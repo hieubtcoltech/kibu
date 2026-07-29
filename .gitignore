@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Trình soạn thảo
+.vscode/
+.idea/
+*.swp
+
+# Log & thư mục tạm
+*.log
+tmp/
