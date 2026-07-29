@@ -289,6 +289,9 @@ const I18N = {
         btnLevels: 'Chọn Màn',
         btnRestart: 'Chơi Lại',
         btnSound: 'Âm Thanh',
+        btnMusic: 'Nhạc Nền',
+        musicOn: 'Nhạc nền: bản "{theme}"',
+        musicOff: 'Đã tắt nhạc nền',
         specialsTitle: 'Hoa quả đặc biệt',
         spH: '<b>Tia ngang</b> — ghép 4 quả theo hàng ngang, nổ sạch cả hàng.',
         spV: '<b>Tia dọc</b> — ghép 4 quả theo hàng dọc, nổ sạch cả cột.',
@@ -346,6 +349,9 @@ const I18N = {
         btnLevels: 'Levels',
         btnRestart: 'Restart',
         btnSound: 'Sound',
+        btnMusic: 'Music',
+        musicOn: 'Music: "{theme}" theme',
+        musicOff: 'Music is off',
         specialsTitle: 'Special fruits',
         spH: '<b>Row blast</b> — match 4 in a row to clear the whole row.',
         spV: '<b>Column blast</b> — match 4 in a column to clear the whole column.',
@@ -509,6 +515,7 @@ class SoundEngine {
         this.enabled = true;
         this.unlocked = false;
         this.failure = null;
+        this.onUnlocked = null;   // gọi lại khi âm thanh vừa được mở khoá
     }
 
     init() {
@@ -540,16 +547,21 @@ class SoundEngine {
      */
     unlock() {
         const ctx = this.init();
-        if (!ctx || this.unlocked || ctx.state !== 'running') return;
-        try {
-            const src = ctx.createBufferSource();
-            src.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
-            src.connect(this.master);
-            src.start(0);
-            this.unlocked = true;
-        } catch (e) {
-            this.failure = String(e && e.message || e);
+        if (!ctx || ctx.state !== 'running') return;
+        if (!this.unlocked) {
+            try {
+                const src = ctx.createBufferSource();
+                src.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+                src.connect(this.master);
+                src.start(0);
+                this.unlocked = true;
+            } catch (e) {
+                this.failure = String(e && e.message || e);
+                return;
+            }
         }
+        // Nhạc nền đang chờ cử chỉ đầu tiên thì cho vào luôn
+        if (this.onUnlocked) this.onUnlocked();
     }
 
     // Trạng thái để soi lỗi nhanh trong console: fruitCrushAudio()
@@ -695,6 +707,247 @@ class SoundEngine {
 }
 
 const sound = new SoundEngine();
+
+/* ============================================================
+ *  2b. NHẠC NỀN
+ * ============================================================ */
+
+const MUSIC_KEY = 'fruitCrushMusic';
+
+// Mỗi màn một chủ đề: vòng hoà âm ghi bằng số nửa cung so với nốt gốc.
+// Chủ đề được chọn theo chỉ số màn nên chơi lại một màn luôn nghe đúng bài đó.
+const THEMES = [
+    {   // Vườn táo — Đô trưởng, tươi sáng
+        name: 'orchard', bpm: 100, root: 60,
+        bass: 'triangle', lead: 'triangle',
+        chords: [[0, 4, 7], [5, 9, 12], [7, 11, 14], [9, 12, 16]],
+    },
+    {   // Nhiệt đới — La thứ, có chút đung đưa
+        name: 'tropic', bpm: 108, root: 57,
+        bass: 'sine', lead: 'square',
+        chords: [[0, 3, 7], [5, 8, 12], [3, 7, 10], [7, 10, 14]],
+    },
+    {   // Băng giá — Rê thứ, thưa và lạnh
+        name: 'frost', bpm: 88, root: 62,
+        bass: 'sine', lead: 'sine',
+        chords: [[0, 3, 7], [-2, 3, 7], [5, 8, 12], [3, 7, 12]],
+    },
+    {   // Kho gỗ — Sol mixolydian, chắc nhịp
+        name: 'crates', bpm: 112, root: 55,
+        bass: 'triangle', lead: 'square',
+        chords: [[0, 4, 7], [10, 14, 17], [5, 9, 12], [0, 4, 9]],
+    },
+    {   // Biển dừa — Fa trưởng, thong thả
+        name: 'coconut', bpm: 96, root: 53,
+        bass: 'sine', lead: 'triangle',
+        chords: [[0, 4, 7], [9, 12, 16], [5, 9, 12], [7, 11, 14]],
+    },
+    {   // Vô trọng lực — Mi thứ, căng và trôi
+        name: 'gravity', bpm: 118, root: 52,
+        bass: 'sawtooth', lead: 'triangle',
+        chords: [[0, 3, 7], [7, 10, 14], [8, 12, 15], [3, 7, 10]],
+    },
+];
+
+function midiToFreq(midi) {
+    return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+/**
+ * Nhạc nền tổng hợp bằng Web Audio: không cần tệp âm thanh nào.
+ * Dùng bộ lập lịch nhìn trước (lookahead) để nhịp không bị trôi khi trình
+ * duyệt bận vẽ hiệu ứng — setTimeout chỉ dùng để *đặt lịch*, còn thời điểm
+ * phát nốt luôn tính theo đồng hồ của AudioContext.
+ */
+class MusicEngine {
+    constructor(soundEngine) {
+        this.sound = soundEngine;
+        this.enabled = true;
+        this.playing = false;
+        this.timer = null;
+        this.gain = null;
+        this.theme = null;
+        this.transpose = 0;
+        this.stepDur = 0.15;
+        this.step = 0;
+        this.nextTime = 0;
+        this.pendingLevel = null;   // màn đang chờ âm thanh được mở khoá
+        this.volume = 0.16;         // nhỏ hơn hẳn hiệu ứng để không át tiếng nổ
+
+        try {
+            const saved = localStorage.getItem(MUSIC_KEY);
+            if (saved !== null) this.enabled = saved === '1';
+        } catch (e) { /* bỏ qua */ }
+    }
+
+    // Bắt đầu nhạc của một màn; nếu trình duyệt chưa mở khoá âm thanh thì chờ
+    play(levelIndex) {
+        this.pendingLevel = levelIndex;
+        if (!this.enabled) return;
+        const ctx = this.sound.init();
+        if (!ctx || ctx.state !== 'running') return;
+        this.startNow(levelIndex);
+    }
+
+    startNow(levelIndex) {
+        const ctx = this.sound.ctx;
+        if (!ctx || !this.sound.master) return;
+
+        this.stopNow();
+        this.theme = THEMES[levelIndex % THEMES.length];
+        // dịch giọng theo nhóm màn để cùng một chủ đề vẫn thấy mới
+        this.transpose = (Math.floor(levelIndex / THEMES.length) % 4) * 2;
+        this.stepDur = 60 / this.theme.bpm / 4;   // mỗi bước là một nốt móc kép
+
+        this.gain = ctx.createGain();
+        this.gain.gain.setValueAtTime(0, ctx.currentTime);
+        this.gain.gain.linearRampToValueAtTime(this.volume, ctx.currentTime + 1.2);
+        this.gain.connect(this.sound.master);
+
+        this.step = 0;
+        this.nextTime = ctx.currentTime + 0.1;
+        this.playing = true;
+        this.tick();
+    }
+
+    // Lên lịch trước cho các nốt sắp tới rồi hẹn kiểm tra lại
+    tick() {
+        const ctx = this.sound.ctx;
+        if (!ctx || !this.playing) return;
+
+        const lookahead = 0.3;
+        let guard = 0;
+        while (this.nextTime < ctx.currentTime + lookahead && guard++ < 64) {
+            this.playStep(this.step, this.nextTime);
+            this.nextTime += this.stepDur;
+            this.step = (this.step + 1) % 64;   // vòng lặp 4 ô nhịp
+        }
+
+        this.timer = setTimeout(() => this.tick(), 80);
+    }
+
+    playStep(step, time) {
+        const th = this.theme;
+        if (!th) return;
+        const chord = th.chords[Math.floor(step / 16) % th.chords.length];
+        const inBar = step % 16;
+
+        // Bè trầm: nhấn ở phách mạnh
+        if (inBar === 0 || inBar === 6 || inBar === 8 || inBar === 14) {
+            this.note(chord[0] - 12, time, this.stepDur * 3.2, th.bass, 0.5);
+        }
+
+        // Bè giai điệu rải hợp âm ở các bước chẵn
+        if (inBar % 2 === 0) {
+            const idx = (step / 2) % chord.length;
+            const octave = inBar === 0 || inBar === 8 ? 12 : 0;
+            this.note(chord[idx] + 12 + octave, time, this.stepDur * 1.6, th.lead, 0.26);
+        }
+
+        // Nốt láy nhẹ cuối ô nhịp cho đỡ đơn điệu
+        if (inBar === 15) {
+            this.note(chord[chord.length - 1] + 19, time, this.stepDur, th.lead, 0.16);
+        }
+
+        // Bộ gõ: tiếng gõ nhẹ ở phách lẻ
+        if (inBar % 4 === 2) this.hat(time, 0.05);
+        if (inBar === 0 || inBar === 8) this.hat(time, 0.09);
+    }
+
+    note(semitone, time, dur, type, vol) {
+        const ctx = this.sound.ctx;
+        if (!ctx || !this.gain || !this.theme) return;
+        try {
+            const osc = ctx.createOscillator();
+            const env = ctx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(midiToFreq(this.theme.root + this.transpose + semitone), time);
+
+            env.gain.setValueAtTime(0.0001, time);
+            env.gain.exponentialRampToValueAtTime(vol, time + 0.02);
+            env.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+            osc.connect(env);
+            env.connect(this.gain);
+            osc.start(time);
+            osc.stop(time + dur + 0.05);
+        } catch (e) { /* bỏ qua một nốt lỗi, không làm gãy nhạc */ }
+    }
+
+    hat(time, vol) {
+        const ctx = this.sound.ctx;
+        if (!ctx || !this.gain) return;
+        try {
+            const len = Math.floor(ctx.sampleRate * 0.05);
+            const buffer = ctx.createBuffer(1, len, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+
+            const src = ctx.createBufferSource();
+            src.buffer = buffer;
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(6000, time);
+            const env = ctx.createGain();
+            env.gain.setValueAtTime(vol, time);
+            env.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
+
+            src.connect(filter);
+            filter.connect(env);
+            env.connect(this.gain);
+            src.start(time);
+        } catch (e) { /* bỏ qua */ }
+    }
+
+    // Tắt dần rồi dừng hẳn
+    stop(fadeSec = 0.6) {
+        const ctx = this.sound.ctx;
+        if (!this.playing || !ctx || !this.gain) { this.stopNow(); return; }
+        const g = this.gain;
+        try {
+            g.gain.cancelScheduledValues(ctx.currentTime);
+            g.gain.setValueAtTime(g.gain.value, ctx.currentTime);
+            g.gain.linearRampToValueAtTime(0.0001, ctx.currentTime + fadeSec);
+        } catch (e) { /* bỏ qua */ }
+        this.playing = false;
+        if (this.timer) clearTimeout(this.timer);
+        this.timer = null;
+        setTimeout(() => { try { g.disconnect(); } catch (e) { /* bỏ qua */ } }, fadeSec * 1000 + 100);
+        this.gain = null;
+    }
+
+    stopNow() {
+        this.playing = false;
+        if (this.timer) clearTimeout(this.timer);
+        this.timer = null;
+        if (this.gain) {
+            try { this.gain.disconnect(); } catch (e) { /* bỏ qua */ }
+            this.gain = null;
+        }
+    }
+
+    // Gọi khi người chơi vừa có cử chỉ đầu tiên: nhạc đang chờ thì cho chạy
+    onUnlock() {
+        if (this.enabled && !this.playing && this.pendingLevel !== null) {
+            this.startNow(this.pendingLevel);
+        }
+    }
+
+    toggle() {
+        this.enabled = !this.enabled;
+        try { localStorage.setItem(MUSIC_KEY, this.enabled ? '1' : '0'); } catch (e) { /* bỏ qua */ }
+        if (this.enabled) this.play(this.pendingLevel || 0);
+        else this.stop(0.3);
+        return this.enabled;
+    }
+
+    themeName() {
+        return this.theme ? this.theme.name : '—';
+    }
+}
+
+const music = new MusicEngine(sound);
+sound.onUnlocked = () => music.onUnlock();
 
 /* ============================================================
  *  3. HỆ THỐNG HIỆU ỨNG (CANVAS PARTICLES)
@@ -930,6 +1183,8 @@ const btnRestart = document.getElementById('btn-restart');
 const btnSound = document.getElementById('btn-sound');
 const btnLevels = document.getElementById('btn-levels');
 const btnLang = document.getElementById('btn-lang');
+const btnMusic = document.getElementById('btn-music');
+const musicIcon = document.getElementById('music-icon');
 const langLabel = document.getElementById('lang-label');
 const soundIcon = document.getElementById('sound-icon');
 
@@ -1187,6 +1442,10 @@ function startLevel(index, showIntro = true) {
     hideModal(modalGameOver);
     hideModal(modalLevels);
 
+    // Mỗi màn một chủ đề nhạc riêng; nếu trình duyệt chưa mở khoá âm thanh thì
+    // nhạc sẽ tự vào ngay khi người chơi chạm lần đầu.
+    music.play(index);
+
     if (showIntro) {
         showIntroModal();
     } else {
@@ -1405,6 +1664,9 @@ function applyLanguage() {
     });
 
     langLabel.textContent = t('langSwitch');
+    musicIcon.className = music.enabled ? 'fa-solid fa-music' : 'fa-solid fa-volume-xmark';
+    btnMusic.classList.toggle('btn-muted', !music.enabled);
+    btnMusic.title = music.enabled ? t('musicOn', { theme: music.themeName() }) : t('musicOff');
     btnSound.title = sound.enabled
         ? t('soundState', { state: sound.status().contextState })
         : t('soundOff');
@@ -2350,6 +2612,7 @@ async function finishTurn() {
 
     if (state.moves <= 0) {
         state.busy = true;
+        music.stop(0.8);          // nhường sân cho tiếng kết thúc
         await wait(300);
         sound.playGameOver();
         renderGameOverContent();
@@ -2417,6 +2680,7 @@ async function celebrateWin() {
         await resolveCascades();
     }
 
+    music.stop(0.9);              // nhường sân cho khúc nhạc chiến thắng
     await wait(350);
     sound.playLevelUp();
 
@@ -2586,9 +2850,15 @@ btnRestart.addEventListener('click', () => {
 ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(type => {
     window.addEventListener(type, () => sound.unlock(), { capture: true, passive: true });
 });
-// Context có thể bị treo khi chuyển tab — đánh thức lại khi quay về
+// Context có thể bị treo khi chuyển tab — đánh thức lại khi quay về,
+// và tạm ngắt nhạc nền khi người chơi rời đi cho đỡ phiền
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) sound.init();
+    if (document.hidden) {
+        music.stop(0.3);
+    } else {
+        sound.init();
+        if (music.enabled && state.started) music.play(state.levelIndex);
+    }
 });
 // Soi trạng thái âm thanh trong console nếu cần: fruitCrushAudio()
 window.fruitCrushAudio = () => sound.status();
@@ -2601,6 +2871,13 @@ btnSound.addEventListener('click', () => {
     btnSound.title = on
         ? t('soundState', { state: st.contextState }) + (st.failure ? ' — ' + st.failure : '')
         : t('soundOff');
+});
+
+btnMusic.addEventListener('click', () => {
+    const on = music.toggle();
+    musicIcon.className = on ? 'fa-solid fa-music' : 'fa-solid fa-volume-xmark';
+    btnMusic.classList.toggle('btn-muted', !on);
+    btnMusic.title = on ? t('musicOn', { theme: music.themeName() }) : t('musicOff');
 });
 
 btnLang.addEventListener('click', () => {
