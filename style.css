@@ -1,7 +1,10 @@
 /* Style reset & base */
 :root {
-    /* Roboto phủ đủ dấu tiếng Việt; dự phòng bằng font hệ thống có tiếng Việt */
-    --font-main: 'Roboto', 'Helvetica Neue', Arial, 'Segoe UI', system-ui, sans-serif;
+    /* Hai font đều có subset vietnamese; dự phòng bằng font hệ thống đủ dấu.
+       Baloo 2 dùng cho tiêu đề, con số, nút bấm — nét bo tròn mập mạp.
+       Nunito dùng cho chữ chạy — cùng họ bo tròn nhưng dễ đọc ở cỡ nhỏ. */
+    --font-display: 'Baloo 2', 'Nunito', 'Helvetica Neue', Arial, system-ui, sans-serif;
+    --font-main: 'Nunito', 'Helvetica Neue', Arial, 'Segoe UI', system-ui, sans-serif;
 
     --bg-primary: #0a0b1e;
     --card-bg: rgba(255, 255, 255, 0.05);
@@ -77,6 +80,7 @@ body {
 }
 
 .logo-text {
+    font-family: var(--font-display);
     font-size: 3rem;
     font-weight: 800;
     letter-spacing: 2px;
@@ -159,6 +163,7 @@ body {
 .pulse-green:hover { box-shadow: 0 0 25px var(--glow-green); border-color: #39ff14; }
 
 .stat-label {
+    font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 600;
     color: var(--text-muted);
@@ -170,6 +175,7 @@ body {
 .stat-label i { margin-right: 6px; }
 
 .stat-value {
+    font-family: var(--font-display);
     font-size: 2.8rem;
     font-weight: 800;
     font-variant-numeric: tabular-nums;
@@ -255,6 +261,7 @@ body {
 .objective-icon { font-size: 1.6rem; line-height: 1; }
 
 .objective-count {
+    font-family: var(--font-display);
     font-size: 1.1rem;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
@@ -642,6 +649,7 @@ body {
 
 /* ---------- Chỉ báo trọng lực ---------- */
 .gravity-badge {
+    font-family: var(--font-display);
     margin-top: 12px;
     padding: 8px 12px;
     border-radius: 12px;
@@ -680,6 +688,7 @@ body {
 
 /* Điểm bay lên */
 .score-pop {
+    font-family: var(--font-display);
     position: absolute;
     transform: translate(-50%, -50%);
     font-weight: 800;
@@ -705,6 +714,7 @@ body {
 
 /* Combo banner */
 .combo-banner {
+    font-family: var(--font-display);
     position: absolute;
     top: 50%;
     left: 50%;
@@ -778,7 +788,8 @@ body {
     justify-content: center;
     gap: 8px;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-    font-family: inherit;
+    font-family: var(--font-display);
+    letter-spacing: 0.3px;
 }
 
 .btn-primary {
@@ -809,6 +820,7 @@ body {
 
 /* Guide Card */
 .guide-card h3 {
+    font-family: var(--font-display);
     font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: 10px;
@@ -913,6 +925,7 @@ body {
 
 .modal-icon { font-size: 4rem; margin-bottom: 10px; }
 .modal-content h2 { font-size: 2.2rem; font-weight: 800; }
+    font-family: var(--font-display);
 .modal-content p { color: var(--text-muted); }
 
 .modal-stats {
@@ -930,6 +943,7 @@ body {
 }
 
 .intro-goal {
+    font-family: var(--font-display);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -953,12 +967,12 @@ body {
 }
 
 .level-node {
+    font-family: var(--font-display);
     aspect-ratio: 1;
     border-radius: 18px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     background: linear-gradient(160deg, rgba(0, 240, 255, 0.16), rgba(186, 85, 211, 0.16));
     color: #fff;
-    font-family: inherit;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -982,6 +996,7 @@ body {
 .level-node.locked:hover { transform: none; box-shadow: none; }
 
 .level-num { font-size: 1.4rem; font-weight: 800; line-height: 1.1; }
+    font-family: var(--font-display);
 
 .level-icons {
     font-size: 0.72rem;
