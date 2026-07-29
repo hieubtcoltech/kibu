@@ -1,0 +1,677 @@
+/* =========================================================
+   BOT ARENA BLASTER - STYLESHEET
+   Neon Cyberpunk Glassmorphism Aesthetics
+   ========================================================= */
+
+:root {
+    --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+    --font-main: 'Nunito', system-ui, sans-serif;
+
+    --bg-dark: #070914;
+    --card-bg: rgba(15, 23, 42, 0.75);
+    --card-border: rgba(255, 255, 255, 0.12);
+    
+    --neon-blue: #00f0ff;
+    --neon-pink: #ff007f;
+    --neon-purple: #9d4edd;
+    --neon-green: #39ff14;
+    --neon-yellow: #ffd700;
+    --neon-orange: #ff6b00;
+    --neon-red: #ff3366;
+
+    --glow-blue: 0 0 15px rgba(0, 240, 255, 0.5);
+    --glow-pink: 0 0 15px rgba(255, 0, 127, 0.5);
+    --glow-green: 0 0 15px rgba(57, 255, 20, 0.5);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-dark);
+    color: #ffffff;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Background animated grid */
+.bg-grid-glow {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: 
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8) 0%, #050710 100%),
+        linear-gradient(rgba(0, 240, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.05) 1px, transparent 1px);
+    background-size: 100% 100%, 40px 40px, 40px 40px;
+    animation: bgPulse 10s ease-in-out infinite alternate;
+}
+
+@keyframes bgPulse {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(30deg); }
+}
+
+/* App Wrapper */
+.app-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Header Navbar */
+.game-nav {
+    height: 60px;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(10, 14, 29, 0.8);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--card-border);
+    z-index: 10;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-icon {
+    font-size: 1.8rem;
+    color: var(--neon-blue);
+    text-shadow: var(--glow-blue);
+}
+
+.brand-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Buttons */
+.btn {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--neon-pink), #e6005c);
+    border-color: var(--neon-pink);
+    box-shadow: 0 4px 15px rgba(255, 0, 127, 0.4);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(255, 0, 127, 0.6);
+    background: linear-gradient(135deg, #ff1a8c, #ff0055);
+}
+
+.btn-cyber {
+    background: linear-gradient(135deg, var(--neon-blue), #00a8ff);
+    color: #000;
+    border-color: var(--neon-blue);
+    font-weight: 800;
+    box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4);
+}
+
+.btn-cyber:hover {
+    box-shadow: 0 6px 22px rgba(0, 240, 255, 0.7);
+    color: #000;
+}
+
+.btn-toggle {
+    border-color: rgba(0, 240, 255, 0.4);
+}
+
+.btn-toggle.active {
+    background: rgba(0, 240, 255, 0.25);
+    border-color: var(--neon-blue);
+    color: var(--neon-blue);
+    box-shadow: var(--glow-blue);
+}
+
+/* Main Viewport */
+.game-viewport {
+    flex: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* Canvas Game View */
+#game-canvas {
+    display: block;
+    background: transparent;
+    cursor: crosshair;
+}
+
+/* HUD Overlay */
+.hud-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    padding: 16px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 5;
+}
+
+.hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+/* HUD Glass Box */
+.hud-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 12px 18px;
+    pointer-events: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Health Bar HUD */
+.player-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 260px;
+}
+
+.avatar-badge {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.4rem;
+    box-shadow: var(--glow-blue);
+}
+
+.status-details {
+    flex: 1;
+}
+
+.bar-header {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.health-track {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.health-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff3366, #39ff14);
+    border-radius: 6px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(57, 255, 20, 0.6);
+}
+
+/* Wave & Score Stats */
+.hud-center {
+    text-align: center;
+}
+
+.wave-title {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--neon-yellow);
+    letter-spacing: 1px;
+}
+
+.bots-remaining {
+    font-size: 0.9rem;
+    color: #cbd5e1;
+    margin-top: 2px;
+}
+
+.hud-right {
+    display: flex;
+    gap: 16px;
+}
+
+.stat-item {
+    text-align: right;
+}
+
+.stat-val {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.stat-lbl {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Active Weapon HUD */
+.hud-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+/* 4-Weapon Quick Switch Slots */
+.weapon-slots-bar {
+    display: flex;
+    gap: 8px;
+    padding: 8px 12px;
+}
+
+.weapon-slot {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 72px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.weapon-slot:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.weapon-slot.active {
+    background: rgba(0, 240, 255, 0.2);
+    border-color: var(--neon-blue);
+    box-shadow: var(--glow-blue);
+    transform: translateY(-4px);
+}
+
+.slot-num {
+    position: absolute;
+    top: 3px;
+    left: 6px;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--neon-yellow);
+    background: rgba(0, 0, 0, 0.5);
+    padding: 1px 5px;
+    border-radius: 6px;
+}
+
+.slot-icon {
+    font-size: 1.4rem;
+    color: var(--neon-blue);
+    margin-top: 4px;
+}
+
+.weapon-slot.active .slot-icon {
+    color: #fff;
+    text-shadow: var(--glow-blue);
+}
+
+.slot-name {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-top: 2px;
+}
+
+.slot-ammo {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--neon-yellow);
+}
+
+/* Active Buff Badges */
+.buff-container {
+    display: flex;
+    gap: 8px;
+}
+
+.buff-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: rgba(0, 240, 255, 0.15);
+    border: 1px solid var(--neon-blue);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--neon-blue);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: buffPop 0.3s ease;
+}
+
+@keyframes buffPop {
+    0% { transform: scale(0.6); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Touch Controls for Mobile/Tablet */
+.touch-controls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+    display: none; /* Auto-detected via JS touch query */
+}
+
+.touch-joystick-zone {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    width: 140px;
+    height: 140px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.joystick-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 50px;
+    height: 50px;
+    margin-top: -25px;
+    margin-left: -25px;
+    background: var(--neon-blue);
+    border-radius: 50%;
+    box-shadow: var(--glow-blue);
+    pointer-events: none;
+}
+
+.touch-fire-btn {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--neon-pink), #e6005c);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--glow-pink);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2.2rem;
+    color: white;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+/* Modals Overlay */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 16, 0.85);
+    backdrop-filter: blur(12px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-card {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid var(--card-border);
+    border-radius: 28px;
+    padding: 32px;
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.25);
+}
+
+.modal-overlay.active .modal-card {
+    transform: scale(1);
+}
+
+.modal-icon {
+    font-size: 3.5rem;
+    margin-bottom: 12px;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+}
+
+.modal-title {
+    font-family: var(--font-display);
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fff, var(--neon-blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.modal-subtitle {
+    color: #94a3b8;
+    margin-bottom: 24px;
+    font-size: 1.05rem;
+}
+
+/* Game Mode Selection Grid */
+.mode-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.mode-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.mode-card:hover {
+    background: rgba(0, 240, 255, 0.12);
+    border-color: var(--neon-blue);
+    transform: translateY(-4px);
+    box-shadow: var(--glow-blue);
+}
+
+.mode-card.selected {
+    background: rgba(0, 240, 255, 0.2);
+    border-color: var(--neon-blue);
+    box-shadow: var(--glow-blue);
+}
+
+.mode-icon {
+    font-size: 2.2rem;
+    margin-bottom: 8px;
+}
+
+.mode-name {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: white;
+}
+
+.mode-desc {
+    font-size: 0.85rem;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+/* Shop Items Grid */
+.shop-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    margin: 20px 0;
+}
+
+.shop-item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.shop-item-icon {
+    font-size: 2rem;
+    color: var(--neon-yellow);
+}
+
+.shop-item-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.shop-item-level {
+    font-size: 0.8rem;
+    color: var(--neon-blue);
+}
+
+.shop-buy-btn {
+    width: 100%;
+    padding: 6px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    margin-top: 4px;
+}
+
+/* High Score List */
+.score-table {
+    width: 100%;
+    margin: 16px 0;
+    border-collapse: collapse;
+}
+
+.score-table th, .score-table td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.score-table th {
+    color: #94a3b8;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.score-table td {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+}
+
+/* Floating Toast Notifications */
+.toast-msg {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid var(--neon-blue);
+    box-shadow: var(--glow-blue);
+    padding: 10px 24px;
+    border-radius: 30px;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: white;
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.toast-msg.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}

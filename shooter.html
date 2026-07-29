@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bot Arena Blaster - Đấu Trường Bot Ultra</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="shooter-style.css">
+</head>
+<body>
+    <div class="bg-grid-glow"></div>
+
+    <div class="app-wrapper">
+        <!-- Top Navigation Bar -->
+        <header class="game-nav">
+            <div class="brand">
+                <i class="fa-solid fa-robot brand-icon"></i>
+                <h1 class="brand-title">BOT ARENA BLASTER</h1>
+            </div>
+
+            <div class="nav-actions">
+                <button id="btn-auto-aim" class="btn btn-toggle active" title="Tự động ngắm bắn cho bé">
+                    <i class="fa-solid fa-bullseye"></i> <span id="auto-aim-label">Tự Ngắm: BẬT</span>
+                </button>
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                </button>
+                <button id="btn-shop" class="btn">
+                    <i class="fa-solid fa-store text-yellow"></i> <span>Cửa Hàng</span>
+                </button>
+                <a href="index.html" class="btn btn-primary" style="background: linear-gradient(135deg, #ff007f, #9d4edd);">
+                    <i class="fa-solid fa-house"></i> <span>Trang Chọn Game</span>
+                </a>
+                <a href="fruit.html" class="btn btn-primary">
+                    <i class="fa-solid fa-lemon"></i> <span>Fruit Crush</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Main Canvas Viewport -->
+        <main class="game-viewport">
+            <canvas id="game-canvas"></canvas>
+
+            <!-- Heads-Up Display (HUD) -->
+            <div class="hud-overlay">
+                <!-- Top Status Bar -->
+                <div class="hud-top">
+                    <div class="hud-box player-status">
+                        <div class="avatar-badge" id="player-avatar">
+                            <span style="font-size: 1.4rem;">🧑‍✈️</span>
+                        </div>
+                        <div class="status-details">
+                            <div class="bar-header">
+                                <span id="player-name-hud">Đặc Nhiệm Con Người</span>
+                                <span id="hp-text">100/100</span>
+                            </div>
+                            <div class="health-track">
+                                <div id="hp-fill" class="health-fill" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="hud-box hud-center">
+                        <div id="wave-hud" class="wave-title">ĐỢT 1</div>
+                        <div id="bots-left-hud" class="bots-remaining"><i class="fa-solid fa-skull"></i> Bot Còn Lại: 5</div>
+                    </div>
+
+                    <div class="hud-box hud-right">
+                        <div class="stat-item">
+                            <div id="score-hud" class="stat-val">0</div>
+                            <div class="stat-lbl">Điểm Số</div>
+                        </div>
+                        <div class="stat-item" style="margin-left: 14px;">
+                            <div id="coins-hud" class="stat-val text-yellow"><i class="fa-solid fa-coins"></i> 0</div>
+                            <div class="stat-lbl">Xu Thưởng</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom 4 Weapons Quick-Switch Bar & Buff Bar -->
+                <div class="hud-bottom">
+                    <div class="hud-box weapon-slots-bar" id="weapon-slots">
+                        <div class="weapon-slot active" data-slot="0" data-key="pistol" title="Bấm phím 1 để chọn">
+                            <span class="slot-num">1</span>
+                            <div class="slot-icon"><i class="fa-solid fa-gun"></i></div>
+                            <div class="slot-name">Súng Ngắn</div>
+                            <div class="slot-ammo" id="ammo-0">∞</div>
+                        </div>
+                        <div class="weapon-slot" data-slot="1" data-key="shotgun" title="Bấm phím 2 để chọn">
+                            <span class="slot-num">2</span>
+                            <div class="slot-icon"><i class="fa-solid fa-burst"></i></div>
+                            <div class="slot-name">Súng Săn</div>
+                            <div class="slot-ammo" id="ammo-1">40</div>
+                        </div>
+                        <div class="weapon-slot" data-slot="2" data-key="rocket" title="Bấm phím 3 để chọn">
+                            <span class="slot-num">3</span>
+                            <div class="slot-icon"><i class="fa-solid fa-rocket"></i></div>
+                            <div class="slot-name">Tên Lửa</div>
+                            <div class="slot-ammo" id="ammo-2">15</div>
+                        </div>
+                        <div class="weapon-slot" data-slot="3" data-key="plasma" title="Bấm phím 4 để chọn">
+                            <span class="slot-num">4</span>
+                            <div class="slot-icon"><i class="fa-solid fa-bolt"></i></div>
+                            <div class="slot-name">Laser</div>
+                            <div class="slot-ammo" id="ammo-3">60</div>
+                        </div>
+                    </div>
+
+                    <div class="buff-container" id="buff-list">
+                        <!-- Active Power-up badges appear dynamically here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Virtual Controls for Touch Devices -->
+            <div class="touch-controls" id="touch-controls">
+                <div class="touch-joystick-zone" id="joystick-zone">
+                    <div class="joystick-knob" id="joystick-knob"></div>
+                </div>
+                <div class="touch-fire-btn" id="fire-btn">
+                    <i class="fa-solid fa-crosshairs"></i>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+
+    <!-- Main Menu Modal -->
+    <div id="modal-start" class="modal-overlay active">
+        <div class="modal-card">
+            <div class="modal-icon"><i class="fa-solid fa-gamepad"></i></div>
+            <h2 class="modal-title">CON NGƯỜI CẦM SÚNG 🧑‍✈️🔫 VS ROBOT 🤖</h2>
+            <p class="modal-subtitle">Bé nhập vai <b>CON NGƯỜI CẦM SÚNG 🧑‍✈️🔫</b> dũng cảm tiêu diệt các binh đoàn <b>ROBOT 🤖</b> độc ác!</p>
+
+            <div class="mode-grid">
+                <div class="mode-card selected" data-mode="survival">
+                    <div class="mode-icon text-yellow"><i class="fa-solid fa-person-rifle"></i></div>
+                    <div class="mode-name">Con Người Sinh Tồn</div>
+                    <div class="mode-desc">Bé cầm súng tiêu diệt từng đợt Robot địch & Trùm Robot Khổng Lồ!</div>
+                </div>
+                <div class="mode-card" data-mode="team">
+                    <div class="mode-icon text-blue"><i class="fa-solid fa-user-shield"></i></div>
+                    <div class="mode-name">Con Người Đấu Đội</div>
+                    <div class="mode-desc">Bé (Con Người) cùng đội Robot bảo vệ tiêu diệt Binh Đoàn Robot Đỏ!</div>
+                </div>
+            </div>
+
+            <!-- Loadout & Equipment Selector -->
+            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 14px; margin-bottom: 20px;">
+                <div style="font-size: 0.95rem; font-weight: 800; color: #00f0ff; margin-bottom: 8px;">
+                    <i class="fa-solid fa-vest-patches"></i> CHỌN TRANG BỊ & VŨ KHÍ CHO NHÂN VẬT:
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn btn-toggle active loadout-btn" data-type="armor" data-val="tactical">🛡️ Giáp Đặc Nhiệm (+Tốc)</button>
+                    <button class="btn btn-toggle loadout-btn" data-type="armor" data-val="heavy">🛡️ Giáp Thép Kevlar (+Máu)</button>
+                    <button class="btn btn-toggle active loadout-btn" data-type="helmet" data-val="bandana">🪖 Băng Rôn (+Sát Thương)</button>
+                    <button class="btn btn-toggle loadout-btn" data-type="helmet" data-val="helmet">🪖 Mũ Thép (Chống Bẫy)</button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="color: #94a3b8; font-weight: 700; margin-right: 10px;">Độ Khó Đấu Trường:</label>
+                <button class="btn btn-toggle active difficulty-btn" data-diff="easy">Dễ (Vui Vẻ)</button>
+                <button class="btn btn-toggle difficulty-btn" data-diff="normal">Vừa (Thử Thách)</button>
+                <button class="btn btn-toggle difficulty-btn" data-diff="hard">Khó (Dũng Sĩ)</button>
+            </div>
+
+            <button id="btn-play-game" class="btn btn-cyber btn-primary" style="font-size: 1.3rem; padding: 14px 40px; border-radius: 20px;">
+                BẮT ĐẦU CHƠI <i class="fa-solid fa-play"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Shop / Upgrade Modal -->
+    <div id="modal-shop" class="modal-overlay">
+        <div class="modal-card" style="max-width: 650px;">
+            <div class="modal-icon text-yellow"><i class="fa-solid fa-cart-shopping"></i></div>
+            <h2 class="modal-title">CỬA HÀNG NÂNG CẤP</h2>
+            <p class="modal-subtitle">Số xu hiện có: <b id="shop-coins-val" style="color: #ffd700;">0</b> Xu</p>
+
+            <div class="shop-grid">
+                <div class="shop-item">
+                    <div class="shop-item-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+                    <div class="shop-item-title">Máu Tối Đa</div>
+                    <div class="shop-item-level" id="shop-hp-lvl">Cấp 1 (+20 Máu)</div>
+                    <button class="btn btn-primary shop-buy-btn" id="btn-buy-hp">50 Xu</button>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-item-icon"><i class="fa-solid fa-person-running"></i></div>
+                    <div class="shop-item-title">Tốc Độ Chạy</div>
+                    <div class="shop-item-level" id="shop-speed-lvl">Cấp 1 (+10% Tốc)</div>
+                    <button class="btn btn-primary shop-buy-btn" id="btn-buy-speed">50 Xu</button>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-item-icon"><i class="fa-solid fa-burst"></i></div>
+                    <div class="shop-item-title">Sát Thương Súng</div>
+                    <div class="shop-item-level" id="shop-damage-lvl">Cấp 1 (+15% ST)</div>
+                    <button class="btn btn-primary shop-buy-btn" id="btn-buy-damage">75 Xu</button>
+                </div>
+            </div>
+
+            <button id="btn-close-shop" class="btn btn-primary" style="margin-top: 10px;">Đóng Cửa Hàng</button>
+        </div>
+    </div>
+
+    <!-- Game Over / Victory Modal -->
+    <div id="modal-end" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-icon" id="end-icon"><i class="fa-solid fa-trophy"></i></div>
+            <h2 class="modal-title" id="end-title">CHIẾN THẮNG!</h2>
+            <p class="modal-subtitle" id="end-sub">Bạn đã hạ gục toàn bộ các đợt Bot!</p>
+
+            <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 16px; margin-bottom: 20px;">
+                <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">Điểm số đạt được: <span id="end-score" style="color:#00f0ff">0</span></div>
+                <div style="font-size: 1rem; color:#ffd700;">Xu thưởng kiếm được: +<span id="end-coins">0</span> Xu</div>
+            </div>
+
+            <div style="display: flex; gap: 14px; justify-content: center;">
+                <button id="btn-restart-game" class="btn btn-cyber">
+                    <i class="fa-solid fa-rotate-right"></i> Chơi Lại
+                </button>
+                <button id="btn-menu-game" class="btn">
+                    <i class="fa-solid fa-house"></i> Về Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast-msg"></div>
+
+    <script src="shooter-game.js"></script>
+</body>
+</html>

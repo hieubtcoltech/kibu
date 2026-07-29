@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Quest - Hiện Tại Hoàn Thành</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="english-style.css">
+</head>
+<body>
+    <div class="bg-aurora"></div>
+
+    <div class="app">
+        <!-- Top Navigation -->
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-icon">🎓</span>
+                <div>
+                    <h1 class="brand-title">ENGLISH QUEST</h1>
+                    <p class="brand-sub">Present Perfect · Hiện Tại Hoàn Thành</p>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <button id="btn-theory" class="btn btn-yellow">
+                    <i class="fa-solid fa-book-open"></i> <span>Ghi Nhớ</span>
+                </button>
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                </button>
+                <button id="btn-reset" class="btn" title="Xoá tiến trình đã lưu">
+                    <i class="fa-solid fa-arrows-rotate"></i> <span>Học Lại</span>
+                </button>
+                <a href="index.html" class="btn btn-primary">
+                    <i class="fa-solid fa-house"></i> <span>Trang Chọn Game</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- ============ SCREEN: MAP ============ -->
+        <section id="screen-map" class="screen active">
+            <div class="hero">
+                <div class="hero-badge">🗺️ Bản đồ hành trình · 7 chặng</div>
+                <h2 class="hero-title">Chinh Phục Thì Hiện Tại Hoàn Thành</h2>
+                <p class="hero-sub">
+                    Học từ mới có tranh minh hoạ &amp; phát âm, luyện ngữ pháp, ghép câu, nối từ,
+                    nghe điền từ và đọc hiểu — tất cả trong một cuộc phiêu lưu.
+                </p>
+            </div>
+
+            <div class="stat-row">
+                <div class="stat-chip stat-xp">
+                    <span class="stat-ic">💎</span>
+                    <div><b id="stat-xp">0</b><small>Điểm kinh nghiệm</small></div>
+                </div>
+                <div class="stat-chip stat-star">
+                    <span class="stat-ic">⭐</span>
+                    <div><b id="stat-stars">0/21</b><small>Sao đã đạt</small></div>
+                </div>
+                <div class="stat-chip stat-fire">
+                    <span class="stat-ic">🔥</span>
+                    <div><b id="stat-streak">0</b><small>Chuỗi đúng dài nhất</small></div>
+                </div>
+                <div class="stat-chip stat-done">
+                    <span class="stat-ic">🏁</span>
+                    <div><b id="stat-done">0/7</b><small>Chặng hoàn thành</small></div>
+                </div>
+            </div>
+
+            <div class="section-label"><i class="fa-solid fa-map-location-dot"></i> Chọn một chặng để bắt đầu</div>
+            <div id="station-grid" class="station-grid"></div>
+
+            <footer class="page-foot">
+                <p>💡 Mẹo: bấm nút <b>Ghi Nhớ</b> ở trên để xem lại toàn bộ công thức bất cứ lúc nào.</p>
+            </footer>
+        </section>
+
+        <!-- ============ SCREEN: PLAY ============ -->
+        <section id="screen-play" class="screen">
+            <div class="playbar">
+                <button id="btn-quit" class="pb-back" title="Quay lại bản đồ">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="progress-track">
+                    <div id="progress-fill" class="progress-fill"></div>
+                </div>
+                <div id="hearts" class="hearts"></div>
+                <div class="xp-chip">💎 <b id="run-xp">0</b></div>
+                <div id="combo-chip" class="combo-chip">🔥 <b id="run-combo">0</b></div>
+            </div>
+
+            <div class="play-head">
+                <span id="play-icon" class="play-icon">🎴</span>
+                <div>
+                    <h3 id="play-title">Chặng</h3>
+                    <p id="play-count" class="play-count">Câu 1 / 10</p>
+                </div>
+            </div>
+
+            <div id="stage" class="stage"></div>
+
+            <div id="feedback" class="feedback"></div>
+
+            <div class="actions">
+                <button id="btn-check" class="btn-check">KIỂM TRA</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- ============ MODAL: THEORY ============ -->
+    <div id="modal-theory" class="modal">
+        <div class="modal-card modal-wide">
+            <button class="modal-close" data-close="modal-theory"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="modal-title">📚 Ghi Nhớ: Thì Hiện Tại Hoàn Thành</h2>
+
+            <div class="theory-block">
+                <h4>1. Công thức</h4>
+                <div class="formula-row">
+                    <div class="formula formula-pos">
+                        <span class="f-tag">Khẳng định</span>
+                        <b>S + have/has + V3</b>
+                        <em>I <u>have eaten</u> pizza.</em>
+                    </div>
+                    <div class="formula formula-neg">
+                        <span class="f-tag">Phủ định</span>
+                        <b>S + have/has + not + V3</b>
+                        <em>She <u>hasn't finished</u> yet.</em>
+                    </div>
+                    <div class="formula formula-que">
+                        <span class="f-tag">Nghi vấn</span>
+                        <b>Have/Has + S + V3?</b>
+                        <em><u>Have</u> you <u>seen</u> it?</em>
+                    </div>
+                </div>
+                <p class="theory-note">
+                    👉 <b>He / She / It</b> và danh từ số ít dùng <b class="hl-pink">has</b>.
+                    <b>I / You / We / They</b> và danh từ số nhiều dùng <b class="hl-blue">have</b>.
+                </p>
+            </div>
+
+            <div class="theory-block">
+                <h4>2. Dùng khi nào?</h4>
+                <ul class="theory-list">
+                    <li>✅ Việc <b>vừa mới xảy ra</b>, còn "nóng hổi": <em>I have just finished my homework.</em></li>
+                    <li>✅ Việc <b>bắt đầu trong quá khứ và vẫn kéo dài</b> tới hiện tại: <em>We have lived here for 5 years.</em></li>
+                    <li>✅ <b>Trải nghiệm</b> trong đời, không nói rõ thời gian: <em>She has never seen snow.</em></li>
+                    <li>❌ <b>Không dùng</b> khi đã nói rõ thời điểm trong quá khứ (yesterday, last week) — lúc đó dùng quá khứ đơn.</li>
+                </ul>
+            </div>
+
+            <div class="theory-block">
+                <h4>3. Dấu hiệu nhận biết</h4>
+                <div class="signal-grid">
+                    <span class="signal">just <small>vừa mới</small></span>
+                    <span class="signal">already <small>rồi</small></span>
+                    <span class="signal">yet <small>chưa (câu ¬/?)</small></span>
+                    <span class="signal">ever <small>từng</small></span>
+                    <span class="signal">never <small>chưa bao giờ</small></span>
+                    <span class="signal">since <small>từ khi (mốc)</small></span>
+                    <span class="signal">for <small>trong (khoảng)</small></span>
+                    <span class="signal">recently <small>gần đây</small></span>
+                    <span class="signal">so far <small>cho đến nay</small></span>
+                    <span class="signal">times <small>… lần</small></span>
+                </div>
+                <p class="theory-note">
+                    ⚖️ <b class="hl-yellow">since</b> + <u>mốc thời gian</u> (since 2020, since Monday) ·
+                    <b class="hl-yellow">for</b> + <u>khoảng thời gian</u> (for 3 years, for a week).
+                </p>
+            </div>
+
+            <div class="theory-block">
+                <h4>4. Bảng động từ bất quy tắc hay gặp</h4>
+                <div id="theory-verbs" class="verb-table"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL: RESULT ============ -->
+    <div id="modal-result" class="modal">
+        <div class="modal-card">
+            <div id="res-emoji" class="res-emoji">🎉</div>
+            <h2 id="res-title" class="modal-title">Hoàn thành chặng!</h2>
+            <p id="res-sub" class="res-sub">Bé làm tốt lắm!</p>
+            <div id="res-stars" class="res-stars"></div>
+            <div class="res-grid">
+                <div class="res-box"><b id="res-xp">0</b><small>💎 Điểm nhận được</small></div>
+                <div class="res-box"><b id="res-acc">0%</b><small>🎯 Độ chính xác</small></div>
+                <div class="res-box"><b id="res-streak">0</b><small>🔥 Chuỗi đúng</small></div>
+            </div>
+            <div class="res-actions">
+                <button id="btn-res-again" class="btn-check btn-alt">🔁 Làm lại</button>
+                <button id="btn-res-next" class="btn-check">➡️ Chặng tiếp theo</button>
+            </div>
+            <button id="btn-res-map" class="link-btn">Về bản đồ hành trình</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="english-game.js"></script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Crush Deluxe</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-gradient-shimmer"></div>
+    <!-- Chỉ hiện khi bật chế độ thử màn (?dev=1 hoặc fruitCrush.on()) -->
+    <div id="dev-badge" class="dev-badge hidden">
+        <i class="fa-solid fa-flask"></i> <span data-i18n="devBadge">CHẾ ĐỘ THỬ MÀN</span>
+    </div>
+    <div class="game-container">
+        <!-- Header -->
+        <header class="game-header">
+            <h1 class="logo-text"><span>FRUIT</span> CRUSH</h1>
+            <p class="tagline" data-i18n="tagline">Trải nghiệm ghép hoa quả ngọt ngào</p>
+        </header>
+
+        <!-- Main Body -->
+        <main class="game-main">
+            <!-- Sidebar Stats -->
+            <section class="game-sidebar">
+                <div class="glass-card stat-card pulse-blue">
+                    <div class="stat-label">
+                        <i class="fa-solid fa-trophy text-gold"></i>
+                        <span data-i18n="score">Điểm Số</span>
+                    </div>
+                    <div id="score" class="stat-value">0</div>
+                    <div class="stat-sub"><span data-i18n="target">Mục tiêu</span>: <span id="target-score">1000</span></div>
+                    <div class="progress-bar-container">
+                        <div id="level-progress" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="star-row" id="star-row">
+                        <i class="fa-solid fa-star star" data-star="1"></i>
+                        <i class="fa-solid fa-star star" data-star="2"></i>
+                        <i class="fa-solid fa-star star" data-star="3"></i>
+                    </div>
+                </div>
+
+                <div class="glass-card stat-card pulse-purple">
+                    <div class="stat-label">
+                        <i class="fa-solid fa-hourglass-half text-purple"></i>
+                        <span data-i18n="moves">Lượt Đi</span>
+                    </div>
+                    <div id="moves" class="stat-value">30</div>
+                    <div class="stat-sub" data-i18n="movesSub">Cố lên nhé!</div>
+                </div>
+
+                <div class="glass-card stat-card pulse-green objectives-card">
+                    <div class="stat-label">
+                        <i class="fa-solid fa-bullseye text-green"></i>
+                        <span data-i18n="levelWord">Màn</span> <span id="level">1</span>
+                    </div>
+                    <div id="objectives" class="objective-list"></div>
+                    <div id="gravity-badge" class="gravity-badge hidden"></div>
+                </div>
+
+                <div class="glass-card guide-card">
+                    <h3><i class="fa-solid fa-circle-info"></i> <span data-i18n="howTitle">Cách chơi</span></h3>
+                    <ul>
+                        <li data-i18n="how1">Chạm chọn hoặc vuốt hai quả cạnh nhau để tráo đổi.</li>
+                        <li data-i18n-html="how2">Hoàn thành mục tiêu thu thập <b>và</b> đạt điểm trước khi hết lượt.</li>
+                        <li data-i18n="how3">Kết hợp hai quả đặc biệt cạnh nhau để tạo vụ nổ cực lớn!</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Game Board Container -->
+            <section class="board-area">
+                <div class="glass-card board-wrapper" id="board-wrapper">
+                    <div id="board" class="board-grid">
+                        <div id="cell-layer" class="cell-layer"></div>
+                        <div id="tile-layer" class="tile-layer"></div>
+                        <canvas id="fx-canvas" class="fx-canvas"></canvas>
+                        <div id="popup-layer" class="popup-layer"></div>
+                    </div>
+                    <div id="combo-banner" class="combo-banner"></div>
+                </div>
+            </section>
+
+            <!-- Control Actions -->
+            <section class="game-controls">
+                <a href="index.html" class="btn btn-primary glass-btn" style="text-decoration: none; background: linear-gradient(135deg, #ff007f, #9d4edd); color: white;">
+                    <i class="fa-solid fa-house"></i> <span>Trang Chọn Game</span>
+                </a>
+                <a href="shooter.html" class="btn btn-primary glass-btn" style="text-decoration: none; background: linear-gradient(135deg, #00f0ff, #ff007f); color: white;">
+                    <i class="fa-solid fa-crosshairs"></i> <span>Game Bắn Súng Bot</span>
+                </a>
+                <button id="btn-lang" class="btn btn-secondary glass-btn">
+                    <i class="fa-solid fa-language"></i> <span id="lang-label">English</span>
+                </button>
+                <button id="btn-levels" class="btn btn-secondary glass-btn">
+                    <i class="fa-solid fa-map"></i> <span data-i18n="btnLevels">Chọn Màn</span>
+                </button>
+                <button id="btn-scores" class="btn btn-secondary glass-btn">
+                    <i class="fa-solid fa-trophy text-gold"></i> <span data-i18n="btnScores">Bảng Vàng</span>
+                </button>
+                <button id="btn-restart" class="btn btn-secondary glass-btn">
+                    <i class="fa-solid fa-rotate-right"></i> <span data-i18n="btnRestart">Chơi Lại</span>
+                </button>
+                <button id="btn-sound" class="btn btn-secondary glass-btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span data-i18n="btnSound">Âm Thanh</span>
+                </button>
+                <button id="btn-music" class="btn btn-secondary glass-btn">
+                    <i id="music-icon" class="fa-solid fa-music"></i> <span data-i18n="btnMusic">Nhạc Nền</span>
+                </button>
+
+                <div class="glass-card guide-card">
+                    <h3><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="specialsTitle">Hoa quả đặc biệt</span></h3>
+                    <ul class="special-list">
+                        <li><span class="legend-badge legend-h">↔</span><span data-i18n-html="spH"><b>Tia ngang</b> — ghép 4 quả theo hàng ngang, nổ sạch cả hàng.</span></li>
+                        <li><span class="legend-badge legend-v">↕</span><span data-i18n-html="spV"><b>Tia dọc</b> — ghép 4 quả theo hàng dọc, nổ sạch cả cột.</span></li>
+                        <li><span class="legend-badge legend-bomb">💥</span><span data-i18n-html="spBomb"><b>Bom</b> — ghép hình chữ L hoặc T, nổ tung 8 ô xung quanh.</span></li>
+                        <li><span class="legend-badge legend-rainbow">🌈</span><span data-i18n-html="spRainbow"><b>Cầu vồng</b> — ghép 5 quả thẳng hàng, quét sạch mọi quả cùng loại.</span></li>
+                    </ul>
+                </div>
+
+                <div class="glass-card guide-card">
+                    <h3><i class="fa-solid fa-mountain"></i> <span data-i18n="obstaclesTitle">Chướng ngại vật</span></h3>
+                    <ul class="special-list">
+                        <li><span class="legend-badge legend-frost">❄️</span><span data-i18n-html="obFrost"><b>Băng</b> — ghép quả ngay trên ô băng để phá. Băng dày cần hai lần.</span></li>
+                        <li><span class="legend-badge legend-crate">📦</span><span data-i18n-html="obCrate"><b>Thùng gỗ</b> — không tráo được, phải cho nổ ở ô ngay cạnh nó.</span></li>
+                        <li><span class="legend-badge legend-harvest">🥥</span><span data-i18n-html="obHarvest"><b>Dừa</b> — dọn đường cho nó rơi tới mép bàn theo chiều trọng lực.</span></li>
+                        <li><span class="legend-badge legend-gravity">🔄</span><span data-i18n-html="obGravity"><b>Đảo trọng lực</b> — cứ vài lượt là cả bàn rơi ngược chiều!</span></li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <!-- Level Intro Modal -->
+    <div id="modal-intro" class="modal-overlay hidden">
+        <div class="modal-content glass-card pop-in">
+            <div class="modal-icon text-green"><i class="fa-solid fa-flag-checkered"></i></div>
+            <h2><span data-i18n="levelWord">Màn</span> <span id="intro-level">1</span></h2>
+            <p id="intro-desc"></p>
+            <div class="intro-goals" id="intro-goals"></div>
+            <div class="modal-stats" id="intro-stats"></div>
+            <button id="btn-start" class="btn btn-primary">
+                <span data-i18n="btnStart">Bắt Đầu</span> <i class="fa-solid fa-play"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="modal-victory" class="modal-overlay hidden">
+        <div class="modal-content glass-card pop-in">
+            <div class="modal-icon text-gold"><i class="fa-solid fa-crown fa-bounce"></i></div>
+            <h2 data-i18n="victoryTitle">Chiến Thắng!</h2>
+            <p id="victory-msg"></p>
+            <div class="star-row big" id="victory-stars">
+                <i class="fa-solid fa-star star" data-star="1"></i>
+                <i class="fa-solid fa-star star" data-star="2"></i>
+                <i class="fa-solid fa-star star" data-star="3"></i>
+            </div>
+            <div class="modal-stats" id="victory-stats"></div>
+            <div id="victory-record" class="record-box hidden"></div>
+            <div id="victory-share" class="share-box"></div>
+            <button id="btn-next-level" class="btn btn-primary">
+                <span data-i18n="btnNext">Màn Tiếp Theo</span> <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <button id="btn-victory-map" class="btn btn-secondary" data-i18n="btnMap">Về bản đồ màn chơi</button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="modal-gameover" class="modal-overlay hidden">
+        <div class="modal-content glass-card pop-in">
+            <div class="modal-icon text-red"><i class="fa-solid fa-face-frown"></i></div>
+            <h2 data-i18n="gameoverTitle">Hết Lượt Đi!</h2>
+            <p id="gameover-reason"></p>
+            <div class="modal-stats" id="gameover-stats"></div>
+            <div id="gameover-record" class="record-box hidden"></div>
+            <div id="gameover-share" class="share-box"></div>
+            <button id="btn-retry" class="btn btn-primary">
+                <span data-i18n="btnRetry">Thử Lại</span> <i class="fa-solid fa-rotate-right"></i>
+            </button>
+            <button id="btn-gameover-map" class="btn btn-secondary" data-i18n="btnMap">Về bản đồ màn chơi</button>
+        </div>
+    </div>
+
+    <!-- Level Select Modal -->
+    <div id="modal-levels" class="modal-overlay hidden">
+        <div class="modal-content glass-card pop-in wide">
+            <div class="modal-icon text-purple"><i class="fa-solid fa-map-location-dot"></i></div>
+            <h2 data-i18n="mapTitle">Bản Đồ Màn Chơi</h2>
+            <p data-i18n="mapSub">Hoàn thành từng màn để mở khoá thử thách tiếp theo.</p>
+            <div id="level-grid" class="level-grid"></div>
+            <button id="btn-close-levels" class="btn btn-secondary" data-i18n="btnClose">Đóng</button>
+        </div>
+    </div>
+
+    <!-- Bảng Vàng -->
+    <div id="modal-scores" class="modal-overlay hidden">
+        <div class="modal-content glass-card pop-in wide">
+            <div class="modal-icon text-gold"><i class="fa-solid fa-trophy"></i></div>
+            <h2 data-i18n="scoresTitle">Bảng Vàng</h2>
+            <p data-i18n="scoresSub">Mười thành tích cao nhất, lưu ngay trên máy bạn.</p>
+            <div id="score-list" class="score-list"></div>
+            <button id="btn-close-scores" class="btn btn-secondary" data-i18n="btnClose">Đóng</button>
+        </div>
+    </div>
+
+    <!-- Thông báo nổi -->
+    <div id="toast" class="toast"></div>
+
+    <script src="game.js"></script>
+</body>
+</html>
