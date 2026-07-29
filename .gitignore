@@ -9,3 +9,6 @@
 # Log & thư mục tạm
 *.log
 tmp/
+
+# Địa chỉ public tạm thời do start-public.command tạo ra
+.public-url.txt

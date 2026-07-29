@@ -29,26 +29,26 @@
                 <button id="btn-theory" class="btn btn-yellow">
                     <i class="fa-solid fa-book-open"></i> <span>Ghi Nhớ</span>
                 </button>
+                <button id="btn-voice" class="btn btn-blue">
+                    <i class="fa-solid fa-microphone-lines"></i> <span>Giọng Đọc</span>
+                </button>
                 <button id="btn-sound" class="btn">
                     <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
                 </button>
                 <button id="btn-reset" class="btn" title="Xoá tiến trình đã lưu">
                     <i class="fa-solid fa-arrows-rotate"></i> <span>Học Lại</span>
                 </button>
-                <a href="index.html" class="btn btn-primary">
-                    <i class="fa-solid fa-house"></i> <span>Trang Chọn Game</span>
-                </a>
             </div>
         </header>
 
         <!-- ============ SCREEN: MAP ============ -->
         <section id="screen-map" class="screen active">
             <div class="hero">
-                <div class="hero-badge">🗺️ Bản đồ hành trình · 7 chặng</div>
+                <div class="hero-badge">🗺️ Bản đồ hành trình · 8 chặng · 20 động từ</div>
                 <h2 class="hero-title">Chinh Phục Thì Hiện Tại Hoàn Thành</h2>
                 <p class="hero-sub">
-                    Học từ mới có tranh minh hoạ &amp; phát âm, luyện ngữ pháp, ghép câu, nối từ,
-                    nghe điền từ và đọc hiểu — tất cả trong một cuộc phiêu lưu.
+                    Học <b>20 động từ bất quy tắc</b> có tranh minh hoạ &amp; phát âm, luyện ngữ pháp,
+                    ghép câu, nối từ, nghe điền từ và đọc hiểu — tất cả trong một cuộc phiêu lưu.
                 </p>
             </div>
 
@@ -59,7 +59,7 @@
                 </div>
                 <div class="stat-chip stat-star">
                     <span class="stat-ic">⭐</span>
-                    <div><b id="stat-stars">0/21</b><small>Sao đã đạt</small></div>
+                    <div><b id="stat-stars">0/24</b><small>Sao đã đạt</small></div>
                 </div>
                 <div class="stat-chip stat-fire">
                     <span class="stat-ic">🔥</span>
@@ -67,7 +67,21 @@
                 </div>
                 <div class="stat-chip stat-done">
                     <span class="stat-ic">🏁</span>
-                    <div><b id="stat-done">0/7</b><small>Chặng hoàn thành</small></div>
+                    <div><b id="stat-done">0/8</b><small>Chặng hoàn thành</small></div>
+                </div>
+            </div>
+
+            <div id="resume-bar" class="resume-bar">
+                <div class="rs-info">
+                    <span class="rs-icon">⏸️</span>
+                    <div>
+                        <b id="rs-title">Bé đang học dở một chặng</b>
+                        <small id="rs-sub"></small>
+                    </div>
+                </div>
+                <div class="rs-actions">
+                    <button id="btn-resume" class="rs-go">▶ HỌC TIẾP</button>
+                    <button id="btn-drop" class="rs-drop" title="Bỏ lượt học dở này">✕</button>
                 </div>
             </div>
 
@@ -173,9 +187,58 @@
             </div>
 
             <div class="theory-block">
-                <h4>4. Bảng động từ bất quy tắc hay gặp</h4>
+                <h4>4. Bảng 20 động từ bất quy tắc cần thuộc</h4>
+                <div class="verb-legend">
+                    <span>#</span><span></span><span>V1</span><span>V2</span><span>V3</span><span>Nghĩa</span>
+                </div>
                 <div id="theory-verbs" class="verb-table"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- ============ MODAL: VOICE ============ -->
+    <div id="modal-voice" class="modal">
+        <div class="modal-card modal-mid">
+            <button class="modal-close" data-close="modal-voice"><i class="fa-solid fa-xmark"></i></button>
+            <h2 class="modal-title">🎙️ Chọn Giọng Đọc</h2>
+            <p class="res-sub">Bấm ▶ nghe thử từng giọng, rồi chọn giọng nào nghe tự nhiên nhất nhé.</p>
+
+            <div class="speed-row">
+                <span class="speed-label">Tốc độ đọc</span>
+                <div class="speed-btns">
+                    <button class="speed-btn" data-rate="0.6">🐢 Chậm</button>
+                    <button class="speed-btn" data-rate="0.85">🚶 Vừa</button>
+                    <button class="speed-btn" data-rate="1">🐇 Bình thường</button>
+                </div>
+            </div>
+
+            <div id="voice-list" class="voice-list"></div>
+
+            <details class="voice-help">
+                <summary>😕 Nghe vẫn như robot? Bấm vào đây</summary>
+                <div class="voice-help-body">
+                    <p>Giọng đọc là <b>của thiết bị</b>, không phải của trang web. Máy chưa tải giọng cao cấp
+                       thì chỉ có giọng nén đời cũ nghe rất máy móc. Tải thêm giọng <b>miễn phí</b> như sau:</p>
+
+                    <p class="vh-title">🖥️ Trên máy Mac</p>
+                    <ol>
+                        <li>Mở <b>Cài đặt Hệ thống</b> → <b>Trợ năng</b> → <b>Nội dung đọc</b></li>
+                        <li>Ở mục <b>Giọng nói hệ thống</b>, bấm <b>Quản lý giọng nói…</b></li>
+                        <li>Mở phần <b>English (US)</b>, tải các giọng có chữ
+                            <b>(Premium)</b> hoặc <b>(Enhanced)</b> — gợi ý: <b>Ava</b>, <b>Zoe</b>, <b>Allison</b>, <b>Samantha</b></li>
+                        <li>Tải xong, <b>tải lại trang này</b> rồi quay lại đây chọn giọng mới</li>
+                    </ol>
+
+                    <p class="vh-title">📱 Trên iPad / iPhone</p>
+                    <ol>
+                        <li><b>Cài đặt</b> → <b>Trợ năng</b> → <b>Nội dung đọc</b> → <b>Giọng nói</b> → <b>English</b></li>
+                        <li>Tải giọng có chữ <b>(Nâng cao)</b> hoặc <b>(Cao cấp)</b></li>
+                    </ol>
+
+                    <p class="vh-tip">💡 Mẹo nhanh: mở bài học bằng <b>Google Chrome</b> — Chrome có sẵn giọng
+                       <b>Google US English</b> chạy qua mạng, nghe tự nhiên hơn hẳn giọng cài sẵn của máy.</p>
+                </div>
+            </details>
         </div>
     </div>
 
