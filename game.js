@@ -350,6 +350,23 @@ const I18N = {
         btnRestart: 'Chơi Lại',
         btnSound: 'Âm Thanh',
         btnMusic: 'Nhạc Nền',
+        btnScores: 'Bảng Vàng',
+        scoresTitle: 'Bảng Vàng',
+        scoresSub: 'Mười thành tích cao nhất, lưu ngay trên máy bạn.',
+        scoresEmpty: 'Chưa có ai ghi danh. Hãy là người đầu tiên!',
+        scoreLevelShort: 'Màn {n}',
+        anonymous: 'Người chơi ẩn danh',
+        recordPrompt: 'Thành tích này lọt Bảng Vàng — ghi danh nhé!',
+        recordPlaceholder: 'Tên của bạn',
+        recordSave: 'Ghi danh',
+        recordSaved: 'Đã ghi danh — hạng #{rank}!',
+        shareTitle: 'Khoe thành tích',
+        shareNative: 'Chia sẻ',
+        shareCopy: 'Sao chép',
+        shareText: '🍉 Mình vừa đạt {score} điểm ở Màn {level} trong Fruit Crush Deluxe!{stars} Bạn phá được kỷ lục này không?',
+        shareNeedsHost: 'Cần đăng trò chơi lên mạng mới chia sẻ Facebook được',
+        copied: 'Đã sao chép!',
+        copyFailed: 'Không sao chép được',
         devBadge: 'CHẾ ĐỘ THỬ MÀN',
         musicOn: 'Nhạc nền: bản "{theme}"',
         musicOff: 'Đã tắt nhạc nền',
@@ -411,6 +428,23 @@ const I18N = {
         btnRestart: 'Restart',
         btnSound: 'Sound',
         btnMusic: 'Music',
+        btnScores: 'Hall of Fame',
+        scoresTitle: 'Hall of Fame',
+        scoresSub: 'The ten best runs, saved right on your own device.',
+        scoresEmpty: 'Nobody here yet. Be the first!',
+        scoreLevelShort: 'Lv {n}',
+        anonymous: 'Anonymous',
+        recordPrompt: 'This run makes the Hall of Fame!',
+        recordPlaceholder: 'Your name',
+        recordSave: 'Add my name',
+        recordSaved: 'Saved — rank #{rank}!',
+        shareTitle: 'Show it off',
+        shareNative: 'Share',
+        shareCopy: 'Copy',
+        shareText: '🍉 I just scored {score} points on level {level} of Fruit Crush Deluxe!{stars} Think you can beat that?',
+        shareNeedsHost: 'Facebook sharing needs the game hosted online',
+        copied: 'Copied!',
+        copyFailed: 'Could not copy',
         devBadge: 'LEVEL TEST MODE',
         musicOn: 'Music: "{theme}" theme',
         musicOff: 'Music is off',
@@ -1249,6 +1283,7 @@ const devBadge = document.getElementById('dev-badge');
 const btnRestart = document.getElementById('btn-restart');
 const btnSound = document.getElementById('btn-sound');
 const btnLevels = document.getElementById('btn-levels');
+const btnScores = document.getElementById('btn-scores');
 const btnLang = document.getElementById('btn-lang');
 const btnMusic = document.getElementById('btn-music');
 const musicIcon = document.getElementById('music-icon');
@@ -1258,6 +1293,7 @@ const soundIcon = document.getElementById('sound-icon');
 const modalVictory = document.getElementById('modal-victory');
 const modalGameOver = document.getElementById('modal-gameover');
 const modalLevels = document.getElementById('modal-levels');
+const modalScores = document.getElementById('modal-scores');
 const modalIntro = document.getElementById('modal-intro');
 
 const btnNextLevel = document.getElementById('btn-next-level');
@@ -1273,6 +1309,13 @@ const victoryStars = document.getElementById('victory-stars');
 const gameoverStatsEl = document.getElementById('gameover-stats');
 const gameoverReasonEl = document.getElementById('gameover-reason');
 const levelGridEl = document.getElementById('level-grid');
+const scoreListEl = document.getElementById('score-list');
+const toastEl = document.getElementById('toast');
+const btnCloseScores = document.getElementById('btn-close-scores');
+const victoryRecordEl = document.getElementById('victory-record');
+const victoryShareEl = document.getElementById('victory-share');
+const gameoverRecordEl = document.getElementById('gameover-record');
+const gameoverShareEl = document.getElementById('gameover-share');
 const introLevelEl = document.getElementById('intro-level');
 const introDescEl = document.getElementById('intro-desc');
 const introGoalsEl = document.getElementById('intro-goals');
@@ -1752,6 +1795,7 @@ function applyLanguage() {
         renderGameOverContent();
     }
     if (!modalLevels.classList.contains('hidden')) renderLevelMap();
+    if (!modalScores.classList.contains('hidden')) renderScoreBoard();
 }
 
 function setLanguage(next) {
@@ -1799,6 +1843,11 @@ function showIntroModal() {
 function renderVictoryContent() {
     victoryMsgEl.innerHTML = t('victoryMsg', { level: state.levelIndex + 1 });
     victoryStatsEl.textContent = `${t('scoreLabel')}: ${state.score}`;
+    renderEndgamePanel(victoryRecordEl, victoryShareEl, {
+        score: state.score,
+        level: state.levelIndex + 1,
+        stars: starCount(),
+    });
 }
 
 function renderGameOverContent() {
@@ -1806,6 +1855,11 @@ function renderGameOverContent() {
     gameoverStatsEl.textContent = t('gameoverStats', {
         score: state.score,
         target: state.config.target,
+    });
+    renderEndgamePanel(gameoverRecordEl, gameoverShareEl, {
+        score: state.score,
+        level: state.levelIndex + 1,
+        stars: 0,
     });
 }
 
@@ -2938,7 +2992,296 @@ document.addEventListener('visibilitychange', () => {
 window.fruitCrushAudio = () => sound.status();
 
 /* ============================================================
- *  19. CHẾ ĐỘ THỬ MÀN (dành cho người làm game)
+ *  19. BẢNG VÀNG (ghi danh điểm cao) & CHIA SẺ
+ * ============================================================ */
+
+const SCORES_KEY = 'fruitCrushScores';
+const NAME_KEY = 'fruitCrushPlayerName';
+const MAX_SCORES = 10;
+const MAX_NAME_LENGTH = 16;
+
+// Đọc bảng điểm đã lưu, bỏ qua mọi dữ liệu hỏng để không làm gãy trò chơi
+function loadScores() {
+    try {
+        const raw = localStorage.getItem(SCORES_KEY);
+        if (!raw) return [];
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data)) return [];
+        return data
+            .filter(e => e && typeof e.score === 'number' && Number.isFinite(e.score))
+            .map(e => ({
+                name: String(e.name || '').slice(0, MAX_NAME_LENGTH) || t('anonymous'),
+                level: Number(e.level) || 1,
+                score: Math.max(0, Math.floor(e.score)),
+                date: Number(e.date) || 0,
+            }))
+            .sort(compareScores)
+            .slice(0, MAX_SCORES);
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveScores(entries) {
+    try {
+        localStorage.setItem(SCORES_KEY, JSON.stringify(entries.slice(0, MAX_SCORES)));
+    } catch (e) { /* bỏ qua: hết dung lượng hoặc bị chặn */ }
+}
+
+// Điểm cao đứng trước; bằng điểm thì màn cao hơn thắng; vẫn bằng thì ai ghi trước đứng trước
+function compareScores(a, b) {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.level !== a.level) return b.level - a.level;
+    return a.date - b.date;
+}
+
+// Điểm này có lọt vào bảng vàng không? (bảng chưa đầy thì luôn lọt)
+function qualifiesForBoard(score, level = 1) {
+    if (!(score > 0)) return false;
+    const entries = loadScores();
+    if (entries.length < MAX_SCORES) return true;
+    const last = entries[entries.length - 1];
+    return compareScores({ score, level, date: Date.now() }, last) < 0;
+}
+
+function sanitizeName(name) {
+    const clean = String(name == null ? '' : name)
+        .replace(/[\u0000-\u001F\u007F]/g, '')   // bỏ ký tự điều khiển
+        .replace(/[<>]/g, '')                      // bỏ dấu ngoặc thẻ HTML
+        .trim()
+        .slice(0, MAX_NAME_LENGTH);
+    return clean || t('anonymous');
+}
+
+/**
+ * Ghi một thành tích vào bảng vàng.
+ * Trả về { rank, entries } — rank là thứ hạng 1-based, hoặc 0 nếu không lọt bảng.
+ */
+function addScore({ name, level, score, date = Date.now() }) {
+    const entry = {
+        name: sanitizeName(name),
+        level: Math.max(1, Math.floor(level) || 1),
+        score: Math.max(0, Math.floor(score) || 0),
+        date,
+    };
+
+    const entries = loadScores();
+    entries.push(entry);
+    entries.sort(compareScores);
+    const kept = entries.slice(0, MAX_SCORES);
+    saveScores(kept);
+
+    const rank = kept.indexOf(entry) + 1;   // 0 nếu bị đẩy khỏi bảng
+    return { rank, entries: kept, entry };
+}
+
+function loadPlayerName() {
+    try { return localStorage.getItem(NAME_KEY) || ''; } catch (e) { return ''; }
+}
+
+function savePlayerName(name) {
+    try { localStorage.setItem(NAME_KEY, name); } catch (e) { /* bỏ qua */ }
+}
+
+/* ---------------- Chia sẻ ---------------- */
+
+// Facebook chỉ nhận đường dẫn http(s); mở từ tệp trên máy thì không chia sẻ được
+function shareableUrl() {
+    try {
+        const proto = window.location.protocol;
+        if (proto === 'http:' || proto === 'https:') {
+            return window.location.origin + window.location.pathname;
+        }
+    } catch (e) { /* bỏ qua */ }
+    return '';
+}
+
+function buildShareText({ score, level, stars = 0 }) {
+    const starText = stars > 0 ? ' ' + '⭐'.repeat(stars) : '';
+    return t('shareText', {
+        score: score.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US'),
+        level,
+        stars: starText,
+    });
+}
+
+function facebookShareUrl(url) {
+    return 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url);
+}
+
+function twitterShareUrl(text, url) {
+    const params = ['text=' + encodeURIComponent(text), 'hashtags=FruitCrushDeluxe'];
+    if (url) params.push('url=' + encodeURIComponent(url));
+    return 'https://x.com/intent/post?' + params.join('&');
+}
+
+// Sao chép có đường lui cho ngữ cảnh không bảo mật (mở tệp bằng file://)
+async function copyToClipboard(text) {
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+    } catch (e) { /* thử cách cũ bên dưới */ }
+
+    try {
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        const ok = document.execCommand('copy');
+        area.remove();
+        return ok;
+    } catch (e) {
+        return false;
+    }
+}
+
+let toastTimer = null;
+
+function showToast(message, kind = '') {
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.className = 'toast show' + (kind ? ' ' + kind : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { toastEl.className = 'toast'; }, 2200);
+}
+
+/* ---------------- Giao diện bảng vàng ---------------- */
+
+const MEDALS = ['🥇', '🥈', '🥉'];
+
+function formatScoreDate(ms) {
+    if (!ms) return '';
+    try {
+        return new Date(ms).toLocaleDateString(lang === 'vi' ? 'vi-VN' : 'en-US',
+            { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch (e) {
+        return '';
+    }
+}
+
+function renderScoreBoard(highlightDate = null) {
+    if (!scoreListEl) return;
+    const entries = loadScores();
+
+    if (!entries.length) {
+        scoreListEl.innerHTML = `<p class="score-empty">${t('scoresEmpty')}</p>`;
+        return;
+    }
+
+    scoreListEl.innerHTML = entries.map((e, i) => {
+        const medal = MEDALS[i] || `<span class="score-rank">${i + 1}</span>`;
+        const isNew = highlightDate && e.date === highlightDate;
+        return `
+            <div class="score-row${i < 3 ? ' top-' + (i + 1) : ''}${isNew ? ' is-new' : ''}">
+                <div class="score-medal">${medal}</div>
+                <div class="score-name">${escapeHtml(e.name)}</div>
+                <div class="score-meta">${t('scoreLevelShort', { n: e.level })}</div>
+                <div class="score-points">${e.score.toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}</div>
+                <div class="score-date">${formatScoreDate(e.date)}</div>
+            </div>`;
+    }).join('');
+}
+
+// Tên do người chơi tự nhập nên phải thoát ký tự trước khi ghép vào HTML
+function escapeHtml(text) {
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+/**
+ * Dựng phần "ghi danh + chia sẻ" ở cuối modal Thắng hoặc Thua.
+ */
+function renderEndgamePanel(recordEl, shareEl, ctx) {
+    const { score, level, stars } = ctx;
+    const text = buildShareText({ score, level, stars });
+    const url = shareableUrl();
+
+    // --- Ghi danh ---
+    if (recordEl) {
+        if (qualifiesForBoard(score, level)) {
+            recordEl.classList.remove('hidden');
+            recordEl.innerHTML = `
+                <div class="record-title"><i class="fa-solid fa-medal"></i> ${t('recordPrompt')}</div>
+                <div class="record-form">
+                    <input class="record-input" type="text" maxlength="${MAX_NAME_LENGTH}"
+                           placeholder="${t('recordPlaceholder')}" value="${escapeHtml(loadPlayerName())}">
+                    <button class="btn btn-primary record-save">${t('recordSave')}</button>
+                </div>`;
+
+            const input = recordEl.querySelector('.record-input');
+            const save = () => {
+                const name = sanitizeName(input.value);
+                savePlayerName(name === t('anonymous') ? '' : name);
+                const { rank, entry } = addScore({ name, level, score });
+                recordEl.innerHTML =
+                    `<div class="record-done"><i class="fa-solid fa-circle-check"></i> ` +
+                    `${t('recordSaved', { rank: rank || MAX_SCORES })}</div>`;
+                renderScoreBoard(entry.date);
+                sound.playStar(1);
+            };
+
+            recordEl.querySelector('.record-save').addEventListener('click', save);
+            input.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
+            setTimeout(() => input.focus(), 350);
+        } else {
+            recordEl.classList.add('hidden');
+            recordEl.innerHTML = '';
+        }
+    }
+
+    // --- Chia sẻ ---
+    if (!shareEl) return;
+    const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+    shareEl.innerHTML = `
+        <div class="share-title">${t('shareTitle')}</div>
+        <div class="share-row">
+            ${canNativeShare ? `<button class="share-btn share-native"><i class="fa-solid fa-share-nodes"></i> ${t('shareNative')}</button>` : ''}
+            <button class="share-btn share-fb"${url ? '' : ' disabled title="' + t('shareNeedsHost') + '"'}><i class="fa-brands fa-facebook-f"></i> Facebook</button>
+            <button class="share-btn share-x"><i class="fa-brands fa-x-twitter"></i></button>
+            <button class="share-btn share-copy"><i class="fa-solid fa-copy"></i> ${t('shareCopy')}</button>
+        </div>`;
+
+    const nativeBtn = shareEl.querySelector('.share-native');
+    if (nativeBtn) {
+        nativeBtn.addEventListener('click', async () => {
+            try {
+                await navigator.share({ title: 'Fruit Crush Deluxe', text, url: url || undefined });
+            } catch (e) { /* người chơi bấm huỷ — không cần báo gì */ }
+        });
+    }
+
+    shareEl.querySelector('.share-fb').addEventListener('click', () => {
+        if (!url) { showToast(t('shareNeedsHost'), 'warn'); return; }
+        openShareWindow(facebookShareUrl(url));
+    });
+
+    shareEl.querySelector('.share-x').addEventListener('click', () => {
+        openShareWindow(twitterShareUrl(text, url));
+    });
+
+    shareEl.querySelector('.share-copy').addEventListener('click', async () => {
+        const full = url ? `${text}\n${url}` : text;
+        const ok = await copyToClipboard(full);
+        showToast(ok ? t('copied') : t('copyFailed'), ok ? '' : 'warn');
+    });
+}
+
+function openShareWindow(url) {
+    window.open(url, '_blank', 'noopener,noreferrer,width=620,height=560');
+}
+
+/* ============================================================
+ *  20. CHẾ ĐỘ THỬ MÀN (dành cho người làm game)
  *
  *  Bật bằng địa chỉ  ?dev=1  hoặc gõ  fruitCrush.on()  trong Console.
  *  Khi bật: bản đồ mở khoá toàn bộ màn và có huy hiệu DEV ở góc màn hình.
@@ -2987,6 +3330,16 @@ const dev = {
         progress = { unlocked: 1, stars: {} };
         saveProgress(progress);
         return 'Đã xoá sạch tiến trình';
+    },
+    clearScores() {
+        saveScores([]);
+        renderScoreBoard();
+        return 'Đã xoá Bảng Vàng';
+    },
+    addFakeScore(name, level, score) {
+        const { rank } = addScore({ name, level, score });
+        renderScoreBoard();
+        return `Đã thêm ${name} — hạng ${rank || 'ngoài bảng'}`;
     },
 
     // --- nắn trạng thái màn đang chơi để thử nhanh ---
@@ -3090,6 +3443,8 @@ const dev = {
             '  fruitCrush.replay()           chơi lại màn hiện tại',
             '  fruitCrush.unlockAll()        mở khoá toàn bộ bản đồ',
             '  fruitCrush.resetProgress()    xoá sạch tiến trình đã lưu',
+            '  fruitCrush.clearScores()      xoá Bảng Vàng',
+            '  fruitCrush.addFakeScore(...)  thêm điểm giả để soát bảng',
             '  fruitCrush.levels()           bảng thiết kế của cả 20 màn',
             '  fruitCrush.status()           tình trạng màn đang chơi',
             '  fruitCrush.moves(3)           đặt số lượt còn lại',
@@ -3159,6 +3514,13 @@ btnLevels.addEventListener('click', () => {
 });
 
 btnCloseLevels.addEventListener('click', () => hideModal(modalLevels));
+
+btnScores.addEventListener('click', () => {
+    renderScoreBoard();
+    showModal(modalScores);
+});
+
+btnCloseScores.addEventListener('click', () => hideModal(modalScores));
 
 btnStart.addEventListener('click', () => {
     sound.init();

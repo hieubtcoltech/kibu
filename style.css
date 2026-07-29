@@ -1094,3 +1094,254 @@ body {
 }
 
 .dev-badge.hidden { display: none; }
+
+/* ===================== BẢNG VÀNG ===================== */
+.score-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0;
+    max-height: 46vh;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.score-empty {
+    padding: 24px 0;
+    color: var(--text-muted);
+}
+
+.score-row {
+    display: grid;
+    grid-template-columns: 38px 1fr auto auto;
+    grid-template-areas: 'medal name meta points' 'medal date date points';
+    align-items: center;
+    gap: 2px 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: left;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.score-row:hover { transform: translateX(3px); }
+
+.score-medal {
+    grid-area: medal;
+    font-size: 1.5rem;
+    line-height: 1;
+    text-align: center;
+}
+
+.score-rank {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+.score-name {
+    grid-area: name;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.score-meta {
+    grid-area: meta;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.score-points {
+    grid-area: points;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #ffd93d;
+    font-variant-numeric: tabular-nums;
+}
+
+.score-date {
+    grid-area: date;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    opacity: 0.75;
+}
+
+/* Huy chương Vàng, Bạc, Đồng cho ba hạng đầu */
+.score-row.top-1 {
+    background: linear-gradient(100deg, rgba(255, 215, 0, 0.18), rgba(255, 255, 255, 0.04));
+    border-color: rgba(255, 215, 0, 0.5);
+    box-shadow: 0 0 18px rgba(255, 215, 0, 0.18);
+}
+.score-row.top-2 {
+    background: linear-gradient(100deg, rgba(200, 210, 225, 0.16), rgba(255, 255, 255, 0.04));
+    border-color: rgba(200, 210, 225, 0.45);
+}
+.score-row.top-3 {
+    background: linear-gradient(100deg, rgba(205, 127, 50, 0.16), rgba(255, 255, 255, 0.04));
+    border-color: rgba(205, 127, 50, 0.45);
+}
+
+/* Dòng vừa ghi danh xong thì nháy lên cho dễ thấy */
+.score-row.is-new { animation: scoreHighlight 1.6s ease-out; }
+
+@keyframes scoreHighlight {
+    0% { transform: scale(0.94); box-shadow: 0 0 0 rgba(0, 240, 255, 0); }
+    25% { transform: scale(1.03); box-shadow: 0 0 26px rgba(0, 240, 255, 0.7); }
+    100% { transform: scale(1); box-shadow: 0 0 0 rgba(0, 240, 255, 0); }
+}
+
+/* ===================== GHI DANH ===================== */
+.record-box {
+    width: 100%;
+    padding: 16px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.12), rgba(255, 255, 255, 0.04));
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    animation: recordAppear 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.4);
+}
+
+.record-box.hidden { display: none; }
+
+@keyframes recordAppear {
+    0% { transform: translateY(14px) scale(0.94); opacity: 0; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.record-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #ffd93d;
+    margin-bottom: 10px;
+}
+
+.record-form { display: flex; gap: 8px; }
+
+.record-input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.record-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+
+.record-input:focus {
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(0, 240, 255, 0.18);
+}
+
+.record-form .btn { width: auto; padding: 12px 20px; white-space: nowrap; }
+
+.record-done {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #39ff14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    animation: recordAppear 0.4s ease-out;
+}
+
+/* ===================== CHIA SẺ ===================== */
+.share-box { width: 100%; }
+
+.share-title {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.share-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.share-btn {
+    flex: 1 1 auto;
+    min-width: 104px;
+    padding: 11px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.share-btn:hover:not([disabled]) { transform: translateY(-2px); }
+.share-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+.share-native {
+    background: linear-gradient(135deg, #39ff14, #00c853);
+    color: #05210a;
+    border-color: transparent;
+}
+.share-native:hover { box-shadow: 0 6px 18px rgba(57, 255, 20, 0.4); }
+
+.share-fb { background: #1877f2; border-color: transparent; }
+.share-fb:hover:not([disabled]) { box-shadow: 0 6px 18px rgba(24, 119, 242, 0.5); }
+
+.share-x { background: #000; border-color: rgba(255, 255, 255, 0.25); }
+.share-x:hover { box-shadow: 0 6px 18px rgba(255, 255, 255, 0.22); }
+
+.share-copy:hover { background: rgba(255, 255, 255, 0.15); }
+
+/* ===================== THÔNG BÁO NỔI ===================== */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 32px;
+    transform: translate(-50%, 24px);
+    z-index: 300;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #05210a;
+    background: linear-gradient(135deg, #39ff14, #00e5a0);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+.toast.warn {
+    color: #2a1500;
+    background: linear-gradient(135deg, #ffd93d, #ff9f43);
+}
+
+@media (max-width: 560px) {
+    .score-row { grid-template-columns: 32px 1fr auto; }
+    .score-points { font-size: 1.1rem; }
+    .record-form { flex-direction: column; }
+    .record-form .btn { width: 100%; }
+}

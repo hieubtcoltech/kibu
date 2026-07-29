@@ -11,7 +11,7 @@
          game xếp kẹo, và cả hai đều có subset vietnamese đầy đủ dấu -->
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -65,6 +65,15 @@
                     <div id="objectives" class="objective-list"></div>
                     <div id="gravity-badge" class="gravity-badge hidden"></div>
                 </div>
+
+                <div class="glass-card guide-card">
+                    <h3><i class="fa-solid fa-circle-info"></i> <span data-i18n="howTitle">Cách chơi</span></h3>
+                    <ul>
+                        <li data-i18n="how1">Chạm chọn hoặc vuốt hai quả cạnh nhau để tráo đổi.</li>
+                        <li data-i18n-html="how2">Hoàn thành mục tiêu thu thập <b>và</b> đạt điểm trước khi hết lượt.</li>
+                        <li data-i18n="how3">Kết hợp hai quả đặc biệt cạnh nhau để tạo vụ nổ cực lớn!</li>
+                    </ul>
+                </div>
             </section>
 
             <!-- Game Board Container -->
@@ -87,6 +96,9 @@
                 </button>
                 <button id="btn-levels" class="btn btn-secondary glass-btn">
                     <i class="fa-solid fa-map"></i> <span data-i18n="btnLevels">Chọn Màn</span>
+                </button>
+                <button id="btn-scores" class="btn btn-secondary glass-btn">
+                    <i class="fa-solid fa-trophy text-gold"></i> <span data-i18n="btnScores">Bảng Vàng</span>
                 </button>
                 <button id="btn-restart" class="btn btn-secondary glass-btn">
                     <i class="fa-solid fa-rotate-right"></i> <span data-i18n="btnRestart">Chơi Lại</span>
@@ -115,15 +127,6 @@
                         <li><span class="legend-badge legend-crate">📦</span><span data-i18n-html="obCrate"><b>Thùng gỗ</b> — không tráo được, phải cho nổ ở ô ngay cạnh nó.</span></li>
                         <li><span class="legend-badge legend-harvest">🥥</span><span data-i18n-html="obHarvest"><b>Dừa</b> — dọn đường cho nó rơi tới mép bàn theo chiều trọng lực.</span></li>
                         <li><span class="legend-badge legend-gravity">🔄</span><span data-i18n-html="obGravity"><b>Đảo trọng lực</b> — cứ vài lượt là cả bàn rơi ngược chiều!</span></li>
-                    </ul>
-                </div>
-
-                <div class="glass-card guide-card">
-                    <h3><i class="fa-solid fa-circle-info"></i> <span data-i18n="howTitle">Cách chơi</span></h3>
-                    <ul>
-                        <li data-i18n="how1">Chạm chọn hoặc vuốt hai quả cạnh nhau để tráo đổi.</li>
-                        <li data-i18n-html="how2">Hoàn thành mục tiêu thu thập <b>và</b> đạt điểm trước khi hết lượt.</li>
-                        <li data-i18n="how3">Kết hợp hai quả đặc biệt cạnh nhau để tạo vụ nổ cực lớn!</li>
                     </ul>
                 </div>
             </section>
@@ -157,6 +160,8 @@
                 <i class="fa-solid fa-star star" data-star="3"></i>
             </div>
             <div class="modal-stats" id="victory-stats"></div>
+            <div id="victory-record" class="record-box hidden"></div>
+            <div id="victory-share" class="share-box"></div>
             <button id="btn-next-level" class="btn btn-primary">
                 <span data-i18n="btnNext">Màn Tiếp Theo</span> <i class="fa-solid fa-arrow-right"></i>
             </button>
@@ -171,6 +176,8 @@
             <h2 data-i18n="gameoverTitle">Hết Lượt Đi!</h2>
             <p id="gameover-reason"></p>
             <div class="modal-stats" id="gameover-stats"></div>
+            <div id="gameover-record" class="record-box hidden"></div>
+            <div id="gameover-share" class="share-box"></div>
             <button id="btn-retry" class="btn btn-primary">
                 <span data-i18n="btnRetry">Thử Lại</span> <i class="fa-solid fa-rotate-right"></i>
             </button>
@@ -188,6 +195,20 @@
             <button id="btn-close-levels" class="btn btn-secondary" data-i18n="btnClose">Đóng</button>
         </div>
     </div>
+
+    <!-- Bảng Vàng -->
+    <div id="modal-scores" class="modal-overlay hidden">
+        <div class="modal-content glass-card pop-in wide">
+            <div class="modal-icon text-gold"><i class="fa-solid fa-trophy"></i></div>
+            <h2 data-i18n="scoresTitle">Bảng Vàng</h2>
+            <p data-i18n="scoresSub">Mười thành tích cao nhất, lưu ngay trên máy bạn.</p>
+            <div id="score-list" class="score-list"></div>
+            <button id="btn-close-scores" class="btn btn-secondary" data-i18n="btnClose">Đóng</button>
+        </div>
+    </div>
+
+    <!-- Thông báo nổi (sao chép, nhắc nhở...) -->
+    <div id="toast" class="toast"></div>
 
     <script src="game.js"></script>
 </body>
