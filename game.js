@@ -350,6 +350,7 @@ const I18N = {
         btnRestart: 'Chơi Lại',
         btnSound: 'Âm Thanh',
         btnMusic: 'Nhạc Nền',
+        devBadge: 'CHẾ ĐỘ THỬ MÀN',
         musicOn: 'Nhạc nền: bản "{theme}"',
         musicOff: 'Đã tắt nhạc nền',
         specialsTitle: 'Hoa quả đặc biệt',
@@ -410,6 +411,7 @@ const I18N = {
         btnRestart: 'Restart',
         btnSound: 'Sound',
         btnMusic: 'Music',
+        devBadge: 'LEVEL TEST MODE',
         musicOn: 'Music: "{theme}" theme',
         musicOff: 'Music is off',
         specialsTitle: 'Special fruits',
@@ -1242,6 +1244,7 @@ const objectivesEl = document.getElementById('objectives');
 const starRow = document.getElementById('star-row');
 const comboBanner = document.getElementById('combo-banner');
 const gravityBadge = document.getElementById('gravity-badge');
+const devBadge = document.getElementById('dev-badge');
 
 const btnRestart = document.getElementById('btn-restart');
 const btnSound = document.getElementById('btn-sound');
@@ -1810,7 +1813,7 @@ function renderLevelMap() {
     levelGridEl.innerHTML = '';
     const total = Math.max(LEVELS.length, progress.unlocked + 2);
     for (let i = 0; i < total; i++) {
-        const unlocked = i < progress.unlocked;
+        const unlocked = dev.enabled || i < progress.unlocked;
         const stars = progress.stars[i] || 0;
         const btn = document.createElement('button');
         btn.className = 'level-node' + (unlocked ? '' : ' locked');
@@ -2934,6 +2937,201 @@ document.addEventListener('visibilitychange', () => {
 // Soi trạng thái âm thanh trong console nếu cần: fruitCrushAudio()
 window.fruitCrushAudio = () => sound.status();
 
+/* ============================================================
+ *  19. CHẾ ĐỘ THỬ MÀN (dành cho người làm game)
+ *
+ *  Bật bằng địa chỉ  ?dev=1  hoặc gõ  fruitCrush.on()  trong Console.
+ *  Khi bật: bản đồ mở khoá toàn bộ màn và có huy hiệu DEV ở góc màn hình.
+ *  Nhảy thẳng tới một màn:  ?level=17
+ * ============================================================ */
+
+const DEV_KEY = 'fruitCrushDev';
+
+const dev = {
+    enabled: false,
+
+    // --- bật/tắt ---
+    on() { return this.setEnabled(true); },
+    off() { return this.setEnabled(false); },
+    setEnabled(value) {
+        this.enabled = !!value;
+        try { localStorage.setItem(DEV_KEY, this.enabled ? '1' : '0'); } catch (e) { /* bỏ qua */ }
+        if (devBadge) devBadge.classList.toggle('hidden', !this.enabled);
+        return this.enabled ? 'Đã bật chế độ thử màn / dev mode ON' : 'Đã tắt / dev mode OFF';
+    },
+
+    // --- đi lại giữa các màn ---
+    goto(levelNumber) {
+        const index = Math.max(0, Math.floor(levelNumber) - 1);
+        this.unlockUpTo(index + 1);
+        startLevel(index, false);
+        return this.status();
+    },
+    next() { return this.goto(state.levelIndex + 2); },
+    prev() { return this.goto(state.levelIndex); },
+    replay() { return this.goto(state.levelIndex + 1); },
+
+    // --- tiến trình ---
+    unlockAll() {
+        progress.unlocked = Math.max(progress.unlocked, LEVELS.length + 2);
+        saveProgress(progress);
+        renderLevelMap();
+        return `Đã mở khoá ${progress.unlocked} màn`;
+    },
+    unlockUpTo(n) {
+        progress.unlocked = Math.max(progress.unlocked, n);
+        saveProgress(progress);
+        return progress.unlocked;
+    },
+    resetProgress() {
+        progress = { unlocked: 1, stars: {} };
+        saveProgress(progress);
+        return 'Đã xoá sạch tiến trình';
+    },
+
+    // --- nắn trạng thái màn đang chơi để thử nhanh ---
+    moves(n) { state.moves = Math.max(0, Math.floor(n)); updateUI(); return state.moves; },
+    score(n) { state.score = Math.max(0, Math.floor(n)); updateUI(); return state.score; },
+
+    // Hoàn thành mọi mục tiêu để xem màn hình chiến thắng
+    async win() {
+        if (!state.config) return 'Chưa vào màn nào';
+        state.score = Math.max(state.score, state.config.target);
+        state.config.objectives.forEach(o => {
+            if (o.type === OBJ.FRUIT) state.counters[OBJ.FRUIT][o.fruit] = o.count;
+            else state.counters[o.type] = o.count;
+        });
+        updateUI();
+        await finishTurn();
+        return 'Đã hoàn thành mục tiêu';
+    },
+
+    // Ép thua để xem màn hình hết lượt
+    async lose() {
+        if (!state.config) return 'Chưa vào màn nào';
+        state.moves = 0;
+        await finishTurn();
+        return 'Đã ép hết lượt';
+    },
+
+    // Đặt một quả đặc biệt lên ô bất kỳ để thử combo: gift(3, 4, 'bomb')
+    gift(r, c, kind = 'bomb') {
+        const map = { h: SP.LINE_H, lineH: SP.LINE_H, v: SP.LINE_V, lineV: SP.LINE_V,
+                      bomb: SP.BOMB, rainbow: SP.RAINBOW };
+        const special = map[kind];
+        if (!special) return `Loại không hợp lệ. Dùng: ${Object.keys(map).join(', ')}`;
+        if (!inBounds(r, c)) return 'Toạ độ ngoài bàn cờ';
+        const cell = state.grid[r][c];
+        if (!isFruit(cell)) return 'Ô này là thùng gỗ hoặc dừa, không gắn được';
+        cell.special = special;
+        paintCell(cell);
+        cell.el.classList.add('upgrade');
+        setTimeout(() => cell.el.classList.remove('upgrade'), 600);
+        return `Đã đặt ${kind} tại ${r},${c}`;
+    },
+
+    async flip() { await flipGravity(); return `Trọng lực: ${state.gravity === 1 ? 'xuống' : 'lên'}`; },
+
+    // Phá sạch băng còn lại (để kiểm tra nhanh phần sau của màn)
+    clearFrost() {
+        let n = 0;
+        for (let r = 0; r < GRID; r++) {
+            for (let c = 0; c < GRID; c++) {
+                while (state.frost[r][c] > 0) { breakFrost(r, c); n++; }
+            }
+        }
+        updateUI();
+        return `Đã phá ${n} lớp băng`;
+    },
+
+    // --- xem thông tin ---
+    status() {
+        if (!state.config) return 'Chưa vào màn nào';
+        return {
+            màn: state.levelIndex + 1,
+            lượt: state.moves,
+            điểm: `${state.score}/${state.config.target}`,
+            sao: starCount(),
+            trọngLực: state.gravity === 1 ? 'xuống' : 'lên',
+            nhạc: music.themeName(),
+            mụcTiêu: state.config.objectives.map(o =>
+                `${o.type}${o.type === OBJ.FRUIT ? ' ' + FRUITS[o.fruit].emoji : ''} ` +
+                `${objectiveProgress(o)}/${o.count}`),
+        };
+    },
+
+    // Bảng tổng hợp mọi màn để soát thiết kế
+    levels() {
+        const rows = LEVELS.map((lv, i) => {
+            const cfg = prepareLevel(lv);
+            return {
+                màn: i + 1,
+                lượt: cfg.moves,
+                điểm: cfg.target,
+                màu: cfg.colors,
+                mụcTiêu: cfg.objectives.map(o => `${o.type}:${o.count}`).join(' '),
+                băng: cfg.frostLayers,
+                thùng: cfg.crateCount,
+                dừa: cfg.harvest ? cfg.harvest.total : 0,
+                đảoTrọngLực: cfg.gravityFlip || '',
+                nhạc: cfg.music || '(theo thứ tự)',
+            };
+        });
+        if (console.table) console.table(rows);
+        return rows;
+    },
+
+    help() {
+        const lines = [
+            'Công cụ thử màn — Fruit Crush',
+            '  fruitCrush.on() / .off()      bật, tắt chế độ thử màn',
+            '  fruitCrush.goto(17)           mở thẳng màn 17',
+            '  fruitCrush.next() / .prev()   màn kế / màn trước',
+            '  fruitCrush.replay()           chơi lại màn hiện tại',
+            '  fruitCrush.unlockAll()        mở khoá toàn bộ bản đồ',
+            '  fruitCrush.resetProgress()    xoá sạch tiến trình đã lưu',
+            '  fruitCrush.levels()           bảng thiết kế của cả 20 màn',
+            '  fruitCrush.status()           tình trạng màn đang chơi',
+            '  fruitCrush.moves(3)           đặt số lượt còn lại',
+            '  fruitCrush.win() / .lose()    xem ngay màn thắng / thua',
+            '  fruitCrush.gift(3,4,"bomb")   đặt quả đặc biệt để thử combo',
+            '                                 (h, v, bomb, rainbow)',
+            '  fruitCrush.flip()             đảo trọng lực ngay',
+            '  fruitCrush.clearFrost()       phá sạch băng còn lại',
+            'Địa chỉ: ?dev=1 để bật, ?level=17 để vào thẳng màn 17',
+        ];
+        console.log(lines.join('\n'));
+        return lines.length + ' lệnh';
+    },
+};
+
+window.fruitCrush = dev;
+
+// Đọc thiết lập thử màn từ localStorage và từ địa chỉ trang
+function initDevMode() {
+    let enabled = false;
+    try { enabled = localStorage.getItem(DEV_KEY) === '1'; } catch (e) { /* bỏ qua */ }
+
+    let jumpTo = null;
+    try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has('dev')) enabled = params.get('dev') !== '0';
+        const lv = parseInt(params.get('level'), 10);
+        if (Number.isFinite(lv) && lv > 0) {
+            jumpTo = lv - 1;
+            enabled = params.get('dev') === '0' ? false : true;
+        }
+    } catch (e) { /* bỏ qua */ }
+
+    dev.setEnabled(enabled);
+    if (enabled) {
+        dev.unlockUpTo(LEVELS.length + 2);
+        console.log('%cFruit Crush · chế độ thử màn đang BẬT', 'color:#00f0ff;font-weight:bold');
+        dev.help();
+    }
+    return jumpTo;
+}
+
 btnSound.addEventListener('click', () => {
     const on = sound.toggle();
     soundIcon.className = on ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
@@ -3004,6 +3202,10 @@ window.addEventListener('resize', () => {
 
 window.addEventListener('DOMContentLoaded', () => {
     progress = loadProgress();
+    const jumpTo = initDevMode();
     applyLanguage();
-    startLevel(Math.max(0, progress.unlocked - 1));
+
+    // ?level=N mở thẳng màn đó và bỏ qua màn giới thiệu cho đỡ mất thì giờ
+    if (jumpTo !== null) startLevel(jumpTo, false);
+    else startLevel(Math.max(0, progress.unlocked - 1));
 });
