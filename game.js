@@ -45,6 +45,15 @@ const TILE_FROST1 = '#';
 const TILE_FROST2 = '=';
 const TILE_CRATE = 'X';
 
+// Ô được tặng sẵn quả đặc biệt ngay khi vào màn (dành cho các màn thưởng)
+//   'H' tia ngang   'V' tia dọc   'B' bom   'R' cầu vồng
+const TILE_GIFTS = {
+    H: SP.LINE_H,
+    V: SP.LINE_V,
+    B: SP.BOMB,
+    R: SP.RAINBOW,
+};
+
 const OBJ = {
     FRUIT: 'fruit',       // thu thập N quả loại X
     FROST: 'frost',       // phá sạch băng
@@ -268,6 +277,57 @@ const LEVELS = [
             '..#..#..',
             '.X#..#X.',
             '..#..#..',
+        ],
+    },
+
+    /* ---------- Hai màn đặc biệt khép lại hành trình ---------- */
+    {
+        // Cả bàn phủ băng: mọi cú ghép đều có ích, nhưng lõi băng dày rất lì.
+        // Tặng sẵn hai quả bom để phá tan lớp vỏ ngoài ngay từ nước đầu.
+        moves: 32, target: 12000, colors: 6, music: 'frost',
+        desc: {
+            vi: 'Cung điện băng: cả bàn cờ đóng băng! Hai quả bom được tặng sẵn để bạn mở màn thật giòn giã.',
+            en: 'The ice palace: the whole board is frozen! Two free bombs are waiting to crack it wide open.',
+        },
+        objectives: [{ type: OBJ.FROST }, { type: OBJ.SPECIAL, count: 4 }],
+        layout: [
+            '########',
+            '#======#',
+            '#=####=#',
+            '#=#B.#=#',
+            '#=#.B#=#',
+            '#=####=#',
+            '#======#',
+            '########',
+        ],
+    },
+    {
+        // Màn tổng kết: đủ bốn chướng ngại vật, trọng lực đảo liên tục, và một
+        // kho quả đặc biệt tặng sẵn ở giữa để người chơi mở tiệc pháo hoa.
+        moves: 36, target: 16000, colors: 7, music: 'gravity',
+        desc: {
+            vi: 'Đại tiệc hoa quả: đủ cả băng, thùng gỗ, dừa và trọng lực đảo — kèm một kho quả đặc biệt tặng sẵn giữa bàn!',
+            en: 'The grand feast: frost, crates, coconuts and flipping gravity — plus a stash of free special fruits in the middle!',
+        },
+        objectives: [
+            { type: OBJ.FROST },
+            { type: OBJ.CRATE },
+            { type: OBJ.HARVEST, count: 3 },
+            { type: OBJ.COMBO, count: 4 },
+        ],
+        harvest: { total: 3, onBoard: 2 },
+        gravityFlip: 5,
+        // Cột 0 và 7 để trống hẳn làm hai làn cho dừa rơi; kho quả đặc biệt
+        // nằm giữa, được viền băng và thùng gỗ bao quanh như một rương báu.
+        layout: [
+            '.XX..XX.',
+            '.#....#.',
+            '..X##X..',
+            '..#VB#..',
+            '..#BH#..',
+            '..X##X..',
+            '.#....#.',
+            '.XX..XX.',
         ],
     },
 ];
@@ -772,6 +832,7 @@ class MusicEngine {
         this.step = 0;
         this.nextTime = 0;
         this.pendingLevel = null;   // màn đang chờ âm thanh được mở khoá
+        this.pendingTheme = null;
         this.volume = 0.16;         // nhỏ hơn hẳn hiệu ứng để không át tiếng nổ
 
         try {
@@ -780,21 +841,24 @@ class MusicEngine {
         } catch (e) { /* bỏ qua */ }
     }
 
-    // Bắt đầu nhạc của một màn; nếu trình duyệt chưa mở khoá âm thanh thì chờ
-    play(levelIndex) {
+    // Bắt đầu nhạc của một màn; nếu trình duyệt chưa mở khoá âm thanh thì chờ.
+    // themeName cho phép màn đặc biệt chỉ định hẳn bản nhạc của riêng nó.
+    play(levelIndex, themeName = null) {
         this.pendingLevel = levelIndex;
+        this.pendingTheme = themeName;
         if (!this.enabled) return;
         const ctx = this.sound.init();
         if (!ctx || ctx.state !== 'running') return;
-        this.startNow(levelIndex);
+        this.startNow(levelIndex, themeName);
     }
 
-    startNow(levelIndex) {
+    startNow(levelIndex, themeName = null) {
         const ctx = this.sound.ctx;
         if (!ctx || !this.sound.master) return;
 
         this.stopNow();
-        this.theme = THEMES[levelIndex % THEMES.length];
+        const picked = themeName ? THEMES.findIndex(th => th.name === themeName) : -1;
+        this.theme = THEMES[picked >= 0 ? picked : levelIndex % THEMES.length];
         // dịch giọng theo nhóm màn để cùng một chủ đề vẫn thấy mới
         this.transpose = (Math.floor(levelIndex / THEMES.length) % 4) * 2;
         this.stepDur = 60 / this.theme.bpm / 4;   // mỗi bước là một nốt móc kép
@@ -929,14 +993,14 @@ class MusicEngine {
     // Gọi khi người chơi vừa có cử chỉ đầu tiên: nhạc đang chờ thì cho chạy
     onUnlock() {
         if (this.enabled && !this.playing && this.pendingLevel !== null) {
-            this.startNow(this.pendingLevel);
+            this.startNow(this.pendingLevel, this.pendingTheme);
         }
     }
 
     toggle() {
         this.enabled = !this.enabled;
         try { localStorage.setItem(MUSIC_KEY, this.enabled ? '1' : '0'); } catch (e) { /* bỏ qua */ }
-        if (this.enabled) this.play(this.pendingLevel || 0);
+        if (this.enabled) this.play(this.pendingLevel || 0, this.pendingTheme);
         else this.stop(0.3);
         return this.enabled;
     }
@@ -1444,7 +1508,7 @@ function startLevel(index, showIntro = true) {
 
     // Mỗi màn một chủ đề nhạc riêng; nếu trình duyệt chưa mở khoá âm thanh thì
     // nhạc sẽ tự vào ngay khi người chơi chạm lần đầu.
-    music.play(index);
+    music.play(index, state.config.music || null);
 
     if (showIntro) {
         showIntroModal();
@@ -1486,7 +1550,9 @@ function buildGrid() {
         for (let c = 0; c < GRID; c++) {
             let cell;
 
-            if (layoutChar(r, c) === TILE_CRATE) {
+            const ch = layoutChar(r, c);
+
+            if (ch === TILE_CRATE) {
                 cell = createCrate();
             } else {
                 let type;
@@ -1500,7 +1566,8 @@ function buildGrid() {
                     (r >= 2 && isFruit(state.grid[r - 1][c]) && isFruit(state.grid[r - 2][c]) &&
                         state.grid[r - 1][c].type === type && state.grid[r - 2][c].type === type)
                 ));
-                cell = createCell(type);
+                // Màn thưởng có thể tặng sẵn quả đặc biệt ngay tại ô này
+                cell = createCell(type, TILE_GIFTS[ch] || null);
             }
 
             cell.r = r;
@@ -1518,15 +1585,19 @@ function buildGrid() {
         }
     }
 
-    // Thả sẵn vài quả dừa ở hàng đầu theo hướng trọng lực
+    // Thả sẵn vài quả dừa ở hàng đầu theo hướng trọng lực.
+    // Chỉ bốc trong những cột không bị thùng gỗ chiếm chỗ, nếu không thì màn có
+    // hàng đầu nhiều thùng (ví dụ '..XXXX..') sẽ vào màn mà chẳng có quả dừa nào.
     if (state.config.harvest) {
-        const onBoard = Math.min(state.config.harvest.onBoard || 1, state.harvestLeft);
-        const columns = shuffled(range(GRID)).slice(0, onBoard);
-        columns.forEach(c => {
-            const r = entryRow();
-            const old = state.grid[r][c];
-            if (!old || old.kind === KIND.CRATE) return;
-            old.el.remove();
+        const r = entryRow();
+        const freeCols = range(GRID).filter(c => {
+            const cell = state.grid[r][c];
+            return cell && cell.kind !== KIND.CRATE;
+        });
+        const onBoard = Math.min(state.config.harvest.onBoard || 1, state.harvestLeft, freeCols.length);
+
+        shuffled(freeCols).slice(0, onBoard).forEach(c => {
+            state.grid[r][c].el.remove();
             const coconut = createHarvest();
             coconut.r = r;
             coconut.c = c;
@@ -2857,7 +2928,7 @@ document.addEventListener('visibilitychange', () => {
         music.stop(0.3);
     } else {
         sound.init();
-        if (music.enabled && state.started) music.play(state.levelIndex);
+        if (music.enabled && state.started) music.play(state.levelIndex, state.config && state.config.music);
     }
 });
 // Soi trạng thái âm thanh trong console nếu cần: fruitCrushAudio()
