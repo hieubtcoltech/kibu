@@ -1375,6 +1375,23 @@ I <b>have taken</b> forty photos today, but I <b>haven't written</b> my diary ye
             resumeRun();
         });
 
+        $('btn-resume-yes').addEventListener('click', () => {
+            sfx.init();
+            sfx.click();
+            closeModal('modal-resume-confirm');
+            resumeRun();
+        });
+
+        $('btn-resume-no').addEventListener('click', () => {
+            sfx.init();
+            sfx.click();
+            closeModal('modal-resume-confirm');
+            clearRun();
+            showScreen('map');
+            renderMap();
+            showToast('🗑️ Đã bỏ lượt học dở và quay lại bản đồ');
+        });
+
         $('btn-drop').addEventListener('click', () => {
             if (!confirm('Bỏ lượt học dở này? Điểm của lượt đó sẽ không được tính.')) return;
             clearRun();
@@ -1503,8 +1520,15 @@ I <b>have taken</b> forty photos today, but I <b>haven't written</b> my diary ye
         renderMap();
         bindEvents();
 
-        // Tải lại trang giữa chừng -> vào thẳng đúng chỗ bé đang học
-        if (!resumeRun()) {
+        // Tải lại trang giữa chừng -> Kiểm tra lượt học cũ để hỏi bé
+        const found = readRun();
+        if (found) {
+            const { data: d, station: st } = found;
+            const total = st.items.length;
+            const at = Math.min(total, (Number(d.idx) || 0) + (d.answered ? 2 : 1));
+            $('resume-confirm-info').innerHTML = `${st.icon} <b>${st.title}</b><br><small>Đang ở câu ${at}/${total} · ❤️ ${d.hearts} · 💎 ${d.xp}</small>`;
+            openModal('modal-resume-confirm');
+        } else {
             // Không có bài dở, nhưng địa chỉ chỉ tới một chặng -> mở chặng đó
             const st = stationFromHash();
             if (st) startStation(st.id);

@@ -1,0 +1,535 @@
+/* Reset and Base Styles */
+:root {
+    --bg-dark: #030310;
+    --neon-red: #ff3366;
+    --neon-blue: #00f0ff;
+    --neon-green: #39ff14;
+    --neon-yellow: #ffd700;
+    --card-bg: rgba(10, 10, 30, 0.6);
+    --card-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: #ffffff;
+    font-family: 'Orbitron', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Background Stars Animation Overlay */
+.stars-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    background: radial-gradient(circle at center, #0c0c2a 0%, #030310 100%);
+}
+
+/* Game Wrapper Container */
+.game-wrapper {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    max-width: 900px;
+    max-height: 1000px;
+    aspect-ratio: 9/10;
+    background-color: rgba(3, 3, 16, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+@media (max-width: 900px), (max-height: 1000px) {
+    .game-wrapper {
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        aspect-ratio: auto;
+    }
+}
+
+/* Canvas styling */
+#game-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    transition: all 0.3s ease;
+}
+
+/* Full Screen Overlays */
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(3, 3, 16, 0.8);
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    transition: opacity 0.4s ease;
+}
+
+.hidden {
+    display: none !important;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Menu Content & Titles */
+.menu-content {
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    align-items: center;
+}
+
+.logo-title {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-red));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+}
+
+.logo-subtitle {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1rem;
+    color: #8888aa;
+    letter-spacing: 2px;
+}
+
+/* Keyboard / Controls styling */
+.controls-guide {
+    text-align: left;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.controls-guide h3, .ship-select h3 {
+    font-size: 0.9rem;
+    color: var(--neon-blue);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+kbd {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    padding: 2px 6px;
+    color: #fff;
+    font-size: 0.8rem;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Ship Select Options */
+.ship-select {
+    width: 100%;
+}
+
+.ship-options {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.ship-option {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+}
+
+.ship-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.ship-option.active {
+    background: rgba(0, 240, 255, 0.1);
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.ship-color-preview {
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 25px solid white;
+    filter: drop-shadow(0 0 5px currentColor);
+}
+
+.ship-red { border-bottom-color: var(--neon-red); color: var(--neon-red); }
+.ship-blue { border-bottom-color: var(--neon-blue); color: var(--neon-blue); }
+.ship-green { border-bottom-color: var(--neon-green); color: var(--neon-green); }
+
+/* Buttons & glow */
+.btn {
+    width: 100%;
+    padding: 14px 28px;
+    border-radius: 12px;
+    border: none;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-red));
+    color: white;
+}
+
+.btn-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.5);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+}
+
+/* HUD System Overlay */
+.hud-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.hud-left {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 200px;
+}
+
+.hud-bar-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.bar-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.bar-container {
+    background: rgba(0, 0, 0, 0.5);
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid;
+    padding: 1px;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.15s ease-out;
+}
+
+.border-red { border-color: rgba(255, 51, 102, 0.3); }
+.border-blue { border-color: rgba(0, 240, 255, 0.3); }
+
+.bg-red {
+    background: linear-gradient(90deg, #ff3366, #ff007f);
+    box-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+}
+
+.bg-blue {
+    background: linear-gradient(90deg, #00f0ff, #0072ff);
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.text-red { color: var(--neon-red); }
+.text-blue { color: var(--neon-blue); }
+.text-yellow { color: var(--neon-yellow); }
+
+/* Waves HUD */
+.hud-center {
+    text-align: center;
+}
+
+.wave-text {
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.alert-text {
+    font-size: 0.9rem;
+    color: var(--neon-red);
+    font-weight: 800;
+    letter-spacing: 2px;
+    margin-top: 5px;
+    animation: alertBlink 0.6s infinite alternate;
+}
+
+@keyframes alertBlink {
+    0% { opacity: 0.3; }
+    100% { opacity: 1; text-shadow: 0 0 10px var(--neon-red); }
+}
+
+/* Score display */
+.score-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.score-label {
+    font-size: 0.75rem;
+    color: #8888aa;
+    letter-spacing: 1px;
+}
+
+.score-val, .score-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+/* Powerups indicators on HUD bottom */
+.powerups-indicator-list {
+    position: absolute;
+    bottom: -60vh;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.powerup-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    color: white;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    0% { transform: translateX(-20px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Game Over Stats list */
+.final-stats {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    padding: 15px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 1.1rem;
+    color: #ccc;
+}
+
+.menu-buttons {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+}
+
+/* Pop in menu animations */
+.pop-in {
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Unified Top Navigation Bar */
+.unified-nav {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(10, 10, 25, 0.75);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 24px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 99;
+}
+
+.unified-nav .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.unified-nav .brand-icon {
+    font-size: 1.6rem;
+    color: #00f0ff;
+    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+.unified-nav .brand-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, #ffffff, #8888aa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.unified-nav .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.unified-nav .btn {
+    border: none;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.unified-nav .btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255,255,255,0.05);
+}
+
+.unified-nav .btn-home {
+    background: linear-gradient(135deg, #00f0ff, #0072ff);
+    border-color: #00f0ff;
+    color: #050515;
+    box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.unified-nav .btn-home:hover {
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.5);
+    color: #ffffff;
+}
+
+/* Ensure mobile layout doesn't break header */
+@media (max-width: 600px) {
+    .unified-nav {
+        padding: 10px 16px;
+    }
+    .unified-nav .brand-title {
+        font-size: 1.1rem;
+    }
+    .unified-nav .btn span {
+        display: none;
+    }
+    .unified-nav .btn {
+        padding: 8px;
+    }
+}

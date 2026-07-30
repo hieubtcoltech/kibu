@@ -10,29 +10,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="racer-style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="bg-shimmer"></div>
 
     <div class="app-wrapper">
         <!-- Top Navigation Bar -->
-        <header class="game-nav">
+        <header class="unified-nav">
             <div class="brand">
-                <i class="fa-solid fa-car-burst brand-icon"></i>
-                <h1 class="brand-title">NEON RACER ARCADE</h1>
+                <i class="fa-solid fa-car brand-icon" style="color: #ff9f43; text-shadow: 0 0 10px rgba(255,159,67,0.5);"></i>
+                <h1 class="brand-title">NEON RACER</h1>
             </div>
 
-            <div class="nav-actions" style="display: flex; gap: 10px;">
+            <div class="nav-actions">
+                <a href="../index.html" class="btn btn-home">
+                    <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+                </a>
                 <button id="btn-sound" class="btn">
                     <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
                 </button>
-                <a href="index.html" class="btn btn-primary" style="background: linear-gradient(135deg, #ff007f, #9d4edd);">
-                    <i class="fa-solid fa-house"></i> <span>Trang Chọn Game</span>
-                </a>
-                <a href="shooter.html" class="btn btn-cyber">
-                    <i class="fa-solid fa-crosshairs"></i> <span>Game Bắn Súng</span>
-                </a>
             </div>
         </header>
 
@@ -138,6 +135,6 @@
     <!-- Notification Toast -->
     <div id="toast" class="toast-msg"></div>
 
-    <script src="racer-game.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>

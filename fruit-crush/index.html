@@ -18,12 +18,36 @@
     <div id="dev-badge" class="dev-badge hidden">
         <i class="fa-solid fa-flask"></i> <span data-i18n="devBadge">CHẾ ĐỘ THỬ MÀN</span>
     </div>
+    <header class="unified-nav">
+        <div class="brand">
+            <i class="fa-solid fa-lemon brand-icon"></i>
+            <h1 class="brand-title">FRUIT CRUSH</h1>
+        </div>
+        <div class="nav-actions">
+            <a href="../index.html" class="btn btn-home">
+                <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+            </a>
+            <button id="btn-lang" class="btn">
+                <i class="fa-solid fa-language"></i> <span id="lang-label">English</span>
+            </button>
+            <button id="btn-levels" class="btn">
+                <i class="fa-solid fa-map"></i> <span data-i18n="btnLevels">Chọn Màn</span>
+            </button>
+            <button id="btn-scores" class="btn">
+                <i class="fa-solid fa-trophy text-gold"></i> <span data-i18n="btnScores">Bảng Vàng</span>
+            </button>
+            <button id="btn-restart" class="btn">
+                <i class="fa-solid fa-rotate-right"></i> <span data-i18n="btnRestart">Chơi Lại</span>
+            </button>
+            <button id="btn-sound" class="btn">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span data-i18n="btnSound">Âm Thanh</span>
+            </button>
+            <button id="btn-music" class="btn">
+                <i id="music-icon" class="fa-solid fa-music"></i> <span data-i18n="btnMusic">Nhạc Nền</span>
+            </button>
+        </div>
+    </header>
     <div class="game-container">
-        <!-- Header -->
-        <header class="game-header">
-            <h1 class="logo-text"><span>FRUIT</span> CRUSH</h1>
-            <p class="tagline" data-i18n="tagline">Trải nghiệm ghép hoa quả ngọt ngào</p>
-        </header>
 
         <!-- Main Body -->
         <main class="game-main">
@@ -87,32 +111,8 @@
                 </div>
             </section>
 
-            <!-- Control Actions -->
+            <!-- Control Actions (Guide Cards only) -->
             <section class="game-controls">
-                <a href="index.html" class="btn btn-primary glass-btn" style="text-decoration: none; background: linear-gradient(135deg, #ff007f, #9d4edd); color: white;">
-                    <i class="fa-solid fa-house"></i> <span>Trang Chọn Game</span>
-                </a>
-                <a href="shooter.html" class="btn btn-primary glass-btn" style="text-decoration: none; background: linear-gradient(135deg, #00f0ff, #ff007f); color: white;">
-                    <i class="fa-solid fa-crosshairs"></i> <span>Game Bắn Súng Bot</span>
-                </a>
-                <button id="btn-lang" class="btn btn-secondary glass-btn">
-                    <i class="fa-solid fa-language"></i> <span id="lang-label">English</span>
-                </button>
-                <button id="btn-levels" class="btn btn-secondary glass-btn">
-                    <i class="fa-solid fa-map"></i> <span data-i18n="btnLevels">Chọn Màn</span>
-                </button>
-                <button id="btn-scores" class="btn btn-secondary glass-btn">
-                    <i class="fa-solid fa-trophy text-gold"></i> <span data-i18n="btnScores">Bảng Vàng</span>
-                </button>
-                <button id="btn-restart" class="btn btn-secondary glass-btn">
-                    <i class="fa-solid fa-rotate-right"></i> <span data-i18n="btnRestart">Chơi Lại</span>
-                </button>
-                <button id="btn-sound" class="btn btn-secondary glass-btn">
-                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span data-i18n="btnSound">Âm Thanh</span>
-                </button>
-                <button id="btn-music" class="btn btn-secondary glass-btn">
-                    <i id="music-icon" class="fa-solid fa-music"></i> <span data-i18n="btnMusic">Nhạc Nền</span>
-                </button>
 
                 <div class="glass-card guide-card">
                     <h3><i class="fa-solid fa-wand-magic-sparkles"></i> <span data-i18n="specialsTitle">Hoa quả đặc biệt</span></h3>

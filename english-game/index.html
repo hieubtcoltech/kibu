@@ -10,22 +10,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="english-style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="bg-aurora"></div>
 
     <div class="app">
         <!-- Top Navigation -->
-        <header class="topbar">
+        <header class="unified-nav">
             <div class="brand">
-                <span class="brand-icon">🎓</span>
+                <i class="fa-solid fa-graduation-cap brand-icon" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5);"></i>
                 <div>
                     <h1 class="brand-title">ENGLISH QUEST</h1>
                     <p class="brand-sub">Present Perfect · Hiện Tại Hoàn Thành</p>
                 </div>
             </div>
             <div class="nav-actions">
+                <a href="../index.html" class="btn btn-home">
+                    <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+                </a>
                 <button id="btn-theory" class="btn btn-yellow">
                     <i class="fa-solid fa-book-open"></i> <span>Ghi Nhớ</span>
                 </button>
@@ -262,8 +265,22 @@
         </div>
     </div>
 
+    <!-- ============ MODAL: RESUME CONFIRM ============ -->
+    <div id="modal-resume-confirm" class="modal">
+        <div class="modal-card">
+            <div class="modal-icon" style="color: #ffd700;">⏸️</div>
+            <h2 class="modal-title">Lượt học dở dang</h2>
+            <p class="res-sub">Bé đang học dở một chặng. Bé muốn học tiếp hay quay về bản đồ học tập?</p>
+            <div id="resume-confirm-info" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; margin: 12px 0; font-size: 0.95rem;"></div>
+            <div class="res-actions" style="display: flex; gap: 12px; width: 100%; margin-top: 10px;">
+                <button id="btn-resume-yes" class="btn btn-primary" style="flex: 1; justify-content: center;">▶ Học Tiếp</button>
+                <button id="btn-resume-no" class="btn btn-secondary" style="flex: 1; justify-content: center;">🗺️ Bản Đồ</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
-    <script src="english-game.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>

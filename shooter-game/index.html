@@ -10,20 +10,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="shooter-style.css">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="bg-grid-glow"></div>
 
     <div class="app-wrapper">
         <!-- Top Navigation Bar -->
-        <header class="game-nav">
+        <header class="unified-nav">
             <div class="brand">
-                <i class="fa-solid fa-robot brand-icon"></i>
-                <h1 class="brand-title">BOT ARENA BLASTER</h1>
+                <i class="fa-solid fa-robot brand-icon" style="color: #00ffcc; text-shadow: 0 0 10px rgba(0,255,204,0.5);"></i>
+                <h1 class="brand-title">BOT ARENA</h1>
             </div>
 
             <div class="nav-actions">
+                <a href="../index.html" class="btn btn-home">
+                    <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+                </a>
                 <button id="btn-auto-aim" class="btn btn-toggle active" title="Tự động ngắm bắn cho bé">
                     <i class="fa-solid fa-bullseye"></i> <span id="auto-aim-label">Tự Ngắm: BẬT</span>
                 </button>
@@ -33,12 +36,6 @@
                 <button id="btn-shop" class="btn">
                     <i class="fa-solid fa-store text-yellow"></i> <span>Cửa Hàng</span>
                 </button>
-                <a href="index.html" class="btn btn-primary" style="background: linear-gradient(135deg, #ff007f, #9d4edd);">
-                    <i class="fa-solid fa-house"></i> <span>Trang Chọn Game</span>
-                </a>
-                <a href="fruit.html" class="btn btn-primary">
-                    <i class="fa-solid fa-lemon"></i> <span>Fruit Crush</span>
-                </a>
             </div>
         </header>
 
@@ -235,6 +232,6 @@
     <!-- Notification Toast -->
     <div id="toast" class="toast-msg"></div>
 
-    <script src="shooter-game.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>

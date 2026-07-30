@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Nebula - Space Shooter</title>
+    <!-- Google Fonts: Orbitron for futuristic UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="stars-bg"></div>
+    <header class="unified-nav">
+        <div class="brand">
+            <i class="fa-solid fa-shuttle-space brand-icon"></i>
+            <h1 class="brand-title">NEON NEBULA</h1>
+        </div>
+        <div class="nav-actions">
+            <a href="../index.html" class="btn btn-home">
+                <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+            </a>
+        </div>
+    </header>
+    <div class="game-wrapper">
+        <!-- Canvas area where rendering happens -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- HUD (Heads Up Display) Overlay -->
+        <div id="hud" class="hud-container hidden">
+            <div class="hud-left">
+                <!-- HP Bar -->
+                <div class="hud-bar-group">
+                    <span class="bar-label"><i class="fa-solid fa-heart text-red"></i> HP</span>
+                    <div class="bar-container border-red">
+                        <div id="hp-bar" class="bar-fill bg-red" style="width: 100%"></div>
+                    </div>
+                </div>
+                <!-- Shield Bar -->
+                <div class="hud-bar-group">
+                    <span class="bar-label"><i class="fa-solid fa-shield-halved text-blue"></i> SHIELD</span>
+                    <div class="bar-container border-blue">
+                        <div id="shield-bar" class="bar-fill bg-blue" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hud-center">
+                <!-- Current Wave & Alert -->
+                <div id="wave-display" class="wave-text">WAVE 1</div>
+                <div id="alert-banner" class="alert-text hidden">WARNING: INCOMING WAVE</div>
+            </div>
+
+            <div class="hud-right">
+                <div class="score-box">
+                    <span class="score-label">SCORE</span>
+                    <span id="score-val" class="score-value">000000</span>
+                </div>
+            </div>
+            
+            <!-- Powerups Indicators list -->
+            <div id="active-powerups" class="powerups-indicator-list">
+                <!-- Dynamic active power-up badges go here -->
+            </div>
+        </div>
+
+        <!-- Main Start Screen -->
+        <div id="menu-overlay" class="overlay">
+            <div class="menu-content glass-card pop-in">
+                <h1 class="logo-title">NEON NEBULA</h1>
+                <p class="logo-subtitle">A Futuristic Particle Space Shooter</p>
+                
+                <div class="controls-guide">
+                    <h3><i class="fa-solid fa-gamepad"></i> HƯỚNG DẪN</h3>
+                    <div class="controls-grid">
+                        <div><kbd>A</kbd> / <kbd>D</kbd> hoặc <kbd>←</kbd> / <kbd>→</kbd> : Di chuyển trái/phải</div>
+                        <div><kbd>W</kbd> / <kbd>S</kbd> hoặc <kbd>↑</kbd> / <kbd>↓</kbd> : Di chuyển lên/xuống</div>
+                        <div><kbd>SPACE</kbd> hoặc <kbd>Click chuột</kbd> : Bắn laser vũ khí</div>
+                        <div>Di chuột / Chạm kéo : Tự động di chuyển & Bắn</div>
+                    </div>
+                </div>
+
+                <div class="ship-select">
+                    <h3>CHỌN TÀU CHIẾN</h3>
+                    <div class="ship-options">
+                        <div class="ship-option active" data-ship="0">
+                            <div class="ship-color-preview ship-red"></div>
+                            <span>Interceptor</span>
+                        </div>
+                        <div class="ship-option" data-ship="1">
+                            <div class="ship-color-preview ship-blue"></div>
+                            <span>Defender</span>
+                        </div>
+                        <div class="ship-option" data-ship="2">
+                            <div class="ship-color-preview ship-green"></div>
+                            <span>Phantom</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="btn-start" class="btn btn-primary btn-glow">BẮT ĐẦU CHƠI</button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-overlay" class="overlay hidden">
+            <div class="menu-content glass-card pop-in">
+                <h2 class="text-red">MISSION FAILED</h2>
+                <p class="gameover-subtitle">Tàu chiến của bạn đã bị tiêu diệt</p>
+                
+                <div class="final-stats">
+                    <div class="stat-row">
+                        <span>Điểm số đạt được:</span>
+                        <span id="final-score" class="text-yellow">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Sống sót đến Wave:</span>
+                        <span id="final-wave" class="text-blue">1</span>
+                    </div>
+                </div>
+
+                <div class="menu-buttons">
+                    <button id="btn-retry" class="btn btn-primary btn-glow">CHƠI LẠI <i class="fa-solid fa-rotate-right"></i></button>
+                    <button id="btn-menu" class="btn btn-secondary">TRANG CHỦ <i class="fa-solid fa-house"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

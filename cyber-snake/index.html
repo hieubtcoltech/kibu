@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Snake - Neon Matrix Grid</title>
+    <!-- Google Fonts for Cyberpunk UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="matrix-grid-bg"></div>
+    <header class="unified-nav">
+        <div class="brand">
+            <i class="fa-solid fa-dragon brand-icon"></i>
+            <h1 class="brand-title">CYBER SNAKE</h1>
+        </div>
+        <div class="nav-actions">
+            <a href="../index.html" class="btn btn-home">
+                <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+            </a>
+        </div>
+    </header>
+    <div class="game-wrapper">
+        <!-- Canvas where snake is drawn -->
+        <canvas id="game-canvas"></canvas>
+
+        <!-- HUD panel overlay -->
+        <div id="hud" class="hud-container hidden">
+            <div class="hud-row">
+                <div class="hud-item pulse-blue">
+                    <span class="hud-label"><i class="fa-solid fa-trophy text-yellow"></i> SCORE</span>
+                    <span id="score-val" class="hud-value text-yellow">0</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label"><i class="fa-solid fa-crown text-purple"></i> HIGH</span>
+                    <span id="high-score-val" class="hud-value text-purple">0</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label"><i class="fa-solid fa-layer-group text-green"></i> LEVEL</span>
+                    <span id="level-val" class="hud-value text-green">1</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label"><i class="fa-solid fa-arrows-up-to-line text-blue"></i> SIZE</span>
+                    <span id="size-val" class="hud-value text-blue">3</span>
+                </div>
+            </div>
+            
+            <!-- Powerup active countdown bar -->
+            <div id="powerup-bar-container" class="powerup-bar-container hidden">
+                <div class="powerup-bar-header">
+                    <span id="powerup-label">OVERDRIVE ACTIVE</span>
+                    <span id="powerup-timer">5.0s</span>
+                </div>
+                <div class="powerup-progress-bg">
+                    <div id="powerup-progress-fill" class="powerup-progress-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Start Game Screen Overlay -->
+        <div id="menu-overlay" class="overlay">
+            <div class="menu-content glass-card pop-in">
+                <h1 class="logo-title">CYBER SNAKE</h1>
+                <p class="logo-subtitle">Neon Grid Grid Cybernetic Hack</p>
+
+                <div class="legend-box">
+                    <h3>HỆ THỐNG POWER-UP CORES</h3>
+                    <div class="legend-grid">
+                        <div class="legend-item"><span class="core-dot bg-green"></span> <span><b>Nano</b>: Mồi thường (+100đ, dài +1)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-yellow"></span> <span><b>Overdrive</b>: Nhân đôi điểm + Siêu tốc (5s)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-blue"></span> <span><b>Cryo</b>: Làm chậm tốc độ di chuyển (5s)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-red"></span> <span><b>EMP</b>: Phá hủy giật lùi đuôi (-2 đốt thân)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-rainbow"></span> <span><b>Glitch</b>: Cho điểm cực lớn (+500đ)</span></div>
+                    </div>
+                </div>
+
+                <div class="controls-guide">
+                    <h3>ĐIỀU KHIỂN</h3>
+                    <p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / <kbd>↑</kbd> <kbd>←</kbd> <kbd>↓</kbd> <kbd>→</kbd> để điều khiển hướng đi.</p>
+                    <p>Trên di động: <b>Vuốt màn hình</b> theo hướng muốn rẽ.</p>
+                </div>
+
+                <button id="btn-start" class="btn btn-primary btn-glow">BẮT ĐẦU HACK GRID</button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen Overlay -->
+        <div id="gameover-overlay" class="overlay hidden">
+            <div class="menu-content glass-card pop-in">
+                <h2 class="text-red">GRID COLLUSION DETECTED</h2>
+                <p class="gameover-subtitle">Kết nối mạng lưới đã bị ngắt</p>
+
+                <div class="final-stats">
+                    <div class="stat-row">
+                        <span>Điểm số hack được:</span>
+                        <span id="final-score" class="text-yellow">0</span>
+                    </div>
+                    <div class="stat-row">
+                        <span>Đạt tới Level:</span>
+                        <span id="final-level" class="text-green">1</span>
+                    </div>
+                    <div id="new-high-badge" class="new-high-badge hidden">KỶ LỤC MỚI ĐÃ ĐƯỢC THIẾT LẬP!</div>
+                </div>
+
+                <div class="menu-buttons">
+                    <button id="btn-retry" class="btn btn-primary btn-glow">HACK LẠI <i class="fa-solid fa-rotate-right"></i></button>
+                    <button id="btn-menu" class="btn btn-secondary">TRANG CHỦ <i class="fa-solid fa-house"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

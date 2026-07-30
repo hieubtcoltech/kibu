@@ -22,6 +22,8 @@
             --pink-glow: #ff007f;
             --blue-glow: #00f0ff;
             --yellow-glow: #ffd700;
+            --green-glow: #39ff14;
+            --purple-glow: #9d4edd;
         }
 
         * {
@@ -42,7 +44,7 @@
             align-items: center;
             position: relative;
             overflow-x: hidden;
-            padding: 20px;
+            padding: 40px 20px;
         }
 
         /* Dynamic shimmer background */
@@ -100,7 +102,7 @@
         /* Game Cards Grid */
         .cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 24px;
             width: 100%;
         }
@@ -112,27 +114,6 @@
             .hub-title {
                 font-size: 2.3rem;
             }
-        }
-
-        .badge-racer {
-            background: rgba(255, 215, 0, 0.15);
-            color: #ffd700;
-            border: 1px solid rgba(255, 215, 0, 0.4);
-        }
-
-        .card-racer:hover {
-            box-shadow: 0 15px 50px rgba(255, 215, 0, 0.4);
-            border-color: var(--yellow-glow);
-        }
-
-        .btn-racer {
-            background: linear-gradient(135deg, #ffd700, #ff9900);
-            color: #050714;
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
-        }
-
-        .btn-racer:hover {
-            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.8);
         }
 
         .game-card {
@@ -169,6 +150,26 @@
             border-color: var(--blue-glow);
         }
 
+        .card-racer:hover {
+            box-shadow: 0 15px 50px rgba(255, 215, 0, 0.4);
+            border-color: var(--yellow-glow);
+        }
+
+        .card-english:hover {
+            box-shadow: 0 15px 50px rgba(157, 78, 221, 0.45);
+            border-color: var(--purple-glow);
+        }
+
+        .card-space:hover {
+            box-shadow: 0 15px 50px rgba(0, 240, 255, 0.45);
+            border-color: var(--blue-glow);
+        }
+
+        .card-snake:hover {
+            box-shadow: 0 15px 50px rgba(57, 255, 20, 0.45);
+            border-color: var(--green-glow);
+        }
+
         .badge {
             font-family: var(--font-display);
             font-size: 0.85rem;
@@ -190,6 +191,30 @@
             background: rgba(0, 240, 255, 0.15);
             color: #00f0ff;
             border: 1px solid rgba(0, 240, 255, 0.4);
+        }
+
+        .badge-racer {
+            background: rgba(255, 215, 0, 0.15);
+            color: #ffd700;
+            border: 1px solid rgba(255, 215, 0, 0.4);
+        }
+
+        .badge-english {
+            background: rgba(157, 78, 221, 0.15);
+            color: #c77dff;
+            border: 1px solid rgba(157, 78, 221, 0.4);
+        }
+
+        .badge-space {
+            background: rgba(0, 240, 255, 0.15);
+            color: #00f0ff;
+            border: 1px solid rgba(0, 240, 255, 0.4);
+        }
+
+        .badge-snake {
+            background: rgba(57, 255, 20, 0.15);
+            color: #39ff14;
+            border: 1px solid rgba(57, 255, 20, 0.4);
         }
 
         .card-banner {
@@ -257,7 +282,6 @@
             color: white;
             box-shadow: 0 6px 20px rgba(255, 0, 127, 0.5);
         }
-
         .btn-fruit:hover {
             box-shadow: 0 8px 30px rgba(255, 0, 127, 0.8);
         }
@@ -267,20 +291,17 @@
             color: #050714;
             box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
         }
-
         .btn-shooter:hover {
             box-shadow: 0 8px 30px rgba(0, 240, 255, 0.8);
         }
 
-        .badge-english {
-            background: rgba(157, 78, 221, 0.15);
-            color: #c77dff;
-            border: 1px solid rgba(157, 78, 221, 0.4);
+        .btn-racer {
+            background: linear-gradient(135deg, #ffd700, #ff9900);
+            color: #050714;
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
         }
-
-        .card-english:hover {
-            box-shadow: 0 15px 50px rgba(157, 78, 221, 0.45);
-            border-color: #9d4edd;
+        .btn-racer:hover {
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.8);
         }
 
         .btn-english {
@@ -288,9 +309,26 @@
             color: #050714;
             box-shadow: 0 6px 20px rgba(157, 78, 221, 0.5);
         }
-
         .btn-english:hover {
             box-shadow: 0 8px 30px rgba(157, 78, 221, 0.85);
+        }
+
+        .btn-space {
+            background: linear-gradient(135deg, #00f0ff, #9d4edd);
+            color: #050714;
+            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
+        }
+        .btn-space:hover {
+            box-shadow: 0 8px 30px rgba(0, 240, 255, 0.8);
+        }
+
+        .btn-snake {
+            background: linear-gradient(135deg, #39ff14, #00f0ff);
+            color: #050714;
+            box-shadow: 0 6px 20px rgba(57, 255, 20, 0.5);
+        }
+        .btn-snake:hover {
+            box-shadow: 0 8px 30px rgba(57, 255, 20, 0.8);
         }
 
         /* Footer */
@@ -315,7 +353,7 @@
         <!-- Game Cards Selection -->
         <div class="cards-grid">
             <!-- Game 1: Fruit Crush -->
-            <a href="fruit.html" class="game-card card-fruit">
+            <a href="./fruit-crush/index.html" class="game-card card-fruit">
                 <div class="badge badge-fruit"><i class="fa-solid fa-apple-whole"></i> Thư Giãn & Trí Tuệ</div>
                 <div class="card-banner">🍓🍊🍇</div>
                 <h2 class="card-title">FRUIT CRUSH DELUXE</h2>
@@ -328,33 +366,33 @@
                     <span class="tag">🔄 Đảo trọng lực</span>
                 </div>
                 <div class="play-btn btn-fruit">
-                    CHƠI FRUIT CRUSH <i class="fa-solid fa-play"></i>
+                    CHƠI NGAY <i class="fa-solid fa-play"></i>
                 </div>
             </a>
 
             <!-- Game 2: Bot Arena Blaster -->
-            <a href="shooter.html" class="game-card card-shooter">
+            <a href="./shooter-game/index.html" class="game-card card-shooter">
                 <div class="badge badge-shooter"><i class="fa-solid fa-person-rifle"></i> Con Người Bắn Súng</div>
-                <div class="card-banner">🧑‍✈️🔫 ⚡ 🤖</div>
-                <h2 class="card-title">CON NGƯỜI CẦM SÚNG VS ROBOT</h2>
+                <div class="card-banner">🧑‍✈️🔫🤖</div>
+                <h2 class="card-title">BOT ARENA</h2>
                 <p class="card-desc">
                     Bé nhập vai <b>CON NGƯỜI CẦM SÚNG 🧑‍✈️🔫</b> trực tiếp ngắm bắn và tiêu diệt các <b>ROBOT 🤖</b> độc ác cùng Trùm Robot Khổng Lồ! Có hỗ trợ tự động ngắm cực dễ cho bé!
                 </p>
                 <div class="feature-tags">
-                    <span class="tag">🧑‍✈️🔫 Con Người Cầm Súng</span>
+                    <span class="tag">🧑‍✈️🔫 Con Người</span>
                     <span class="tag">🤖 Đấu Với Robot</span>
                     <span class="tag">🎯 Tự Ngắm cho bé</span>
                 </div>
                 <div class="play-btn btn-shooter">
-                    BẮT ĐẦU VÀO CHƠI <i class="fa-solid fa-rocket"></i>
+                    CHƠI NGAY <i class="fa-solid fa-rocket"></i>
                 </div>
             </a>
 
             <!-- Game 3: Neon Racer Arcade -->
-            <a href="racer.html" class="game-card card-racer">
+            <a href="./racer-game/index.html" class="game-card card-racer">
                 <div class="badge badge-racer"><i class="fa-solid fa-flag-checkered"></i> Đua Xe Siêu Tốc</div>
                 <div class="card-banner">🏎️🚀💥</div>
-                <h2 class="card-title">NEON RACER ARCADE</h2>
+                <h2 class="card-title">NEON RACER</h2>
                 <p class="card-desc">
                     Lái các siêu xe thể thao neon 🏎️ né tránh vật cản, nhặt bình Nitro 🚀 phóng bứt tốc độ rùng mình và nổ thùng dầu cực vui!
                 </p>
@@ -364,12 +402,12 @@
                     <span class="tag">🛢️ Né vệt dầu trơn</span>
                 </div>
                 <div class="play-btn btn-racer">
-                    BẮT ĐẦU VÀO ĐUA <i class="fa-solid fa-flag-checkered"></i>
+                    CHƠI NGAY <i class="fa-solid fa-flag-checkered"></i>
                 </div>
             </a>
 
             <!-- Game 4: English Quest -->
-            <a href="english.html" class="game-card card-english">
+            <a href="./english-game/index.html" class="game-card card-english">
                 <div class="badge badge-english"><i class="fa-solid fa-graduation-cap"></i> Vừa Học Vừa Chơi</div>
                 <div class="card-banner">🎓📚✨</div>
                 <h2 class="card-title">ENGLISH QUEST</h2>
@@ -382,7 +420,43 @@
                     <span class="tag">⭐ Ăn sao &amp; tích điểm</span>
                 </div>
                 <div class="play-btn btn-english">
-                    BẮT ĐẦU HỌC <i class="fa-solid fa-graduation-cap"></i>
+                    CHƠI NGAY <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+            </a>
+
+            <!-- Game 5: Neon Nebula (Space Shooter) -->
+            <a href="./space-shooter/index.html" class="game-card card-space">
+                <div class="badge badge-space"><i class="fa-solid fa-shuttle-space"></i> Chiến Đấu Vũ Trụ</div>
+                <div class="card-banner">🚀👾🛸</div>
+                <h2 class="card-title">NEON NEBULA</h2>
+                <p class="card-desc">
+                    Bắn phi thuyền không gian cực đỉnh với hiệu ứng nổ mảnh hạt chân thực, điều khiển mượt mà, nhiều vật phẩm bổ trợ và trận đấu Boss kịch tính!
+                </p>
+                <div class="feature-tags">
+                    <span class="tag">🚀 Parallax Starfield</span>
+                    <span class="tag">💥 Nổ mảnh hạt</span>
+                    <span class="tag">👾 Boss khổng lồ</span>
+                </div>
+                <div class="play-btn btn-space">
+                    CHƠI NGAY <i class="fa-solid fa-shuttle-space"></i>
+                </div>
+            </a>
+
+            <!-- Game 6: Cyber Snake -->
+            <a href="./cyber-snake/index.html" class="game-card card-snake">
+                <div class="badge badge-snake"><i class="fa-solid fa-dragon"></i> Rắn Cyberpunk</div>
+                <div class="card-banner">🐍⚡🔋</div>
+                <h2 class="card-title">CYBER SNAKE</h2>
+                <p class="card-desc">
+                    Rắn săn mồi uốn lượn như thật với da vằn kim cương, săn tìm lõi năng lượng đa dạng (Glitch, Cryo, Overdrive) trên lưới ma trận neon.
+                </p>
+                <div class="feature-tags">
+                    <span class="tag">🐍 Trườn bò mượt mà</span>
+                    <span class="tag">⚡ 5 Lõi năng lượng</span>
+                    <span class="tag">🔋 Đồ họa ma trận</span>
+                </div>
+                <div class="play-btn btn-snake">
+                    CHƠI NGAY <i class="fa-solid fa-play"></i>
                 </div>
             </a>
         </div>
