@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Basketball Duel - Song Đấu Bóng Rổ 2 Người</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-court-glow"></div>
+
+    <div class="app-wrapper">
+        <!-- Top Navigation Bar -->
+        <header class="unified-nav">
+            <div class="brand">
+                <span class="brand-icon">🏀</span>
+                <h1 class="brand-title">BASKETBALL DUEL</h1>
+            </div>
+
+            <div class="nav-actions">
+                <a href="../index.html" class="btn btn-home">
+                    <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+                </a>
+                <button id="btn-help" class="btn btn-toggle active" title="Hiện đường bay dự đoán giúp bé ngắm dễ hơn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="help-label">Trợ Giúp Bé: BẬT</span>
+                </button>
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                </button>
+                <button id="btn-restart" class="btn">
+                    <i class="fa-solid fa-rotate-right"></i> <span>Chơi Lại</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Canvas Viewport -->
+        <main class="game-viewport">
+            <canvas id="game-canvas"></canvas>
+
+            <!-- Heads-Up Display -->
+            <div class="hud-overlay">
+                <div class="hud-top">
+                    <!-- Player 1 -->
+                    <div class="score-card card-p1">
+                        <div class="score-avatar">🐯</div>
+                        <div class="score-info">
+                            <div class="score-name">NGƯỜI CHƠI 1</div>
+                            <div class="score-sub">
+                                <span id="p1-streak" class="streak-tag">Chuỗi: 0</span>
+                                <span id="p1-acc" class="streak-tag">0/0</span>
+                            </div>
+                        </div>
+                        <div id="p1-score" class="score-number">0</div>
+                    </div>
+
+                    <!-- Clock -->
+                    <div class="clock-box">
+                        <div class="clock-label">THỜI GIAN</div>
+                        <div id="clock" class="clock-time">1:30</div>
+                    </div>
+
+                    <!-- Player 2 -->
+                    <div class="score-card card-p2">
+                        <div id="p2-score" class="score-number">0</div>
+                        <div class="score-info align-right">
+                            <div class="score-name">NGƯỜI CHƠI 2</div>
+                            <div class="score-sub">
+                                <span id="p2-acc" class="streak-tag">0/0</span>
+                                <span id="p2-streak" class="streak-tag">Chuỗi: 0</span>
+                            </div>
+                        </div>
+                        <div class="score-avatar">🐼</div>
+                    </div>
+                </div>
+
+                <div class="hud-bottom">
+                    <div class="key-hint hint-p1">
+                        <span class="key-cap">A</span>
+                        <span>Giữ để lấy lực — Thả để ném</span>
+                    </div>
+                    <div class="key-hint hint-p2">
+                        <span>Giữ để lấy lực — Thả để ném</span>
+                        <span class="key-cap">L</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start / Menu Screen -->
+            <div id="screen-menu" class="screen">
+                <div class="panel">
+                    <div class="panel-emoji">🏀🔥</div>
+                    <h2 class="panel-title">SONG ĐẤU BÓNG RỔ</h2>
+                    <p class="panel-desc">
+                        Hai bé cùng chơi trên một máy! Ai ném vào rổ nhiều điểm hơn trong <b>90 giây</b> sẽ thắng cuộc.
+                    </p>
+
+                    <div class="rules-grid">
+                        <div class="rule-box rule-p1">
+                            <div class="rule-avatar">🐯</div>
+                            <div class="rule-name">NGƯỜI CHƠI 1</div>
+                            <div class="rule-key"><span class="key-cap big">A</span></div>
+                            <div class="rule-note">Hoặc chạm nửa <b>TRÁI</b> màn hình</div>
+                        </div>
+                        <div class="vs-badge">VS</div>
+                        <div class="rule-box rule-p2">
+                            <div class="rule-avatar">🐼</div>
+                            <div class="rule-name">NGƯỜI CHƠI 2</div>
+                            <div class="rule-key"><span class="key-cap big">L</span></div>
+                            <div class="rule-note">Hoặc chạm nửa <b>PHẢI</b> màn hình</div>
+                        </div>
+                    </div>
+
+                    <div class="howto">
+                        <div class="howto-item"><span class="step">1</span> Mũi tên tự lắc lên xuống — chọn <b>hướng ném</b></div>
+                        <div class="howto-item"><span class="step">2</span> <b>Giữ</b> phím để thanh lực chạy lên</div>
+                        <div class="howto-item"><span class="step">3</span> <b>Thả</b> phím đúng lúc để bóng bay vào rổ!</div>
+                    </div>
+
+                    <div class="point-legend">
+                        <span class="pt pt-2">2 ĐIỂM · đứng gần</span>
+                        <span class="pt pt-3">3 ĐIỂM · ngoài vạch</span>
+                        <span class="pt pt-s">SWISH +1 · không chạm vành</span>
+                        <span class="pt pt-f">🔥 3 quả liên tiếp = BỐC LỬA +1</span>
+                    </div>
+
+                    <button id="btn-start" class="big-btn">
+                        <i class="fa-solid fa-play"></i> BẮT ĐẦU TRẬN ĐẤU
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pause Screen -->
+            <div id="screen-pause" class="screen hidden">
+                <div class="panel panel-small">
+                    <div class="panel-emoji">⏸️</div>
+                    <h2 class="panel-title">TẠM DỪNG</h2>
+                    <p class="panel-desc">Nghỉ một chút rồi chơi tiếp nhé!</p>
+                    <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> CHƠI TIẾP</button>
+                </div>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="screen-over" class="screen hidden">
+                <div class="panel">
+                    <div id="over-emoji" class="panel-emoji">🏆</div>
+                    <h2 id="over-title" class="panel-title">NGƯỜI CHƠI 1 THẮNG!</h2>
+                    <p id="over-desc" class="panel-desc">Một trận đấu quá hay!</p>
+
+                    <div class="final-grid">
+                        <div class="final-box final-p1">
+                            <div class="final-avatar">🐯</div>
+                            <div class="final-name">NGƯỜI CHƠI 1</div>
+                            <div id="f1-score" class="final-score">0</div>
+                            <div class="final-stats">
+                                <div><span>Vào rổ</span><b id="f1-made">0/0</b></div>
+                                <div><span>Chính xác</span><b id="f1-acc">0%</b></div>
+                                <div><span>Chuỗi dài nhất</span><b id="f1-best">0</b></div>
+                                <div><span>Swish</span><b id="f1-swish">0</b></div>
+                            </div>
+                        </div>
+                        <div class="final-box final-p2">
+                            <div class="final-avatar">🐼</div>
+                            <div class="final-name">NGƯỜI CHƠI 2</div>
+                            <div id="f2-score" class="final-score">0</div>
+                            <div class="final-stats">
+                                <div><span>Vào rổ</span><b id="f2-made">0/0</b></div>
+                                <div><span>Chính xác</span><b id="f2-acc">0%</b></div>
+                                <div><span>Chuỗi dài nhất</span><b id="f2-best">0</b></div>
+                                <div><span>Swish</span><b id="f2-swish">0</b></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="over-actions">
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> ĐẤU LẠI</button>
+                        <a href="../index.html" class="big-btn btn-ghost"><i class="fa-solid fa-house"></i> TRANG CHỦ</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
