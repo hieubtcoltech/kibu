@@ -32,8 +32,11 @@
     const RIM_X2 = RIM_X1 + RIM_D;
     const RIM_CX = (RIM_X1 + RIM_X2) / 2;
 
-    const REL_Y = FLOOR_Y - M(2.15);      // độ cao điểm rời tay
-    const REL_DX = -M(0.25);              // bóng rời tay hơi chếch về phía rổ
+    // Điểm rời tay phải nằm trong TẦM VỚI thật của cánh tay (vai cao 1,18m,
+    // tay dài 0,56m) — nếu đặt cao hơn thì IK sẽ kéo bàn tay và quả bóng tụt
+    // xuống trong khi mũi tên vẫn vẽ ở đây, thành ra lệch nhau.
+    const REL_Y = FLOOR_Y - M(1.76);      // độ cao điểm rời tay
+    const REL_DX = -M(0.22);              // bóng rời tay hơi chếch về phía rổ
 
     // Càng nhiều người chơi thì mỗi sân càng hẹp, nên chỗ đứng cũng gần rổ hơn
     const LAYOUTS = {
@@ -69,6 +72,7 @@
     const ALPHA = 2 / 3;                  // I/(mR²) của quả cầu RỖNG như bóng rổ
     const SPIN0 = 15.5;                   // xoáy ngược lúc rời tay (~2,5 vòng/giây)
     const SPIN_DECAY = 0.35;              // xoáy tắt dần trong không khí
+    const MISS_DELAY = 0.5;               // sau cú nảy đầu tiên bao lâu thì sang lượt mới
 
     const ANGLE_MIN = 38 * Math.PI / 180;
     const ANGLE_MAX = 72 * Math.PI / 180;
@@ -88,7 +92,11 @@
     const DIFFS = {
         easy: { key: 'easy', name: 'DỄ', sweep: 0.30, power: 1.05, post: 1.6, guide: true },
         normal: { key: 'normal', name: 'VỪA', sweep: 0.46, power: 1.45, post: 2.6, guide: true },
-        hard: { key: 'hard', name: 'KHÓ', sweep: 0.64, power: 1.85, post: 3.6, guide: false }
+        hard: { key: 'hard', name: 'KHÓ', sweep: 0.64, power: 1.85, post: 3.6, guide: false },
+        insane: {
+            key: 'insane', name: 'SIÊU KHÓ', sweep: 0.72, power: 2.0, post: 3.6, guide: false,
+            moveHoop: true, hoopRange: M(0.55), hoopSpeed: 0.85   // rổ trượt lên xuống
+        }
     };
 
     const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -100,6 +108,102 @@
     //  nên tay gập duỗi trông tự nhiên chứ không gãy khúc như que.
     // =========================================================
     const UPPER_ARM = M(0.29), FORE_ARM = M(0.27);
+
+    // =========================================================
+    //  Quả bóng rổ dựng như khối cầu da thật
+    //  8 múi da ngăn bởi ba đường may là ba vòng tròn lớn vuông góc nhau,
+    //  mặt da sần, có rãnh lõm quanh đường may và đốm sáng bóng.
+    //  Vì nhìn ngang nên bóng chỉ xoáy quanh trục vuông góc màn hình → dựng
+    //  sẵn 48 bước quay lúc khởi động, khi vẽ chỉ việc chọn đúng bước.
+    // =========================================================
+    const BB_TEX = 44;                    // độ phân giải ảnh bề mặt
+    const BB_STEPS = 48;                  // số bước quay dựng sẵn
+    const BB_SEAM = 0.042;                // nửa bề rộng đường may (bóng thật ~2% đường kính)
+    const LEATHER = [216, 106, 46];       // màu da cam của quả bóng
+    const SEAM_COL = [46, 22, 10];
+    const BB_LIGHT = (() => {
+        const v = [-0.34, -0.46, 0.82], n = Math.hypot(...v);
+        return v.map(c => c / n);
+    })();
+    const BB_HALF = (() => {
+        const v = [BB_LIGHT[0], BB_LIGHT[1], BB_LIGHT[2] + 1], n = Math.hypot(...v);
+        return v.map(c => c / n);
+    })();
+    let ballTex = null;
+
+    function buildBallTex() {
+        // Nghiêng quả bóng một góc bất kì để ba đường may không trùng trục nhìn,
+        // nhờ vậy nhìn thấy đúng dáng cong đặc trưng của quả bóng rổ.
+        const ax = 0.62, ay = 0.42;
+        const cx1 = Math.cos(ax), sx1 = Math.sin(ax);
+        const cy1 = Math.cos(ay), sy1 = Math.sin(ay);
+        // T = Ry(ay) · Rx(ax), lưu theo hàng
+        const T = [
+            cy1, sy1 * sx1, sy1 * cx1,
+            0, cx1, -sx1,
+            -sy1, cy1 * sx1, cy1 * cx1
+        ];
+
+        ballTex = [];
+        for (let k = 0; k < BB_STEPS; k++) {
+            const ang = k / BB_STEPS * Math.PI * 2;
+            const ca = Math.cos(ang), sa = Math.sin(ang);
+            const cv = document.createElement('canvas');
+            cv.width = cv.height = BB_TEX;
+            const cc = cv.getContext('2d');
+            const img = cc.createImageData(BB_TEX, BB_TEX);
+            const d = img.data;
+            let p = 0;
+
+            for (let j = 0; j < BB_TEX; j++) {
+                const ny = (j + 0.5) / BB_TEX * 2 - 1;
+                for (let i = 0; i < BB_TEX; i++, p += 4) {
+                    const nx = (i + 0.5) / BB_TEX * 2 - 1;
+                    const d2 = nx * nx + ny * ny;
+                    if (d2 >= 1) { d[p + 3] = 0; continue; }
+                    const nz = Math.sqrt(1 - d2);
+
+                    // Gỡ phép xoáy quanh trục vuông góc màn hình, rồi đưa về hệ gắn với bóng
+                    const rx = nx * ca + ny * sa, ry = -nx * sa + ny * ca;
+                    const lx = T[0] * rx + T[1] * ry + T[2] * nz;
+                    const ly = T[3] * rx + T[4] * ry + T[5] * nz;
+                    const lz = T[6] * rx + T[7] * ry + T[8] * nz;
+
+                    // Ba vòng tròn lớn vuông góc nhau chia mặt bóng thành 8 múi
+                    const sd = Math.min(Math.abs(lx), Math.abs(ly), Math.abs(lz));
+                    const seam = sd < BB_SEAM;
+                    const groove = sd < BB_SEAM * 2.0;
+
+                    // Da sần: nhiễu tần số cao, chỉ có trên phần da
+                    const h = Math.sin(lx * 149.3 + ly * 271.9 + lz * 197.1) * 43758.5453;
+                    const pebble = (h - Math.floor(h)) - 0.5;
+
+                    let diff = nx * BB_LIGHT[0] + ny * BB_LIGHT[1] + nz * BB_LIGHT[2];
+                    if (diff < 0) diff = 0;
+                    let shade = 0.30 + 0.80 * diff;
+                    const col = seam ? SEAM_COL : LEATHER;
+                    if (!seam) {
+                        shade += pebble * 0.11;               // hạt da
+                        if (groove) shade *= 0.72;            // rãnh lõm quanh đường may
+                    }
+
+                    let spec = 0;
+                    if (!seam) {
+                        const sp = nx * BB_HALF[0] + ny * BB_HALF[1] + nz * BB_HALF[2];
+                        if (sp > 0) { const s2 = sp * sp, s4 = s2 * s2, s8 = s4 * s4; spec = s8 * s4 * 60; }
+                    }
+
+                    d[p] = Math.min(255, col[0] * shade + spec);
+                    d[p + 1] = Math.min(255, col[1] * shade + spec);
+                    d[p + 2] = Math.min(255, col[2] * shade + spec);
+                    const edge = (1 - Math.sqrt(d2)) * (BB_TEX * 0.5);
+                    d[p + 3] = edge >= 1 ? 255 : edge * 255;
+                }
+            }
+            cc.putImageData(img, 0, 0);
+            ballTex.push(cv);
+        }
+    }
 
     // Một đốt chi: hình thang bo tròn hai đầu, có mảng sáng dọc theo bắp
     function limb(ctx, x1, y1, x2, y2, w1, w2, skin, shade) {
@@ -126,7 +230,7 @@
 
     /* Vẽ một cánh tay từ vai tới bàn tay.
        bend = +1 / -1 quyết định khuỷu tay gập về phía nào. */
-    function drawArm(ctx, sx, sy, hx, hy, bend, skin, shade, withBall) {
+    function drawArm(ctx, sx, sy, hx, hy, bend, skin, shade) {
         let dx = hx - sx, dy = hy - sy;
         let d = Math.hypot(dx, dy);
         const maxD = (UPPER_ARM + FORE_ARM) * 0.985;
@@ -147,25 +251,15 @@
         limb(ctx, sx, sy, ex, ey, 7.2, 5.6, skin, shade);     // bắp tay
         limb(ctx, ex, ey, hx, hy, 5.6, 4.4, skin, shade);     // cẳng tay
 
-        // Bàn tay: hơi to hơn cổ tay, xoay theo hướng cẳng tay
+        // Bàn tay: một khối tròn gọn, hơi to hơn cổ tay
         const fa = Math.atan2(hy - ey, hx - ex);
         ctx.save();
         ctx.translate(hx, hy);
         ctx.rotate(fa);
         ctx.fillStyle = skin;
         ctx.beginPath();
-        ctx.ellipse(3.5, 0, 6.4, 5.2, 0, 0, Math.PI * 2);
+        ctx.ellipse(2.6, 0, 6.2, 5.4, 0, 0, Math.PI * 2);
         ctx.fill();
-        if (withBall) {                    // ngón tay xoè ra đỡ bóng
-            ctx.strokeStyle = shade;
-            ctx.lineWidth = 1.6;
-            for (let i = -1; i <= 1; i++) {
-                ctx.beginPath();
-                ctx.moveTo(4, i * 2.6);
-                ctx.lineTo(9.5, i * 3.4);
-                ctx.stroke();
-            }
-        }
         ctx.restore();
         return { x: hx, y: hy };
     }
@@ -253,6 +347,7 @@
             this.hitRim = false;
             this.hitBoard = false;
             this.scored = false;
+            this.missed = false;
             this.bounces = 0;
             this.alive = true;
             this.life = 0;
@@ -325,6 +420,8 @@
             this.followThrough = 0;
             this.hoopFlash = 0;
             this.scorePulse = 0;
+            this.hoopOff = 0;         // độ lệch cao thấp của rổ ở chế độ siêu khó
+            this.hoopT = Math.random() * Math.PI * 2;
             this.outcome = null;      // 'win' | 'lose' | 'draw' khi hết trận
             this.celebT = 0;
             this.tears = [];
@@ -332,6 +429,7 @@
         }
 
         get isThree() { return this.px >= THREE_X; }
+        get rimY() { return RIM_Y + this.hoopOff; }        // cao độ vành lúc này
         get isMoneyBall() { return Game.mode === 'three' && this.rackIdx % 5 === 4; }
         get relX() { return this.px + REL_DX; }
         get relY() { return REL_Y; }
@@ -395,6 +493,12 @@
         // ----- Cập nhật -----
         update(dt, held) {
             if (!held) this.armed = true;
+
+            // Chế độ siêu khó: cả bộ rổ trượt lên xuống nhịp nhàng
+            if (this.diff.moveHoop) {
+                this.hoopT += this.diff.hoopSpeed * dt;
+                this.hoopOff = Math.sin(this.hoopT) * this.diff.hoopRange;
+            } else this.hoopOff = 0;
 
             this.netBulgeV += -this.netBulge * 150 * dt;
             this.netBulgeV *= Math.pow(0.015, dt);
@@ -469,15 +573,17 @@
                 b.spin *= Math.exp(-SPIN_DECAY * h);
                 b.rot += b.spin * h;
 
+                const rimY = this.rimY;                 // vành có thể đang trượt lên xuống
+
                 // --- Hai đầu vành rổ ---
                 for (const rx of [RIM_X1, RIM_X2]) {
-                    const dx = b.x - rx, dy = b.y - RIM_Y;
+                    const dx = b.x - rx, dy = b.y - rimY;
                     const d = Math.hypot(dx, dy);
                     const min = BALL_R + post;
                     if (d < min && d > 0.0001) {
                         const nx = dx / d, ny = dy / d;
                         b.x = rx + nx * min;
-                        b.y = RIM_Y + ny * min;
+                        b.y = rimY + ny * min;
                         const imp = b.bounce(nx, ny, RIM_E);
                         if (imp > 20) {
                             if (!b.hitRim) Sfx.rim();
@@ -490,7 +596,7 @@
 
                 // --- Bảng rổ ---
                 if (b.x - BALL_R < BOARD_X && b.x > BOARD_X - M(0.5) &&
-                    b.y > BOARD_TOP - BALL_R && b.y < BOARD_BOT && b.vx < 0) {
+                    b.y > BOARD_TOP + this.hoopOff - BALL_R && b.y < BOARD_BOT + this.hoopOff && b.vx < 0) {
                     b.x = BOARD_X + BALL_R;
                     const imp = b.bounce(1, 0, BOARD_E);
                     if (imp > 20 && !b.hitBoard) Sfx.board();
@@ -502,20 +608,24 @@
                 if (b.x - BALL_R < 24) { b.x = 24 + BALL_R; b.bounce(1, 0, 0.5); }
 
                 // --- Bóng lọt rổ ---
-                if (!b.scored && b.vy > 0 && prevY <= RIM_Y && b.y > RIM_Y &&
+                if (!b.scored && b.vy > 0 && prevY <= rimY && b.y > rimY &&
                     b.x > RIM_X1 + post && b.x < RIM_X2 - post) {
                     b.scored = true;
                     this.netBulgeV += 260;
                     this.onScore(b);
                 }
 
-                // --- Sàn ---
+                /* --- Sàn ---
+                   Ném trượt thì cho bóng nảy đúng MỘT cái rồi kết thúc tình
+                   huống: vừa đủ nhịp để bé thấy tiếc, mà không phải ngồi chờ
+                   bóng lóc cóc hết trên sàn mới được ném lượt mới. */
                 if (b.y + BALL_R > FLOOR_Y && b.vy > 0) {
                     b.y = FLOOR_Y - BALL_R;
                     const imp = b.bounce(0, -1, FLOOR_E);
                     b.bounces++;
-                    if (b.bounces <= 4) Sfx.floor(imp);
-                    if (b.bounces >= 4 || imp < 60) this.killBall(b);
+                    Sfx.floor(imp);
+                    if (!b.scored && !b.missed) { b.missed = true; this.onMiss(); }
+                    if (b.bounces >= 2 || imp < 60) this.killBall(b);
                 }
 
                 if (b.x > CW - 6 || b.x < -60 || b.y > CH + 120 || b.life > 8) this.killBall(b);
@@ -528,7 +638,7 @@
         killBall(b) {
             if (!b.alive) return;
             b.alive = false;
-            if (!b.scored) this.onMiss();
+            if (!b.scored && !b.missed) { b.missed = true; this.onMiss(); }
         }
 
         onScore(b) {
@@ -551,13 +661,13 @@
             this.scorePulse = 1;
             this.hoopFlash = 1;
 
-            this.addPopup(RIM_CX, RIM_Y - 52, `+${pts}`,
+            this.addPopup(RIM_CX, this.rimY - 52, `+${pts}`,
                 this.isThree || this.isMoneyBall ? '#d9b3ff' : '#9fe8ff', 1.5, 36);
-            if (swish) this.addPopup(RIM_CX, RIM_Y - 92, 'SWISH! +1', '#b9ffb0', 1.4, 23);
-            if (wasFire) this.addPopup(RIM_CX, RIM_Y - 124, '🔥 BỐC LỬA +1', '#ffca8a', 1.4, 21);
-            if (b.hitBoard && !swish) this.addPopup(RIM_CX, RIM_Y - 92, 'BANK SHOT!', '#ffd700', 1.2, 21);
+            if (swish) this.addPopup(RIM_CX, this.rimY - 92, 'SWISH! +1', '#b9ffb0', 1.4, 23);
+            if (wasFire) this.addPopup(RIM_CX, this.rimY - 124, '🔥 BỐC LỬA +1', '#ffca8a', 1.4, 21);
+            if (b.hitBoard && !swish) this.addPopup(RIM_CX, this.rimY - 92, 'BANK SHOT!', '#ffd700', 1.2, 21);
 
-            this.burst(RIM_CX, RIM_Y + 14, swish ? '#39ff14' : this.cfg.accent, swish ? 36 : 26);
+            this.burst(RIM_CX, this.rimY + 14, swish ? '#39ff14' : this.cfg.accent, swish ? 36 : 26);
 
             if (!this.onFire && this.streak >= 3) {
                 this.onFire = true;
@@ -577,8 +687,8 @@
             this.onFire = false;
             this.addPopup(this.px, FLOOR_Y - M(2.4), 'Trượt rồi!', '#94a3b8', 0.9, 19);
             Sfx.miss();
-            if (this.state !== 'result') { this.state = 'result'; this.resultT = 0.55; }
-            else this.resultT = Math.min(this.resultT, 0.55);
+            if (this.state !== 'result') { this.state = 'result'; this.resultT = MISS_DELAY; }
+            else this.resultT = Math.min(this.resultT, MISS_DELAY);
         }
 
         addPopup(x, y, text, color, life, size) {
@@ -824,27 +934,126 @@
             }
         }
 
+        /* --- Bộ trụ rổ thi đấu ---
+           Đế bắt sàn, trụ thép tròn có đệm bảo vệ cao 2m ở phần dưới, và bộ
+           tay đỡ hình tam giác (một thanh ngang trên + một thanh chống chéo)
+           đỡ bảng rổ — đúng như trụ rổ trong nhà thi đấu. */
+        drawStanchion(ctx) {
+            const cx = 36, hw = 8;                  // tâm trụ và nửa bề rộng (trụ ø16cm)
+            const off = this.hoopOff;               // bộ rổ trượt trên trụ ở chế độ siêu khó
+            const topY = 126;                       // đỉnh trụ
+            const padTop = FLOOR_Y - M(2.15);       // đệm bảo vệ cao 2,15m theo luật FIBA
+            const braceY = padTop - 18;             // chỗ thanh chống bắt vào trụ
+
+            // Thanh kim loại có vệt sáng dọc thân cho ra khối trụ tròn
+            const bar = (x1, y1, x2, y2, w, dark, light) => {
+                const dx = x2 - x1, dy = y2 - y1, d = Math.hypot(dx, dy) || 1;
+                const nx = -dy / d * w, ny = dx / d * w;
+                ctx.beginPath();
+                ctx.moveTo(x1 + nx, y1 + ny);
+                ctx.lineTo(x2 + nx, y2 + ny);
+                ctx.lineTo(x2 - nx, y2 - ny);
+                ctx.lineTo(x1 - nx, y1 - ny);
+                ctx.closePath();
+                const g = ctx.createLinearGradient(x1 + nx, y1 + ny, x1 - nx, y1 - ny);
+                g.addColorStop(0, dark);
+                g.addColorStop(0.34, light);
+                g.addColorStop(0.52, dark === '#141a2c' ? '#4b5779' : dark);
+                g.addColorStop(1, '#10141f');
+                ctx.fillStyle = g;
+                ctx.fill();
+            };
+
+            // Bóng đổ dưới chân trụ
+            ctx.fillStyle = 'rgba(0,0,0,0.34)';
+            ctx.beginPath();
+            ctx.ellipse(cx, FLOOR_Y + 6, 46, 9, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Thanh chống chéo và thanh ngang đỡ bảng
+            bar(cx + 3, braceY + off, BOARD_X - 2, RIM_Y - M(0.18) + off, 6, '#141a2c', '#6d7ca6');
+            bar(cx, topY + 8 + off * 0.5, BOARD_X - 2, BOARD_TOP + 26 + off, 7, '#141a2c', '#7a89b4');
+
+            // Trụ chính
+            bar(cx, FLOOR_Y, cx, topY, hw, '#141a2c', '#7d8cb8');
+            // Chỏm bo tròn trên đỉnh trụ
+            ctx.fillStyle = '#39415f';
+            ctx.beginPath();
+            ctx.ellipse(cx, topY, hw, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Đệm bảo vệ quấn quanh phần dưới trụ
+            const padW = hw + 6;
+            const pg = ctx.createLinearGradient(cx - padW, 0, cx + padW, 0);
+            pg.addColorStop(0, '#101728');
+            pg.addColorStop(0.34, this.cfg.jersey2);
+            pg.addColorStop(0.52, this.cfg.jersey);
+            pg.addColorStop(1, '#0d1220');
+            ctx.fillStyle = pg;
+            ctx.beginPath();
+            ctx.roundRect(cx - padW, padTop, padW * 2, FLOOR_Y - padTop, 7);
+            ctx.fill();
+            // Đường chỉ may ngang trên đệm
+            ctx.strokeStyle = 'rgba(0,0,0,0.30)';
+            ctx.lineWidth = 1.6;
+            for (let y = padTop + 26; y < FLOOR_Y - 10; y += 30) {
+                ctx.beginPath();
+                ctx.moveTo(cx - padW + 2, y); ctx.lineTo(cx + padW - 2, y);
+                ctx.stroke();
+            }
+            // Vệt sáng dọc mép đệm
+            ctx.strokeStyle = 'rgba(255,255,255,0.20)';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.moveTo(cx - padW * 0.45, padTop + 8);
+            ctx.lineTo(cx - padW * 0.45, FLOOR_Y - 8);
+            ctx.stroke();
+
+            // Đế bắt sàn
+            ctx.fillStyle = '#1d2338';
+            ctx.beginPath();
+            ctx.moveTo(cx - 40, FLOOR_Y);
+            ctx.lineTo(cx - 28, FLOOR_Y - 14);
+            ctx.lineTo(cx + 28, FLOOR_Y - 14);
+            ctx.lineTo(cx + 40, FLOOR_Y);
+            ctx.closePath();
+            ctx.fill();
+            ctx.fillStyle = '#39415f';
+            ctx.fillRect(cx - 40, FLOOR_Y - 4, 80, 4);
+            // Bu-lông neo đế
+            ctx.fillStyle = '#8d99bd';
+            for (const bx of [cx - 32, cx - 21, cx + 21, cx + 32]) {
+                ctx.beginPath();
+                ctx.arc(bx, FLOOR_Y - 9, 2.6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Bản mã bắt tay đỡ vào bảng rổ
+            ctx.fillStyle = '#2b3350';
+            ctx.fillRect(BOARD_X - 7, BOARD_TOP + 16 + off, 8, 26);
+            ctx.fillRect(BOARD_X - 7, RIM_Y - M(0.3) + off, 8, 26);
+            ctx.fillStyle = '#8d99bd';
+            for (const [bx, by] of [[BOARD_X - 3, BOARD_TOP + 22 + off], [BOARD_X - 3, BOARD_TOP + 36 + off],
+            [BOARD_X - 3, RIM_Y - M(0.3) + 6 + off], [BOARD_X - 3, RIM_Y - M(0.3) + 20 + off]]) {
+                ctx.beginPath();
+                ctx.arc(bx, by, 2.2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
         // --- Rổ: trụ, bảng kính, vành, lưới ---
         drawHoop(ctx, time) {
             const flash = this.hoopFlash;
-            const shake = this.rimShake * 3;
+            const vib = this.rimShake * 3;      // rung nhẹ khi bóng đập vành
+            const off = this.hoopOff;           // cả bộ rổ trượt lên xuống (chế độ siêu khó)
+            const boardY = off + vib * 0.3;     // bảng rung ít hơn vành
+            const shake = off + vib;            // vành và lưới
 
-            // Trụ và tay đỡ
-            const pole = ctx.createLinearGradient(22, 0, 52, 0);
-            pole.addColorStop(0, '#4a5675');
-            pole.addColorStop(0.5, '#2b3350');
-            pole.addColorStop(1, '#1a2038');
-            ctx.fillStyle = pole;
-            ctx.fillRect(24, 120, 26, FLOOR_Y - 120);
-            ctx.fillStyle = '#151a2c';
-            ctx.fillRect(14, FLOOR_Y - 16, 46, 16);
-            ctx.fillStyle = pole;
-            ctx.fillRect(50, BOARD_TOP + 40, BOARD_X - 50, 16);
-            ctx.fillRect(50, BOARD_BOT - 34, BOARD_X - 50, 14);
+            this.drawStanchion(ctx);
 
             // Bảng rổ bằng kính
             ctx.save();
-            ctx.translate(0, shake * 0.3);
+            ctx.translate(0, boardY);
             ctx.shadowColor = `rgba(255,215,0,${flash * 0.9})`;
             ctx.shadowBlur = 30 * flash;
             const bw = M(0.32);                       // bề dày nhìn nghiêng của bảng
@@ -859,12 +1068,12 @@
             // Khung nhôm quanh bảng
             ctx.strokeStyle = flash > 0.1 ? '#ffe08a' : '#e9f2ff';
             ctx.lineWidth = 5;
-            ctx.strokeRect(BOARD_X - bw, BOARD_TOP + shake * 0.3, bw, BOARD_BOT - BOARD_TOP);
+            ctx.strokeRect(BOARD_X - bw, BOARD_TOP + boardY, bw, BOARD_BOT - BOARD_TOP);
 
             // Ô vuông ngắm bảng (0,59m x 0,45m)
             ctx.strokeStyle = flash > 0.1 ? '#ffd700' : '#ffffff';
             ctx.lineWidth = 3.5;
-            ctx.strokeRect(BOARD_X - bw + 5, RIM_Y - M(0.45) + shake * 0.3, bw - 10, M(0.45));
+            ctx.strokeRect(BOARD_X - bw + 5, RIM_Y - M(0.45) + boardY, bw - 10, M(0.45));
 
             // Vành rổ: nhìn nghiêng nên vẽ thành hình bầu dục dẹt
             ctx.save();
@@ -939,10 +1148,6 @@
             const x = this.px;
             const bob = this.bodyBob;
 
-            let raise = 0.85;
-            if (this.state === 'charge') raise = 0.85 - this.power * 0.5;
-            else if (this.state === 'fly' || this.followThrough > 0) raise = 1;
-
             const squat = this.state === 'charge' ? this.power * 13 : 0;
             const jump = this.state === 'fly' && this.ball && this.ball.life < 0.35
                 ? Math.sin(this.ball.life / 0.35 * Math.PI) * 20 : 0;
@@ -950,9 +1155,9 @@
             let baseY = FLOOR_Y - jump;
             let lean = 0, headTilt = 0;
 
-            if (this.outcome === 'win') { baseY = FLOOR_Y - bob; raise = 1; }
-            else if (this.outcome === 'lose') { baseY = FLOOR_Y; raise = 0; lean = 0.22; headTilt = 0.4; }
-            else if (this.outcome === 'draw') { baseY = FLOOR_Y - bob; raise = 0.5; }
+            if (this.outcome === 'win') baseY = FLOOR_Y - bob;
+            else if (this.outcome === 'lose') { baseY = FLOOR_Y; lean = 0.22; headTilt = 0.4; }
+            else if (this.outcome === 'draw') baseY = FLOOR_Y - bob;
 
             // Bóng đổ
             ctx.fillStyle = 'rgba(0,0,0,0.35)';
@@ -1008,11 +1213,13 @@
             ctx.fillText(c.num, this.mirror ? -x : x, shoulderY + 26);
             ctx.restore();
 
-            // Tay — dùng IK 2 đốt nên khuỷu tay tự tìm đúng chỗ, gập duỗi mượt
+            // Tay — dùng IK 2 đốt nên khuỷu tay tự tìm đúng chỗ, gập duỗi mượt.
+            // Bàn tay ném luôn đỡ ngay dưới quả bóng, mà quả bóng thì nằm đúng
+            // điểm rời tay, nên mũi tên ngắm - quả bóng - điểm xuất phát của cú
+            // ném đều trùng khớp nhau.
             const shade = c.skin === '#f5c396' ? '#c78f5e' : '#c08a5c';
-            const handX = lerp(x - 15, this.relX, raise);
-            const handY = lerp(shoulderY + 7, REL_Y, raise);
-            let ballHand = { x: handX, y: handY };
+            const handX = this.relX + M(0.02);
+            const handY = this.relY + BALL_R * 0.55;
 
             if (this.outcome === 'win') {
                 // Hai tay giơ cao chữ V, vẫy vẫy ăn mừng
@@ -1026,7 +1233,7 @@
             } else {
                 // Tay đỡ bóng ở dưới, tay ném ở trên — đúng tư thế ném rổ
                 drawArm(ctx, x + 14, shoulderY + 3, handX + 13, handY + 9, 1, c.skin, shade);
-                ballHand = drawArm(ctx, x - 14, shoulderY + 1, handX, handY, -1, c.skin, shade, true);
+                drawArm(ctx, x - 14, shoulderY + 1, handX, handY, -1, c.skin, shade);
             }
 
             // Đầu
@@ -1079,8 +1286,7 @@
             // Bóng nằm trên bàn tay khi đang ngắm: chỉ đung đưa nhẹ,
             // bóng chỉ thực sự xoay tít sau khi rời tay.
             if (!this.outcome && (this.state === 'aim' || this.state === 'charge')) {
-                this.drawBallShape(ctx, ballHand.x - 5, ballHand.y - BALL_R * 0.55,
-                    Math.sin(time * 1.3) * 0.13, this.onFire);
+                this.drawBallShape(ctx, this.relX, this.relY, Math.sin(time * 1.3) * 0.13, this.onFire);
             }
 
             // Hào quang bốc lửa
@@ -1109,59 +1315,57 @@
             }
         }
 
-        // --- Quả bóng rổ: có đường may, xoay theo xoáy thật ---
+        // --- Quả bóng rổ: khối cầu da thật, xoay theo xoáy ngược của cú ném ---
         drawBallShape(ctx, x, y, rot, fire) {
+            if (!ballTex) buildBallTex();
             const r = BALL_R;
+            let k = Math.round(rot / (Math.PI * 2) * BB_STEPS) % BB_STEPS;
+            if (k < 0) k += BB_STEPS;
+
             ctx.save();
-            if (fire) { ctx.shadowColor = '#ff7a1a'; ctx.shadowBlur = 26; }
-            ctx.translate(x, y);
-            ctx.rotate(rot);
+            if (fire) { ctx.shadowColor = '#ff7a1a'; ctx.shadowBlur = 24; }
+            ctx.drawImage(ballTex[k], x - r, y - r, r * 2, r * 2);
+            ctx.shadowBlur = 0;
 
-            const g = ctx.createRadialGradient(-r * 0.34, -r * 0.38, r * 0.12, 0, 0, r);
-            g.addColorStop(0, fire ? '#ffd27a' : '#f0a256');
-            g.addColorStop(0.55, fire ? '#ff7a1a' : '#dd6f22');
-            g.addColorStop(1, fire ? '#b8360a' : '#96400f');
-            ctx.fillStyle = g;
-            ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-
-            // Đường may kiểu bóng rổ thật
-            ctx.strokeStyle = 'rgba(35,16,6,0.9)';
-            ctx.lineWidth = Math.max(1.2, r * 0.11);
-            ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(0, r); ctx.stroke();
-            ctx.beginPath(); ctx.ellipse(0, 0, r * 0.52, r, 0, -Math.PI / 2, Math.PI / 2); ctx.stroke();
-            ctx.beginPath(); ctx.ellipse(0, 0, r * 0.52, r, 0, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
-
-            // Đốm sáng
-            ctx.fillStyle = 'rgba(255,255,255,0.22)';
-            ctx.beginPath();
-            ctx.ellipse(-r * 0.36, -r * 0.4, r * 0.26, r * 0.18, -0.6, 0, Math.PI * 2);
-            ctx.fill();
+            if (fire) {
+                // Đang bốc lửa thì phủ thêm sắc cam nóng lên đúng phần quả bóng
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.clip();
+                ctx.fillStyle = 'rgba(255,140,20,0.34)';
+                ctx.fillRect(x - r, y - r, r * 2, r * 2);
+            }
             ctx.restore();
         }
 
         drawBall(ctx) {
             const b = this.ball;
             if (!b) return;
+            // Sắp sang lượt mới thì quả bóng mờ dần thay vì biến mất đột ngột
+            const fade = this.state === 'result' ? clamp(this.resultT / 0.25, 0, 1) : 1;
+            ctx.save();
             for (let i = 0; i < b.trail.length; i++) {
                 const t = i / b.trail.length;
-                ctx.globalAlpha = t * 0.4;
+                ctx.globalAlpha = t * 0.4 * fade;
                 ctx.fillStyle = b.fire ? '#ff7a1a' : this.cfg.accent;
                 ctx.beginPath();
                 ctx.arc(b.trail[i].x, b.trail[i].y, BALL_R * t * 0.8, 0, Math.PI * 2);
                 ctx.fill();
             }
-            ctx.globalAlpha = 1;
+            ctx.globalAlpha = fade;
             this.drawBallShape(ctx, b.x, b.y, b.rot, b.fire);
+            ctx.restore();
         }
 
         drawAim(ctx, time) {
             const rx = this.relX, ry = this.relY;
+            const dx = -Math.cos(this.angle), dy = -Math.sin(this.angle);
+            // Mũi tên bắt đầu ở RÌA quả bóng (chừa thêm chút khe) chứ không đâm vào tâm
+            const gap = BALL_R + 4;
+            const sx = rx + dx * gap, sy = ry + dy * gap;
             const len = 100 + (this.state === 'charge' ? this.power * 56 : Math.sin(time * 4) * 5);
-            const ax = rx - Math.cos(this.angle) * len;
-            const ay = ry - Math.sin(this.angle) * len;
+            const ax = rx + dx * len;
+            const ay = ry + dy * len;
 
             ctx.save();
             ctx.strokeStyle = this.cfg.accent;
@@ -1169,8 +1373,8 @@
             ctx.lineCap = 'round';
             ctx.shadowColor = this.cfg.accent;
             ctx.shadowBlur = 14;
-            ctx.beginPath(); ctx.moveTo(rx, ry); ctx.lineTo(ax, ay); ctx.stroke();
-            const a = Math.atan2(ay - ry, ax - rx);
+            ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ax, ay); ctx.stroke();
+            const a = Math.atan2(dy, dx);
             ctx.beginPath();
             ctx.moveTo(ax, ay); ctx.lineTo(ax - Math.cos(a - 0.4) * 18, ay - Math.sin(a - 0.4) * 18);
             ctx.moveTo(ax, ay); ctx.lineTo(ax - Math.cos(a + 0.4) * 18, ay - Math.sin(a + 0.4) * 18);
@@ -1187,11 +1391,14 @@
                 ctx.strokeStyle = 'rgba(255,255,255,0.55)';
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
-                ctx.moveTo(px, py);
+                let started = false;
                 for (let i = 0; i < 110; i++) {
                     vy += G * 0.016; px += vx * 0.016; py += vy * 0.016;
                     if (py > FLOOR_Y || px < BOARD_X) break;
-                    ctx.lineTo(px, py);
+                    // Chỉ bắt đầu vẽ khi đã ra khỏi quả bóng, cho khỏi đè lên bóng
+                    if (Math.hypot(px - rx, py - ry) < gap) continue;
+                    if (!started) { ctx.moveTo(px, py); started = true; }
+                    else ctx.lineTo(px, py);
                 }
                 ctx.stroke();
                 ctx.setLineDash([]);
@@ -1340,7 +1547,8 @@
             this.el = {
                 clock: document.getElementById('clock'),
                 clockLabel: document.getElementById('clock-label'),
-                strip: document.getElementById('score-strip'),
+                stripL: document.getElementById('score-left'),
+                stripR: document.getElementById('score-right'),
                 finals: document.getElementById('final-grid'),
                 menu: document.getElementById('screen-menu'),
                 pause: document.getElementById('screen-pause'),
@@ -1373,9 +1581,11 @@
             for (let i = 0; i < n; i++) this.courts.push(new Court(i));
             this.held = new Array(n).fill(false);
 
-            // Bảng điểm trên đầu màn hình
-            this.el.strip.innerHTML = this.courts.map((c, i) => `
-                <div class="score-card card-p${i + 1}" data-card="${i}">
+            /* Bảng điểm chia đều sang hai bên đồng hồ, để đồng hồ luôn nằm
+               chính giữa màn hình — cầu thủ nào cũng liếc thấy giờ ngay. */
+            const half = Math.ceil(n / 2);
+            const card = (c, i) => `
+                <div class="score-card card-p${i + 1}${i >= half ? ' flip' : ''}" data-card="${i}">
                     <div class="score-avatar">${c.cfg.emoji}</div>
                     <div class="score-info">
                         <div class="score-name">${c.cfg.name} <span class="key-tag">${this.keyLabel(i)}</span></div>
@@ -1385,11 +1595,15 @@
                         </div>
                     </div>
                     <div class="score-number" data-score="${i}">0</div>
-                </div>`).join('');
-            this.cards = this.courts.map((_, i) => this.el.strip.querySelector(`[data-card="${i}"]`));
-            this.scoreEls = this.courts.map((_, i) => this.el.strip.querySelector(`[data-score="${i}"]`));
-            this.streakEls = this.courts.map((_, i) => this.el.strip.querySelector(`[data-streak="${i}"]`));
-            this.accEls = this.courts.map((_, i) => this.el.strip.querySelector(`[data-acc="${i}"]`));
+                </div>`;
+            this.el.stripL.innerHTML = this.courts.slice(0, half).map((c, i) => card(c, i)).join('');
+            this.el.stripR.innerHTML = this.courts.slice(half).map((c, i) => card(c, i + half)).join('');
+            const box = i => i < half ? this.el.stripL : this.el.stripR;
+            const pick = (attr, i) => box(i).querySelector(`[data-${attr}="${i}"]`);
+            this.cards = this.courts.map((_, i) => pick('card', i));
+            this.scoreEls = this.courts.map((_, i) => pick('score', i));
+            this.streakEls = this.courts.map((_, i) => pick('streak', i));
+            this.accEls = this.courts.map((_, i) => pick('acc', i));
 
             // Bảng tổng kết cuối trận
             this.el.finals.className = 'final-grid cols-' + Math.min(n, 4);
@@ -1739,7 +1953,9 @@
             ctx.scale(this.scale, this.scale);
 
             this.courts.forEach(c => c.draw(ctx, this.time));
-            this.drawDivider(ctx);
+            // Vạch chia đôi chỉ có nghĩa khi hai bé đối đầu; từ 3 sân trở lên
+            // nó sẽ nằm vắt ngang sân của bé ở giữa nên bỏ hẳn.
+            if (this.playerCount === 2) this.drawDivider(ctx);
             if (this.state === 'countdown') this.drawCountdown(ctx);
 
             ctx.restore();

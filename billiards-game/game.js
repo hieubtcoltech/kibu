@@ -7,7 +7,7 @@
     'use strict';
 
     // ---------- Kích thước bàn (toạ độ logic) ----------
-    const W = 1160, H = 736;        // chừa dải điều khiển phía dưới bàn
+    const W = 1160, H = 764;        // chừa dải điều khiển phía dưới bàn
     const LEFT = 76, RIGHT = 1084, TOP = 68, BOTTOM = 572;   // mặt nỉ: 1008 x 504 (đúng tỉ lệ 2:1)
     const MID_X = (LEFT + RIGHT) / 2, MID_Y = (TOP + BOTTOM) / 2;
 
@@ -46,8 +46,15 @@
     const S_NOSE = 28, S_BASE = 16;     // vát ở lỗ giữa
 
     // ---------- Bảng chọn điểm chạm trên bi cái (9 vị trí) ----------
-    const SPIN_CX = 300, SPIN_CY = 680, SPIN_R = 36;
-    const SPIN_STEP = 18;                           // khoảng cách giữa các chấm
+    // Bảng điều khiển nằm hẳn dưới bàn, không đè lên mặt nỉ
+    const PANEL = { x: 286, y: 642, w: 588, h: 108 };
+    const SPIN_CX = PANEL.x + 62, SPIN_CY = PANEL.y + PANEL.h / 2, SPIN_R = 40;
+    const SPIN_STEP = SPIN_R * 0.52;                // khoảng cách từ tâm tới hàng/cột chấm
+    // Hướng đèn chiếu lên quả bi cái trong bảng (dùng để tô khối và làm mờ chấm khuất)
+    const SPIN_LIGHT = (() => {
+        const v = [-0.42, -0.52, 0.74], n = Math.hypot(...v);
+        return v.map(c => c / n);
+    })();
     // Xoáy dọc được quy đổi thành vận tốc bi trắng nhận lại sau khi chạm bi:
     // followV = lực đánh × FOLLOW_K, giảm dần theo quãng đường bi lăn trước lúc chạm.
     const FOLLOW_K = 0.58;      // độ mạnh của cú "chạy tiếp" / "lùi lại"
@@ -978,62 +985,112 @@
             ctx.restore();
         },
 
+        /* Bảng chọn điểm chạm: nằm hẳn dưới bàn trong khung riêng, không đè lên mặt nỉ.
+           Bi cái vẽ như khối cầu thật — 9 điểm đánh nằm ĐÚNG trên mặt cầu nên càng ra
+           rìa càng bị nhìn nghiêng: dẹt lại theo phương xuyên tâm và tối dần đi. */
         drawSpinWidget(ctx) {
             const active = this.state === 'aim' || this.state === 'ballinhand';
             ctx.save();
-            ctx.globalAlpha = active ? 1 : 0.4;
+            ctx.globalAlpha = active ? 1 : 0.45;
 
-            // Nhãn
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'alphabetic';
-            ctx.font = 'bold 14px "Baloo 2", sans-serif';
-            ctx.fillStyle = 'rgba(255,255,255,0.6)';
-            ctx.fillText('ĐIỂM CHẠM BI CÁI', SPIN_CX, SPIN_CY - SPIN_R - 14);
-
-            // Bi cái phóng to
-            const g = ctx.createRadialGradient(SPIN_CX - SPIN_R * 0.35, SPIN_CY - SPIN_R * 0.4, SPIN_R * 0.1,
-                SPIN_CX, SPIN_CY, SPIN_R);
-            g.addColorStop(0, '#ffffff');
-            g.addColorStop(0.65, '#e8e4d8');
-            g.addColorStop(1, '#b3ada0');
+            // Khung bảng điều khiển
+            ctx.fillStyle = 'rgba(6, 14, 9, 0.82)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+            ctx.lineWidth = 1.5;
             ctx.beginPath();
-            ctx.arc(SPIN_CX, SPIN_CY, SPIN_R, 0, Math.PI * 2);
-            ctx.fillStyle = g;
+            ctx.roundRect(PANEL.x, PANEL.y, PANEL.w, PANEL.h, 18);
             ctx.fill();
-            ctx.strokeStyle = 'rgba(255,255,255,0.45)';
-            ctx.lineWidth = 2;
             ctx.stroke();
 
-            // 9 điểm chạm
-            for (let y = -1; y <= 1; y++) {
-                for (let x = -1; x <= 1; x++) {
-                    const d = this.spinDotPos(x, y);
-                    const sel = this.spin.x === x && this.spin.y === y;
+            // Bóng đổ dưới quả bi
+            ctx.fillStyle = 'rgba(0,0,0,0.45)';
+            ctx.beginPath();
+            ctx.ellipse(SPIN_CX + 3, SPIN_CY + SPIN_R * 0.94, SPIN_R * 0.86, SPIN_R * 0.2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Khối cầu bi cái
+            const g = ctx.createRadialGradient(
+                SPIN_CX + SPIN_LIGHT[0] * SPIN_R * 0.55, SPIN_CY + SPIN_LIGHT[1] * SPIN_R * 0.55, SPIN_R * 0.06,
+                SPIN_CX, SPIN_CY, SPIN_R);
+            g.addColorStop(0, '#ffffff');
+            g.addColorStop(0.42, '#f3eee1');
+            g.addColorStop(0.78, '#cfc7b4');
+            g.addColorStop(1, '#8d8677');
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(SPIN_CX, SPIN_CY, SPIN_R, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Viền tối phía khuất sáng cho quả bi nổi khối
+            const rim = ctx.createRadialGradient(SPIN_CX, SPIN_CY, SPIN_R * 0.72, SPIN_CX, SPIN_CY, SPIN_R);
+            rim.addColorStop(0, 'rgba(0,0,0,0)');
+            rim.addColorStop(1, 'rgba(40,34,24,0.45)');
+            ctx.fillStyle = rim;
+            ctx.beginPath();
+            ctx.arc(SPIN_CX, SPIN_CY, SPIN_R, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Hai đường kinh tuyến mờ gợi mặt cong của quả cầu
+            ctx.strokeStyle = 'rgba(96,86,68,0.20)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.ellipse(SPIN_CX, SPIN_CY, SPIN_R * 0.42, SPIN_R * 0.97, 0, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.ellipse(SPIN_CX, SPIN_CY, SPIN_R * 0.97, SPIN_R * 0.42, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Đốm sáng
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.beginPath();
+            ctx.ellipse(SPIN_CX + SPIN_LIGHT[0] * SPIN_R * 0.5, SPIN_CY + SPIN_LIGHT[1] * SPIN_R * 0.5,
+                SPIN_R * 0.2, SPIN_R * 0.13, -0.7, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 9 điểm đánh nằm trên mặt cầu
+            for (let gy = 1; gy >= -1; gy--) {
+                for (let gx = -1; gx <= 1; gx++) {
+                    const sel = this.spin.x === gx && this.spin.y === gy;
+                    const px = SPIN_CX + gx * SPIN_STEP;
+                    const py = SPIN_CY - gy * SPIN_STEP;
+                    // Pháp tuyến mặt cầu tại điểm đó -> độ nhìn nghiêng và độ sáng
+                    const nx = (px - SPIN_CX) / SPIN_R, ny = (py - SPIN_CY) / SPIN_R;
+                    const nz = Math.sqrt(Math.max(0.04, 1 - nx * nx - ny * ny));
+                    const lit = Math.max(0, nx * SPIN_LIGHT[0] + ny * SPIN_LIGHT[1] + nz * SPIN_LIGHT[2]);
+                    const rDot = sel ? SPIN_R * 0.2 : SPIN_R * 0.115;
+
+                    ctx.save();
+                    ctx.translate(px, py);
+                    if (nx !== 0 || ny !== 0) ctx.rotate(Math.atan2(ny, nx));
+                    ctx.scale(nz, 1);          // dẹt lại đúng như một chấm sơn trên mặt cầu
                     ctx.beginPath();
-                    ctx.arc(d.x, d.y, sel ? 8 : 4.5, 0, Math.PI * 2);
+                    ctx.arc(0, 0, rDot, 0, Math.PI * 2);
                     if (sel) {
-                        ctx.fillStyle = '#e01e37';
-                        ctx.shadowColor = 'rgba(224,30,55,0.9)';
-                        ctx.shadowBlur = 12;
+                        ctx.fillStyle = `rgb(${Math.round(148 + 92 * lit)},${Math.round(18 + 28 * lit)},${Math.round(32 + 32 * lit)})`;
+                        ctx.shadowColor = 'rgba(224,30,55,0.85)';
+                        ctx.shadowBlur = 14;
                     } else {
-                        ctx.fillStyle = 'rgba(70,70,80,0.42)';
-                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = `rgba(86,78,68,${0.28 + 0.36 * lit})`;
                     }
                     ctx.fill();
-                    ctx.shadowBlur = 0;
+                    ctx.restore();
                 }
             }
 
-            // Mũi tên gợi ý hiệu ứng + lời giải thích
+            // Chữ hướng dẫn bên phải quả bi
             const hint = SPIN_HINT[`${this.spin.x},${this.spin.y}`] || SPIN_HINT['0,0'];
+            const tx = SPIN_CX + SPIN_R + 30;
             ctx.textAlign = 'left';
-            ctx.font = 'bold 17px "Baloo 2", sans-serif';
-            ctx.fillStyle = this.spin.x === 0 && this.spin.y === 0 ? 'rgba(255,255,255,0.7)' : '#ffe08a';
-            ctx.fillText(hint, SPIN_CX + SPIN_R + 24, SPIN_CY + 1);
+            ctx.textBaseline = 'alphabetic';
+            ctx.font = 'bold 13px "Baloo 2", sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.fillText('ĐIỂM CHẠM BI CÁI', tx, SPIN_CY - 22);
+            ctx.font = 'bold 18px "Baloo 2", sans-serif';
+            ctx.fillStyle = this.spin.x === 0 && this.spin.y === 0 ? 'rgba(255,255,255,0.78)' : '#ffe08a';
+            ctx.fillText(hint, tx, SPIN_CY + 4);
             ctx.font = '13px "Nunito", sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,0.42)';
-            ctx.fillText('Bấm vào bi cái để chọn — mỗi cú đánh xong tự về giữa',
-                SPIN_CX + SPIN_R + 24, SPIN_CY + 21);
+            ctx.fillText('Chạm vào bi cái để chọn — đánh xong tự về giữa', tx, SPIN_CY + 26);
             ctx.restore();
         },
 
@@ -1212,39 +1269,77 @@
             }
         },
 
-        // --- Lỗ bi ---
+        /* --- Lỗ bi ---
+           Như bàn thật: góc bàn được CẮT VÁT 45 độ bằng gỗ, hai băng kết thúc ngay
+           mép vát, còn miệng lỗ là hình tròn lớn ôm lấy chỗ vát đó. Lỗ giữa thì
+           thành gỗ thụt vào ôm quanh miệng lỗ. */
         drawPockets(ctx) {
+            // 1. Mặt vát gỗ ở bốn góc và hai thành lỗ giữa
+            const woodFacet = (pts) => {
+                ctx.beginPath();
+                ctx.moveTo(pts[0][0], pts[0][1]);
+                for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+                ctx.closePath();
+                const g = ctx.createLinearGradient(pts[0][0], pts[0][1], pts[2][0], pts[2][1]);
+                g.addColorStop(0, '#8a5a2b');
+                g.addColorStop(0.45, '#63391a');
+                g.addColorStop(1, '#3c210d');
+                ctx.fillStyle = g;
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,222,170,0.22)';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            };
+
+            // Bốn góc: tam giác vát nối hai mũi băng, đỉnh thứ ba là góc mặt nỉ
+            woodFacet([[LEFT + C_NOSE, TOP], [LEFT, TOP + C_NOSE], [CX0, CY0]]);
+            woodFacet([[RIGHT - C_NOSE, TOP], [RIGHT, TOP + C_NOSE], [CX1, CY0]]);
+            woodFacet([[LEFT + C_NOSE, BOTTOM], [LEFT, BOTTOM - C_NOSE], [CX0, CY1]]);
+            woodFacet([[RIGHT - C_NOSE, BOTTOM], [RIGHT, BOTTOM - C_NOSE], [CX1, CY1]]);
+
+            // Hai lỗ giữa: thành gỗ thụt ra sau miệng lỗ
+            woodFacet([[MID_X - S_NOSE, TOP], [MID_X + S_NOSE, TOP],
+            [MID_X + S_NOSE + 6, CY0], [MID_X - S_NOSE - 6, CY0]]);
+            woodFacet([[MID_X - S_NOSE, BOTTOM], [MID_X + S_NOSE, BOTTOM],
+            [MID_X + S_NOSE + 6, CY1], [MID_X - S_NOSE - 6, CY1]]);
+
+            // 2. Miệng lỗ
             POCKETS.forEach((p, i) => {
                 const flash = this.pocketFlash[i];
-                const rOut = POCKET_R + 9;
+                const corner = i !== 1 && i !== 4;
+                // Lỗ góc nằm chếch ra ngoài theo đường chéo, đúng như bàn thật
+                const ox = corner ? (p.x < MID_X ? -7 : 7) : 0;
+                const oy = corner ? (p.y < MID_Y ? -7 : 7) : (p.y < MID_Y ? -5 : 5);
+                const cx = p.x + ox, cy = p.y + oy;
+                const rOut = POCKET_R + (corner ? 12 : 10);
 
                 ctx.save();
-                // Vành lỗ bằng da/đồng
-                const ring = ctx.createRadialGradient(p.x - 3, p.y - 4, rOut * 0.4, p.x, p.y, rOut);
-                ring.addColorStop(0, '#5a4326');
-                ring.addColorStop(0.7, '#3a2a15');
-                ring.addColorStop(1, '#1d1409');
+                // Vành lỗ bằng da bọc
+                const ring = ctx.createRadialGradient(cx - 4, cy - 5, rOut * 0.45, cx, cy, rOut);
+                ring.addColorStop(0, '#6b5130');
+                ring.addColorStop(0.62, '#3c2a15');
+                ring.addColorStop(1, '#170f07');
                 ctx.fillStyle = ring;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, rOut, 0, Math.PI * 2);
+                ctx.arc(cx, cy, rOut, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Miệng lỗ: tối dần vào tâm, hở sáng nhẹ ở mép trên cho có chiều sâu
-                const hole = ctx.createRadialGradient(p.x - 2, p.y - 3, 1, p.x, p.y, POCKET_R + 2);
+                // Miệng lỗ sâu hun hút
+                const hole = ctx.createRadialGradient(cx - 3, cy - 4, 1, cx, cy, POCKET_R + 3);
                 hole.addColorStop(0, '#000000');
-                hole.addColorStop(0.6, '#050505');
-                hole.addColorStop(0.88, '#12100d');
-                hole.addColorStop(1, '#2b2118');
+                hole.addColorStop(0.55, '#040404');
+                hole.addColorStop(0.86, '#100e0b');
+                hole.addColorStop(1, '#2c2118');
                 ctx.fillStyle = hole;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, POCKET_R + 2, 0, Math.PI * 2);
+                ctx.arc(cx, cy, POCKET_R + 3, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Ánh sáng hắt vào thành lỗ phía trên
-                ctx.strokeStyle = 'rgba(255,230,190,0.16)';
+                ctx.strokeStyle = 'rgba(255,228,185,0.18)';
                 ctx.lineWidth = 2.5;
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, POCKET_R, Math.PI * 1.12, Math.PI * 1.88);
+                ctx.arc(cx, cy, POCKET_R + 1, Math.PI * 1.1, Math.PI * 1.9);
                 ctx.stroke();
 
                 if (flash > 0) {
@@ -1253,7 +1348,7 @@
                     ctx.shadowColor = 'rgba(255,215,0,0.9)';
                     ctx.shadowBlur = 24 * flash;
                     ctx.beginPath();
-                    ctx.arc(p.x, p.y, rOut - 2, 0, Math.PI * 2);
+                    ctx.arc(cx, cy, rOut - 2, 0, Math.PI * 2);
                     ctx.stroke();
                 }
                 ctx.restore();
@@ -1293,7 +1388,7 @@
             if (b.num !== 0) {
                 const m = b.ori;
                 let px = m[2], py = m[5], pz = m[8];        // trục cực (nơi in số)
-                let ax = m[0], ay = m[3];                   // trục ngang của bi -> chữ số nghiêng theo
+                let ax = m[0], ay = m[3];                   // trục ngang của bi
                 if (pz < 0) { px = -px; py = -py; pz = -pz; ax = -ax; }
 
                 const fade = clamp((pz - 0.12) / 0.28, 0, 1);
@@ -1321,7 +1416,6 @@
             if (this.cue.potted) return;
             const pr = this.predict();
             const cx = this.cue.x, cy = this.cue.y;
-            const col = PLAYERS[this.turn].color;
 
             // Đường ngắm
             ctx.save();
@@ -1381,7 +1475,7 @@
                 g.addColorStop(1, '#ff3366');
                 ctx.fillStyle = g;
                 ctx.beginPath(); ctx.roundRect(bxx, byy, barW * this.power, barH, 6); ctx.fill();
-                ctx.strokeStyle = col;
+                ctx.strokeStyle = PLAYERS[this.turn].color;
                 ctx.lineWidth = 1.6;
                 ctx.beginPath(); ctx.roundRect(bxx - 3, byy - 3, barW + 6, barH + 6, 9); ctx.stroke();
                 ctx.restore();
@@ -1391,7 +1485,6 @@
         // Gậy cơ thật: thon dần từ chuôi ra đầu, đủ đầu da, đai ngà,
         // khớp nối đồng, thân gỗ trắc và phần quấn cán.
         drawCueStick(ctx, tipX, tipY, ang) {
-            // Các đoạn: [chiều dài, bán kính đầu, bán kính cuối, màu sáng, màu giữa, màu tối]
             const SEGS = [
                 [6, 2.5, 2.7, '#7ba9dd', '#3f7fbd', '#22506f'],     // đầu da (đã chuốt lơ)
                 [11, 2.7, 2.9, '#fffdf6', '#ece4d0', '#b7ae95'],    // đai ngà
@@ -1406,7 +1499,6 @@
 
             const dx = -Math.cos(ang), dy = -Math.sin(ang);   // từ đầu cơ lùi về chuôi
             const nx = -dy, ny = dx;                          // pháp tuyến của gậy
-
             const total = SEGS.reduce((s, v) => s + v[0], 0);
             ctx.save();
 
@@ -1434,7 +1526,6 @@
                 ctx.lineTo(ax - nx * r0, ay - ny * r0);
                 ctx.closePath();
 
-                // Chuyển màu ngang thân gậy cho ra khối trụ tròn
                 const mx = (ax + bx) / 2, my = (ay + by) / 2, rr = (r0 + r1) / 2;
                 const g = ctx.createLinearGradient(mx + nx * rr, my + ny * rr, mx - nx * rr, my - ny * rr);
                 g.addColorStop(0, cDark);
@@ -1447,14 +1538,14 @@
                 t += len;
             }
 
-            // Hoa văn quấn cán (đoạn thứ 7)
+            // Hoa văn quấn cán
             let wrapStart = 0;
             for (let i = 0; i < 6; i++) wrapStart += SEGS[i][0];
             ctx.save();
             ctx.strokeStyle = 'rgba(255,255,255,0.10)';
             ctx.lineWidth = 1;
-            for (let s = 4; s < SEGS[6][0]; s += 7) {
-                const px = tipX + dx * (wrapStart + s), py = tipY + dy * (wrapStart + s);
+            for (let sgm = 4; sgm < SEGS[6][0]; sgm += 7) {
+                const px = tipX + dx * (wrapStart + sgm), py = tipY + dy * (wrapStart + sgm);
                 ctx.beginPath();
                 ctx.moveTo(px + nx * 5.2 - dx * 3, py + ny * 5.2 - dy * 3);
                 ctx.lineTo(px - nx * 5.2 + dx * 3, py - ny * 5.2 + dy * 3);

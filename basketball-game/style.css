@@ -207,7 +207,7 @@ body {
     gap: 10px;
 }
 
-/* Dải bảng điểm: tự giãn theo 2-4 người chơi */
+/* Hai dải bảng điểm hai bên, đồng hồ nằm chính giữa */
 .score-strip {
     flex: 1;
     display: flex;
@@ -215,7 +215,18 @@ body {
     min-width: 0;
 }
 
-.score-strip .score-card { flex: 1; min-width: 0; }
+.score-strip.right { justify-content: flex-end; }
+
+.score-strip .score-card {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: 260px;
+}
+
+/* Thẻ bên phải soi gương lại cho cân với thẻ bên trái */
+.score-card.flip { flex-direction: row-reverse; }
+.score-card.flip .score-info { text-align: right; }
+.score-card.flip .score-sub { justify-content: flex-end; }
 
 .key-tag {
     display: inline-block;
@@ -537,6 +548,16 @@ body {
 }
 
 .opt-icon { font-size: 1.5rem; line-height: 1; }
+
+/* Mức siêu khó nổi bật hơn */
+.opt-insane { border-color: rgba(255, 51, 102, 0.5); }
+.opt-insane .opt-name { color: #ff8095; }
+.opt-insane.sel {
+    background: linear-gradient(135deg, rgba(255, 51, 102, 0.3), rgba(255, 138, 26, 0.18));
+    border-color: #ff3366;
+    box-shadow: 0 0 22px rgba(255, 51, 102, 0.45);
+}
+.opt-insane.sel .opt-name { color: #fff; }
 
 .opt-name {
     font-family: var(--font-display);

@@ -78,10 +78,133 @@
 
     const MATCH_TIMES = { short: 90, normal: 150, long: 240 };
 
+    // ---------- Đá luân lưu khi hai đội hoà ----------
+    const PK_ROUNDS = 3;                  // mỗi đội đá 3 quả, hoà tiếp thì đấu súng
+    const PK_SWEEP = 1.5;                 // tốc độ vạch ngắm chạy lên xuống (đơn vị/giây)
+    const PK_CHARGE = 1.25;               // tốc độ thanh lực
+    const PK_MIN = 520, PK_MAX = 900;     // lực sút yếu nhất / mạnh nhất
+    const PK_AIM_PAD = M(0.55);           // vạch ngắm quét lố ra ngoài cột dọc chút -> sút hụt được
+    const PK_RESULT = 1.7;                // xem kết quả bao lâu rồi tới lượt sau
+
     const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
     const lerp = (a, b, t) => a + (b - a) * t;
     const rnd = (a, b) => a + Math.random() * (b - a);
     const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+
+    // =========================================================
+    //  Quả bóng: dựng như một khối cầu thật.
+    //  Hoa văn Telstar (12 mảng đen ngũ giác + 20 mảng trắng lục giác) chính là
+    //  sơ đồ Voronoi trên mặt cầu của 12 đỉnh khối 20 mặt và 20 đỉnh khối 12 mặt.
+    //  Bóng lăn thì cả khối cầu quay, hoa văn trôi qua mặt bóng rồi khuất xuống
+    //  dưới — chứ không xoay tròn tại chỗ như bánh xe.
+    // =========================================================
+    const BALL_TEX = 34;                  // độ phân giải ảnh bề mặt bóng
+    const norm3 = v => { const n = Math.hypot(v[0], v[1], v[2]); return [v[0] / n, v[1] / n, v[2] / n]; };
+
+    const PENT_C = [], HEX_C = [];        // tâm các mảng ngũ giác / lục giác
+    {
+        const P = (1 + Math.sqrt(5)) / 2, IP = 1 / P;
+        for (const a of [1, -1]) for (const b of [1, -1]) {
+            PENT_C.push(norm3([0, a, b * P]), norm3([a, b * P, 0]), norm3([b * P, 0, a]));
+        }
+        for (const a of [1, -1]) for (const b of [1, -1]) {
+            for (const c of [1, -1]) HEX_C.push(norm3([a, b, c]));
+            HEX_C.push(norm3([0, a * IP, b * P]), norm3([a * IP, b * P, 0]), norm3([b * P, 0, a * IP]));
+        }
+    }
+    const BALL_LIGHT = norm3([-0.36, -0.46, 0.81]);
+    const BALL_HALF = norm3([BALL_LIGHT[0], BALL_LIGHT[1], BALL_LIGHT[2] + 1]);
+
+    // Quay ma trận hướng quanh trục k một góc ang (Rodrigues), m = R·m
+    function rotateOri(m, kx, ky, kz, ang) {
+        const c = Math.cos(ang), s = Math.sin(ang), t = 1 - c;
+        const r0 = t * kx * kx + c, r1 = t * kx * ky - s * kz, r2 = t * kx * kz + s * ky;
+        const r3 = t * kx * ky + s * kz, r4 = t * ky * ky + c, r5 = t * ky * kz - s * kx;
+        const r6 = t * kx * kz - s * ky, r7 = t * ky * kz + s * kx, r8 = t * kz * kz + c;
+        const a0 = m[0], a1 = m[1], a2 = m[2], a3 = m[3], a4 = m[4], a5 = m[5], a6 = m[6], a7 = m[7], a8 = m[8];
+        m[0] = r0 * a0 + r1 * a3 + r2 * a6; m[1] = r0 * a1 + r1 * a4 + r2 * a7; m[2] = r0 * a2 + r1 * a5 + r2 * a8;
+        m[3] = r3 * a0 + r4 * a3 + r5 * a6; m[4] = r3 * a1 + r4 * a4 + r5 * a7; m[5] = r3 * a2 + r4 * a5 + r5 * a8;
+        m[6] = r6 * a0 + r7 * a3 + r8 * a6; m[7] = r6 * a1 + r7 * a4 + r8 * a7; m[8] = r6 * a2 + r7 * a5 + r8 * a8;
+    }
+
+    function orthonormalize(m) {
+        let n = Math.hypot(m[0], m[1], m[2]);
+        m[0] /= n; m[1] /= n; m[2] /= n;
+        const d = m[3] * m[0] + m[4] * m[1] + m[5] * m[2];
+        m[3] -= d * m[0]; m[4] -= d * m[1]; m[5] -= d * m[2];
+        n = Math.hypot(m[3], m[4], m[5]);
+        m[3] /= n; m[4] /= n; m[5] /= n;
+        m[6] = m[1] * m[5] - m[2] * m[4];
+        m[7] = m[2] * m[3] - m[0] * m[5];
+        m[8] = m[0] * m[4] - m[1] * m[3];
+    }
+
+    /* Bóng lăn không trượt: đi được quãng đường d thì quay d/R quanh trục
+       nằm ngang vuông góc với hướng đi. */
+    function rollBall(b, dx, dy) {
+        const d = Math.hypot(dx, dy);
+        if (d < 0.0005) return;
+        rotateOri(b.ori, -dy / d, dx / d, 0, d / B_R);
+        b.texDirty = true;
+    }
+
+    function renderBallTex(b) {
+        if (!b.tex) {
+            b.tex = document.createElement('canvas');
+            b.tex.width = b.tex.height = BALL_TEX;
+            b.texCtx = b.tex.getContext('2d');
+            b.texImg = b.texCtx.createImageData(BALL_TEX, BALL_TEX);
+        }
+        orthonormalize(b.ori);
+        const m = b.ori, data = b.texImg.data;
+        let p = 0;
+        for (let j = 0; j < BALL_TEX; j++) {
+            const ny = (j + 0.5) / BALL_TEX * 2 - 1;
+            for (let i = 0; i < BALL_TEX; i++, p += 4) {
+                const nx = (i + 0.5) / BALL_TEX * 2 - 1;
+                const d2 = nx * nx + ny * ny;
+                if (d2 >= 1) { data[p + 3] = 0; continue; }
+                const nz = Math.sqrt(1 - d2);
+
+                // Pháp tuyến đổi sang hệ toạ độ gắn với quả bóng
+                const lx = m[0] * nx + m[3] * ny + m[6] * nz;
+                const ly = m[1] * nx + m[4] * ny + m[7] * nz;
+                const lz = m[2] * nx + m[5] * ny + m[8] * nz;
+
+                // Ô Voronoi gần nhất quyết định điểm này thuộc mảng đen hay trắng
+                let bestP = -2, bestH = -2, second = -2;
+                for (const c of PENT_C) {
+                    const dp = lx * c[0] + ly * c[1] + lz * c[2];
+                    if (dp > bestP) { second = bestP; bestP = dp; } else if (dp > second) second = dp;
+                }
+                for (const c of HEX_C) {
+                    const dp = lx * c[0] + ly * c[1] + lz * c[2];
+                    if (dp > bestH) { second = Math.max(second, bestH); bestH = dp; }
+                    else if (dp > second) second = dp;
+                }
+                const top = Math.max(bestP, bestH);
+                const black = bestP > bestH;
+                const seam = (top - second) < 0.035;         // đường chỉ khâu giữa hai mảng
+
+                let base = black ? 26 : 244;
+                if (seam) base = black ? 12 : 96;
+
+                let diff = nx * BALL_LIGHT[0] + ny * BALL_LIGHT[1] + nz * BALL_LIGHT[2];
+                if (diff < 0) diff = 0;
+                const shade = 0.32 + 0.74 * diff;
+                let spec = 0;
+                const sp = nx * BALL_HALF[0] + ny * BALL_HALF[1] + nz * BALL_HALF[2];
+                if (sp > 0) { const s2 = sp * sp, s4 = s2 * s2, s8 = s4 * s4; spec = s8 * s8 * s4 * 170; }
+
+                const v = Math.min(255, base * shade + spec);
+                data[p] = v; data[p + 1] = v; data[p + 2] = Math.min(255, v * 1.01);
+                const edge = (1 - Math.sqrt(d2)) * (BALL_TEX * 0.5);
+                data[p + 3] = edge >= 1 ? 255 : edge * 255;
+            }
+        }
+        b.texCtx.putImageData(b.texImg, 0, 0);
+        b.texDirty = false;
+    }
 
     // ---------- Âm thanh ----------
     const Sfx = {
@@ -422,7 +545,6 @@
             }
             const m = Math.hypot(dx, dy) || 1;
             b.vx = dx / m * speed; b.vy = dy / m * speed;
-            b.spin = (dx / m) * 9;
             Game.releaseBall(this, 0.22);
             this.kickAnim = 1;
             Sfx.pass();
@@ -437,7 +559,6 @@
             const m = Math.hypot(this.fx, this.fy) || 1;
             b.vx = this.fx / m * speed;
             b.vy = this.fy / m * speed;
-            b.spin = (this.fx / m) * (10 + power * 16);
             b.shotBy = this.idx;
             Game.releaseBall(this, 0.26);
             this.kickAnim = 1;
@@ -602,7 +723,10 @@
         players: [],
         keepers: [],
         scores: [0, 0],
-        ball: { x: MID_X, y: MID_Y, vx: 0, vy: 0, spin: 0, rot: 0, shotBy: -1, inNet: 0 },
+        ball: {
+            x: MID_X, y: MID_Y, vx: 0, vy: 0, shotBy: -1, inNet: 0,
+            ori: [1, 0, 0, 0, 1, 0, 0, 0, 1], tex: null, texDirty: true
+        },
         owner: -1,
         ownerLock: 0,
         timeLeft: 150,
@@ -617,6 +741,7 @@
         shake: 0,
         goalT: 0,
         goalText: '',
+        pk: null,                 // dữ liệu loạt luân lưu
         goalTeam: 0,
         celebrateT: 0,
 
@@ -694,7 +819,7 @@
         // ---------- Bố trí lại đội hình khi giao bóng ----------
         kickoff() {
             const b = this.ball;
-            b.x = MID_X; b.y = MID_Y; b.vx = 0; b.vy = 0; b.spin = 0; b.shotBy = -1; b.inNet = 0;
+            b.x = MID_X; b.y = MID_Y; b.vx = 0; b.vy = 0; b.shotBy = -1; b.inNet = 0;
             this.owner = -1;
             this.ownerLock = 0;
             this.trail = [];
@@ -759,11 +884,19 @@
                 if (e.repeat) return;
                 this.keys[e.code] = true;
                 Sfx.ensure();
+                if (this.state === 'shootout') {
+                    if (this.pk && this.pk.shooter && e.code === this.pk.shooter.ctrl.act) this.pkPress();
+                    return;
+                }
                 for (const p of this.players) if (e.code === p.ctrl.act) p.pressAct();
             });
 
             window.addEventListener('keyup', e => {
                 this.keys[e.code] = false;
+                if (this.state === 'shootout') {
+                    if (this.pk && this.pk.shooter && e.code === this.pk.shooter.ctrl.act) this.pkRelease();
+                    return;
+                }
                 for (const p of this.players) if (e.code === p.ctrl.act) p.releaseAct();
             });
 
@@ -800,6 +933,7 @@
             this.lastTick = -1;
             this.celebrateT = 0;
             this.fx = []; this.confetti = []; this.keys = {};
+            this.pk = null;
             this.state = 'countdown';
             this.el.menu.classList.add('hidden');
             this.el.pause.classList.add('hidden');
@@ -887,6 +1021,9 @@
                     else { this.kickoff(); this.state = 'playing'; }
                 }
 
+            } else if (this.state === 'shootout') {
+                this.updateShootout(dt);
+
             } else if (this.state === 'celebrate') {
                 this.celebrateT += dt;
                 this.players.forEach(p => p.update(dt, {}));
@@ -918,9 +1055,8 @@
                 const ny = b.y + (ty - b.y) * k;
                 b.vx = (nx - b.x) / Math.max(dt, 1e-4);
                 b.vy = (ny - b.y) / Math.max(dt, 1e-4);
+                rollBall(b, nx - b.x, ny - b.y);
                 b.x = nx; b.y = ny;
-                b.spin = b.vx * 0.055;
-                b.rot += b.spin * dt;
                 return;
             }
 
@@ -938,8 +1074,7 @@
                 }
                 b.x += b.vx * h;
                 b.y += b.vy * h;
-                b.spin = lerp(b.spin, Math.hypot(b.vx, b.vy) * 0.05 * Math.sign(b.vx || 1), 0.3);
-                b.rot += b.spin * h;
+                rollBall(b, b.vx * h, b.vy * h);
 
                 /* Bóng đã nằm trong lưới: lưới hãm gần hết lực, bóng dội nhẹ vào
                    đáy lưới rồi nằm gọn bên trong chứ không bay xuyên ra ngoài. */
@@ -1006,6 +1141,7 @@
                     b.x = k.x + nx * (B_R + r);
                     b.y = k.y + ny * (B_R + r);
                     const speed = Math.hypot(b.vx, b.vy);
+                    b.savedBy = k.team;
                     if (speed < GK_CATCH_V) {
                         // Bắt dính bóng
                         k.holdT = GK_HOLD;
@@ -1177,9 +1313,11 @@
         },
 
         endMatch() {
+            Sfx.whistle();
+            // Hoà thì bước vào loạt sút luân lưu để phân định thắng thua
+            if (this.scores[0] === this.scores[1]) { this.startShootout(); return; }
             this.state = 'celebrate';
             this.celebrateT = 0;
-            Sfx.whistle();
             const [a, b] = this.scores;
             this.players.forEach(p => {
                 if (a === b) p.setOutcome('draw');
@@ -1199,12 +1337,242 @@
             }
         },
 
+
+        /* =====================================================
+           ĐÁ LUÂN LƯU — dùng khi hết giờ mà hai đội hoà.
+           Mỗi đội 3 quả, vẫn hoà thì đấu súng từng quả một.
+           Cách sút giống hệt lúc thi đấu: vạch ngắm tự chạy dọc khung thành,
+           GIỮ phím để lấy lực rồi THẢ đúng lúc. Ngắm lố ra ngoài cột là sút hụt.
+           ===================================================== */
+        startShootout() {
+            this.state = 'shootout';
+            this.pk = {
+                phase: 'ready',
+                team: 0,                    // đội đang sút
+                round: 0,
+                goals: [0, 0],
+                taken: [0, 0],
+                history: [[], []],
+                shooterOf: [0, 0],          // cầu thủ nào của đội tới lượt
+                shooter: null,
+                aim: 0, aimDir: 1,          // vạch ngắm: -1 mép trên, +1 mép dưới
+                power: 0, powerDir: 1,
+                holding: false,
+                t: 0, resultT: 0, resultText: '', resultGood: false,
+                over: false, winner: -1
+            };
+            this.confetti = [];
+            this.fx = [];
+            Sfx.tick();
+            this.setupPenalty();
+        },
+
+        setupPenalty() {
+            const pk = this.pk;
+            const mates = this.players.filter(p => p.team === pk.team);
+            pk.shooter = mates[pk.shooterOf[pk.team] % mates.length];
+            const side = pk.team === 0 ? 1 : 0;          // sút vào khung thành đội kia
+            const goalX = side === 0 ? PITCH.x : PR;
+            const dir = side === 0 ? -1 : 1;             // hướng bóng bay
+            pk.goalX = goalX;
+            pk.dir = dir;
+            pk.spotX = goalX - dir * PEN_SPOT;
+
+            const b = this.ball;
+            b.x = pk.spotX; b.y = MID_Y;
+            b.vx = 0; b.vy = 0; b.inNet = 0; b.shotBy = -1; b.savedBy = undefined;
+            this.owner = -1;
+
+            // Người sút đứng sau bóng, quay mặt về khung thành
+            pk.shooter.reset(pk.spotX - dir * M(1.1), MID_Y);
+            pk.shooter.fx = dir; pk.shooter.fy = 0;
+
+            // Những cầu thủ còn lại đứng chờ ở giữa sân
+            let n = 0;
+            for (const p of this.players) {
+                if (p === pk.shooter) continue;
+                p.reset(MID_X + (n % 2 ? 1 : -1) * M(1.2), MID_Y + (n < 2 ? -1 : 1) * M(2.4));
+                n++;
+            }
+            this.keepers.forEach(k => k.reset());
+
+            pk.aim = 0; pk.aimDir = 1;
+            pk.power = 0; pk.powerDir = 1;
+            pk.holding = false;
+            pk.phase = 'aim';
+            pk.t = 0;
+        },
+
+        pkAimY() {
+            const half = GOAL_H / 2 + PK_AIM_PAD;
+            return MID_Y + this.pk.aim * half;
+        },
+
+        pkPress() {
+            const pk = this.pk;
+            if (pk.phase !== 'aim') return;
+            pk.phase = 'charge';
+            pk.power = 0; pk.powerDir = 1; pk.holding = true;
+        },
+
+        pkRelease() {
+            const pk = this.pk;
+            if (pk.phase !== 'charge') return;
+            pk.holding = false;
+            const b = this.ball;
+            const ty = this.pkAimY();
+            const dx = pk.goalX - b.x, dy = ty - b.y;
+            const d = Math.hypot(dx, dy) || 1;
+            const speed = lerp(PK_MIN, PK_MAX, pk.power);
+            b.vx = dx / d * speed;
+            b.vy = dy / d * speed;
+            b.shotBy = pk.shooter.idx;
+            pk.shooter.kickAnim = 1;
+            pk.shooter.shots++;
+            pk.phase = 'fly';
+            pk.t = 0;
+            Sfx.kick(pk.power);
+
+            // Thủ môn đổ người đoán hướng: chọn một trong ba vùng, đúng 1/3 cơ hội
+            const gk = this.keepers[pk.team === 0 ? 1 : 0];
+            const zone = Math.floor(Math.random() * 3) - 1;      // -1 trên, 0 giữa, 1 dưới
+            gk.aimY = clamp(MID_Y + zone * GOAL_H * 0.34, MID_Y - GK_RANGE, MID_Y + GK_RANGE);
+            gk.reactT = 99;                                       // khoá lại, không tự bám bóng nữa
+            gk.pkGuess = zone;
+            gk.pkCorrectT = 0.42;                                 // lát sau mới kịp chỉnh theo bóng
+            gk.diveT = 1;
+            gk.dive = zone || 1;
+        },
+
+        updateShootout(dt) {
+            const pk = this.pk;
+            const b = this.ball;
+            pk.t += dt;
+
+            // Thủ môn: giai đoạn luân lưu tự điều khiển riêng
+            const gk = this.keepers[pk.team === 0 ? 1 : 0];
+            if (pk.phase === 'fly') {
+                gk.pkCorrectT = Math.max(0, (gk.pkCorrectT || 0) - dt);
+                if (gk.pkCorrectT <= 0) gk.aimY = clamp(b.y, MID_Y - GK_RANGE, MID_Y + GK_RANGE);
+                const dy = gk.aimY - gk.y;
+                gk.y += clamp(dy * 7, -GK_SPEED * 1.5, GK_SPEED * 1.5) * dt;
+                gk.diveT = Math.max(0, gk.diveT - dt * 1.2);
+                gk.saveFlash = Math.max(0, gk.saveFlash - dt * 2);
+            } else {
+                this.keepers.forEach(k => k.update(dt, b));
+            }
+            this.players.forEach(p => p.update(dt, {}));
+
+            switch (pk.phase) {
+                case 'aim': {
+                    pk.aim += pk.aimDir * PK_SWEEP * dt;
+                    if (pk.aim > 1) { pk.aim = 1; pk.aimDir = -1; }
+                    if (pk.aim < -1) { pk.aim = -1; pk.aimDir = 1; }
+                    break;
+                }
+                case 'charge': {
+                    pk.power += pk.powerDir * PK_CHARGE * dt;
+                    if (pk.power > 1) { pk.power = 1; pk.powerDir = -1; }
+                    if (pk.power < 0) { pk.power = 0; pk.powerDir = 1; }
+                    if (pk.t > 6) this.pkRelease();      // giữ mãi thì tự sút
+                    break;
+                }
+                case 'fly': {
+                    this.stepBall(dt);
+                    const past = pk.dir < 0 ? b.x < pk.goalX - B_R : b.x > pk.goalX + B_R;
+                    if (b.inNet !== 0) this.pkFinishShot(true, '⚽ VÀO RỒI!');
+                    else if (b.savedBy !== undefined || gk.holdT > 0) this.pkFinishShot(false, '🧤 THỦ MÔN CẢN!');
+                    else if (past) this.pkFinishShot(false, '😮 SÚT HỤT!');
+                    else if (pk.t > 3.2 || (Math.hypot(b.vx, b.vy) < 5 && pk.t > 0.6))
+                        this.pkFinishShot(false, '😮 KHÔNG VÀO!');
+                    break;
+                }
+                case 'result': {
+                    pk.resultT -= dt;
+                    if (pk.resultT <= 0) this.pkNext();
+                    break;
+                }
+            }
+        },
+
+        pkFinishShot(scored, text) {
+            const pk = this.pk;
+            pk.phase = 'result';
+            pk.resultT = PK_RESULT;
+            pk.resultText = text;
+            pk.resultGood = scored;
+            pk.taken[pk.team]++;
+            pk.history[pk.team].push(scored);
+            if (scored) {
+                pk.goals[pk.team]++;
+                pk.shooter.goals++;
+                Sfx.goal();
+                for (let i = 0; i < 40; i++) {
+                    this.confetti.push({
+                        x: rnd(pk.goalX - 60, pk.goalX + 60), y: rnd(GOAL_T - 40, GOAL_B),
+                        vx: rnd(-60, 60), vy: rnd(60, 200), size: rnd(4, 8), rot: rnd(0, 6),
+                        color: [TEAMS[pk.team].color, '#ffd700', '#ffffff'][i % 3], life: 3
+                    });
+                }
+            } else {
+                Sfx.post();
+            }
+        },
+
+        /* Xong một lượt: kiểm tra đã phân thắng bại chưa rồi chuyển lượt. */
+        pkNext() {
+            const pk = this.pk;
+            const [ta, tb] = pk.taken, [ga, gb] = pk.goals;
+            const done = Math.min(ta, tb);
+
+            // Trong 3 lượt đầu: nếu một bên đã hơn nhiều hơn số quả còn lại thì kết thúc sớm
+            if (done < PK_ROUNDS) {
+                const leftA = PK_ROUNDS - ta, leftB = PK_ROUNDS - tb;
+                if (ga > gb + leftB) return this.pkFinish(0);
+                if (gb > ga + leftA) return this.pkFinish(1);
+                if (ta >= PK_ROUNDS && tb >= PK_ROUNDS && ga !== gb) return this.pkFinish(ga > gb ? 0 : 1);
+            } else if (ta === tb && ga !== gb) {
+                // Đấu súng: hai bên đá đủ số quả bằng nhau mà lệch nhau là xong
+                return this.pkFinish(ga > gb ? 0 : 1);
+            }
+
+            pk.shooterOf[pk.team]++;
+            pk.team = pk.team === 0 ? 1 : 0;
+            if (pk.team === 0) pk.round++;
+            this.setupPenalty();
+        },
+
+        pkFinish(winner) {
+            const pk = this.pk;
+            pk.over = true;
+            pk.winner = winner;
+            this.state = 'celebrate';
+            this.celebrateT = 0;
+            this.players.forEach(p => p.setOutcome(p.team === winner ? 'win' : 'lose'));
+            setTimeout(() => Sfx.cheer(), 400);
+            setTimeout(() => Sfx.sob(), 900);
+            for (let i = 0; i < 120; i++) {
+                this.confetti.push({
+                    x: rnd(0, W), y: rnd(-260, 0), vx: rnd(-50, 50), vy: rnd(90, 230),
+                    size: rnd(4, 9), rot: rnd(0, 6),
+                    color: [TEAMS[winner].color, '#ffd700', '#ffffff'][i % 3], life: 8
+                });
+            }
+        },
+
         showResult() {
             this.state = 'over';
             const [a, b] = this.scores;
             const el = id => document.getElementById(id);
             let title, desc, emoji;
-            if (a === b) {
+            if (this.pk && this.pk.over) {
+                const w = this.pk.winner;
+                title = `${TEAMS[w].name} THẮNG LUÂN LƯU!`;
+                desc = `Hoà ${a} - ${b} sau thời gian thi đấu, ${TEAMS[w].name} thắng ` +
+                    `${this.pk.goals[w]} - ${this.pk.goals[1 - w]} trên chấm phạt đền. Chúc mừng ` +
+                    this.players.filter(p => p.team === w).map(p => p.emoji + ' ' + p.name).join(' và ') + '!';
+                emoji = '🥅';
+            } else if (a === b) {
                 title = 'HOÀ RỒI!';
                 desc = `Tỉ số ${a} - ${b}. Hai đội ngang tài ngang sức, đá lại một trận nữa nhé!`;
                 emoji = '🤝';
@@ -1287,6 +1655,7 @@
             this.players.forEach(p => p.draw(ctx, this.time));
             this.drawBall(ctx);
             this.drawFx(ctx);
+            if (this.state === 'shootout') this.drawShootout(ctx);
             if (this.state === 'goal') this.drawGoalBanner(ctx);
             if (this.state === 'countdown') this.drawCountdown(ctx);
             if (this.state === 'celebrate' || this.state === 'over') this.drawEndBanner(ctx);
@@ -1490,43 +1859,28 @@
 
         drawBall(ctx) {
             const b = this.ball;
-            // Vệt bóng
+
+            // Vệt bóng khi đi nhanh
             for (const t of this.trail) {
-                ctx.globalAlpha = clamp(t.life / 0.28, 0, 1) * 0.35;
+                ctx.globalAlpha = clamp(t.life / 0.28, 0, 1) * 0.32;
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath(); ctx.arc(t.x, t.y, B_R * 0.8, 0, Math.PI * 2); ctx.fill();
             }
             ctx.globalAlpha = 1;
 
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            // Bóng đổ trên cỏ
+            ctx.fillStyle = 'rgba(0,0,0,0.32)';
             ctx.beginPath();
-            ctx.ellipse(b.x + 1.5, b.y + 4, B_R * 0.95, B_R * 0.55, 0, 0, Math.PI * 2);
+            ctx.ellipse(b.x + 2, b.y + 4, B_R * 0.98, B_R * 0.5, 0, 0, Math.PI * 2);
             ctx.fill();
+
+            if (b.texDirty || !b.tex) renderBallTex(b);
 
             ctx.save();
             ctx.translate(b.x, b.y);
-            ctx.rotate(b.rot);
-            const g = ctx.createRadialGradient(-B_R * 0.35, -B_R * 0.4, B_R * 0.15, 0, 0, B_R);
-            g.addColorStop(0, '#ffffff');
-            g.addColorStop(0.75, '#eef1f5');
-            g.addColorStop(1, '#b9c1cc');
-            ctx.fillStyle = g;
-            ctx.beginPath(); ctx.arc(0, 0, B_R, 0, Math.PI * 2); ctx.fill();
-
-            // Các mảng đen kiểu quả bóng đá
-            ctx.fillStyle = '#1b1f27';
-            ctx.beginPath();
-            for (let i = 0; i < 5; i++) {
-                const a = i / 5 * Math.PI * 2;
-                ctx.moveTo(Math.cos(a) * B_R * 0.42, Math.sin(a) * B_R * 0.42);
-                ctx.arc(Math.cos(a) * B_R * 0.62, Math.sin(a) * B_R * 0.62, B_R * 0.26, 0, Math.PI * 2);
-            }
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(0, 0, B_R * 0.3, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+            ctx.drawImage(b.tex, -B_R, -B_R, B_R * 2, B_R * 2);
+            // Viền tối rất mảnh cho quả bóng tách khỏi nền cỏ
+            ctx.strokeStyle = 'rgba(0,0,0,0.35)';
             ctx.lineWidth = 1;
             ctx.beginPath(); ctx.arc(0, 0, B_R, 0, Math.PI * 2); ctx.stroke();
             ctx.restore();
@@ -1550,6 +1904,131 @@
                 }
                 ctx.restore();
             }
+        },
+
+
+        /* Giao diện loạt luân lưu: băng rôn, bảng đếm quả của hai đội,
+           vạch ngắm chạy dọc khung thành và thanh lực. */
+        drawShootout(ctx) {
+            const pk = this.pk;
+            if (!pk) return;
+
+            // Băng rôn trên đầu
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 34px "Baloo 2", sans-serif';
+            ctx.fillStyle = '#ffd700';
+            ctx.shadowColor = 'rgba(0,0,0,0.8)';
+            ctx.shadowBlur = 12;
+            const extra = Math.min(pk.taken[0], pk.taken[1]) >= PK_ROUNDS;
+            ctx.fillText(extra ? '🥅 ĐẤU SÚNG!' : '🥅 ĐÁ LUÂN LƯU', W / 2, 46);
+
+            // Đang tới lượt ai
+            ctx.font = 'bold 21px "Baloo 2", sans-serif';
+            ctx.fillStyle = TEAMS[pk.team].light;
+            ctx.fillText(`${pk.shooter.emoji} ${pk.shooter.name} — ${TEAMS[pk.team].name}`, W / 2, 74);
+
+            // Bảng đếm quả: mỗi lượt một ô, xanh là vào, đỏ là hỏng
+            const slots = Math.max(PK_ROUNDS, pk.taken[0], pk.taken[1]);
+            for (const t of [0, 1]) {
+                const y = 100 + t * 26;
+                const total = slots * 24;
+                let x = W / 2 - total / 2;
+                ctx.textAlign = 'right';
+                ctx.font = 'bold 14px "Baloo 2", sans-serif';
+                ctx.fillStyle = TEAMS[t].light;
+                ctx.fillText(TEAMS[t].name, x - 12, y + 5);
+                for (let i = 0; i < slots; i++, x += 24) {
+                    const r = pk.history[t][i];
+                    ctx.beginPath();
+                    ctx.arc(x + 9, y, 8, 0, Math.PI * 2);
+                    if (r === true) { ctx.fillStyle = '#39ff14'; }
+                    else if (r === false) { ctx.fillStyle = '#ff3b3b'; }
+                    else { ctx.fillStyle = 'rgba(255,255,255,0.16)'; }
+                    ctx.fill();
+                    if (r === false) {
+                        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(x + 5, y - 4); ctx.lineTo(x + 13, y + 4);
+                        ctx.moveTo(x + 13, y - 4); ctx.lineTo(x + 5, y + 4);
+                        ctx.stroke();
+                    }
+                }
+            }
+            ctx.restore();
+
+            // Vạch ngắm chạy dọc khung thành
+            if (pk.phase === 'aim' || pk.phase === 'charge') {
+                const ay = this.pkAimY();
+                const inside = ay > GOAL_T && ay < GOAL_B;
+                ctx.save();
+                ctx.strokeStyle = inside ? '#ffd700' : '#ff5566';
+                ctx.lineWidth = 3;
+                ctx.shadowColor = inside ? 'rgba(255,215,0,0.9)' : 'rgba(255,85,102,0.9)';
+                ctx.shadowBlur = 14;
+                const gx = pk.goalX;
+                ctx.beginPath();
+                ctx.moveTo(gx - pk.dir * 26, ay);
+                ctx.lineTo(gx + pk.dir * 8, ay);
+                ctx.stroke();
+                // vòng ngắm
+                ctx.beginPath();
+                ctx.arc(gx - pk.dir * 30, ay, 9, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(gx - pk.dir * 30, ay - 5);
+                ctx.lineTo(gx - pk.dir * 30, ay + 5);
+                ctx.stroke();
+                // đường nối từ bóng tới điểm ngắm
+                ctx.globalAlpha = 0.45;
+                ctx.setLineDash([8, 8]);
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.ball.x, this.ball.y);
+                ctx.lineTo(gx - pk.dir * 30, ay);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // Thanh lực trên đầu người sút
+            if (pk.phase === 'charge') {
+                const bw = 90, bh = 12;
+                const bx = pk.shooter.x - bw / 2, by = pk.shooter.y - P_R - 26;
+                ctx.save();
+                ctx.fillStyle = 'rgba(4,12,8,0.85)';
+                ctx.beginPath(); ctx.roundRect(bx - 3, by - 3, bw + 6, bh + 6, 7); ctx.fill();
+                const g = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+                g.addColorStop(0, '#7bed9f');
+                g.addColorStop(0.6, '#ffd700');
+                g.addColorStop(1, '#ff3b3b');
+                ctx.fillStyle = g;
+                ctx.beginPath(); ctx.roundRect(bx, by, bw * pk.power, bh, 6); ctx.fill();
+                ctx.restore();
+            }
+
+            // Kết quả quả vừa sút
+            if (pk.phase === 'result') {
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 44px "Baloo 2", sans-serif';
+                ctx.fillStyle = pk.resultGood ? '#39ff14' : '#ff8a8a';
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 16;
+                ctx.fillText(pk.resultText, W / 2, MID_Y - 60);
+                ctx.restore();
+            }
+
+            // Nhắc phím
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 15px "Nunito", sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fillText(
+                pk.phase === 'aim' ? `Giữ phím ${pk.shooter.ctrl.actLabel} để lấy lực` :
+                    pk.phase === 'charge' ? 'Thả ra để sút!' : '',
+                W / 2, H - 26);
+            ctx.restore();
         },
 
         drawGoalBanner(ctx) {
