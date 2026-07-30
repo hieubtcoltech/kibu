@@ -1,0 +1,612 @@
+/* =========================================================
+   SUPER STRIKER — BÓNG ĐÁ MINI
+   Sân vận động về đêm · 2-4 người chơi trên cùng một máy
+   ========================================================= */
+
+:root {
+    --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+    --font-main: 'Nunito', system-ui, sans-serif;
+
+    --bg-dark: #050b06;
+    --card-bg: rgba(10, 24, 14, 0.8);
+    --card-border: rgba(255, 255, 255, 0.12);
+
+    --grass: #2e8f43;
+    --team-a: #ff4d4d;
+    --team-b: #3da5ff;
+    --gold: #ffd700;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-dark);
+    color: #fff;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.bg-stadium-glow {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(circle at 18% 15%, rgba(255, 77, 77, 0.18), transparent 42%),
+        radial-gradient(circle at 82% 15%, rgba(61, 165, 255, 0.18), transparent 42%),
+        radial-gradient(circle at 50% 105%, rgba(46, 143, 67, 0.3), transparent 55%),
+        linear-gradient(165deg, #040a06 0%, #0a1710 60%, #10251a 100%);
+    background-size: 180% 180%;
+    animation: stadiumPulse 17s ease-in-out infinite alternate;
+}
+
+@keyframes stadiumPulse {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+.app-wrapper {
+    width: 100%;
+    max-width: 1400px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px 14px;
+    gap: 10px;
+}
+
+/* ---------------- Nav ---------------- */
+.unified-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 9px 16px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    flex-shrink: 0;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; }
+
+.brand-icon {
+    font-size: 1.7rem;
+    display: inline-block;
+    animation: rollBall 4s linear infinite;
+}
+
+@keyframes rollBall {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.brand-title {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    background: linear-gradient(135deg, var(--team-a), var(--gold), var(--team-b));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.btn {
+    font-family: var(--font-display);
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 8px 15px;
+    border-radius: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+    color: #e2e8f0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.btn-home {
+    background: linear-gradient(135deg, rgba(46, 143, 67, 0.5), rgba(61, 165, 255, 0.28));
+    border-color: rgba(46, 143, 67, 0.6);
+    color: #fff;
+}
+
+.btn.muted { opacity: 0.55; }
+
+/* ---------------- Viewport ---------------- */
+.game-viewport {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.65);
+    background: #050b06;
+}
+
+#game-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+.hud-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+}
+
+.hud-top { display: flex; justify-content: center; }
+
+/* Bảng tỉ số kiểu sân vận động */
+.scoreboard {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    background: rgba(4, 12, 8, 0.86);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    overflow: hidden;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.6);
+}
+
+.team-side {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 20px;
+}
+
+.team-a { background: linear-gradient(90deg, rgba(255, 77, 77, 0.28), transparent); }
+.team-b { background: linear-gradient(270deg, rgba(61, 165, 255, 0.28), transparent); }
+
+.team-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+}
+
+.team-a .team-name { color: #ffb3b3; }
+.team-b .team-name { color: #a8d8ff; }
+
+.team-score {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1;
+    min-width: 42px;
+    text-align: center;
+}
+
+.team-a .team-score { color: var(--team-a); text-shadow: 0 0 18px rgba(255, 77, 77, 0.75); }
+.team-b .team-score { color: var(--team-b); text-shadow: 0 0 18px rgba(61, 165, 255, 0.75); }
+
+.clock-box {
+    text-align: center;
+    padding: 6px 22px;
+    border-left: 1px solid var(--card-border);
+    border-right: 1px solid var(--card-border);
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.clock-label {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #94a3b8;
+}
+
+.clock-time {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.1;
+    color: var(--gold);
+    text-shadow: 0 0 16px rgba(255, 215, 0, 0.6);
+    font-variant-numeric: tabular-nums;
+}
+
+.clock-time.urgent {
+    color: #ff5566;
+    text-shadow: 0 0 18px rgba(255, 60, 90, 0.85);
+    animation: clockBeat 0.6s ease-in-out infinite;
+}
+
+@keyframes clockBeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.13); }
+}
+
+.hud-bottom { display: flex; justify-content: center; }
+
+.control-hint {
+    background: rgba(4, 12, 8, 0.72);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 6px 18px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #cbd5e1;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    text-align: center;
+}
+
+.control-hint b { color: var(--gold); }
+
+/* ---------------- Màn hình phủ ---------------- */
+.screen {
+    position: absolute;
+    inset: 0;
+    background: rgba(3, 9, 5, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 20;
+    overflow-y: auto;
+}
+
+.screen.hidden { display: none; }
+
+.panel {
+    width: 100%;
+    max-width: 820px;
+    background: rgba(9, 22, 14, 0.94);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 22px 26px 26px;
+    text-align: center;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, 0.7);
+    animation: panelIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.28);
+}
+
+.panel-small { max-width: 440px; }
+
+@keyframes panelIn {
+    from { opacity: 0; transform: translateY(22px) scale(0.95); }
+    to { opacity: 1; transform: none; }
+}
+
+.panel-emoji { font-size: 2.6rem; margin-bottom: 4px; }
+
+.panel-title {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, var(--team-a), var(--gold), var(--team-b));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 6px;
+}
+
+.panel-desc {
+    color: #cbd5e1;
+    font-size: 0.98rem;
+    line-height: 1.55;
+    margin-bottom: 16px;
+}
+
+/* ---- Khối tuỳ chọn ---- */
+.setup-block { margin-bottom: 14px; }
+
+.setup-label {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    color: #94a3b8;
+    text-align: left;
+    margin-bottom: 7px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.opt-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.opt {
+    font-family: var(--font-main);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 15px;
+    padding: 10px 9px;
+    cursor: pointer;
+    color: #cbd5e1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.opt:hover { background: rgba(255, 255, 255, 0.11); transform: translateY(-2px); }
+
+.opt.sel {
+    background: linear-gradient(135deg, rgba(46, 143, 67, 0.4), rgba(255, 215, 0, 0.14));
+    border-color: #4ec46c;
+    color: #fff;
+    box-shadow: 0 0 20px rgba(46, 143, 67, 0.4);
+}
+
+.opt-icon { font-size: 1.35rem; line-height: 1; }
+
+.opt-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.opt-desc { font-size: 0.72rem; color: #94a3b8; line-height: 1.35; }
+.opt.sel .opt-desc { color: #d7e9c8; }
+
+/* ---- Đội hình ---- */
+.lineup {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    justify-content: center;
+}
+
+.lineup-team {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 15px;
+    padding: 10px 12px;
+}
+
+.lineup-t0 { border-color: rgba(255, 77, 77, 0.5); }
+.lineup-t1 { border-color: rgba(61, 165, 255, 0.5); }
+
+.lineup-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.lineup-t0 .lineup-title { color: #ffb3b3; }
+.lineup-t1 .lineup-title { color: #a8d8ff; }
+
+.lineup-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 0.85rem;
+}
+
+.lineup-emoji { font-size: 1.2rem; }
+.lineup-name { flex: 1; text-align: left; font-weight: 700; color: #e2e8f0; }
+
+.lineup-keys {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    padding: 2px 8px;
+    color: #cbd5e1;
+    white-space: nowrap;
+}
+
+.lineup-keys b {
+    color: var(--gold);
+    margin-left: 5px;
+    padding-left: 5px;
+    border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.lineup-vs {
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--gold);
+}
+
+/* ---- Kĩ năng ---- */
+.skills {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 14px 0 18px;
+}
+
+.skill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 13px;
+    padding: 9px 13px;
+    font-size: 0.83rem;
+    line-height: 1.45;
+    color: #cbd5e1;
+    text-align: left;
+}
+
+.skill b { color: #fff; font-family: var(--font-display); letter-spacing: 0.4px; }
+.skill i { color: var(--gold); font-style: normal; font-weight: 700; }
+.skill-icon { font-size: 1.5rem; flex-shrink: 0; }
+
+/* ---- Nút ---- */
+.big-btn {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 800;
+    padding: 13px 36px;
+    border-radius: 17px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #2e8f43, #7bed9f);
+    color: #06210f;
+    box-shadow: 0 8px 26px rgba(46, 143, 67, 0.5);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    transition: all 0.22s ease;
+}
+
+.big-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 34px rgba(46, 143, 67, 0.8); }
+
+.btn-ghost {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: none;
+}
+
+.over-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ---- Bảng tổng kết ---- */
+.final-grid {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+
+.final-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.final-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+.final-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+.final-box {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 18px;
+    padding: 12px 10px;
+}
+
+.final-t0 { border-color: rgba(255, 77, 77, 0.45); }
+.final-t1 { border-color: rgba(61, 165, 255, 0.45); }
+
+.final-box.winner {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+    border-color: var(--gold);
+    background: rgba(255, 215, 0, 0.08);
+}
+
+.final-avatar { font-size: 1.9rem; }
+
+.final-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+}
+
+.final-score {
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    font-weight: 800;
+    line-height: 1.05;
+    color: var(--gold);
+}
+
+.final-sub {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+
+.final-stats { display: grid; gap: 3px; font-size: 0.8rem; }
+
+.final-stats div {
+    display: flex;
+    justify-content: space-between;
+    color: #94a3b8;
+    padding: 2px 6px;
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.final-stats b { color: #f1f5f9; }
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 900px) {
+    .brand-title { font-size: 1.1rem; }
+    .btn span { display: none; }
+    .btn { padding: 8px 12px; }
+    .team-name { font-size: 0.8rem; }
+    .team-score { font-size: 1.8rem; min-width: 30px; }
+    .team-side { padding: 6px 12px; gap: 8px; }
+    .clock-time { font-size: 1.4rem; }
+    .clock-box { padding: 5px 12px; }
+    .control-hint { font-size: 0.7rem; padding: 5px 10px; }
+    .panel { padding: 18px 15px 22px; }
+    .panel-title { font-size: 1.5rem; }
+    .opt-row { grid-template-columns: 1fr; }
+    .opt { flex-direction: row; justify-content: flex-start; gap: 9px; text-align: left; }
+    .opt-desc { flex: 1; }
+    .skills { grid-template-columns: 1fr; }
+    .lineup { flex-direction: column; }
+    .final-grid.cols-3, .final-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+    .app-wrapper { padding: 6px 6px 8px; }
+    .final-grid.cols-2, .final-grid.cols-3, .final-grid.cols-4 { grid-template-columns: 1fr; }
+}

@@ -26,6 +26,7 @@
             --purple-glow: #9d4edd;
             --orange-glow: #ff8a1a;
             --felt-glow: #16955a;
+            --pitch-glow: #4ec46c;
         }
 
         * {
@@ -183,6 +184,11 @@
             border-color: var(--felt-glow);
         }
 
+        .card-soccer:hover {
+            box-shadow: 0 15px 50px rgba(78, 196, 108, 0.5);
+            border-color: var(--pitch-glow);
+        }
+
         .badge {
             font-family: var(--font-display);
             font-size: 0.85rem;
@@ -234,6 +240,12 @@
             background: rgba(255, 138, 26, 0.15);
             color: #ffa64d;
             border: 1px solid rgba(255, 138, 26, 0.4);
+        }
+
+        .badge-soccer {
+            background: rgba(78, 196, 108, 0.18);
+            color: #8ff0a4;
+            border: 1px solid rgba(78, 196, 108, 0.45);
         }
 
         .badge-pool {
@@ -367,6 +379,15 @@
         }
         .btn-basket:hover {
             box-shadow: 0 8px 30px rgba(255, 138, 26, 0.85);
+        }
+
+        .btn-soccer {
+            background: linear-gradient(135deg, #2e8f43, #7bed9f);
+            color: #06210f;
+            box-shadow: 0 6px 20px rgba(78, 196, 108, 0.5);
+        }
+        .btn-soccer:hover {
+            box-shadow: 0 8px 30px rgba(78, 196, 108, 0.9);
         }
 
         .btn-pool {
@@ -513,12 +534,12 @@
                 <div class="card-banner">🏀🐯🐼</div>
                 <h2 class="card-title">BASKETBALL DUEL</h2>
                 <p class="card-desc">
-                    <b>Hai bé cùng chơi trên một máy!</b> Mỗi bé một rổ riêng, giữ phím lấy lực rồi thả đúng lúc để ném bóng vào rổ. Sau 90 giây, ai ghi nhiều điểm hơn sẽ thắng!
+                    <b>Từ 2 đến 4 bé cùng chơi trên một máy!</b> Mỗi bé một rổ riêng, bóng xoáy ngược khi bay theo đúng vật lý thật. Ai thắng thì nhảy ăn mừng, ai thua thì khóc hu hu!
                 </p>
                 <div class="feature-tags">
-                    <span class="tag">👫 2 người chơi</span>
-                    <span class="tag">🎯 Ném 2đ &amp; 3đ</span>
-                    <span class="tag">🔥 Combo bốc lửa</span>
+                    <span class="tag">👨‍👩‍👧‍👦 2-4 người chơi</span>
+                    <span class="tag">🎮 3 chế độ chơi</span>
+                    <span class="tag">🏀 Vật lý thật</span>
                 </div>
                 <div class="play-btn btn-basket">
                     CHƠI NGAY <i class="fa-solid fa-basketball"></i>
@@ -540,6 +561,24 @@
                 </div>
                 <div class="play-btn btn-pool">
                     CHƠI NGAY <i class="fa-solid fa-play"></i>
+                </div>
+            </a>
+
+            <!-- Game 9: Super Striker -->
+            <a href="./soccer-game/index.html" class="game-card card-soccer">
+                <div class="badge badge-soccer"><i class="fa-solid fa-users"></i> 2-4 Bé Thi Đấu</div>
+                <div class="card-banner">⚽🥅🏆</div>
+                <h2 class="card-title">SUPER STRIKER</h2>
+                <p class="card-desc">
+                    <b>Bóng đá mini từ 2 đến 4 bé!</b> Sân vẽ theo luật futsal, có <b>thủ môn</b> bắt bóng. Rê bóng, chuyền cho đồng đội rồi sút vào góc trống. Đội thắng nhảy ăn mừng, đội thua khóc hu hu!
+                </p>
+                <div class="feature-tags">
+                    <span class="tag">👨‍👩‍👧‍👦 2-4 người chơi</span>
+                    <span class="tag">🤝 Chuyền &amp; rê bóng</span>
+                    <span class="tag">🧤 Có thủ môn</span>
+                </div>
+                <div class="play-btn btn-soccer">
+                    CHƠI NGAY <i class="fa-solid fa-futbol"></i>
                 </div>
             </a>
         </div>

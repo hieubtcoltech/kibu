@@ -270,7 +270,8 @@ function banner(port) {
         ['shooter', '🤖 Bot Arena Blaster'],
         ['racer', '🏎️  Neon Racer Arcade'],
         ['basketball-game', '🏀 Basketball Duel — 2 bé thi đấu'],
-        ['billiards-game', '🎱 Pool Masters — bi-a 8 bi 2 người']
+        ['billiards-game', '🎱 Pool Masters — bi-a 8 bi 2 người'],
+        ['soccer-game', '⚽ Super Striker — bóng đá mini 2-4 bé']
     ].forEach(([slug, name]) => {
         console.log(`    ${C.dim}/${slug}${C.reset}${' '.repeat(Math.max(1, 10 - slug.length))}${name}`);
     });

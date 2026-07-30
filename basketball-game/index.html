@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Basketball Duel - Song Đấu Bóng Rổ 2 Người</title>
+    <title>Basketball Duel - Song Đấu Bóng Rổ 2-4 Người</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -33,6 +33,9 @@
                 <button id="btn-sound" class="btn">
                     <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
                 </button>
+                <button id="btn-menu" class="btn">
+                    <i class="fa-solid fa-list"></i> <span>Đổi Chế Độ</span>
+                </button>
                 <button id="btn-restart" class="btn">
                     <i class="fa-solid fa-rotate-right"></i> <span>Chơi Lại</span>
                 </button>
@@ -46,48 +49,15 @@
             <!-- Heads-Up Display -->
             <div class="hud-overlay">
                 <div class="hud-top">
-                    <!-- Player 1 -->
-                    <div class="score-card card-p1">
-                        <div class="score-avatar">🐯</div>
-                        <div class="score-info">
-                            <div class="score-name">NGƯỜI CHƠI 1</div>
-                            <div class="score-sub">
-                                <span id="p1-streak" class="streak-tag">Chuỗi: 0</span>
-                                <span id="p1-acc" class="streak-tag">0/0</span>
-                            </div>
-                        </div>
-                        <div id="p1-score" class="score-number">0</div>
-                    </div>
-
-                    <!-- Clock -->
+                    <div id="score-strip" class="score-strip"></div>
                     <div class="clock-box">
-                        <div class="clock-label">THỜI GIAN</div>
+                        <div id="clock-label" class="clock-label">ĐỐI KHÁNG</div>
                         <div id="clock" class="clock-time">1:30</div>
-                    </div>
-
-                    <!-- Player 2 -->
-                    <div class="score-card card-p2">
-                        <div id="p2-score" class="score-number">0</div>
-                        <div class="score-info align-right">
-                            <div class="score-name">NGƯỜI CHƠI 2</div>
-                            <div class="score-sub">
-                                <span id="p2-acc" class="streak-tag">0/0</span>
-                                <span id="p2-streak" class="streak-tag">Chuỗi: 0</span>
-                            </div>
-                        </div>
-                        <div class="score-avatar">🐼</div>
                     </div>
                 </div>
 
                 <div class="hud-bottom">
-                    <div class="key-hint hint-p1">
-                        <span class="key-cap">A</span>
-                        <span>Giữ để lấy lực — Thả để ném</span>
-                    </div>
-                    <div class="key-hint hint-p2">
-                        <span>Giữ để lấy lực — Thả để ném</span>
-                        <span class="key-cap">L</span>
-                    </div>
+                    <div id="control-hint" class="control-hint">🐯 A · 🐼 L — Giữ phím để lấy lực, thả đúng lúc để ném</div>
                 </div>
             </div>
 
@@ -97,29 +67,94 @@
                     <div class="panel-emoji">🏀🔥</div>
                     <h2 class="panel-title">SONG ĐẤU BÓNG RỔ</h2>
                     <p class="panel-desc">
-                        Hai bé cùng chơi trên một máy! Ai ném vào rổ nhiều điểm hơn trong <b>90 giây</b> sẽ thắng cuộc.
+                        Từ <b>2 đến 4 bé</b> cùng chơi trên một máy — mỗi bé một rổ riêng.
+                        Vành cao 3,05m và đường bay của bóng theo <b>đúng vật lý thật</b>;
+                        bóng và vành được phóng to như <b>bộ rổ mini trong nhà</b> cho dễ nhìn,
+                        vẫn giữ nguyên tỉ lệ bóng/vành của thi đấu chuyên nghiệp.
                     </p>
 
-                    <div class="rules-grid">
-                        <div class="rule-box rule-p1">
-                            <div class="rule-avatar">🐯</div>
-                            <div class="rule-name">NGƯỜI CHƠI 1</div>
-                            <div class="rule-key"><span class="key-cap big">A</span></div>
-                            <div class="rule-note">Hoặc chạm nửa <b>TRÁI</b> màn hình</div>
-                        </div>
-                        <div class="vs-badge">VS</div>
-                        <div class="rule-box rule-p2">
-                            <div class="rule-avatar">🐼</div>
-                            <div class="rule-name">NGƯỜI CHƠI 2</div>
-                            <div class="rule-key"><span class="key-cap big">L</span></div>
-                            <div class="rule-note">Hoặc chạm nửa <b>PHẢI</b> màn hình</div>
+                    <div class="setup-block">
+                        <div class="setup-label"><i class="fa-solid fa-users"></i> SỐ NGƯỜI CHƠI</div>
+                        <div class="opt-row">
+                            <button class="opt sel" data-players="2">
+                                <span class="opt-icon">🐯🐼</span>
+                                <span class="opt-name">2 BÉ</span>
+                                <span class="opt-desc">Sân rộng nhất, bóng to nhất</span>
+                            </button>
+                            <button class="opt" data-players="3">
+                                <span class="opt-icon">🐯🐼🐸</span>
+                                <span class="opt-name">3 BÉ</span>
+                                <span class="opt-desc">Ba sân cạnh nhau</span>
+                            </button>
+                            <button class="opt" data-players="4">
+                                <span class="opt-icon">🐯🐼🐸🦊</span>
+                                <span class="opt-name">4 BÉ</span>
+                                <span class="opt-desc">Bốn sân, đứng gần rổ hơn</span>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="howto">
-                        <div class="howto-item"><span class="step">1</span> Mũi tên tự lắc lên xuống — chọn <b>hướng ném</b></div>
-                        <div class="howto-item"><span class="step">2</span> <b>Giữ</b> phím để thanh lực chạy lên</div>
-                        <div class="howto-item"><span class="step">3</span> <b>Thả</b> phím đúng lúc để bóng bay vào rổ!</div>
+                    <div class="setup-block">
+                        <div class="setup-label"><i class="fa-solid fa-gamepad"></i> CHỌN CHẾ ĐỘ CHƠI</div>
+                        <div class="opt-row">
+                            <button class="opt sel" data-mode="versus">
+                                <span class="opt-icon">⚔️</span>
+                                <span class="opt-name">ĐỐI KHÁNG</span>
+                                <span class="opt-desc">90 giây · ai nhiều điểm hơn thì thắng</span>
+                            </button>
+                            <button class="opt" data-mode="three">
+                                <span class="opt-icon">🎯</span>
+                                <span class="opt-name">THI 3 ĐIỂM</span>
+                                <span class="opt-desc">60 giây · đi qua 5 vị trí, bóng vàng ăn đôi</span>
+                            </button>
+                            <button class="opt" data-mode="practice">
+                                <span class="opt-icon">🧘</span>
+                                <span class="opt-name">LUYỆN TẬP</span>
+                                <span class="opt-desc">Không tính giờ · ném thoải mái</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setup-grid">
+                        <div class="setup-block">
+                            <div class="setup-label"><i class="fa-solid fa-signal"></i> ĐỘ KHÓ</div>
+                            <div class="opt-row small">
+                                <button class="opt" data-diff="easy">
+                                    <span class="opt-name">DỄ</span>
+                                    <span class="opt-desc">Mũi tên &amp; thanh lực chạy chậm</span>
+                                </button>
+                                <button class="opt sel" data-diff="normal">
+                                    <span class="opt-name">VỪA</span>
+                                    <span class="opt-desc">Cân bằng</span>
+                                </button>
+                                <button class="opt" data-diff="hard">
+                                    <span class="opt-name">KHÓ</span>
+                                    <span class="opt-desc">Chạy nhanh, không có đường ngắm</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="setup-block">
+                            <div class="setup-label"><i class="fa-solid fa-hand-pointer"></i> CÁCH NGẮM</div>
+                            <div class="opt-row small">
+                                <button class="opt sel" data-ctrl="sweep">
+                                    <span class="opt-name">GIỮ &amp; THẢ</span>
+                                    <span class="opt-desc">Mũi tên tự lắc, giữ phím lấy lực rồi thả</span>
+                                </button>
+                                <button class="opt" data-ctrl="drag">
+                                    <span class="opt-name">KÉO &amp; THẢ</span>
+                                    <span class="opt-desc">Kéo lùi như bắn ná (hợp với màn hình cảm ứng)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="keys-note">
+                        <b>Phím của từng bé:</b>
+                        2 bé → <span class="key-cap">A</span> <span class="key-cap">L</span> ·
+                        3 bé → <span class="key-cap">A</span> <span class="key-cap">G</span> <span class="key-cap">L</span> ·
+                        4 bé → <span class="key-cap">A</span> <span class="key-cap">F</span> <span class="key-cap">J</span> <span class="key-cap">L</span>
+                        <br>Trên máy cảm ứng: mỗi bé chạm vào <b>phần sân của mình</b>.
                     </div>
 
                     <div class="point-legend">
@@ -141,7 +176,10 @@
                     <div class="panel-emoji">⏸️</div>
                     <h2 class="panel-title">TẠM DỪNG</h2>
                     <p class="panel-desc">Nghỉ một chút rồi chơi tiếp nhé!</p>
-                    <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> CHƠI TIẾP</button>
+                    <div class="over-actions">
+                        <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> CHƠI TIẾP</button>
+                        <button id="btn-back-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> ĐỔI CHẾ ĐỘ</button>
+                    </div>
                 </div>
             </div>
 
@@ -152,30 +190,7 @@
                     <h2 id="over-title" class="panel-title">NGƯỜI CHƠI 1 THẮNG!</h2>
                     <p id="over-desc" class="panel-desc">Một trận đấu quá hay!</p>
 
-                    <div class="final-grid">
-                        <div class="final-box final-p1">
-                            <div class="final-avatar">🐯</div>
-                            <div class="final-name">NGƯỜI CHƠI 1</div>
-                            <div id="f1-score" class="final-score">0</div>
-                            <div class="final-stats">
-                                <div><span>Vào rổ</span><b id="f1-made">0/0</b></div>
-                                <div><span>Chính xác</span><b id="f1-acc">0%</b></div>
-                                <div><span>Chuỗi dài nhất</span><b id="f1-best">0</b></div>
-                                <div><span>Swish</span><b id="f1-swish">0</b></div>
-                            </div>
-                        </div>
-                        <div class="final-box final-p2">
-                            <div class="final-avatar">🐼</div>
-                            <div class="final-name">NGƯỜI CHƠI 2</div>
-                            <div id="f2-score" class="final-score">0</div>
-                            <div class="final-stats">
-                                <div><span>Vào rổ</span><b id="f2-made">0/0</b></div>
-                                <div><span>Chính xác</span><b id="f2-acc">0%</b></div>
-                                <div><span>Chuỗi dài nhất</span><b id="f2-best">0</b></div>
-                                <div><span>Swish</span><b id="f2-swish">0</b></div>
-                            </div>
-                        </div>
-                    </div>
+                    <div id="final-grid" class="final-grid cols-2"></div>
 
                     <div class="over-actions">
                         <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> ĐẤU LẠI</button>
