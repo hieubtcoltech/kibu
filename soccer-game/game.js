@@ -20,6 +20,8 @@
     const GOAL_D = M(1.1);                // chiều sâu lưới
     const GOAL_T = MID_Y - GOAL_H / 2;
     const GOAL_B = MID_Y + GOAL_H / 2;
+    const GOAL_Z = M(2.2);                // xà ngang cao 2,2m
+    const GOAL_BZ = M(1.35);              // mép sau lưới thấp hơn -> mái lưới dốc
 
     // Vạch sân theo futsal
     const PEN_R = M(3.5);                 // vòng cung vòng cấm, tâm ở chân cột dọc
@@ -28,6 +30,51 @@
     const CENTER_R = M(2.5);              // vòng tròn giữa sân
     const CORNER_R = M(0.5);              // cung phạt góc
     const SUB_ZONE = M(2.5);              // khu thay người hai bên vạch giữa
+
+    /* ---------- Góc nhìn 2.5D ----------
+       Mọi tính toán bóng lăn, va chạm, cướp bóng… vẫn diễn ra trên mặt sân
+       phẳng nhìn từ trên xuống như cũ. Chỉ tới lúc VẼ mới chiếu mặt sân qua
+       một máy quay đặt cao phía sau khán đài gần: nửa sân xa co nhỏ lại,
+       cầu thủ đứng thẳng như người thật, khung thành thành khối ba chiều.
+
+       Đây là phép chiếu phối cảnh thật (kiểu lỗ kim) nên đường thẳng dưới
+       sân vẫn là đường thẳng trên màn hình — chỉ cần chiếu hai đầu mút. */
+    const CAM = {
+        near: 606,       // biên dọc gần nằm ở dòng này trên màn hình
+        far: 0.70,       // biên dọc xa chỉ còn 70% bề ngang
+        tilt: 1.15       // độ nén chiều sâu ngay sát máy quay
+    };
+    CAM.A = CAM.tilt * PITCH.h / (1 / CAM.far - 1);
+    CAM.horizon = CAM.near - CAM.A;          // điểm tụ (nằm ngoài màn hình)
+    CAM.vx = MID_X;
+
+    // Hệ số thu nhỏ tại chiều sâu y: 1 ở biên gần, CAM.far ở biên xa
+    const dscale = y => 1 / (1 + (PB - y) / PITCH.h * (1 / CAM.far - 1));
+    // Toạ độ màn hình. h = độ cao so với mặt cỏ (tính bằng pixel lúc ở sát máy quay)
+    const sx_ = (x, y) => CAM.vx + (x - CAM.vx) * dscale(y);
+    const sy_ = (y, h) => CAM.horizon + (CAM.A - (h || 0)) * dscale(y);
+
+    // Nối các điểm dưới sân thành một đường trên màn hình. Mỗi điểm: [x, y, cao]
+    const pPath = (ctx, pts, close) => {
+        ctx.beginPath();
+        for (let i = 0; i < pts.length; i++) {
+            const q = pts[i];
+            const px = sx_(q[0], q[1]), py = sy_(q[1], q[2]);
+            i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+        }
+        if (close) ctx.closePath();
+    };
+    // Cung tròn vẽ dưới sân: lên màn hình thành hình bầu dục nghiêng
+    const pArc = (ctx, cx, cy, r, a0, a1, n) => {
+        const N = n || 44;
+        ctx.beginPath();
+        for (let i = 0; i <= N; i++) {
+            const a = a0 + (a1 - a0) * i / N;
+            const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r;
+            const px = sx_(x, y), py = sy_(y);
+            i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+        }
+    };
 
     // ---------- Cầu thủ & bóng ----------
     const P_R = 20;                       // bán kính cầu thủ (to hơn cho dễ nhìn)
@@ -276,6 +323,151 @@
     const GK_CATCH_V = 380;               // bóng chậm hơn ngần này thì bắt gọn
     const GK_HOLD = 1.1;                  // ôm bóng bao lâu rồi phát lên
 
+    /* ---------------------------------------------------------
+       Vẽ một người ĐỨNG THẲNG trên sân.
+       Gốc toạ độ đặt ở bàn chân, trục y đi lên là số âm. Mọi số đo viết
+       theo cỡ lúc người đứng sát máy quay, rồi nhân hệ số xa gần dscale()
+       nên càng chạy lên phía trên sân người càng nhỏ đi.
+       --------------------------------------------------------- */
+    const FIG = {
+        headR: 9.4,
+        headY: -50,
+        shoulderY: -39,
+        hipY: -23,
+        shoulderW: 11,
+        hipW: 8,
+        legW: 5.8,
+        armW: 4.6
+    };
+    const SKIN = '#f2c89c', SKIN_DK = '#c9975f';
+
+    /* o = {
+         dir     : +1 quay mặt sang phải màn hình, -1 sang trái
+         front   : -1 quay lưng lại người xem … +1 quay mặt về phía người xem
+         swing   : nhịp sải chân (-1..1)      kick: 0..1 lúc vung chân sút
+         armUp   : 0..1 giơ tay ăn mừng       droop: 0..1 gục xuống buồn
+         lift    : nhấc khỏi mặt cỏ bao nhiêu (nhảy lên / bay người)
+         lean    : nghiêng cả người (thủ môn đổ)
+         kit/kitDark/kitLight/shorts/socks/glove/hair : màu
+         number  : số áo, vẽ ngửa mặt nên không bị lộn ngược
+       } */
+    function drawHuman(ctx, wx, wy, o) {
+        const s = dscale(wy);
+        const px = sx_(wx, wy), py = sy_(wy, o.lift || 0);
+        const kick = o.kick || 0, armUp = o.armUp || 0, droop = o.droop || 0;
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.scale(s, s * (1 - droop * 0.12));
+        if (o.lean) ctx.rotate(o.lean);
+
+        ctx.save();
+        ctx.scale(o.dir, 1);                     // lật trái/phải, chữ vẽ sau khi restore
+
+        const legLen = -FIG.hipY;
+        const leg = (side, ang) => {
+            ctx.save();
+            ctx.translate(side * FIG.hipW * 0.52, FIG.hipY);
+            ctx.rotate(ang);
+            ctx.fillStyle = SKIN;
+            ctx.beginPath(); ctx.roundRect(-FIG.legW / 2, -1, FIG.legW, legLen + 1, FIG.legW / 2); ctx.fill();
+            ctx.fillStyle = o.socks;             // tất cao cổ
+            ctx.beginPath(); ctx.roundRect(-FIG.legW / 2, legLen * 0.52, FIG.legW, legLen * 0.34, 1.8); ctx.fill();
+            ctx.fillStyle = '#f4f7fb';           // giày
+            ctx.beginPath(); ctx.roundRect(-FIG.legW / 2, legLen - 3.6, FIG.legW + 4.6, 4.4, 2); ctx.fill();
+            ctx.fillStyle = o.kitDark;
+            ctx.beginPath(); ctx.roundRect(-FIG.legW / 2, legLen - 1.1, FIG.legW + 4.6, 1.6, 0.8); ctx.fill();
+            ctx.restore();
+        };
+        const arm = (side, ang) => {
+            ctx.save();
+            ctx.translate(side * FIG.shoulderW * 0.74, FIG.shoulderY + 2.5);
+            ctx.rotate(ang);
+            ctx.fillStyle = o.kit;               // tay áo
+            ctx.beginPath(); ctx.roundRect(-FIG.armW / 2, -1.5, FIG.armW, 8.5, FIG.armW / 2); ctx.fill();
+            ctx.fillStyle = SKIN;                // cẳng tay
+            ctx.beginPath(); ctx.roundRect(-FIG.armW / 2 + 0.4, 6.5, FIG.armW - 0.8, 9, 1.9); ctx.fill();
+            if (o.glove) {                       // găng thủ môn to bản
+                ctx.fillStyle = o.glove;
+                ctx.beginPath(); ctx.roundRect(-FIG.armW / 2 - 1.4, 14.5, FIG.armW + 2.8, 6.6, 2.6); ctx.fill();
+                ctx.fillStyle = 'rgba(0,0,0,0.22)';
+                ctx.beginPath(); ctx.roundRect(-FIG.armW / 2 - 1.4, 19, FIG.armW + 2.8, 2, 1); ctx.fill();
+            }
+            ctx.restore();
+        };
+
+        // --- tay & chân phía XA vẽ trước cho lọt ra sau thân ---
+        const sw = (o.swing || 0) * 0.5;
+        ctx.globalAlpha = 0.82;
+        leg(-1, -sw - kick * 0.15);
+        arm(-1, armUp ? -2.5 : (droop ? 0.35 : sw * 0.8) + (o.spread || 0));
+        ctx.globalAlpha = 1;
+
+        // --- thân áo ---
+        const sw2 = FIG.shoulderW, hw2 = FIG.hipW;
+        const tg = ctx.createLinearGradient(0, FIG.shoulderY, 0, FIG.hipY);
+        tg.addColorStop(0, o.kitLight);
+        tg.addColorStop(0.5, o.kit);
+        tg.addColorStop(1, o.kitDark);
+        ctx.fillStyle = tg;
+        ctx.beginPath();
+        ctx.moveTo(-sw2, FIG.shoulderY + 3);
+        ctx.quadraticCurveTo(0, FIG.shoulderY - 3.5, sw2, FIG.shoulderY + 3);
+        ctx.quadraticCurveTo(sw2 + 0.6, FIG.hipY * 0.45, hw2, FIG.hipY + 1);
+        ctx.lineTo(-hw2, FIG.hipY + 1);
+        ctx.quadraticCurveTo(-sw2 - 0.6, FIG.hipY * 0.45, -sw2, FIG.shoulderY + 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.28)';
+        ctx.lineWidth = 0.9;
+        ctx.stroke();
+        // sọc áo dọc
+        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+        ctx.beginPath(); ctx.roundRect(-1.6, FIG.shoulderY + 2, 3.2, FIG.hipY - FIG.shoulderY, 1); ctx.fill();
+        // quần đùi
+        ctx.fillStyle = o.shorts;
+        ctx.beginPath(); ctx.roundRect(-hw2 - 1, FIG.hipY - 1.5, (hw2 + 1) * 2, 9.5, 2.6); ctx.fill();
+
+        // --- tay & chân phía GẦN ---
+        leg(1, sw + kick * 1.0);
+        arm(1, armUp ? 2.5 : (droop ? -0.35 : -sw * 0.8) - (o.spread || 0));
+
+        // --- đầu ---
+        const hx = 0.6 + (o.front || 0) * -0.6;
+        ctx.fillStyle = SKIN;
+        ctx.beginPath(); ctx.arc(hx, FIG.headY, FIG.headR, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = SKIN_DK;                                  // bóng dưới cằm
+        ctx.beginPath(); ctx.arc(hx, FIG.headY, FIG.headR, Math.PI * 0.18, Math.PI * 0.82); ctx.fill();
+        ctx.fillStyle = o.hair || '#2c1c12';
+        ctx.beginPath();
+        if ((o.front || 0) < -0.3) ctx.arc(hx, FIG.headY, FIG.headR, 0, Math.PI * 2);   // quay lưng: chỉ thấy tóc
+        else ctx.arc(hx, FIG.headY, FIG.headR, Math.PI * 0.62, Math.PI * 1.94);
+        ctx.fill();
+        if ((o.front || 0) >= -0.3) {                             // mắt + miệng
+            ctx.fillStyle = '#241608';
+            const eyes = (o.front || 0) > 0.3 ? [-1.6, 3.2] : [2.8];
+            for (const ex of eyes) {
+                ctx.beginPath(); ctx.ellipse(hx + ex, FIG.headY - 0.5, 0.95, 1.35, 0, 0, Math.PI * 2); ctx.fill();
+            }
+            ctx.strokeStyle = 'rgba(120,60,40,0.75)';
+            ctx.lineWidth = 0.9;
+            ctx.beginPath();
+            ctx.arc(hx + 1.4, FIG.headY + 2.6, 2.4, droop ? Math.PI * 1.15 : Math.PI * 0.1, droop ? Math.PI * 1.85 : Math.PI * 0.9);
+            ctx.stroke();
+        }
+        ctx.restore();                       // hết phần bị lật trái/phải
+
+        // --- số áo: vẽ ở hệ toạ độ KHÔNG lật nên không bao giờ bị ngược ---
+        if (o.number) {
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.font = 'bold 11px "Baloo 2", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(o.number), 0, (FIG.shoulderY + FIG.hipY) / 2 + 1);
+        }
+        ctx.restore();
+    }
+
     class Keeper {
         constructor(team) {
             this.team = team;
@@ -365,115 +557,52 @@
            nổi, đeo găng to, đứng tấn hai chân dang rộng. Đổ người thì cả thân
            vươn dài ra theo hướng bay và hai tay với xa hơn hẳn. */
         draw(ctx, time) {
-            const r = this.radius;
-            const dive = this.diveT;                       // 0 -> 1 lúc đang bay người
-            const skin = '#f0c49a', skinDark = '#c99668';
-            const jersey = '#f7d84a', jerseyDark = '#b9931a', jerseyLight = '#ffef9f';
-            const glove = '#2ee06a', gloveDark = '#12894a';
+            const dive = this.diveT;
+            const s = dscale(this.y);
+            const inward = this.team === 0 ? 1 : -1;          // luôn quay mặt vào trong sân
 
-            // Bóng đổ
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            // Bóng đổ dưới chân
+            ctx.fillStyle = 'rgba(0,0,0,0.32)';
             ctx.beginPath();
-            ctx.ellipse(this.x, this.y + K_R * 0.5, K_R * (0.95 + dive * 0.3), K_R * 0.4, 0, 0, Math.PI * 2);
+            ctx.ellipse(sx_(this.x, this.y), sy_(this.y),
+                K_R * (0.95 + dive * 0.35) * s, K_R * 0.36 * s, 0, 0, Math.PI * 2);
             ctx.fill();
 
             // Vòng sáng khi vừa cứu thua
             if (this.saveFlash > 0) {
                 ctx.save();
                 ctx.strokeStyle = `rgba(255,215,0,${this.saveFlash})`;
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 3.5 * s;
                 ctx.shadowColor = '#ffd700';
                 ctx.shadowBlur = 22 * this.saveFlash;
-                ctx.beginPath(); ctx.arc(this.x, this.y, r + 10, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath();
+                ctx.ellipse(sx_(this.x, this.y), sy_(this.y), (K_R + 11) * s, (K_R + 11) * 0.4 * s, 0, 0, Math.PI * 2);
+                ctx.stroke();
                 ctx.restore();
             }
 
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.team === 0 ? 0 : Math.PI);     // luôn quay mặt vào trong sân
-            const sc = K_R / 16;
-            // Đổ người thì thân vươn dài dọc vạch vôi
-            ctx.scale(sc * (1 - dive * 0.12), sc * (1 + dive * 0.3));
-
-            const step = Math.sin(this.y * 0.09) * 3;      // nhún chân khi chạy dọc vạch vôi
-
-            // --- Hai chân đứng tấn ---
-            const leg = (side, fwd) => {
-                ctx.save();
-                ctx.translate(0, side * 6.5);
-                ctx.fillStyle = skin;
-                ctx.beginPath(); ctx.roundRect(-2, -3.2, 10 + fwd, 6.4, 3.2); ctx.fill();
-                ctx.fillStyle = '#f4f7fb';
-                ctx.beginPath(); ctx.roundRect(7 + fwd, -3.4, 7, 6.8, 3); ctx.fill();
-                ctx.fillStyle = jerseyDark;
-                ctx.fillRect(7 + fwd, 1.4, 7, 2);
-                ctx.restore();
-            };
-            leg(-1, step);
-            leg(1, -step);
-
-            // --- Thân áo dài tay ---
-            const tg = ctx.createLinearGradient(0, -16, 0, 16);
-            tg.addColorStop(0, jerseyLight);
-            tg.addColorStop(0.45, jersey);
-            tg.addColorStop(1, jerseyDark);
-            ctx.fillStyle = tg;
-            ctx.beginPath();
-            ctx.ellipse(-0.5, 0, 16 * 0.64, 16 * 0.86, 0, 0, Math.PI * 2);
-            ctx.fill();
-            // sọc vai kiểu áo thủ môn
-            ctx.fillStyle = 'rgba(0,0,0,0.14)';
-            ctx.fillRect(-4, -16 * 0.82, 3, 16 * 1.64);
-            // số 1 trên lưng
-            ctx.save();
-            ctx.rotate(this.team === 0 ? 0 : Math.PI);
-            ctx.fillStyle = 'rgba(60,40,0,0.7)';
-            ctx.font = 'bold 12px "Baloo 2", sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('1', 0, 0.5);
-            ctx.restore();
-
-            // --- Hai tay dang rộng, đeo găng ---
-            const reach = 9 + dive * 13;
-            const spread = 0.62 + dive * 0.5;
-            const arm = side => {
-                ctx.save();
-                ctx.translate(1, side * (16 * 0.74));
-                ctx.rotate(side * spread);
-                ctx.fillStyle = jersey;                    // tay áo dài
-                ctx.beginPath(); ctx.roundRect(-3.5, -3.2, 10, 6.4, 3.2); ctx.fill();
-                ctx.fillStyle = skin;                      // cổ tay
-                ctx.beginPath(); ctx.roundRect(5, -2.6, reach * 0.4, 5.2, 2.6); ctx.fill();
-                // Găng tay to bản
-                ctx.fillStyle = glove;
-                ctx.beginPath();
-                ctx.roundRect(4 + reach * 0.4, -4.2, 8.5, 8.4, 3.6);
-                ctx.fill();
-                ctx.fillStyle = gloveDark;
-                ctx.beginPath();
-                ctx.roundRect(4 + reach * 0.4, 1.4, 8.5, 2.6, 1.3);
-                ctx.fill();
-                ctx.restore();
-            };
-            arm(-1); arm(1);
-
-            // --- Đầu ---
-            ctx.fillStyle = skin;
-            ctx.beginPath(); ctx.arc(2.5, 0, 8.2, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = skinDark;
-            ctx.beginPath(); ctx.arc(2.5, 0, 8.2, Math.PI * 0.35, Math.PI * 0.9); ctx.fill();
-            ctx.fillStyle = '#3a2414';
-            ctx.beginPath(); ctx.arc(0.8, 0, 8.2, Math.PI * 0.4, Math.PI * 1.6); ctx.fill();
-            ctx.restore();
+            drawHuman(ctx, this.x, this.y, {
+                dir: inward,
+                front: 0.18,                                   // đứng nghiêng, mặt hướng ra sân
+                swing: Math.sin(this.y * 0.09) * (1 - dive),
+                spread: 0.62 + dive * 0.72,                    // hai tay dang rộng, đổ người thì dang hết cỡ
+                lift: dive * M(0.5),                           // bay người khỏi mặt cỏ
+                lean: dive * 0.3 * (this.dive || 1) * inward,
+                kit: '#f7d84a', kitDark: '#b9931a', kitLight: '#ffef9f',
+                shorts: '#2b2b33', socks: '#2b2b33',
+                glove: '#2ee06a', hair: '#3a2414',
+                number: 1
+            });
 
             // Nhãn
             ctx.save();
             ctx.textAlign = 'center';
-            ctx.font = 'bold 11px "Nunito", sans-serif';
+            ctx.font = `bold ${(11 * (0.78 + 0.22 * s)).toFixed(1)}px "Nunito", sans-serif`;
+            const ly = sy_(this.y) + 16 * s;
             ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.fillText('THỦ MÔN', this.x, this.y + K_R + 15);
+            ctx.fillText('THỦ MÔN', sx_(this.x, this.y), ly + 1);
             ctx.fillStyle = '#ffe98a';
-            ctx.fillText('THỦ MÔN', this.x, this.y + K_R + 14);
+            ctx.fillText('THỦ MÔN', sx_(this.x, this.y), ly);
             ctx.restore();
         }
     }
@@ -692,143 +821,68 @@
             const owned = Game.owner === this.idx;
             const cheer = this.celebrate === 'happy' || this.outcome === 'win';
             const sad = this.celebrate === 'sad' || this.outcome === 'lose';
-
-            let bounce = 0, squash = 1;
-            if (cheer) bounce = Math.abs(Math.sin(this.celebT * 6)) * 11;
-            else if (sad) squash = 0.88;
-
-            const x = this.x, y = this.y - bounce;
-            const ang = Math.atan2(this.fy, this.fx);
             const c = this.cfg;
-            const skin = '#f0c49a', skinDark = '#c99668';
+            const s = dscale(this.y);
 
-            // Bóng đổ
-            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            // Quay mặt sang trái hay phải màn hình — nhớ hướng cũ để đứng yên khỏi lật loạn
+            if (this.faceDir === undefined) this.faceDir = this.team === 0 ? 1 : -1;
+            if (Math.abs(this.fx) > 0.2) this.faceDir = this.fx > 0 ? 1 : -1;
+            // fy > 0 là đang hướng xuống phía người xem -> nhìn thấy mặt
+            const front = clamp(this.fy * 1.4, -1, 1);
+
+            const bounce = cheer ? Math.abs(Math.sin(this.celebT * 6)) * M(0.45) : 0;
+
+            // Bóng đổ dưới chân (nhạt dần khi nhảy lên)
+            ctx.fillStyle = `rgba(0,0,0,${(0.32 - bounce * 0.003).toFixed(3)})`;
             ctx.beginPath();
-            ctx.ellipse(this.x, this.y + P_R * 0.5, P_R * (0.95 - bounce * 0.008), P_R * 0.4, 0, 0, Math.PI * 2);
+            ctx.ellipse(sx_(this.x, this.y), sy_(this.y), P_R * 0.92 * s, P_R * 0.36 * s, 0, 0, Math.PI * 2);
             ctx.fill();
 
-            // Vòng sáng của người đang giữ bóng
+            // Vòng sáng dưới chân người đang giữ bóng
             if (owned) {
                 ctx.save();
                 ctx.strokeStyle = `rgba(${c.glow},0.95)`;
-                ctx.lineWidth = 3;
+                ctx.lineWidth = 3 * s;
                 ctx.shadowColor = `rgba(${c.glow},0.9)`;
                 ctx.shadowBlur = 16;
+                const rr = (P_R + 8 + Math.sin(time * 7) * 1.8) * s;
                 ctx.beginPath();
-                ctx.arc(x, y, P_R + 7 + Math.sin(time * 7) * 1.6, 0, Math.PI * 2);
+                ctx.ellipse(sx_(this.x, this.y), sy_(this.y), rr, rr * 0.4, 0, 0, Math.PI * 2);
                 ctx.stroke();
                 ctx.restore();
             }
 
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(ang);
-            // Mọi số đo bên dưới viết theo cỡ gốc 16px rồi phóng theo P_R,
-            // nhờ vậy đổi cỡ nhân vật là cả người to nhỏ cân đối theo.
-            const sc = P_R / 16;
-            ctx.scale(sc, sc * squash);
-
-            const swing = Math.sin(this.step) * 6;        // nhịp sải chân
-            const kick = this.kickAnim * 10;
-
-            // --- Hai chân (nằm dưới thân) ---
-            const leg = (side, fwd) => {
-                ctx.save();
-                ctx.translate(0, side * 5);
-                ctx.fillStyle = skin;
-                ctx.beginPath();
-                ctx.roundRect(-2, -3.2, 11 + fwd, 6.4, 3.2);
-                ctx.fill();
-                // giày
-                ctx.fillStyle = '#f4f7fb';
-                ctx.beginPath();
-                ctx.roundRect(8 + fwd, -3.4, 7, 6.8, 3);
-                ctx.fill();
-                ctx.fillStyle = c.dark;
-                ctx.fillRect(8 + fwd, 1.4, 7, 2);
-                ctx.restore();
-            };
-            leg(-1, swing + kick);
-            leg(1, -swing);
-
-            // --- Thân áo: vai rộng, bụng thon ---
-            const tg = ctx.createLinearGradient(0, -P_R, 0, P_R);
-            tg.addColorStop(0, c.light);
-            tg.addColorStop(0.45, c.color);
-            tg.addColorStop(1, c.dark);
-            ctx.fillStyle = tg;
-            ctx.beginPath();
-            ctx.ellipse(-0.5, 0, 16 * 0.62, 16 * 0.82, 0, 0, Math.PI * 2);
-            ctx.fill();
-            // sọc áo dọc theo thân
-            ctx.fillStyle = 'rgba(255,255,255,0.26)';
-            ctx.fillRect(-3, -16 * 0.78, 2.6, 16 * 1.56);
-            // số áo (dựng lại cho khỏi bị xoay ngược)
-            ctx.save();
-            ctx.rotate(-ang);
-            ctx.fillStyle = 'rgba(255,255,255,0.95)';
-            ctx.font = 'bold 12px "Baloo 2", sans-serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(String(this.idx + 1), 0, 0.5);
-            ctx.restore();
-
-            // --- Hai cánh tay ---
-            const arm = (side, fwd, spread) => {
-                ctx.save();
-                ctx.translate(1, side * (16 * 0.72));
-                ctx.rotate(side * spread);
-                ctx.fillStyle = c.color;                       // tay áo
-                ctx.beginPath();
-                ctx.roundRect(-3.5, -3, 7, 6, 3);
-                ctx.fill();
-                ctx.fillStyle = skin;                          // cẳng tay
-                ctx.beginPath();
-                ctx.roundRect(2, -2.6, 8 + fwd, 5.2, 2.6);
-                ctx.fill();
-                ctx.restore();
-            };
-            if (cheer) {
-                // Giơ hai tay lên trời ăn mừng, vẫy vẫy
-                const w = Math.sin(this.celebT * 9) * 0.25;
-                arm(-1, 5, 1.05 + w);
-                arm(1, 5, 1.05 - w);
-            } else if (sad) {
-                arm(-1, -2, -0.5);
-                arm(1, -2, -0.5);
-            } else {
-                arm(-1, -swing * 0.5, 0.25);
-                arm(1, swing * 0.5, 0.25);
-            }
-
-            // --- Đầu ---
-            ctx.fillStyle = skin;
-            ctx.beginPath();
-            ctx.arc(2.5, 0, 8.2, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = skinDark;                          // bóng cổ
-            ctx.beginPath();
-            ctx.arc(2.5, 0, 8.2, Math.PI * 0.35, Math.PI * 0.9);
-            ctx.fill();
-            ctx.fillStyle = '#2c1c12';                          // tóc, chừa mặt phía trước
-            ctx.beginPath();
-            ctx.arc(0.8, 0, 8.2, Math.PI * 0.4, Math.PI * 1.6);
-            ctx.fill();
-            ctx.restore();
+            drawHuman(ctx, this.x, this.y, {
+                dir: this.faceDir,
+                front,
+                swing: Math.sin(this.step),
+                kick: this.kickAnim,
+                armUp: cheer ? 1 : 0,
+                droop: sad ? 1 : 0,
+                lift: bounce,
+                kit: c.color, kitDark: c.dark, kitLight: c.light,
+                shorts: c.dark, socks: c.dark,
+                number: this.idx + 1
+            });
 
             // Nước mắt khi thua
             for (const t of this.tears) {
                 ctx.save();
                 ctx.globalAlpha = clamp(t.life, 0, 1);
                 ctx.fillStyle = '#8fd8ff';
-                ctx.beginPath(); ctx.ellipse(t.x, t.y, 2.6, 4.2, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath();
+                ctx.ellipse(sx_(this.x, this.y) + t.x * s, sy_(this.y, -FIG.headY * 0.9) + t.y * s,
+                    2.6 * s, 4.2 * s, 0, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.restore();
             }
 
+            const headTop = sy_(this.y, bounce - FIG.headY + FIG.headR);
+
             // Thanh lực khi đang giữ phím sút
             if (this.holding && this.holdT > TAP_TIME * 0.6 && owned) {
-                const bw = 48, bh = 8, bx = x - bw / 2, by = y - P_R - 20;
+                const bw = 48 * s, bh = 8 * s;
+                const bx = sx_(this.x, this.y) - bw / 2, by = headTop - 16 * s;
                 ctx.fillStyle = 'rgba(4,7,18,0.8)';
                 ctx.beginPath(); ctx.roundRect(bx - 2, by - 2, bw + 4, bh + 4, 5); ctx.fill();
                 const pg = ctx.createLinearGradient(bx, 0, bx + bw, 0);
@@ -845,18 +899,19 @@
                 ctx.stroke();
             }
 
-            // Tên bé + ngôi sao nếu chơi một mình
+            // Tên bé, đặt dưới chân cho khỏi che mặt
             ctx.save();
             ctx.textAlign = 'center';
-            ctx.font = 'bold 12px "Nunito", sans-serif';
+            ctx.font = `bold ${(12 * (0.78 + 0.22 * s)).toFixed(1)}px "Nunito", sans-serif`;
+            const nx = sx_(this.x, this.y), ny = sy_(this.y) + 16 * s;
             ctx.fillStyle = 'rgba(0,0,0,0.55)';
-            ctx.fillText(this.name, x, y + P_R + 16);
+            ctx.fillText(this.name, nx, ny + 1);
             ctx.fillStyle = c.light;
-            ctx.fillText(this.name, x, y + P_R + 15);
+            ctx.fillText(this.name, nx, ny);
             if (this.solo) {
-                ctx.font = '11px "Nunito", sans-serif';
+                ctx.font = `${(11 * (0.78 + 0.22 * s)).toFixed(1)}px "Nunito", sans-serif`;
                 ctx.fillStyle = '#ffd700';
-                ctx.fillText('⭐ SIÊU SAO', x, y + P_R + 27);
+                ctx.fillText('⭐ SIÊU SAO', nx, ny + 13 * s);
             }
             ctx.restore();
         }
@@ -1130,14 +1185,16 @@
         },
 
         addFx(x, y, text, color, life, size) {
-            this.fx.push({ x, y, text, color, life, max: life, size: size || 18 });
+            this.fx.push({ x, y, z: M(1.9), text, color, life, max: life, size: size || 18 });
         },
 
+        /* Chùm tia bắn lên khỏi mặt cỏ rồi rơi xuống — nhìn từ góc 2.5D mới ra khối */
         burst(x, y, color, n, speed = 260) {
             for (let i = 0; i < n; i++) {
                 const a = rnd(0, Math.PI * 2), s = rnd(50, speed);
                 this.fx.push({
-                    x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s,
+                    x, y, z: 4, vx: Math.cos(a) * s * 0.55, vy: Math.sin(a) * s * 0.35,
+                    vz: rnd(90, 260),
                     life: rnd(0.4, 0.9), max: 0.9, size: rnd(2, 5), color, dot: true
                 });
             }
@@ -1792,8 +1849,12 @@
             for (let i = this.fx.length - 1; i >= 0; i--) {
                 const f = this.fx[i];
                 f.life -= dt;
-                if (f.dot) { f.vy += 260 * dt; f.x += f.vx * dt; f.y += f.vy * dt; }
-                else f.y -= 34 * dt;
+                if (f.dot) {
+                    f.vz -= 620 * dt;
+                    f.x += f.vx * dt; f.y += f.vy * dt;
+                    f.z += f.vz * dt;
+                    if (f.z < 1) { f.z = 1; f.vz *= -0.4; f.vx *= 0.6; f.vy *= 0.6; }
+                } else f.z += 34 * dt;
                 if (f.life <= 0) this.fx.splice(i, 1);
             }
         },
@@ -1823,11 +1884,19 @@
             }
 
             this.drawPitch(ctx);
-            this.drawGoals(ctx);
+            this.drawGoalNets(ctx);
             this.drawPassLine(ctx);
-            this.keepers.forEach(k => k.draw(ctx, this.time));
-            this.players.forEach(p => p.draw(ctx, this.time));
-            this.drawBall(ctx);
+
+            /* Ai đứng xa hơn (y nhỏ) thì vẽ trước, nhờ vậy người phía trước
+               che được người phía sau đúng như mắt nhìn. */
+            const ents = [];
+            this.keepers.forEach(k => ents.push([k.y, () => k.draw(ctx, this.time)]));
+            this.players.forEach(p => ents.push([p.y, () => p.draw(ctx, this.time)]));
+            ents.push([this.ball.y, () => this.drawBall(ctx)]);
+            ents.sort((a, b) => a[0] - b[0]);
+            ents.forEach(e => e[1]());
+
+            this.drawGoalFrames(ctx);
             this.drawFx(ctx);
             if (this.state === 'shootout') this.drawShootout(ctx);
             if (this.state === 'goal') this.drawGoalBanner(ctx);
@@ -1839,182 +1908,261 @@
         },
 
         drawPitch(ctx) {
-            // Khán đài quanh sân
-            ctx.fillStyle = '#101a14';
-            ctx.fillRect(0, 0, W, H);
-            const rand = (() => { let s = 99; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; })();
-            for (let i = 0; i < 300; i++) {
-                const edge = i % 4;
-                let x, y;
-                if (edge === 0) { x = rand() * W; y = rand() * (PITCH.y - 18); }
-                else if (edge === 1) { x = rand() * W; y = PB + 20 + rand() * (H - PB - 22); }
-                else if (edge === 2) { x = rand() * (PITCH.x - 20); y = rand() * H; }
-                else { x = PR + 22 + rand() * (W - PR - 24); y = rand() * H; }
-                ctx.fillStyle = `hsla(${Math.floor(rand() * 360)},45%,${22 + rand() * 16}%,0.85)`;
-                ctx.beginPath(); ctx.arc(x, y, 4.4, 0, Math.PI * 2); ctx.fill();
-            }
+            const farY = sy_(PITCH.y), nearY = sy_(PB);
 
-            // Mặt cỏ + các dải cắt cỏ (mỗi dải rộng 2m như sân thật)
-            const g = ctx.createLinearGradient(0, PITCH.y, 0, PB);
-            g.addColorStop(0, '#2e8f43');
-            g.addColorStop(0.5, '#25793a');
-            g.addColorStop(1, '#1e6831');
-            ctx.fillStyle = g;
-            ctx.fillRect(PITCH.x, PITCH.y, PITCH.w, PITCH.h);
-            const sw = M(2);
-            for (let i = 0; i * sw < PITCH.w; i++) {
-                if (i % 2) continue;
-                ctx.fillStyle = 'rgba(255,255,255,0.05)';
-                ctx.fillRect(PITCH.x + i * sw, PITCH.y, Math.min(sw, PR - (PITCH.x + i * sw)), PITCH.h);
-            }
-            const spot = ctx.createRadialGradient(MID_X, MID_Y, 60, MID_X, MID_Y, 640);
-            spot.addColorStop(0, 'rgba(255,255,255,0.10)');
-            spot.addColorStop(1, 'rgba(0,0,0,0.3)');
-            ctx.fillStyle = spot;
-            ctx.fillRect(PITCH.x, PITCH.y, PITCH.w, PITCH.h);
+            // ----- Trời đêm -----
+            const sky = ctx.createLinearGradient(0, 0, 0, farY);
+            sky.addColorStop(0, '#03060c');
+            sky.addColorStop(1, '#0d1a24');
+            ctx.fillStyle = sky;
+            ctx.fillRect(0, 0, W, farY + 2);
 
-            // ----- Vạch sân theo luật futsal (vạch rộng 8cm) -----
-            const LW = Math.max(2, M(0.08));
-            ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-            ctx.lineWidth = LW;
-            ctx.lineCap = 'butt';
-
-            // Đường biên dọc và biên ngang
-            ctx.strokeRect(PITCH.x, PITCH.y, PITCH.w, PITCH.h);
-
-            // Vạch giữa sân + vòng tròn giữa sân (bán kính 2,5m)
-            ctx.beginPath(); ctx.moveTo(MID_X, PITCH.y); ctx.lineTo(MID_X, PB); ctx.stroke();
-            ctx.beginPath(); ctx.arc(MID_X, MID_Y, CENTER_R, 0, Math.PI * 2); ctx.stroke();
-            ctx.fillStyle = 'rgba(255,255,255,0.9)';
-            ctx.beginPath(); ctx.arc(MID_X, MID_Y, LW * 1.6, 0, Math.PI * 2); ctx.fill();
-
-            // Khu thay người: hai vạch ngắn cắt biên dọc, cách vạch giữa 2,5m
-            for (const dx of [-SUB_ZONE, SUB_ZONE]) {
-                for (const y of [PITCH.y, PB]) {
-                    const dir = y === PITCH.y ? -1 : 1;
+            // ----- Khán đài phía xa: càng lên cao càng lùi xa nên khán giả càng nhỏ -----
+            const rand = (() => { let s2 = 99; return () => (s2 = (s2 * 1664525 + 1013904223) >>> 0) / 4294967296; })();
+            const standTop = 26;
+            for (let row = 0; row < 16; row++) {
+                const t = row / 15;                       // 0 = hàng dưới cùng (gần nhất)
+                const ry = farY - 14 - t * (farY - 14 - standTop);
+                const half = (W / 2) * (0.98 - t * 0.16);
+                const dot = 4.3 - t * 2.3;
+                ctx.fillStyle = `rgba(0,0,0,${0.1 + t * 0.12})`;
+                ctx.fillRect(W / 2 - half, ry - dot, half * 2, dot * 2.1);
+                for (let x = W / 2 - half; x < W / 2 + half; x += dot * 2.6) {
+                    ctx.fillStyle = `hsla(${Math.floor(rand() * 360)},48%,${26 + rand() * 20}%,${0.75 + rand() * 0.25})`;
                     ctx.beginPath();
-                    ctx.moveTo(MID_X + dx, y);
-                    ctx.lineTo(MID_X + dx, y + dir * M(0.8));
-                    ctx.stroke();
+                    ctx.arc(x + rand() * dot, ry + (rand() - 0.5) * dot, dot * (0.75 + rand() * 0.3), 0, Math.PI * 2);
+                    ctx.fill();
                 }
             }
+            // Mái che phía trên khán đài
+            const roof = ctx.createLinearGradient(0, 0, 0, standTop + 22);
+            roof.addColorStop(0, 'rgba(3,6,12,1)');
+            roof.addColorStop(1, 'rgba(3,6,12,0)');
+            ctx.fillStyle = roof;
+            ctx.fillRect(0, 0, W, standTop + 22);
 
-            // ----- Vòng cấm futsal: hai cung 1/4 tâm ở chân cột dọc, nối bằng đoạn thẳng -----
+            // ----- Vùng tối bao quanh mặt cỏ -----
+            ctx.fillStyle = '#0b1410';
+            ctx.fillRect(0, farY, W, H - farY);
+
+            // ----- Bảng quảng cáo dựng đứng: mách cho mắt biết đâu là chiều cao -----
+            const BH = M(0.95);
+            this.drawBoards(ctx, PITCH.x - M(1.4), PITCH.y - M(1.0), PR + M(1.4), PITCH.y - M(1.0), BH, 13);
+            this.drawBoards(ctx, PITCH.x - M(1.6), PITCH.y - M(0.6), PITCH.x - M(1.6), PB + M(0.6), BH, 8);
+            this.drawBoards(ctx, PR + M(1.6), PITCH.y - M(0.6), PR + M(1.6), PB + M(0.6), BH, 8);
+
+            // ----- Mặt cỏ: hình thang, xa thì hẹp lại -----
+            ctx.save();
+            pPath(ctx, [[PITCH.x, PITCH.y], [PR, PITCH.y], [PR, PB], [PITCH.x, PB]], true);
+            ctx.clip();
+
+            const g = ctx.createLinearGradient(0, farY, 0, nearY);
+            g.addColorStop(0, '#26773a');
+            g.addColorStop(0.55, '#2b8a43');
+            g.addColorStop(1, '#2f9648');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, farY - 4, W, nearY - farY + 8);
+
+            // Dải cắt cỏ rộng 2m, chiếu lên thành hình thang
+            const sw = M(2);
+            for (let i = 0; i * sw < PITCH.w; i += 2) {
+                const x0 = PITCH.x + i * sw, x1 = Math.min(x0 + sw, PR);
+                pPath(ctx, [[x0, PITCH.y], [x1, PITCH.y], [x1, PB], [x0, PB]], true);
+                ctx.fillStyle = 'rgba(255,255,255,0.055)';
+                ctx.fill();
+            }
+            // Đèn sân toả sáng giữa sân, bốn góc tối đi
+            const spot = ctx.createRadialGradient(MID_X, (farY + nearY) / 2, 90, MID_X, (farY + nearY) / 2, 700);
+            spot.addColorStop(0, 'rgba(255,255,255,0.13)');
+            spot.addColorStop(1, 'rgba(0,0,0,0.34)');
+            ctx.fillStyle = spot;
+            ctx.fillRect(0, farY - 4, W, nearY - farY + 8);
+            ctx.restore();
+
+            // ----- Vạch vôi (rộng 8cm), vẽ theo phối cảnh -----
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+            ctx.lineCap = 'butt';
+            const LW = y => Math.max(1.6, M(0.09) * dscale(y));
+
+            const line = (x0, y0, x1, y1) => {
+                ctx.lineWidth = LW((y0 + y1) / 2);
+                pPath(ctx, [[x0, y0], [x1, y1]]);
+                ctx.stroke();
+            };
+            line(PITCH.x, PITCH.y, PR, PITCH.y);         // biên ngang xa
+            line(PITCH.x, PB, PR, PB);                   // biên ngang gần
+            line(PITCH.x, PITCH.y, PITCH.x, PB);         // biên dọc trái
+            line(PR, PITCH.y, PR, PB);                   // biên dọc phải
+            line(MID_X, PITCH.y, MID_X, PB);             // vạch giữa sân
+
+            ctx.lineWidth = LW(MID_Y);
+            pArc(ctx, MID_X, MID_Y, CENTER_R, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.9)';
+            pArc(ctx, MID_X, MID_Y, M(0.12), 0, Math.PI * 2, 12);
+            ctx.fill();
+
+            // Khu thay người
+            for (const dx of [-SUB_ZONE, SUB_ZONE]) {
+                line(MID_X + dx, PITCH.y, MID_X + dx, PITCH.y - M(0.8));
+                line(MID_X + dx, PB, MID_X + dx, PB + M(0.8));
+            }
+
+            // Vòng cấm futsal: hai cung 1/4 tâm ở chân cột dọc
             [0, 1].forEach(side => {
                 const gx = side === 0 ? PITCH.x : PR;
                 const inward = side === 0 ? 1 : -1;
-
-                ctx.beginPath();
-                if (side === 0) {
-                    // cung từ biên ngang (phía trên) vòng vào tới trước cột trên
-                    ctx.arc(gx, GOAL_T, PEN_R, -Math.PI / 2, 0);
-                    ctx.lineTo(gx + PEN_R, GOAL_B);
-                    ctx.arc(gx, GOAL_B, PEN_R, 0, Math.PI / 2);
-                } else {
-                    ctx.arc(gx, GOAL_T, PEN_R, -Math.PI / 2, Math.PI, true);
-                    ctx.lineTo(gx - PEN_R, GOAL_B);
-                    ctx.arc(gx, GOAL_B, PEN_R, Math.PI, Math.PI / 2, true);
-                }
+                ctx.lineWidth = LW(MID_Y);
+                pArc(ctx, gx, GOAL_T, PEN_R, -Math.PI / 2, side === 0 ? 0 : -Math.PI);
                 ctx.stroke();
+                pArc(ctx, gx, GOAL_B, PEN_R, side === 0 ? 0 : Math.PI, Math.PI / 2);
+                ctx.stroke();
+                line(gx + inward * PEN_R, GOAL_T, gx + inward * PEN_R, GOAL_B);
 
-                // Chấm phạt đền (5m) và chấm phạt đền thứ hai (8m)
                 ctx.fillStyle = 'rgba(255,255,255,0.9)';
-                ctx.beginPath();
-                ctx.arc(gx + inward * PEN_SPOT, MID_Y, LW * 1.5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(gx + inward * PEN2_SPOT, MID_Y, LW * 1.5, 0, Math.PI * 2);
-                ctx.fill();
-                // vạch ngắn đánh dấu chấm thứ hai cho dễ thấy
-                ctx.beginPath();
-                ctx.moveTo(gx + inward * PEN2_SPOT, MID_Y - M(0.35));
-                ctx.lineTo(gx + inward * PEN2_SPOT, MID_Y + M(0.35));
-                ctx.stroke();
+                for (const d of [PEN_SPOT, PEN2_SPOT]) {
+                    pArc(ctx, gx + inward * d, MID_Y, M(0.12), 0, Math.PI * 2, 12);
+                    ctx.fill();
+                }
+                line(gx + inward * PEN2_SPOT, MID_Y - M(0.35), gx + inward * PEN2_SPOT, MID_Y + M(0.35));
             });
 
-            // Cung phạt góc bán kính 0,5m
+            // Cung phạt góc
             [[PITCH.x, PITCH.y, 0], [PR, PITCH.y, Math.PI / 2],
              [PITCH.x, PB, -Math.PI / 2], [PR, PB, Math.PI]]
                 .forEach(([cx, cy, a0]) => {
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, CORNER_R, a0, a0 + Math.PI / 2);
+                    ctx.lineWidth = LW(cy);
+                    pArc(ctx, cx, cy, CORNER_R, a0, a0 + Math.PI / 2, 14);
                     ctx.stroke();
                 });
+            ctx.restore();
 
-            // Cột cờ góc
+            // ----- Cột cờ góc: bây giờ là cây cờ dựng đứng thật -----
             [[PITCH.x, PITCH.y], [PR, PITCH.y], [PITCH.x, PB], [PR, PB]].forEach(([cx, cy]) => {
-                ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-                ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - 14); ctx.stroke();
-                ctx.fillStyle = '#ffd700';
+                const d = dscale(cy), poleH = M(1.2);
+                ctx.strokeStyle = 'rgba(240,245,255,0.8)';
+                ctx.lineWidth = Math.max(1.4, 2.6 * d);
+                pPath(ctx, [[cx, cy, 0], [cx, cy, poleH]]);
+                ctx.stroke();
+                const [fx0, fy0] = [sx_(cx, cy), sy_(cy, poleH)];
+                ctx.fillStyle = '#ffd93b';
                 ctx.beginPath();
-                ctx.moveTo(cx, cy - 14); ctx.lineTo(cx + 9, cy - 11); ctx.lineTo(cx, cy - 8);
+                ctx.moveTo(fx0, fy0);
+                ctx.lineTo(fx0 + 13 * d, fy0 + 4 * d);
+                ctx.lineTo(fx0, fy0 + 9 * d);
                 ctx.closePath(); ctx.fill();
-                ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-                ctx.lineWidth = LW;
             });
         },
 
-        drawGoals(ctx) {
+        /* Dãy bảng quảng cáo dựng đứng chạy dọc theo một cạnh sân */
+        drawBoards(ctx, x0, y0, x1, y1, h, n) {
+            const cols = ['#0f2f5c', '#123f2a', '#4a1030', '#2b2350'];
+            for (let i = 0; i < n; i++) {
+                const t0 = i / n, t1 = (i + 1) / n;
+                const ax = x0 + (x1 - x0) * t0, ay = y0 + (y1 - y0) * t0;
+                const bx = x0 + (x1 - x0) * t1, by = y0 + (y1 - y0) * t1;
+                pPath(ctx, [[ax, ay, 0], [bx, by, 0], [bx, by, h], [ax, ay, h]], true);
+                ctx.fillStyle = cols[i % cols.length];
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                // vệt sáng phản chiếu trên mặt bảng
+                pPath(ctx, [[ax, ay, h * 0.62], [bx, by, h * 0.62], [bx, by, h * 0.9], [ax, ay, h * 0.9]], true);
+                ctx.fillStyle = 'rgba(255,255,255,0.07)';
+                ctx.fill();
+            }
+        },
+
+        /* Khung thành ba chiều.
+           Phần lưới và cột xa vẽ TRƯỚC cầu thủ, cột gần và xà ngang vẽ SAU,
+           nhờ vậy thủ môn đứng lọt vào trong khung như thật. */
+        drawGoalNets(ctx) {
             [0, 1].forEach(side => {
                 const outward = side === 0 ? -1 : 1;
                 const gx = side === 0 ? PITCH.x : PR;
                 const bx = gx + outward * GOAL_D;
-
-                // Lưới — chỗ nào bóng găm vào thì các mắt lưới bị đẩy phồng ra
                 const b = this.ball;
                 const inThisNet = b.inNet === (side === 0 ? -1 : 1);
-                const bulge = (px, py) => {
+                // Bóng găm vào lưới thì đẩy các mắt lưới quanh đó phồng ra
+                const bulge = (x, y) => {
                     if (!inThisNet) return 0;
-                    const d = dist(px, py, b.x, b.y);
-                    return d > 46 ? 0 : (1 - d / 46) * 13;
+                    const d = dist(x, y, b.x, b.y);
+                    return d > 52 ? 0 : (1 - d / 52) * 15 * outward;
+                };
+                // Một tấm lưới: 4 góc theo thứ tự vòng quanh, mỗi góc [x, y, cao]
+                const panel = (c, nu, nv) => {
+                    ctx.strokeStyle = 'rgba(255,255,255,0.34)';
+                    ctx.lineWidth = 1;
+                    const at = (u, v) => {
+                        const top = [c[0][0] + (c[1][0] - c[0][0]) * u, c[0][1] + (c[1][1] - c[0][1]) * u, c[0][2] + (c[1][2] - c[0][2]) * u];
+                        const bot = [c[3][0] + (c[2][0] - c[3][0]) * u, c[3][1] + (c[2][1] - c[3][1]) * u, c[3][2] + (c[2][2] - c[3][2]) * u];
+                        const x = top[0] + (bot[0] - top[0]) * v, y = top[1] + (bot[1] - top[1]) * v;
+                        return [x + bulge(x, y), y, top[2] + (bot[2] - top[2]) * v];
+                    };
+                    for (let i = 0; i <= nu; i++) {
+                        const pts = [];
+                        for (let j = 0; j <= nv; j++) pts.push(at(i / nu, j / nv));
+                        pPath(ctx, pts); ctx.stroke();
+                    }
+                    for (let j = 0; j <= nv; j++) {
+                        const pts = [];
+                        for (let i = 0; i <= nu; i++) pts.push(at(i / nu, j / nv));
+                        pPath(ctx, pts); ctx.stroke();
+                    }
                 };
 
                 ctx.save();
-                ctx.fillStyle = 'rgba(255,255,255,0.07)';
-                ctx.fillRect(Math.min(gx, bx), GOAL_T, GOAL_D, GOAL_H);
-                ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-                ctx.lineWidth = 1;
-                for (let i = 0; i <= GOAL_D; i += 8) {
-                    const x = gx + outward * i;
-                    ctx.beginPath();
-                    for (let y = GOAL_T; y <= GOAL_B; y += 6) {
-                        const px = x + outward * bulge(x, y);
-                        y === GOAL_T ? ctx.moveTo(px, y) : ctx.lineTo(px, y);
-                    }
-                    ctx.stroke();
-                }
-                for (let y = GOAL_T; y <= GOAL_B; y += 9) {
-                    ctx.beginPath();
-                    for (let i = 0; i <= GOAL_D; i += 5) {
-                        const x = gx + outward * i;
-                        const px = x + outward * bulge(x, y);
-                        i === 0 ? ctx.moveTo(px, y) : ctx.lineTo(px, y);
-                    }
-                    ctx.stroke();
-                }
+                // nền mờ bên trong khung cho lưới nổi lên
+                pPath(ctx, [[gx, GOAL_T, GOAL_Z], [gx, GOAL_B, GOAL_Z], [gx, GOAL_B, 0], [gx, GOAL_T, 0]], true);
+                ctx.fillStyle = 'rgba(255,255,255,0.05)';
+                ctx.fill();
+
+                panel([[bx, GOAL_T, GOAL_BZ], [bx, GOAL_B, GOAL_BZ], [bx, GOAL_B, 0], [bx, GOAL_T, 0]], 9, 6);      // lưới sau
+                panel([[gx, GOAL_T, GOAL_Z], [bx, GOAL_T, GOAL_BZ], [bx, GOAL_T, 0], [gx, GOAL_T, 0]], 4, 6);        // hông xa
+                panel([[gx, GOAL_B, GOAL_Z], [bx, GOAL_B, GOAL_BZ], [bx, GOAL_B, 0], [gx, GOAL_B, 0]], 4, 6);        // hông gần
+                panel([[gx, GOAL_T, GOAL_Z], [gx, GOAL_B, GOAL_Z], [bx, GOAL_B, GOAL_BZ], [bx, GOAL_T, GOAL_BZ]], 9, 4); // mái
                 ctx.restore();
 
-                // Cột dọc và xà
-                ctx.strokeStyle = '#f4f7fb';
-                ctx.lineWidth = 7;
-                ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(gx, GOAL_T); ctx.lineTo(bx, GOAL_T);
-                ctx.moveTo(gx, GOAL_B); ctx.lineTo(bx, GOAL_B);
-                ctx.stroke();
-                ctx.lineWidth = 9;
-                ctx.strokeStyle = TEAMS[side].color;
-                ctx.beginPath();
-                ctx.moveTo(gx, GOAL_T); ctx.lineTo(gx, GOAL_B);
-                ctx.stroke();
+                // Cột dọc phía XA + khung sau (nằm sau lưng cầu thủ)
+                const bar = (a, b2, w, col) => {
+                    ctx.strokeStyle = col;
+                    ctx.lineWidth = w * dscale((a[1] + b2[1]) / 2);
+                    ctx.lineCap = 'round';
+                    pPath(ctx, [a, b2]); ctx.stroke();
+                };
+                bar([bx, GOAL_T, 0], [bx, GOAL_T, GOAL_BZ], 4, '#cfd8e6');
+                bar([bx, GOAL_B, 0], [bx, GOAL_B, GOAL_BZ], 4, '#cfd8e6');
+                bar([bx, GOAL_T, GOAL_BZ], [bx, GOAL_B, GOAL_BZ], 4, '#cfd8e6');
+                bar([gx, GOAL_T, 0], [gx, GOAL_T, GOAL_Z], 8, '#f6f9ff');
+            });
+        },
 
-                // Nhãn khung thành của đội nào
+        drawGoalFrames(ctx) {
+            [0, 1].forEach(side => {
+                const gx = side === 0 ? PITCH.x : PR;
+                const bar = (a, b2, w, col) => {
+                    ctx.strokeStyle = col;
+                    ctx.lineWidth = w * dscale((a[1] + b2[1]) / 2);
+                    ctx.lineCap = 'round';
+                    pPath(ctx, [a, b2]); ctx.stroke();
+                };
+                bar([gx, GOAL_B, 0], [gx, GOAL_B, GOAL_Z], 8, '#f6f9ff');            // cột gần
+                bar([gx, GOAL_T, GOAL_Z], [gx, GOAL_B, GOAL_Z], 7, '#f6f9ff');       // xà ngang
+                // vạch màu đội dưới chân khung thành
+                ctx.strokeStyle = TEAMS[side].color;
+                ctx.lineWidth = 4 * dscale(MID_Y);
+                pPath(ctx, [[gx, GOAL_T], [gx, GOAL_B]]); ctx.stroke();
+
+                // Nhãn treo trên xà
                 ctx.save();
                 ctx.textAlign = 'center';
                 ctx.font = 'bold 13px "Baloo 2", sans-serif';
                 ctx.fillStyle = TEAMS[side].light;
-                ctx.fillText(`KHUNG THÀNH ${TEAMS[side].name}`, gx + outward * 4, GOAL_T - 14);
+                ctx.shadowColor = 'rgba(0,0,0,0.85)';
+                ctx.shadowBlur = 6;
+                ctx.fillText(`KHUNG THÀNH ${TEAMS[side].name}`, sx_(gx, MID_Y), sy_(MID_Y, GOAL_Z) - 12);
                 ctx.restore();
             });
         },
@@ -2027,59 +2175,64 @@
             ctx.strokeStyle = p.color;
             ctx.lineWidth = 3;
             ctx.setLineDash([9, 8]);
-            ctx.beginPath(); ctx.moveTo(p.x1, p.y1); ctx.lineTo(p.x2, p.y2); ctx.stroke();
+            pPath(ctx, [[p.x1, p.y1, B_R], [p.x2, p.y2, B_R]]); ctx.stroke();
             ctx.restore();
         },
 
         drawBall(ctx) {
             const b = this.ball;
+            const s = dscale(b.y);
+            const bx = sx_(b.x, b.y), by = sy_(b.y, B_R);   // tâm bóng nằm cách mặt cỏ đúng 1 bán kính
 
             // Vệt bóng khi đi nhanh
             for (const t of this.trail) {
+                const ts = dscale(t.y);
                 ctx.globalAlpha = clamp(t.life / 0.28, 0, 1) * 0.32;
                 ctx.fillStyle = '#ffffff';
-                ctx.beginPath(); ctx.arc(t.x, t.y, B_R * 0.8, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath();
+                ctx.arc(sx_(t.x, t.y), sy_(t.y, B_R), B_R * 0.8 * ts, 0, Math.PI * 2);
+                ctx.fill();
             }
             ctx.globalAlpha = 1;
 
             // Bóng đổ trên cỏ
-            ctx.fillStyle = 'rgba(0,0,0,0.32)';
+            ctx.fillStyle = 'rgba(0,0,0,0.34)';
             ctx.beginPath();
-            ctx.ellipse(b.x + 2, b.y + 4, B_R * 0.98, B_R * 0.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(bx + 2 * s, sy_(b.y), B_R * 0.95 * s, B_R * 0.42 * s, 0, 0, Math.PI * 2);
             ctx.fill();
 
             if (b.texDirty || !b.tex) renderBallTex(b);
 
             ctx.save();
-            ctx.translate(b.x, b.y);
-            ctx.drawImage(b.tex, -B_R, -B_R, B_R * 2, B_R * 2);
-            // Viền tối rất mảnh cho quả bóng tách khỏi nền cỏ
+            ctx.translate(bx, by);
+            ctx.drawImage(b.tex, -B_R * s, -B_R * s, B_R * 2 * s, B_R * 2 * s);
             ctx.strokeStyle = 'rgba(0,0,0,0.35)';
             ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.arc(0, 0, B_R, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, B_R * s, 0, Math.PI * 2); ctx.stroke();
             ctx.restore();
         },
 
         drawFx(ctx) {
             for (const f of this.fx) {
                 const a = clamp(f.life / f.max, 0, 1);
+                const sc = dscale(f.y);
+                const px = sx_(f.x, f.y), py = sy_(f.y, f.z || 0);
                 ctx.save();
                 ctx.globalAlpha = a;
                 if (f.dot) {
                     ctx.fillStyle = f.color;
-                    ctx.beginPath(); ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(px, py, f.size * sc, 0, Math.PI * 2); ctx.fill();
                 } else {
-                    ctx.font = `bold ${f.size}px "Baloo 2", sans-serif`;
+                    ctx.font = `bold ${(f.size * (0.72 + 0.28 * sc)).toFixed(1)}px "Baloo 2", sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.fillStyle = 'rgba(0,0,0,0.75)';
-                    ctx.fillText(f.text, f.x + 1.5, f.y + 1.5);
+                    ctx.fillText(f.text, px + 1.5, py + 1.5);
                     ctx.fillStyle = f.color;
-                    ctx.fillText(f.text, f.x, f.y);
+                    ctx.fillText(f.text, px, py);
                 }
                 ctx.restore();
             }
         },
-
 
         /* Giao diện loạt luân lưu: băng rôn, bảng đếm quả của hai đội,
            vạch ngắm chạy dọc khung thành và thanh lực. */
@@ -2141,34 +2294,32 @@
                 ctx.lineWidth = 3;
                 ctx.shadowColor = inside ? 'rgba(255,215,0,0.9)' : 'rgba(255,85,102,0.9)';
                 ctx.shadowBlur = 14;
-                const gx = pk.goalX;
-                ctx.beginPath();
-                ctx.moveTo(gx - pk.dir * 26, ay);
-                ctx.lineTo(gx + pk.dir * 8, ay);
+                const gx = pk.goalX, mx = gx - pk.dir * 30;
+                // vạch ngắm nằm ngay trên vạch vôi, dựng cao bằng quả bóng
+                pPath(ctx, [[gx - pk.dir * 26, ay, B_R], [gx + pk.dir * 8, ay, B_R]]);
                 ctx.stroke();
-                // vòng ngắm
+                // vòng ngắm vẽ sát mặt cỏ nên bẹt đi theo phối cảnh
+                const ms = dscale(ay);
                 ctx.beginPath();
-                ctx.arc(gx - pk.dir * 30, ay, 9, 0, Math.PI * 2);
+                ctx.ellipse(sx_(mx, ay), sy_(ay, B_R), 10 * ms, 10 * ms * 0.55, 0, 0, Math.PI * 2);
                 ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(gx - pk.dir * 30, ay - 5);
-                ctx.lineTo(gx - pk.dir * 30, ay + 5);
+                pPath(ctx, [[mx, ay - M(0.14), B_R], [mx, ay + M(0.14), B_R]]);
                 ctx.stroke();
                 // đường nối từ bóng tới điểm ngắm
                 ctx.globalAlpha = 0.45;
                 ctx.setLineDash([8, 8]);
                 ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(this.ball.x, this.ball.y);
-                ctx.lineTo(gx - pk.dir * 30, ay);
+                pPath(ctx, [[this.ball.x, this.ball.y, B_R], [mx, ay, B_R]]);
                 ctx.stroke();
                 ctx.restore();
             }
 
             // Thanh lực trên đầu người sút
             if (pk.phase === 'charge') {
-                const bw = 90, bh = 12;
-                const bx = pk.shooter.x - bw / 2, by = pk.shooter.y - P_R - 26;
+                const ps = dscale(pk.shooter.y);
+                const bw = 90 * ps, bh = 12 * ps;
+                const bx = sx_(pk.shooter.x, pk.shooter.y) - bw / 2;
+                const by = sy_(pk.shooter.y, -FIG.headY + FIG.headR) - 20 * ps;
                 ctx.save();
                 ctx.fillStyle = 'rgba(4,12,8,0.85)';
                 ctx.beginPath(); ctx.roundRect(bx - 3, by - 3, bw + 6, bh + 6, 7); ctx.fill();
