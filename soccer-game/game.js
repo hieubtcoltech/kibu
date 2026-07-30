@@ -2150,11 +2150,6 @@
                 };
                 bar([gx, GOAL_B, 0], [gx, GOAL_B, GOAL_Z], 8, '#f6f9ff');            // cột gần
                 bar([gx, GOAL_T, GOAL_Z], [gx, GOAL_B, GOAL_Z], 7, '#f6f9ff');       // xà ngang
-                // vạch màu đội dưới chân khung thành
-                ctx.strokeStyle = TEAMS[side].color;
-                ctx.lineWidth = 4 * dscale(MID_Y);
-                pPath(ctx, [[gx, GOAL_T], [gx, GOAL_B]]); ctx.stroke();
-
                 // Nhãn treo trên xà
                 ctx.save();
                 ctx.textAlign = 'center';
