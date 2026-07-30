@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pool Masters - Bi-a 8 Bi 2 Người Chơi</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-hall-glow"></div>
+
+    <div class="app-wrapper">
+        <!-- Top Navigation Bar -->
+        <header class="unified-nav">
+            <div class="brand">
+                <span class="brand-icon">🎱</span>
+                <h1 class="brand-title">POOL MASTERS</h1>
+            </div>
+
+            <div class="nav-actions">
+                <a href="../index.html" class="btn btn-home">
+                    <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
+                </a>
+                <button id="btn-help" class="btn btn-toggle active" title="Hiện đường ngắm và bi ma giúp bé đánh chuẩn hơn">
+                    <i class="fa-solid fa-crosshairs"></i> <span id="help-label">Đường Ngắm: BẬT</span>
+                </button>
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                </button>
+                <button id="btn-rules" class="btn">
+                    <i class="fa-solid fa-circle-question"></i> <span>Luật Chơi</span>
+                </button>
+                <button id="btn-restart" class="btn">
+                    <i class="fa-solid fa-rotate-right"></i> <span>Ván Mới</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Player status bar -->
+        <div class="players-bar">
+            <div id="panel-p1" class="player-panel panel-p1 active">
+                <div class="p-avatar">🦊</div>
+                <div class="p-body">
+                    <div class="p-name">NGƯỜI CHƠI 1</div>
+                    <div id="p1-group" class="p-group">Chưa chọn nhóm bi</div>
+                </div>
+                <div id="p1-balls" class="p-balls"></div>
+            </div>
+
+            <div class="turn-indicator">
+                <div id="turn-text" class="turn-text">LƯỢT CỦA BÉ 1</div>
+                <div id="turn-sub" class="turn-sub">Kéo lùi từ bi trắng rồi thả</div>
+            </div>
+
+            <div id="panel-p2" class="player-panel panel-p2">
+                <div id="p2-balls" class="p-balls"></div>
+                <div class="p-body align-right">
+                    <div class="p-name">NGƯỜI CHƠI 2</div>
+                    <div id="p2-group" class="p-group">Chưa chọn nhóm bi</div>
+                </div>
+                <div class="p-avatar">🐧</div>
+            </div>
+        </div>
+
+        <!-- Main Canvas Viewport -->
+        <main class="game-viewport">
+            <canvas id="game-canvas"></canvas>
+
+            <div class="hud-overlay">
+                <div id="toast" class="toast hidden"></div>
+            </div>
+
+            <!-- Start / Menu Screen -->
+            <div id="screen-menu" class="screen">
+                <div class="panel">
+                    <div class="panel-emoji">🎱🦊🐧</div>
+                    <h2 class="panel-title">BI-A 8 BI — SONG ĐẤU</h2>
+                    <p class="panel-desc">
+                        Hai bé thay phiên nhau đánh trên cùng một máy. Ai ăn hết nhóm bi của mình rồi
+                        đưa <b>bi số 8</b> vào lỗ trước sẽ thắng!
+                    </p>
+
+                    <div class="rules-grid">
+                        <div class="rule-box rule-p1">
+                            <div class="rule-avatar">🦊</div>
+                            <div class="rule-name">NGƯỜI CHƠI 1</div>
+                            <div class="rule-note">Đánh trước — phá bi</div>
+                        </div>
+                        <div class="vs-badge">VS</div>
+                        <div class="rule-box rule-p2">
+                            <div class="rule-avatar">🐧</div>
+                            <div class="rule-name">NGƯỜI CHƠI 2</div>
+                            <div class="rule-note">Đánh sau</div>
+                        </div>
+                    </div>
+
+                    <div class="howto">
+                        <div class="howto-item"><span class="step">1</span> <b>Kéo lùi</b> từ bi trắng (như bắn ná) để ngắm và lấy lực</div>
+                        <div class="howto-item"><span class="step">2</span> <b>Thả tay</b> để đánh — kéo càng xa, cú đánh càng mạnh</div>
+                        <div class="howto-item"><span class="step">3</span> Chạm vào <b>bi cái to phía dưới bàn</b> để chọn 1 trong <b>9 điểm chạm</b> — đánh cao, thấp hay xoáy ngang</div>
+                        <div class="howto-item"><span class="step">4</span> Ăn được bi của mình thì <b>được đánh tiếp</b></div>
+                        <div class="howto-item"><span class="step">5</span> Phím <b>← →</b> chỉnh hướng thật chuẩn, <b>Space</b> để đánh</div>
+                    </div>
+
+                    <button id="btn-start" class="big-btn">
+                        <i class="fa-solid fa-play"></i> BẮT ĐẦU VÁN ĐẤU
+                    </button>
+                </div>
+            </div>
+
+            <!-- Rules Screen -->
+            <div id="screen-rules" class="screen hidden">
+                <div class="panel">
+                    <div class="panel-emoji">📖</div>
+                    <h2 class="panel-title">LUẬT CHƠI</h2>
+                    <div class="rule-list">
+                        <div class="rule-line"><b>🎱 9 điểm chạm bi cái:</b> Chạm vào bi cái to ở dưới bàn để chọn chỗ đầu cơ chạm vào bi trắng —
+                            <span class="chip chip-solid">đánh CAO</span> bi trắng chạy tiếp theo bi mục tiêu,
+                            <span class="chip chip-solid">đánh THẤP</span> bi trắng lùi ngược lại,
+                            <span class="chip chip-stripe">xoáy TRÁI/PHẢI</span> bi trắng ăn băng rồi bạt sang bên đó.
+                            Đánh xong sẽ tự trở về giữa bi.</div>
+                        <div class="rule-line"><b>🎯 Chọn nhóm bi:</b> Sau cú phá bi, ai ăn được bi nào trước thì nhận nhóm đó — <span class="chip chip-solid">bi trơn 1-7</span> hoặc <span class="chip chip-stripe">bi sọc 9-15</span>.</div>
+                        <div class="rule-line"><b>🔁 Đánh tiếp:</b> Ăn được bi của nhóm mình thì được đánh thêm lượt nữa.</div>
+                        <div class="rule-line"><b>⚠️ Phạm lỗi:</b> Bi trắng rơi lỗ, không chạm bi nào, hoặc chạm bi của đối thủ trước. Khi đó đối thủ được <b>cầm bi trắng đặt tự do</b>.</div>
+                        <div class="rule-line"><b>🏆 Thắng:</b> Ăn hết nhóm bi của mình rồi đưa <b>bi số 8</b> vào lỗ.</div>
+                        <div class="rule-line"><b>💀 Thua ngay:</b> Đưa bi số 8 vào lỗ khi chưa ăn hết nhóm của mình, hoặc bi trắng rơi lỗ cùng lúc với bi 8.</div>
+                    </div>
+                    <button id="btn-close-rules" class="big-btn"><i class="fa-solid fa-check"></i> ĐÃ HIỂU</button>
+                </div>
+            </div>
+
+            <!-- Game Over Screen -->
+            <div id="screen-over" class="screen hidden">
+                <div class="panel panel-small">
+                    <div id="over-emoji" class="panel-emoji">🏆</div>
+                    <h2 id="over-title" class="panel-title">NGƯỜI CHƠI 1 THẮNG!</h2>
+                    <p id="over-desc" class="panel-desc">Cú đánh quyết định quá đẹp!</p>
+                    <div class="over-actions">
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> ĐẤU LẠI</button>
+                        <a href="../index.html" class="big-btn btn-ghost"><i class="fa-solid fa-house"></i> TRANG CHỦ</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

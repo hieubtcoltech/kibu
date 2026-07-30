@@ -25,6 +25,7 @@
             --green-glow: #39ff14;
             --purple-glow: #9d4edd;
             --orange-glow: #ff8a1a;
+            --felt-glow: #16955a;
         }
 
         * {
@@ -118,6 +119,7 @@
         }
 
         .game-card {
+            container-type: inline-size;
             background: rgba(15, 23, 42, 0.75);
             border: 1px solid var(--card-border);
             border-radius: 28px;
@@ -176,6 +178,11 @@
             border-color: var(--orange-glow);
         }
 
+        .card-pool:hover {
+            box-shadow: 0 15px 50px rgba(22, 149, 90, 0.5);
+            border-color: var(--felt-glow);
+        }
+
         .badge {
             font-family: var(--font-display);
             font-size: 0.85rem;
@@ -229,6 +236,12 @@
             border: 1px solid rgba(255, 138, 26, 0.4);
         }
 
+        .badge-pool {
+            background: rgba(22, 149, 90, 0.18);
+            color: #5fd99b;
+            border: 1px solid rgba(22, 149, 90, 0.45);
+        }
+
         .card-banner {
             font-size: 4rem;
             margin-bottom: 16px;
@@ -241,8 +254,12 @@
 
         .card-title {
             font-family: var(--font-display);
-            font-size: 2rem;
+            /* Tiêu đề luôn gọn trên 1 dòng: cỡ chữ co theo bề rộng thẻ.
+               Dòng đầu là phương án dự phòng cho trình duyệt cũ chưa hỗ trợ cqi. */
+            font-size: 1.65rem;
+            font-size: clamp(1.05rem, 8.3cqi, 2rem);
             font-weight: 800;
+            white-space: nowrap;
             margin-bottom: 10px;
         }
 
@@ -350,6 +367,15 @@
         }
         .btn-basket:hover {
             box-shadow: 0 8px 30px rgba(255, 138, 26, 0.85);
+        }
+
+        .btn-pool {
+            background: linear-gradient(135deg, #16955a, #ffd700);
+            color: #061a10;
+            box-shadow: 0 6px 20px rgba(22, 149, 90, 0.55);
+        }
+        .btn-pool:hover {
+            box-shadow: 0 8px 30px rgba(22, 149, 90, 0.9);
         }
 
         /* Footer */
@@ -496,6 +522,24 @@
                 </div>
                 <div class="play-btn btn-basket">
                     CHƠI NGAY <i class="fa-solid fa-basketball"></i>
+                </div>
+            </a>
+
+            <!-- Game 8: Pool Masters -->
+            <a href="./billiards-game/index.html" class="game-card card-pool">
+                <div class="badge badge-pool"><i class="fa-solid fa-users"></i> 2 Bé Thi Đấu</div>
+                <div class="card-banner">🎱🦊🐧</div>
+                <h2 class="card-title">POOL MASTERS</h2>
+                <p class="card-desc">
+                    <b>Bi-a 8 bi luân phiên hai bé!</b> Kéo lùi cơ như bắn ná rồi thả để đánh, có đường ngắm và bi ma trợ giúp. Ăn hết nhóm bi của mình rồi hạ bi số 8 là thắng!
+                </p>
+                <div class="feature-tags">
+                    <span class="tag">👫 2 người chơi</span>
+                    <span class="tag">🎱 9 điểm chạm bi cái</span>
+                    <span class="tag">🎯 Đủ luật 8 bi</span>
+                </div>
+                <div class="play-btn btn-pool">
+                    CHƠI NGAY <i class="fa-solid fa-play"></i>
                 </div>
             </a>
         </div>

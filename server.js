@@ -269,7 +269,8 @@ function banner(port) {
         ['fruit', '🍓 Fruit Crush Deluxe'],
         ['shooter', '🤖 Bot Arena Blaster'],
         ['racer', '🏎️  Neon Racer Arcade'],
-        ['basketball-game', '🏀 Basketball Duel — 2 bé thi đấu']
+        ['basketball-game', '🏀 Basketball Duel — 2 bé thi đấu'],
+        ['billiards-game', '🎱 Pool Masters — bi-a 8 bi 2 người']
     ].forEach(([slug, name]) => {
         console.log(`    ${C.dim}/${slug}${C.reset}${' '.repeat(Math.max(1, 10 - slug.length))}${name}`);
     });
