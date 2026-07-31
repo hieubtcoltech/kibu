@@ -18,15 +18,18 @@
         { x: LEFT, y: BOTTOM }, { x: MID_X, y: BOTTOM + 4 }, { x: RIGHT, y: BOTTOM }
     ];
 
-    // --- Ma sát: mô phỏng 2 giai đoạn như bi-a thật ---
+    // --- Ma sát: mô phỏng đúng bi thật, bám theo VẬN TỐC QUAY của từng quả bi ---
     // Bàn 9 feet: mặt nỉ 2,54m ứng với 1008px  =>  1 mét ≈ 397px.
-    // Bi vừa bị đánh thì TRƯỢT trên nỉ (ma sát trượt μ≈0,2 → ~780 px/s²), vừa trượt vừa
-    // được nỉ "vặn" cho quay. Khi tốc độ tụt còn 5/7 ban đầu thì bi chuyển sang LĂN,
-    // lúc này ma sát lăn nhỏ hơn gần 20 lần (μ≈0,010 → ~42 px/s²) nên bi đi rất xa.
+    // Mỗi bi giữ riêng vận tốc quay ω. Điểm chạm nỉ trượt với vận tốc
+    //     u = v + ω × (-R·ẑ) = (vx - R·ωy , vy + R·ωx)
+    // Còn u ≠ 0 thì bi TRƯỢT: nỉ hãm bi theo chiều ngược u (μ≈0,2 → 780 px/s²) đồng thời
+    // vặn cho bi quay nhanh dần; u tự triệt tiêu với gia tốc 7/2·A_SLIDE. Khi u = 0 bi đã
+    // LĂN ĐỀU, ma sát nhỏ hơn ~20 lần (μ≈0,010) nên bi còn trôi rất xa — đó là quán tính.
+    // Nhờ giữ ω riêng, bi cái đâm bi xong vẫn còn xoáy tới nên tự chạy tiếp, không khựng.
     const A_SLIDE = 780;            // giảm tốc lúc bi còn trượt (px/s²)
-    const A_ROLL = 42;              // giảm tốc khi bi đã lăn đều (px/s², ứng với μ≈0,010)
-    const ROLL_RATIO = 5 / 7;       // tỉ lệ tốc độ lúc bi hết trượt, chuyển sang lăn
-    const STOP_V = 12;              // dưới ngưỡng này coi như bi đứng yên
+    const A_ROLL = 38;              // giảm tốc khi bi đã lăn đều (px/s², ứng với μ≈0,010)
+    const SPIN_DECEL = 25;          // xoáy ngang (quanh trục dọc) tắt dần (rad/s²)
+    const STOP_V = 6;               // dưới ngưỡng này (cả vận tốc lẫn trượt) bi mới đứng yên
     const CUSHION_E = 0.80;         // độ nảy của băng (bàn tốt: 0,75-0,85)
     const BALL_E = 0.94;            // độ nảy giữa 2 bi
     const MAX_POWER = 2000;         // tốc độ tối đa của bi trắng (~5 m/s, cỡ cú phá bi thật)
@@ -40,31 +43,50 @@
     const RAIL = 30;                // bề rộng khung gỗ ngoài băng
     const CX0 = LEFT - CUSH, CY0 = TOP - CUSH, CX1 = RIGHT + CUSH, CY1 = BOTTOM + CUSH;
     const OX0 = CX0 - RAIL, OY0 = CY0 - RAIL, OX1 = CX1 + RAIL, OY1 = CY1 + RAIL;
-    // Băng được vát chéo ở hai đầu tạo thành "hàm" lỗ: mũi băng thụt vào nhiều hơn chân băng
-    // Miệng lỗ góc rộng ~1,9 đường kính bi, lỗ giữa ~2,2 — đúng tỉ lệ bàn thật
-    const C_NOSE = 34, C_BASE = 11;     // vát ở lỗ góc
-    const S_NOSE = 28, S_BASE = 16;     // vát ở lỗ giữa
+    // ---------- Hình học 6 lỗ, lấy theo bàn 9 feet tiêu chuẩn ----------
+    // Miệng lỗ đo giữa hai MŨI BĂNG: lỗ góc 4½" = 2,0 đường kính bi; lỗ giữa 5" = 2,2.
+    const C_NOSE = 2 * Math.SQRT2 * R;  // mũi băng cách điểm lỗ góc dọc mỗi cạnh (miệng = 4R)
+    const S_NOSE = 2.2 * R;             // nửa miệng lỗ giữa (miệng = 4,4R)
+    // Hai đầu băng được cắt vát (facing) để mở miệng lỗ. Góc cắt chuẩn: lỗ góc 142°,
+    // lỗ giữa 104° — quy ra là mặt vát nghiêng 26° (góc) và 38° (giữa) so với phương
+    // vuông góc với băng, nên khi đi hết bề dày băng thì chân vát lùi ra:
+    const C_FACE = CUSH * Math.tan(26 * Math.PI / 180);   // ≈ 10,7 px
+    const S_FACE = CUSH * Math.tan(38 * Math.PI / 180);   // ≈ 17,2 px
+    // Miệng lỗ là hốc TRÒN nằm ngay sau hàm băng, ăn lấn cả vào khung gỗ.
+    // Bán kính lấy vừa đủ để cung tròn chạy sát hai mũi băng, không để hở nêm gỗ ở hàm lỗ.
+    const C_HOLE = 29, C_OFF = -4;      // lỗ góc: bán kính; tâm lùi VÀO trong theo đường chéo
+    const S_HOLE = 2.05 * R, S_OFF = 8; // lỗ giữa: bán kính; tâm lệch RA phía thành bàn
+    // Lỗ giữa không có "đường chéo" như lỗ góc, nên bi rơi khi tâm vào trong bề ngang
+    // miệng lỗ và áp sát đường mũi băng. Lấy R + 5 để bi chạm băng là rơi ngay, không lọt.
+    const S_CATCH = R + 5;
 
     // ---------- Bảng chọn điểm chạm trên bi cái (9 vị trí) ----------
     // Bảng điều khiển nằm hẳn dưới bàn, không đè lên mặt nỉ
-    const PANEL = { x: 286, y: 642, w: 588, h: 108 };
+    const PANEL = { w: 720, y: 642, h: 108, x: 0 };
+    PANEL.x = MID_X - PANEL.w / 2;                  // canh giữa theo bàn
     const SPIN_CX = PANEL.x + 62, SPIN_CY = PANEL.y + PANEL.h / 2, SPIN_R = 40;
-    const SPIN_STEP = SPIN_R * 0.52;                // khoảng cách từ tâm tới hàng/cột chấm
+    // Khoảng cách từ tâm bi tới các chấm chọn. Hàng trên/dưới (đánh cao/thấp) đặt xa
+    // tâm hơn cột trái/phải cho dễ nhắm và đúng thói quen cầm cơ.
+    const SPIN_STEP_X = SPIN_R * 0.52;
+    const SPIN_STEP_Y = SPIN_R * 0.66;
     // Hướng đèn chiếu lên quả bi cái trong bảng (dùng để tô khối và làm mờ chấm khuất)
     const SPIN_LIGHT = (() => {
         const v = [-0.42, -0.52, 0.74], n = Math.hypot(...v);
         return v.map(c => c / n);
     })();
-    // Xoáy dọc được quy đổi thành vận tốc bi trắng nhận lại sau khi chạm bi:
-    // followV = lực đánh × FOLLOW_K, giảm dần theo quãng đường bi lăn trước lúc chạm.
-    const FOLLOW_K = 0.58;      // độ mạnh của cú "chạy tiếp" / "lùi lại"
-    const ENGLISH_K = 0.40;     // độ mạnh của xoáy ngang khi ăn băng
-    const FOLLOW_FADE = 1400;   // xoáy dọc tắt dần sau bao nhiêu px lăn
-    const ENGLISH_FADE = 1600;
+    // Điểm chạm của đầu cơ lệch tâm bao nhiêu thì bi nhận xoáy bấy nhiêu:
+    //     ω = 5 · (độ lệch) · (lực đánh) / (2R²)
+    // Lệch 0,4R là bi lăn đều ngay từ đầu; quá 0,5R thì cơ trượt (miscue) nên lấy 0,48R
+    // làm mức tối đa — đánh cao/thấp hết cỡ cho xoáy 1,2 lần mức lăn đều.
+    const TIP_MAX = R * 0.48;
+    const SPIN_K = 5 * TIP_MAX / (2 * R * R);   // hệ số quy đổi lực đánh -> ω (rad/s trên mỗi px/s)
+    const CUSH_GRIP = 0.11;     // băng "bám" xoáy ngang mạnh cỡ nào khi bi ăn băng
+    const CUSH_GRIP_MAX = 0.5;  // độ bạt tối đa, tính theo tốc độ đâm vào băng
+    const CUSH_SPIN_KEEP = 0.45;// phần xoáy ngang còn lại sau mỗi lần ăn băng
 
     // Mô tả cho từng điểm chạm, tra theo `${x},${y}`
     const SPIN_HINT = {
-        '0,0': 'Đánh GIỮA bi — bi trắng khựng lại sau khi chạm',
+        '0,0': 'Đánh GIỮA bi — bi lăn tự nhiên, chạm xong còn trôi theo quán tính',
         '0,1': 'Đánh CAO — bi trắng chạy tiếp theo bi mục tiêu',
         '0,-1': 'Đánh THẤP — bi trắng lùi ngược trở lại',
         '-1,0': 'Xoáy TRÁI — bi trắng ăn băng rồi lệch sang trái',
@@ -144,13 +166,14 @@
         m[8] = m[0] * m[4] - m[1] * m[3];
     }
 
-    // Tô lại ảnh bề mặt bi theo hướng quay hiện tại
-    function renderBallTex(b) {
-        if (!b.tex) {
+    // Tô lại ảnh bề mặt bi theo hướng quay hiện tại.
+    // `size` cho phép tô ở độ phân giải cao hơn khi cần ảnh bi to (danh sách bi ở HUD).
+    function renderBallTex(b, size = TEX) {
+        if (!b.tex || b.tex.width !== size) {
             b.tex = document.createElement('canvas');
-            b.tex.width = b.tex.height = TEX;
+            b.tex.width = b.tex.height = size;
             b.texCtx = b.tex.getContext('2d');
-            b.texImg = b.texCtx.createImageData(TEX, TEX);
+            b.texImg = b.texCtx.createImageData(size, size);
         }
         orthonormalize(b.ori);
         const m = b.ori, d = b.texImg.data;
@@ -158,10 +181,10 @@
         const col = b.num === 0 ? CUE_RGB : BALL_RGB[b.num];
         let p = 0;
 
-        for (let j = 0; j < TEX; j++) {
-            const ny = (j + 0.5) / TEX * 2 - 1;
-            for (let i = 0; i < TEX; i++, p += 4) {
-                const nx = (i + 0.5) / TEX * 2 - 1;
+        for (let j = 0; j < size; j++) {
+            const ny = (j + 0.5) / size * 2 - 1;
+            for (let i = 0; i < size; i++, p += 4) {
+                const nx = (i + 0.5) / size * 2 - 1;
                 const d2 = nx * nx + ny * ny;
                 if (d2 >= 1) { d[p + 3] = 0; continue; }
                 const nz = Math.sqrt(1 - d2);
@@ -177,7 +200,9 @@
                     base = (Math.abs(lx) > 0.985 || Math.abs(ly) > 0.985 || Math.abs(lz) > 0.985)
                         ? CUE_DOT_RGB : col;
                 } else if (stripe) {
-                    base = Math.abs(lz) < 0.52 ? col : WHITE_RGB;    // dải sọc quanh xích đạo
+                    // Dải sọc quanh xích đạo; số bi in trong vòng tròn trắng NẰM TRÊN dải sọc
+                    // (đúng như bi thật), tức là ở hai đầu trục x của quả bi.
+                    base = Math.abs(lz) < 0.52 && Math.abs(lx) < 0.90 ? col : WHITE_RGB;
                 } else {
                     base = Math.abs(lz) > 0.90 ? WHITE_RGB : col;    // vòng tròn trắng in số ở 2 cực
                 }
@@ -196,12 +221,44 @@
                 d[p] = Math.min(255, base[0] * shade + spec);
                 d[p + 1] = Math.min(255, base[1] * shade + spec);
                 d[p + 2] = Math.min(255, base[2] * shade + spec);
-                const edge = (1 - Math.sqrt(d2)) * (TEX * 0.5);      // làm mịn viền bi
+                const edge = (1 - Math.sqrt(d2)) * (size * 0.5);     // làm mịn viền bi
                 d[p + 3] = edge >= 1 ? 255 : edge * 255;
             }
         }
         b.texCtx.putImageData(b.texImg, 0, 0);
         b.texAge = 0;
+    }
+
+    /* Số bi in trong vòng tròn trắng trên mặt cầu: bi trơn in ở hai cực (trục z của bi),
+       bi sọc in ngay trên dải sọc (trục x). Theo bi lăn, chữ số trượt dần ra mép, dẹt lại
+       rồi khuất hẳn, sau đó mặt bên kia hiện ra. Gốc toạ độ ctx phải ở tâm quả bi. */
+    function drawBallNumber(ctx, ori, num, r) {
+        if (num === 0) return;
+        const st = isStripe(num);
+        let px = st ? ori[0] : ori[2];              // hướng của mặt in số
+        let py = st ? ori[3] : ori[5];
+        let pz = st ? ori[6] : ori[8];
+        let ax = st ? ori[1] : ori[0];              // trục "ngang" của chữ số
+        let ay = st ? ori[4] : ori[3];
+        if (pz < 0) { px = -px; py = -py; pz = -pz; ax = -ax; }
+
+        const fade = clamp((pz - 0.12) / 0.28, 0, 1);
+        if (fade <= 0) return;
+        const CAP = 0.90;                           // tâm hình chiếu của vòng tròn số
+        const th = Math.atan2(py, px);
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.translate(px * r * CAP, py * r * CAP);
+        ctx.rotate(th);
+        ctx.scale(Math.max(pz, 0.001), 1);          // ép dẹt theo phương xuyên tâm
+        ctx.rotate(-th);
+        ctx.rotate(Math.atan2(ay, ax));             // chữ số quay theo bi
+        ctx.fillStyle = '#15171f';
+        ctx.font = `bold ${(r * 0.56).toFixed(1)}px "Nunito", sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(num), 0, 0);
+        ctx.restore();
     }
 
     // ---------- Âm thanh ----------
@@ -260,7 +317,10 @@
             this.x = x; this.y = y;
             this.vx = 0; this.vy = 0;
             this.potted = false;
-            this.rollAt = 0;          // dưới tốc độ này bi đã lăn đều (hết trượt)
+            // Vận tốc quay (rad/s) trong hệ trục màn hình: x sang phải, y xuống dưới,
+            // z hướng về phía người xem (tức là hướng thẳng đứng lên khỏi mặt bàn).
+            // wx, wy là xoáy "lăn"; wz là xoáy ngang quanh trục dọc (xoáy trái/phải).
+            this.wx = 0; this.wy = 0; this.wz = 0;
             // Hướng quay 3D của quả bi (ma trận 3x3, hàng = 3 trục gắn với bi)
             this.ori = [1, 0, 0, 0, 1, 0, 0, 0, 1];
             this.texAge = 99;         // góc đã quay kể từ lần vẽ lại bề mặt gần nhất
@@ -271,17 +331,45 @@
             rotateOri(this.ori, 0, 1, 0, (num * 73 % 360) * Math.PI / 180);
             this.dropT = 0;           // hiệu ứng rơi vào lỗ
             this.dropX = 0; this.dropY = 0;
-            // Xoáy (chỉ dùng cho bi cái)
-            this.followV = 0;         // vận tốc bi trắng nhận lại sau khi chạm bi (+ chạy tiếp, - lùi lại)
-            this.eng = 0;             // +1 xoáy phải, -1 xoáy trái
-            this.shotDx = 0; this.shotDy = 0;
         }
         get speed() { return Math.hypot(this.vx, this.vy); }
-        get moving() { return this.vx !== 0 || this.vy !== 0; }
+        // Bi còn "sống" khi còn chạy HOẶC còn xoáy lăn — bi lùi (đờ-mi) có lúc vận tốc
+        // bằng 0 giữa chừng nhưng xoáy ngược vẫn kéo nó quay lại, không được coi là đã dừng.
+        get moving() { return this.vx !== 0 || this.vy !== 0 || this.wx !== 0 || this.wy !== 0; }
+        // Vận tốc trượt của điểm bi chạm nỉ
+        get slipX() { return this.vx - R * this.wy; }
+        get slipY() { return this.vy + R * this.wx; }
 
-        // Gọi mỗi khi bi vừa được truyền lực mới (cơ đánh, chạm bi khác, dội băng):
-        // lúc đó bi chưa quay khớp với đường đi nên bắt đầu bằng giai đoạn trượt.
-        struck() { this.rollAt = this.speed * ROLL_RATIO; }
+        // Đặt bi về trạng thái lăn đều với vận tốc hiện tại (hết trượt)
+        setRolling() { this.wy = this.vx / R; this.wx = -this.vy / R; }
+        rest() { this.vx = this.vy = 0; this.wx = this.wy = this.wz = 0; }
+    }
+
+    // ---------- Ảnh quả bi cho danh sách bi ở thanh người chơi ----------
+    // Vẫn là quả bi 3D y hệt trên bàn, chỉ quay sẵn về tư thế dễ đọc nhất:
+    // bi trơn nhìn thẳng vào cực (vòng tròn trắng có số ở giữa, xung quanh là màu bi),
+    // bi sọc quay ngang để dải sọc nằm vắt ngang giữa quả, số nằm giữa dải.
+    const ICON_PX = 128;
+    const BALL_ICON = {};
+    function ballIcon(num) {
+        if (BALL_ICON[num]) return BALL_ICON[num];
+        const b = new Ball(num, 0, 0);
+        b.ori = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+        if (isStripe(num)) {
+            rotateOri(b.ori, 0, 1, 0, -Math.PI / 2);    // đưa mặt in số ra trước
+            rotateOri(b.ori, 0, 0, 1, -Math.PI / 2);    // xoay cho dải sọc nằm ngang, số dựng đứng
+        }
+        renderBallTex(b, ICON_PX);
+
+        const cv = document.createElement('canvas');
+        cv.width = cv.height = ICON_PX;
+        const c = cv.getContext('2d');
+        const r = ICON_PX / 2;
+        c.translate(r, r);
+        c.drawImage(b.tex, -r, -r, r * 2, r * 2);
+        drawBallNumber(c, b.ori, num, r);
+        BALL_ICON[num] = cv.toDataURL();
+        return BALL_ICON[num];
     }
 
     // =========================================================
@@ -541,7 +629,7 @@
             this.cue.x = this.ghostCue.x;
             this.cue.y = this.ghostCue.y;
             this.cue.potted = false;
-            this.cue.vx = this.cue.vy = 0;
+            this.cue.rest();
             this.ghostCue = null;
             this.state = 'aim';
             this.syncHUD();
@@ -549,7 +637,7 @@
 
         // ---------- Bảng chọn điểm chạm bi cái ----------
         spinDotPos(x, y) {
-            return { x: SPIN_CX + x * SPIN_STEP, y: SPIN_CY - y * SPIN_STEP };
+            return { x: SPIN_CX + x * SPIN_STEP_X, y: SPIN_CY - y * SPIN_STEP_Y };
         },
 
         // Trả về điểm chạm gần con trỏ nhất nếu bấm trúng bảng chọn, ngược lại null
@@ -587,15 +675,18 @@
 
         shoot() {
             const speed = this.power * MAX_POWER;
-            this.cue.vx = Math.cos(this.aimAngle) * speed;
-            this.cue.vy = Math.sin(this.aimAngle) * speed;
-            this.cue.struck();
+            const dx = Math.cos(this.aimAngle), dy = Math.sin(this.aimAngle);
+            const cb = this.cue;
+            cb.vx = dx * speed;
+            cb.vy = dy * speed;
 
-            // Xoáy theo điểm chạm đã chọn, rồi trả bảng chọn về giữa bi
-            this.cue.followV = this.spin.y * speed * FOLLOW_K;
-            this.cue.eng = this.spin.x;
-            this.cue.shotDx = Math.cos(this.aimAngle);
-            this.cue.shotDy = Math.sin(this.aimAngle);
+            // Xoáy ban đầu do đầu cơ chạm lệch tâm bi.
+            // Lệch DỌC (cao/thấp): trục quay vuông góc hướng đi, cùng chiều với lúc bi lăn.
+            const wRoll = this.spin.y * SPIN_K * speed;
+            cb.wx = -dy * wRoll;
+            cb.wy = dx * wRoll;
+            // Lệch NGANG: mô-men quanh trục dọc, chạm bên phải -> wz âm (ngược chiều kim đồng hồ trên màn hình)
+            cb.wz = -this.spin.x * SPIN_K * speed;
             this.spin = { x: 0, y: 0 };
 
             this.pottedThisShot = [];
@@ -611,9 +702,16 @@
 
         // ---------- Vật lý ----------
         stepPhysics(dt) {
-            let maxV = 0;
-            for (const b of this.balls) if (!b.potted && b.speed > maxV) maxV = b.speed;
-            if (maxV === 0) return false;
+            // Bi đang trượt tại chỗ (vận tốc 0 nhưng còn xoáy) vẫn sắp chuyển động,
+            // nên lấy cả tốc độ trượt vào mức chia nhỏ bước thời gian.
+            let maxV = 0, active = false;
+            for (const b of this.balls) {
+                if (b.potted) continue;
+                if (b.moving) active = true;
+                const v = Math.max(b.speed, Math.hypot(b.slipX, b.slipY) * 0.5);
+                if (v > maxV) maxV = v;
+            }
+            if (!active) return false;
 
             const steps = clamp(Math.ceil(maxV * dt / (R * 0.4)), 1, 48);
             const h = dt / steps;
@@ -622,63 +720,89 @@
                 // Di chuyển + ma sát
                 for (const b of this.balls) {
                     if (b.potted) continue;
-                    const sp = b.speed;
-                    if (sp === 0) continue;
-                    // Còn trượt thì hãm mạnh, đã lăn đều thì hãm rất nhẹ
-                    const decel = sp > b.rollAt ? A_SLIDE : A_ROLL;
-                    const ns = Math.max(0, sp - decel * h);
-                    if (ns < STOP_V) { b.vx = 0; b.vy = 0; continue; }
-                    b.vx *= ns / sp; b.vy *= ns / sp;
+                    if (!b.moving && b.wz === 0) continue;
+
+                    // --- Giai đoạn TRƯỢT: nỉ hãm bi ngược chiều trượt và vặn cho bi quay ---
+                    const ux = b.slipX, uy = b.slipY;
+                    const us = Math.hypot(ux, uy);
+                    let left = h;
+                    if (us > 1e-6) {
+                        // Trượt tự triệt tiêu với gia tốc 7/2·A_SLIDE; không cho vượt quá mức 0
+                        const tSlide = Math.min(h, us / (3.5 * A_SLIDE));
+                        const ax = -A_SLIDE * ux / us, ay = -A_SLIDE * uy / us;
+                        b.vx += ax * tSlide; b.vy += ay * tSlide;
+                        // dω/dt = 5/(2R)·(a_y, -a_x): mô-men của lực ma sát đặt ở đáy bi
+                        b.wx += (2.5 / R) * ay * tSlide;
+                        b.wy += -(2.5 / R) * ax * tSlide;
+                        left = h - tSlide;                // > 0 nghĩa là bi vừa hết trượt giữa bước
+                    }
+
+                    // --- Giai đoạn LĂN ĐỀU: ma sát lăn rất nhỏ, bi trôi theo quán tính ---
+                    if (left > 0) {
+                        const sp = b.speed;
+                        if (sp > 0) {
+                            const ns = Math.max(0, sp - A_ROLL * left);
+                            b.vx *= ns / sp; b.vy *= ns / sp;
+                        }
+                        b.setRolling();
+                    }
+
+                    // Xoáy ngang quanh trục dọc tắt dần riêng
+                    if (b.wz !== 0) {
+                        const nz = Math.max(0, Math.abs(b.wz) - SPIN_DECEL * h);
+                        b.wz = nz === 0 ? 0 : Math.sign(b.wz) * nz;
+                    }
+
+                    // Chỉ dừng hẳn khi vừa gần đứng yên vừa hết trượt — còn trượt là còn
+                    // bị nỉ đẩy đi tiếp (cú đờ-mi kéo bi cái quay ngược lại chính là lúc này).
+                    if (b.speed < STOP_V && Math.hypot(b.slipX, b.slipY) < STOP_V) {
+                        b.rest();
+                        continue;
+                    }
+
                     b.x += b.vx * h; b.y += b.vy * h;
 
-                    // Bi lăn: quay quanh trục nằm ngang vuông góc với hướng đi.
-                    // Điều kiện lăn không trượt cho ω = (-vy, vx, 0)/R, tức là mặt trên
-                    // của bi chạy tới trước nhanh gấp đôi tâm bi — đúng như bi thật.
-                    const run = ns * h;
-                    const ang = run / R;
-                    rotateOri(b.ori, -b.vy / ns, b.vx / ns, 0, ang);
-                    b.texAge += ang;
-
-                    // Xoáy tắt dần theo quãng đường bi lăn
-                    if (b.num === 0) {
-                        if (b.followV !== 0) b.followV *= Math.exp(-run / FOLLOW_FADE);
-                        if (b.eng !== 0) b.eng *= Math.exp(-run / ENGLISH_FADE);
+                    // Quay quả bi quanh đúng trục ω hiện tại (thấy được cả xoáy lùi lẫn xoáy ngang)
+                    const w = Math.hypot(b.wx, b.wy, b.wz);
+                    if (w > 1e-6) {
+                        const ang = w * h;
+                        rotateOri(b.ori, b.wx / w, b.wy / w, b.wz / w, ang);
+                        b.texAge += ang;
                     }
                 }
 
                 // Rơi lỗ (kiểm tra trước băng để bi không bị dội ra khỏi miệng lỗ)
                 for (const b of this.balls) {
                     if (b.potted) continue;
-                    for (let pi = 0; pi < POCKETS.length; pi++) {
-                        const p = POCKETS[pi];
-                        if (Math.hypot(b.x - p.x, b.y - p.y) < POCKET_R) {
-                            this.potBall(b, pi);
-                            break;
-                        }
-                    }
+                    const pi = this.pocketAt(b.x, b.y);
+                    if (pi >= 0) this.potBall(b, pi);
                 }
 
                 // Băng bàn
                 for (const b of this.balls) {
                     if (b.potted) continue;
+                    // Ở ngay hàm lỗ giữa thì băng bị cắt đứt — không có gì để bi dội vào
+                    const openMid = Math.abs(b.x - MID_X) < S_NOSE;
                     // Pháp tuyến n hướng từ tâm bi ra phía băng vừa chạm
                     let nx = 0, ny = 0, hit = 0;
                     if (b.x < LEFT + R) { b.x = LEFT + R; hit = Math.abs(b.vx); b.vx = -b.vx * CUSHION_E; nx = -1; }
                     else if (b.x > RIGHT - R) { b.x = RIGHT - R; hit = Math.abs(b.vx); b.vx = -b.vx * CUSHION_E; nx = 1; }
-                    if (b.y < TOP + R) { b.y = TOP + R; hit = Math.max(hit, Math.abs(b.vy)); b.vy = -b.vy * CUSHION_E; ny = -1; }
-                    else if (b.y > BOTTOM - R) { b.y = BOTTOM - R; hit = Math.max(hit, Math.abs(b.vy)); b.vy = -b.vy * CUSHION_E; ny = 1; }
+                    if (!openMid) {
+                        if (b.y < TOP + R) { b.y = TOP + R; hit = Math.max(hit, Math.abs(b.vy)); b.vy = -b.vy * CUSHION_E; ny = -1; }
+                        else if (b.y > BOTTOM - R) { b.y = BOTTOM - R; hit = Math.max(hit, Math.abs(b.vy)); b.vy = -b.vy * CUSHION_E; ny = 1; }
+                    }
                     if (hit <= 0) continue;
 
-                    // Xoáy ngang: ma sát ở băng đẩy bi lệch sang bên theo chiều xoáy.
-                    // Δv = k · xoáy · (-n_y, n_x)  → xoáy phải luôn đẩy về phía tay phải người đánh.
-                    if (b.num === 0 && b.eng !== 0) {
-                        const k = ENGLISH_K * b.eng * hit;
-                        b.vx += -ny * k;
-                        b.vy += nx * k;
-                        b.eng *= 0.45;
+                    // Xoáy ngang: mặt bi ở chỗ chạm băng trượt với vận tốc -wz·R·(-n_y, n_x),
+                    // băng ma sát ngược lại nên đẩy bi lệch sang bên theo đúng chiều xoáy.
+                    if (b.wz !== 0) {
+                        const kick = clamp(-b.wz * R * CUSH_GRIP, -CUSH_GRIP_MAX * hit, CUSH_GRIP_MAX * hit);
+                        b.vx += -ny * kick;
+                        b.vy += nx * kick;
+                        b.wz *= CUSH_SPIN_KEEP;
                     }
-                    // Dội băng xong bi quay ngược chiều đường đi -> trượt lại một đoạn
-                    b.struck();
+                    // Xoáy lăn (wx, wy) giữ nguyên: bi vừa dội ra thì xoáy đang ngược với
+                    // hướng đi mới nên nó trượt lại một đoạn rồi mới bám lăn — đúng như bi thật.
                     if (hit > 40) Sfx.cushion(hit);
                 }
 
@@ -703,20 +827,13 @@
                         const imp = -(1 + BALL_E) * rvn / 2;
                         a.vx -= imp * nx; a.vy -= imp * ny;
                         b.vx += imp * nx; b.vy += imp * ny;
-                        a.struck(); b.struck();
+                        // Va chạm chỉ đổi vận tốc tịnh tiến; xoáy của mỗi bi được GIỮ NGUYÊN.
+                        // Nhờ vậy bi cái đang lăn tới mà đâm đầy bi thì tuy vận tốc bị triệt gần
+                        // hết, xoáy tới vẫn còn nên nỉ đẩy nó chạy tiếp — không dừng khựng nữa.
+                        // Bi mục tiêu đứng yên nên xoáy = 0, nó trượt một đoạn rồi mới lăn đều.
 
                         if (a.num === 0 || b.num === 0) {
                             if (this.firstContact === null) this.firstContact = a.num === 0 ? b.num : a.num;
-
-                            // Đánh cao/thấp: sau khi chạm bi, bi trắng chạy tiếp hoặc lùi lại
-                            const cb = a.num === 0 ? a : b;
-                            if (cb.followV !== 0) {
-                                cb.vx += cb.shotDx * cb.followV;
-                                cb.vy += cb.shotDy * cb.followV;
-                                cb.followV *= 0.15;
-                                // Bi cái đang sẵn xoáy cao/thấp nên lăn luôn, không trượt
-                                cb.rollAt = 0;
-                            }
                         }
                         Sfx.click(Math.abs(rvn));
                     }
@@ -727,12 +844,33 @@
             return false;
         },
 
+        /* Bi rơi lỗ khi tâm nó lọt qua HÀM LỖ — tức là qua khỏi đường nối hai mũi băng,
+           chỗ băng đã bị cắt đi. Đây cũng đúng là vùng mà vòng lặp băng ở trên bỏ qua,
+           nên không có kẽ hở: hoặc bi bị băng dội lại, hoặc bi rơi lỗ, không có chuyện
+           bi nằm giữa miệng lỗ mà vẫn bị "băng ma" đánh bật ra.
+           Trả về chỉ số lỗ, hoặc -1 nếu bi vẫn còn trên bàn. */
+        pocketAt(x, y) {
+            // Lỗ góc: tâm bi đã vượt qua đường chéo nối hai mũi băng
+            for (const i of [0, 2, 3, 5]) {
+                const p = POCKETS[i];
+                const sx = p.x < MID_X ? -1 : 1, sy = p.y < MID_Y ? -1 : 1;
+                if (-sx * (x - p.x) - sy * (y - p.y) < C_NOSE) return i;
+            }
+            // Lỗ giữa: nằm trong bề ngang miệng lỗ và đã áp sát đường mũi băng
+            if (Math.abs(x - MID_X) < S_NOSE) {
+                if (y < TOP + S_CATCH) return 1;
+                if (y > BOTTOM - S_CATCH) return 4;
+            }
+            return -1;
+        },
+
         potBall(b, pocketIndex) {
             b.potted = true;
-            b.vx = b.vy = 0;
+            b.rest();
             b.dropT = 0.45;
-            b.dropX = POCKETS[pocketIndex].x;
-            b.dropY = POCKETS[pocketIndex].y;
+            const h = this.pocketHole(pocketIndex);      // rơi vào đúng tâm hốc đang vẽ
+            b.dropX = h.x;
+            b.dropY = h.y;
             this.pocketFlash[pocketIndex] = 1;
             this.pottedThisShot.push(b.num);
             if (b.num === 0) this.cueScratched = true;
@@ -767,7 +905,7 @@
             // Bi trắng rơi lỗ -> đặt lại để vẽ (sẽ được cầm tay)
             if (this.cueScratched) {
                 this.cue.potted = false;
-                this.cue.vx = this.cue.vy = 0;
+                this.cue.rest();
             }
 
             // --- Bi số 8 ---
@@ -874,8 +1012,8 @@
                     : g === 'stripe' ? [9, 10, 11, 12, 13, 14, 15] : [];
                 const html = nums.map(n => {
                     const done = !this.balls.some(b => b.num === n && !b.potted);
-                    return `<div class="mini-ball${isStripe(n) ? ' striped' : ''}${done ? ' done' : ''}" ` +
-                        `style="background:${BALL_COLOR[n]}"><span>${n}</span></div>`;
+                    return `<div class="mini-ball${done ? ' done' : ''}" title="Bi ${n}" ` +
+                        `style="background-image:url(${ballIcon(n)})"></div>`;
                 }).join('');
                 if (holder.innerHTML !== html) holder.innerHTML = html;
             });
@@ -1030,14 +1168,14 @@
             ctx.arc(SPIN_CX, SPIN_CY, SPIN_R, 0, Math.PI * 2);
             ctx.fill();
 
-            // Hai đường kinh tuyến mờ gợi mặt cong của quả cầu
+            // Hai đường kinh tuyến mờ gợi mặt cong của quả cầu, đi đúng qua các chấm chọn
             ctx.strokeStyle = 'rgba(96,86,68,0.20)';
             ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.ellipse(SPIN_CX, SPIN_CY, SPIN_R * 0.42, SPIN_R * 0.97, 0, 0, Math.PI * 2);
+            ctx.ellipse(SPIN_CX, SPIN_CY, SPIN_STEP_X, SPIN_R * 0.97, 0, 0, Math.PI * 2);
             ctx.stroke();
             ctx.beginPath();
-            ctx.ellipse(SPIN_CX, SPIN_CY, SPIN_R * 0.97, SPIN_R * 0.42, 0, 0, Math.PI * 2);
+            ctx.ellipse(SPIN_CX, SPIN_CY, SPIN_R * 0.97, SPIN_STEP_Y, 0, 0, Math.PI * 2);
             ctx.stroke();
 
             // Đốm sáng
@@ -1051,8 +1189,8 @@
             for (let gy = 1; gy >= -1; gy--) {
                 for (let gx = -1; gx <= 1; gx++) {
                     const sel = this.spin.x === gx && this.spin.y === gy;
-                    const px = SPIN_CX + gx * SPIN_STEP;
-                    const py = SPIN_CY - gy * SPIN_STEP;
+                    const dot = this.spinDotPos(gx, gy);
+                    const px = dot.x, py = dot.y;
                     // Pháp tuyến mặt cầu tại điểm đó -> độ nhìn nghiêng và độ sáng
                     const nx = (px - SPIN_CX) / SPIN_R, ny = (py - SPIN_CY) / SPIN_R;
                     const nz = Math.sqrt(Math.max(0.04, 1 - nx * nx - ny * ny));
@@ -1077,28 +1215,33 @@
                 }
             }
 
-            // Chữ hướng dẫn bên phải quả bi
+            // Chữ hướng dẫn bên phải quả bi — tự thu nhỏ nếu dài quá khung
             const hint = SPIN_HINT[`${this.spin.x},${this.spin.y}`] || SPIN_HINT['0,0'];
             const tx = SPIN_CX + SPIN_R + 30;
+            const maxW = PANEL.x + PANEL.w - 20 - tx;
+            const line = (text, size, weight, family, y) => {
+                ctx.font = `${weight} ${size}px ${family}`;
+                const w = ctx.measureText(text).width;
+                if (w > maxW) ctx.font = `${weight} ${(size * maxW / w).toFixed(1)}px ${family}`;
+                ctx.fillText(text, tx, y);
+            };
             ctx.textAlign = 'left';
             ctx.textBaseline = 'alphabetic';
-            ctx.font = 'bold 13px "Baloo 2", sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,0.55)';
-            ctx.fillText('ĐIỂM CHẠM BI CÁI', tx, SPIN_CY - 22);
-            ctx.font = 'bold 18px "Baloo 2", sans-serif';
+            line('ĐIỂM CHẠM BI CÁI', 13, 'bold', '"Baloo 2", sans-serif', SPIN_CY - 22);
             ctx.fillStyle = this.spin.x === 0 && this.spin.y === 0 ? 'rgba(255,255,255,0.78)' : '#ffe08a';
-            ctx.fillText(hint, tx, SPIN_CY + 4);
-            ctx.font = '13px "Nunito", sans-serif';
+            line(hint, 18, 'bold', '"Baloo 2", sans-serif', SPIN_CY + 4);
             ctx.fillStyle = 'rgba(255,255,255,0.42)';
-            ctx.fillText('Chạm vào bi cái để chọn — đánh xong tự về giữa', tx, SPIN_CY + 26);
+            line('Chạm vào bi cái để chọn — đánh xong tự về giữa', 13, '', '"Nunito", sans-serif', SPIN_CY + 26);
             ctx.restore();
         },
 
         drawTable(ctx) {
             this.drawRails(ctx);
             this.drawCloth(ctx);
-            this.drawCushions(ctx);
-            this.drawPockets(ctx);
+            this.drawPocketBeds(ctx);   // nỉ quanh lỗ bị khoét, lộ khung gỗ
+            this.drawCushions(ctx);     // băng với hai đầu vát ôm lấy hàm lỗ
+            this.drawPockets(ctx);      // miệng lỗ tròn nằm trên cùng
         },
 
         // --- Khung gỗ + các chấm định vị trên thành bàn ---
@@ -1109,11 +1252,11 @@
             ctx.shadowOffsetY = 12;
 
             const g = ctx.createLinearGradient(0, OY0, 0, OY1);
-            g.addColorStop(0, '#8b5a2c');
-            g.addColorStop(0.06, '#6d4320');
-            g.addColorStop(0.5, '#4f2d13');
-            g.addColorStop(0.94, '#3a1f0c');
-            g.addColorStop(1, '#28150a');
+            g.addColorStop(0, '#d2a161');
+            g.addColorStop(0.06, '#b8813f');
+            g.addColorStop(0.5, '#8f5c26');
+            g.addColorStop(0.94, '#6d4319');
+            g.addColorStop(1, '#4e2f10');
             ctx.fillStyle = g;
             ctx.beginPath();
             ctx.roundRect(OX0, OY0, OX1 - OX0, OY1 - OY0, 20);
@@ -1125,7 +1268,7 @@
             ctx.beginPath();
             ctx.roundRect(OX0, OY0, OX1 - OX0, OY1 - OY0, 20);
             ctx.clip();
-            ctx.strokeStyle = 'rgba(30,14,4,0.30)';
+            ctx.strokeStyle = 'rgba(74,40,10,0.22)';
             ctx.lineWidth = 1;
             for (let i = 0; i < 46; i++) {
                 const y = OY0 + (i / 46) * (OY1 - OY0) + Math.sin(i * 2.3) * 2;
@@ -1147,52 +1290,68 @@
             ctx.roundRect(OX0 + 4, OY0 + 4, OX1 - OX0 - 8, OY1 - OY0 - 8, 17);
             ctx.stroke();
 
-            // Chấm định vị (mother-of-pearl) trên thành bàn
-            const diamond = (x, y) => {
-                ctx.save();
-                ctx.translate(x, y);
-                ctx.rotate(Math.PI / 4);
-                ctx.fillStyle = 'rgba(0,0,0,0.45)';
-                ctx.fillRect(-3.4, -2.6, 6.8, 6.8);
-                const dg = ctx.createLinearGradient(-4, -4, 4, 4);
+            // Viền tối ôm sát mép nỉ, tách hẳn khung gỗ khỏi mặt bàn
+            ctx.strokeStyle = 'rgba(46,24,6,0.55)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(CX0 - 1.5, CY0 - 1.5, CX1 - CX0 + 3, CY1 - CY0 + 3);
+
+            // Nạm định vị trên thành bàn: khảm tròn xà cừ viền gỗ sẫm
+            const stud = (x, y, r) => {
+                ctx.beginPath();
+                ctx.arc(x, y + 1, r + 1.6, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(48,24,6,0.6)';
+                ctx.fill();
+                const dg = ctx.createRadialGradient(x - r * 0.4, y - r * 0.5, r * 0.15, x, y, r);
                 dg.addColorStop(0, '#fffdf3');
-                dg.addColorStop(0.55, '#e6dcc2');
+                dg.addColorStop(0.6, '#eadfc4');
                 dg.addColorStop(1, '#b9ab8a');
                 ctx.fillStyle = dg;
-                ctx.fillRect(-3.4, -3.4, 6.8, 6.8);
-                ctx.restore();
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fill();
             };
             const railTopY = (OY0 + CY0) / 2, railBotY = (OY1 + CY1) / 2;
             const railLeftX = (OX0 + CX0) / 2, railRightX = (OX1 + CX1) / 2;
-            for (const k of [1, 2, 3, 5, 6, 7]) {
-                const x = LEFT + (RIGHT - LEFT) * k / 8;
-                diamond(x, railTopY); diamond(x, railBotY);
+            // Mốc chuẩn (1/8 chiều dài, 1/4 chiều rộng) to hơn, xen giữa là chấm nhỏ trang trí
+            for (let k = 1; k <= 15; k++) {
+                if (k === 8) continue;                      // ngay lỗ giữa
+                const x = LEFT + (RIGHT - LEFT) * k / 16;
+                const r = k % 2 === 0 ? 3.6 : 1.8;
+                stud(x, railTopY, r); stud(x, railBotY, r);
             }
-            for (const k of [1, 2, 3]) {
-                const y = TOP + (BOTTOM - TOP) * k / 4;
-                diamond(railLeftX, y); diamond(railRightX, y);
+            for (let k = 1; k <= 7; k++) {
+                const y = TOP + (BOTTOM - TOP) * k / 8;
+                const r = k % 2 === 0 ? 3.6 : 1.8;
+                stud(railLeftX, y, r); stud(railRightX, y, r);
             }
         },
 
-        // --- Mặt nỉ ---
+        // --- Mặt nỉ: xanh tươi, mịn, sáng giữa bàn và tối dần ra bốn phía ---
         drawCloth(ctx) {
-            const felt = ctx.createRadialGradient(MID_X, MID_Y - 40, 80, MID_X, MID_Y, 700);
-            felt.addColorStop(0, '#1aa163');
-            felt.addColorStop(0.45, '#128550');
-            felt.addColorStop(0.75, '#0d6b41');
-            felt.addColorStop(1, '#084a2d');
+            // Nền nỉ. Đèn treo giữa bàn nên vùng sáng nhất hơi lệch lên trên.
+            const felt = ctx.createRadialGradient(MID_X, MID_Y - 30, 60, MID_X, MID_Y, 620);
+            felt.addColorStop(0, '#27b155');
+            felt.addColorStop(0.42, '#1ea149');
+            felt.addColorStop(0.72, '#158d3d');
+            felt.addColorStop(1, '#0c6b2c');
             ctx.fillStyle = felt;
             ctx.fillRect(CX0, CY0, CX1 - CX0, CY1 - CY0);
 
-            // Sợi nỉ: những vệt sáng rất mờ chạy dọc bàn
+            // Bóng tối ép vào sát bốn cạnh cho mặt bàn có chiều sâu
             ctx.save();
-            ctx.globalAlpha = 0.05;
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 1;
-            for (let y = CY0 + 3; y < CY1; y += 5) {
-                ctx.beginPath();
-                ctx.moveTo(CX0, y); ctx.lineTo(CX1, y);
-                ctx.stroke();
+            const edge = 46;
+            const sides = [
+                [CX0, CY0, CX0 + edge, CY0, CX0, CY0, edge, CY1 - CY0],           // trái
+                [CX1, CY0, CX1 - edge, CY0, CX1 - edge, CY0, edge, CY1 - CY0],    // phải
+                [CX0, CY0, CX0, CY0 + edge, CX0, CY0, CX1 - CX0, edge],           // trên
+                [CX0, CY1, CX0, CY1 - edge, CX0, CY1 - edge, CX1 - CX0, edge]     // dưới
+            ];
+            for (const [gx0, gy0, gx1, gy1, rx, ry, rw, rh] of sides) {
+                const sg = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
+                sg.addColorStop(0, 'rgba(4,48,20,0.22)');
+                sg.addColorStop(1, 'rgba(4,48,20,0)');
+                ctx.fillStyle = sg;
+                ctx.fillRect(rx, ry, rw, rh);
             }
             ctx.restore();
 
@@ -1215,22 +1374,23 @@
             // Mỗi băng: [mũi băng x1,y1 -> x2,y2] cùng vector pháp tuyến hướng ra ngoài
             const segs = [
                 // Băng trên: từ lỗ góc trái tới lỗ giữa, rồi tới lỗ góc phải
-                [LEFT + C_NOSE, TOP, MID_X - S_NOSE, TOP, 0, -1, C_NOSE - C_BASE, S_NOSE - S_BASE],
-                [MID_X + S_NOSE, TOP, RIGHT - C_NOSE, TOP, 0, -1, S_NOSE - S_BASE, C_NOSE - C_BASE],
+                [LEFT + C_NOSE, TOP, MID_X - S_NOSE, TOP, 0, -1, C_FACE, S_FACE],
+                [MID_X + S_NOSE, TOP, RIGHT - C_NOSE, TOP, 0, -1, S_FACE, C_FACE],
                 // Băng dưới
-                [MID_X - S_NOSE, BOTTOM, LEFT + C_NOSE, BOTTOM, 0, 1, S_NOSE - S_BASE, C_NOSE - C_BASE],
-                [RIGHT - C_NOSE, BOTTOM, MID_X + S_NOSE, BOTTOM, 0, 1, C_NOSE - C_BASE, S_NOSE - S_BASE],
+                [MID_X - S_NOSE, BOTTOM, LEFT + C_NOSE, BOTTOM, 0, 1, S_FACE, C_FACE],
+                [RIGHT - C_NOSE, BOTTOM, MID_X + S_NOSE, BOTTOM, 0, 1, C_FACE, S_FACE],
                 // Băng trái & phải (không có lỗ giữa)
-                [LEFT, BOTTOM - C_NOSE, LEFT, TOP + C_NOSE, -1, 0, C_NOSE - C_BASE, C_NOSE - C_BASE],
-                [RIGHT, TOP + C_NOSE, RIGHT, BOTTOM - C_NOSE, 1, 0, C_NOSE - C_BASE, C_NOSE - C_BASE]
+                [LEFT, BOTTOM - C_NOSE, LEFT, TOP + C_NOSE, -1, 0, C_FACE, C_FACE],
+                [RIGHT, TOP + C_NOSE, RIGHT, BOTTOM - C_NOSE, 1, 0, C_FACE, C_FACE]
             ];
 
             for (const [x1, y1, x2, y2, nx, ny, cut1, cut2] of segs) {
                 const len = Math.hypot(x2 - x1, y2 - y1);
                 const ux = (x2 - x1) / len, uy = (y2 - y1) / len;   // dọc theo băng
-                // Chân băng thò ra hai phía so với mũi băng -> tạo mặt vát vào lỗ
-                const bx1 = x1 + nx * CUSH - ux * cut1, by1 = y1 + ny * CUSH - uy * cut1;
-                const bx2 = x2 + nx * CUSH + ux * cut2, by2 = y2 + ny * CUSH + uy * cut2;
+                // Mặt vát: chân băng LÙI RA XA lỗ so với mũi băng, nên hàm lỗ loe rộng
+                // dần về phía sau — đúng chiều mở của "jaw" trên bàn thật.
+                const bx1 = x1 + nx * CUSH + ux * cut1, by1 = y1 + ny * CUSH + uy * cut1;
+                const bx2 = x2 + nx * CUSH - ux * cut2, by2 = y2 + ny * CUSH - uy * cut2;
 
                 ctx.beginPath();
                 ctx.moveTo(x1, y1);
@@ -1240,14 +1400,14 @@
                 ctx.closePath();
 
                 const g = ctx.createLinearGradient(x1, y1, x1 + nx * CUSH, y1 + ny * CUSH);
-                g.addColorStop(0, '#1fae6c');      // mũi băng hứng sáng
-                g.addColorStop(0.18, '#159158');
-                g.addColorStop(1, '#0a5734');      // chân băng chìm trong bóng
+                g.addColorStop(0, '#3ac763');      // mũi băng hứng sáng
+                g.addColorStop(0.22, '#2aad50');
+                g.addColorStop(1, '#127a34');      // chân băng chìm trong bóng
                 ctx.fillStyle = g;
                 ctx.fill();
 
                 // Gờ sáng ngay trên mũi băng
-                ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+                ctx.strokeStyle = 'rgba(255,255,255,0.28)';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.moveTo(x1 + nx * 1.2, y1 + ny * 1.2);
@@ -1270,89 +1430,109 @@
         },
 
         /* --- Lỗ bi ---
-           Như bàn thật: góc bàn được CẮT VÁT 45 độ bằng gỗ, hai băng kết thúc ngay
-           mép vát, còn miệng lỗ là hình tròn lớn ôm lấy chỗ vát đó. Lỗ giữa thì
-           thành gỗ thụt vào ôm quanh miệng lỗ. */
-        drawPockets(ctx) {
-            // 1. Mặt vát gỗ ở bốn góc và hai thành lỗ giữa
-            const woodFacet = (pts) => {
+           Dựng theo đúng cách bàn thật (và các game bi-a nhìn từ trên xuống): hai đầu
+           băng được CẮT VÁT (facing) để mở hàm lỗ — lỗ góc cắt 142°, lỗ giữa cắt 104° —
+           còn miệng lỗ là một hốc TRÒN nằm ngay sau hàm băng, khoét lấn cả vào khung gỗ
+           và được bọc một vành da sáng màu. Phần mặt bàn quanh lỗ bị khoét đi để lộ gỗ. */
+
+        // Tâm và bán kính hốc tròn của lỗ thứ i
+        pocketHole(i) {
+            const p = POCKETS[i];
+            if (i === 1 || i === 4) {
+                const sy = p.y < MID_Y ? -1 : 1;
+                return { x: MID_X, y: (p.y < MID_Y ? TOP : BOTTOM) + sy * S_OFF, r: S_HOLE };
+            }
+            const sx = p.x < MID_X ? -1 : 1, sy = p.y < MID_Y ? -1 : 1;
+            return { x: p.x + sx * C_OFF, y: p.y + sy * C_OFF, r: C_HOLE };
+        },
+
+        // Nền quanh lỗ: phần nỉ trong hàm lỗ bị khoét đi để lộ gỗ. Vẽ sau nỉ, trước băng.
+        // Chỉ cần phủ đúng dải rộng bằng bề dày băng — ra ngoài nữa đã là khung gỗ sẵn.
+        drawPocketBeds(ctx) {
+            const W = CUSH;
+            for (let i = 0; i < POCKETS.length; i++) {
+                const p = POCKETS[i];
+                ctx.save();
                 ctx.beginPath();
-                ctx.moveTo(pts[0][0], pts[0][1]);
-                for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+                if (i === 1 || i === 4) {
+                    const sy = p.y < MID_Y ? -1 : 1;
+                    const y0 = p.y < MID_Y ? TOP : BOTTOM, w = S_NOSE + S_FACE;
+                    ctx.moveTo(MID_X - S_NOSE, y0);
+                    ctx.lineTo(MID_X + S_NOSE, y0);
+                    ctx.lineTo(MID_X + w, y0 + sy * W);
+                    ctx.lineTo(MID_X - w, y0 + sy * W);
+                } else {
+                    const sx = p.x < MID_X ? -1 : 1, sy = p.y < MID_Y ? -1 : 1;
+                    ctx.moveTo(p.x - sx * C_NOSE, p.y);                 // mũi băng ngang
+                    ctx.lineTo(p.x, p.y - sy * C_NOSE);                 // mũi băng dọc
+                    ctx.lineTo(p.x + sx * W, p.y - sy * C_NOSE);
+                    ctx.lineTo(p.x + sx * W, p.y + sy * W);
+                    ctx.lineTo(p.x - sx * C_NOSE, p.y + sy * W);
+                }
                 ctx.closePath();
-                const g = ctx.createLinearGradient(pts[0][0], pts[0][1], pts[2][0], pts[2][1]);
-                g.addColorStop(0, '#8a5a2b');
-                g.addColorStop(0.45, '#63391a');
-                g.addColorStop(1, '#3c210d');
+                const h = this.pocketHole(i);
+                const g = ctx.createRadialGradient(h.x, h.y, h.r * 0.5, h.x, h.y, h.r * 2.6);
+                g.addColorStop(0, '#7a4c21');
+                g.addColorStop(0.55, '#5a3416');
+                g.addColorStop(1, '#43250f');
                 ctx.fillStyle = g;
                 ctx.fill();
-                ctx.strokeStyle = 'rgba(255,222,170,0.22)';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-            };
+                ctx.restore();
+            }
+        },
 
-            // Bốn góc: tam giác vát nối hai mũi băng, đỉnh thứ ba là góc mặt nỉ
-            woodFacet([[LEFT + C_NOSE, TOP], [LEFT, TOP + C_NOSE], [CX0, CY0]]);
-            woodFacet([[RIGHT - C_NOSE, TOP], [RIGHT, TOP + C_NOSE], [CX1, CY0]]);
-            woodFacet([[LEFT + C_NOSE, BOTTOM], [LEFT, BOTTOM - C_NOSE], [CX0, CY1]]);
-            woodFacet([[RIGHT - C_NOSE, BOTTOM], [RIGHT, BOTTOM - C_NOSE], [CX1, CY1]]);
-
-            // Hai lỗ giữa: thành gỗ thụt ra sau miệng lỗ
-            woodFacet([[MID_X - S_NOSE, TOP], [MID_X + S_NOSE, TOP],
-            [MID_X + S_NOSE + 6, CY0], [MID_X - S_NOSE - 6, CY0]]);
-            woodFacet([[MID_X - S_NOSE, BOTTOM], [MID_X + S_NOSE, BOTTOM],
-            [MID_X + S_NOSE + 6, CY1], [MID_X - S_NOSE - 6, CY1]]);
-
-            // 2. Miệng lỗ
-            POCKETS.forEach((p, i) => {
-                const flash = this.pocketFlash[i];
-                const corner = i !== 1 && i !== 4;
-                // Lỗ góc nằm chếch ra ngoài theo đường chéo, đúng như bàn thật
-                const ox = corner ? (p.x < MID_X ? -7 : 7) : 0;
-                const oy = corner ? (p.y < MID_Y ? -7 : 7) : (p.y < MID_Y ? -5 : 5);
-                const cx = p.x + ox, cy = p.y + oy;
-                const rOut = POCKET_R + (corner ? 12 : 10);
-
+        // Miệng lỗ — vẽ sau cùng nên đè lên cả nỉ, băng lẫn khung gỗ
+        drawPockets(ctx) {
+            for (let i = 0; i < POCKETS.length; i++) {
+                const h = this.pocketHole(i), flash = this.pocketFlash[i];
                 ctx.save();
-                // Vành lỗ bằng da bọc
-                const ring = ctx.createRadialGradient(cx - 4, cy - 5, rOut * 0.45, cx, cy, rOut);
-                ring.addColorStop(0, '#6b5130');
-                ring.addColorStop(0.62, '#3c2a15');
-                ring.addColorStop(1, '#170f07');
-                ctx.fillStyle = ring;
+
+                // Vành gỗ sáng ôm quanh miệng lỗ (chi tiết trang trí trên khung bàn)
+                const rim = ctx.createRadialGradient(h.x - 3, h.y - 4, h.r, h.x, h.y, h.r + 9);
+                rim.addColorStop(0, '#c79a5e');
+                rim.addColorStop(0.55, '#8d5f2e');
+                rim.addColorStop(1, 'rgba(58,31,12,0)');
+                ctx.fillStyle = rim;
                 ctx.beginPath();
-                ctx.arc(cx, cy, rOut, 0, Math.PI * 2);
+                ctx.arc(h.x, h.y, h.r + 9, 0, Math.PI * 2);
                 ctx.fill();
 
-                // Miệng lỗ sâu hun hút
-                const hole = ctx.createRadialGradient(cx - 3, cy - 4, 1, cx, cy, POCKET_R + 3);
+                // Vành da bọc miệng lỗ
+                ctx.strokeStyle = '#2a1b0d';
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.arc(h.x, h.y, h.r + 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Lòng lỗ hun hút
+                const hole = ctx.createRadialGradient(h.x - h.r * 0.25, h.y - h.r * 0.3, 1, h.x, h.y, h.r);
                 hole.addColorStop(0, '#000000');
-                hole.addColorStop(0.55, '#040404');
-                hole.addColorStop(0.86, '#100e0b');
-                hole.addColorStop(1, '#2c2118');
+                hole.addColorStop(0.55, '#070505');
+                hole.addColorStop(0.88, '#17110c');
+                hole.addColorStop(1, '#33251a');
                 ctx.fillStyle = hole;
                 ctx.beginPath();
-                ctx.arc(cx, cy, POCKET_R + 3, 0, Math.PI * 2);
+                ctx.arc(h.x, h.y, h.r, 0, Math.PI * 2);
                 ctx.fill();
 
                 // Ánh sáng hắt vào thành lỗ phía trên
-                ctx.strokeStyle = 'rgba(255,228,185,0.18)';
-                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = 'rgba(255,230,190,0.22)';
+                ctx.lineWidth = 2.2;
                 ctx.beginPath();
-                ctx.arc(cx, cy, POCKET_R + 1, Math.PI * 1.1, Math.PI * 1.9);
+                ctx.arc(h.x, h.y, h.r - 1, Math.PI * 1.08, Math.PI * 1.92);
                 ctx.stroke();
 
                 if (flash > 0) {
                     ctx.strokeStyle = `rgba(255,215,0,${flash})`;
                     ctx.lineWidth = 4;
                     ctx.shadowColor = 'rgba(255,215,0,0.9)';
-                    ctx.shadowBlur = 24 * flash;
+                    ctx.shadowBlur = 26 * flash;
                     ctx.beginPath();
-                    ctx.arc(cx, cy, rOut - 2, 0, Math.PI * 2);
+                    ctx.arc(h.x, h.y, h.r + 4, 0, Math.PI * 2);
                     ctx.stroke();
                 }
                 ctx.restore();
-            });
+            }
         },
 
         drawBalls(ctx) {
@@ -1382,33 +1562,7 @@
             ctx.save();
             ctx.translate(x, y);
             ctx.drawImage(b.tex, -r, -r, r * 2, r * 2);
-
-            // Số bi nằm ở cực của quả cầu: theo bi lăn nên nó trượt dần ra mép,
-            // dẹt lại rồi khuất hẳn, sau đó cực bên kia hiện ra.
-            if (b.num !== 0) {
-                const m = b.ori;
-                let px = m[2], py = m[5], pz = m[8];        // trục cực (nơi in số)
-                let ax = m[0], ay = m[3];                   // trục ngang của bi
-                if (pz < 0) { px = -px; py = -py; pz = -pz; ax = -ax; }
-
-                const fade = clamp((pz - 0.12) / 0.28, 0, 1);
-                const CAP = 0.90;                           // tâm hình chiếu của vòng tròn số
-                const th = Math.atan2(py, px);
-                ctx.save();
-                ctx.globalAlpha = fade;
-                ctx.translate(px * r * CAP, py * r * CAP);
-                ctx.rotate(th);
-                ctx.scale(Math.max(pz, 0.001), 1);          // ép dẹt theo phương xuyên tâm
-                ctx.rotate(-th);
-                ctx.rotate(Math.atan2(ay, ax));             // chữ số quay theo bi
-                ctx.fillStyle = '#15171f';
-                ctx.font = `bold ${(r * 0.56).toFixed(1)}px "Nunito", sans-serif`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(String(b.num), 0, 0);
-                ctx.restore();
-            }
-
+            drawBallNumber(ctx, b.ori, b.num, r);
             ctx.restore();
         },
 
@@ -1484,18 +1638,23 @@
 
         // Gậy cơ thật: thon dần từ chuôi ra đầu, đủ đầu da, đai ngà,
         // khớp nối đồng, thân gỗ trắc và phần quấn cán.
+        // Kích thước lấy đúng tỉ lệ cơ 58 inch (1,473 m) trên bàn 9 feet:
+        // mặt nỉ dài 2,54 m = 1008 px  =>  1 inch ≈ 10,08 px, cả cây cơ ≈ 585 px,
+        // tức là dài hơn nửa chiều dài mặt bàn — đúng như nhìn từ trên xuống ngoài đời.
         drawCueStick(ctx, tipX, tipY, ang) {
+            const IN = (RIGHT - LEFT) / 100;                 // 1 inch theo toạ độ bàn (mặt nỉ dài 100 inch)
             const SEGS = [
-                [6, 2.5, 2.7, '#7ba9dd', '#3f7fbd', '#22506f'],     // đầu da (đã chuốt lơ)
-                [11, 2.7, 2.9, '#fffdf6', '#ece4d0', '#b7ae95'],    // đai ngà
-                [152, 2.9, 4.2, '#fbeaca', '#e2c48a', '#a67c45'],   // thân ngọn gỗ thích
-                [5, 4.2, 4.3, '#ffeeae', '#c9a53f', '#7d611a'],     // vòng đồng
-                [4, 4.3, 4.35, '#5a5a62', '#26262b', '#0e0e11'],    // cổ khớp
-                [78, 4.35, 5.05, '#a9603a', '#6b3720', '#341a0e'],  // thân gỗ trắc
-                [64, 5.05, 5.45, '#5c5c66', '#2e2e35', '#131317'],  // phần quấn cán
-                [26, 5.45, 5.55, '#a9603a', '#6b3720', '#341a0e'],  // ống cán
-                [7, 5.55, 5.2, '#4a4a52', '#1c1c20', '#08080a']     // nắp chuôi
-            ];
+                // [dài (inch), bán kính đầu, bán kính cuối (px), 3 màu tô khối]
+                [0.55, 2.50, 2.52, '#7ba9dd', '#3f7fbd', '#22506f'],   // đầu da (đã chuốt lơ), Ø 12,7 mm
+                [1.00, 2.52, 2.62, '#fffdf6', '#ece4d0', '#b7ae95'],   // đai ngà
+                [27.45, 2.62, 4.10, '#fbeaca', '#e2c48a', '#a67c45'],  // thân ngọn gỗ thích, thon dần
+                [0.35, 4.10, 4.20, '#ffeeae', '#c9a53f', '#7d611a'],   // vòng đồng
+                [0.60, 4.20, 4.30, '#5a5a62', '#26262b', '#0e0e11'],   // cổ khớp nối
+                [12.50, 4.30, 5.50, '#a9603a', '#6b3720', '#341a0e'],  // thân gỗ trắc
+                [11.00, 5.50, 5.80, '#5c5c66', '#2e2e35', '#131317'],  // phần quấn cán
+                [4.00, 5.80, 6.10, '#a9603a', '#6b3720', '#341a0e'],   // ống cán
+                [0.55, 6.10, 5.70, '#4a4a52', '#1c1c20', '#08080a']    // nắp chuôi cao su, Ø 31 mm
+            ].map(([inch, r0, r1, a, b, c]) => [inch * IN, r0, r1, a, b, c]);
 
             const dx = -Math.cos(ang), dy = -Math.sin(ang);   // từ đầu cơ lùi về chuôi
             const nx = -dy, ny = dx;                          // pháp tuyến của gậy

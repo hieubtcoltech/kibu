@@ -1205,6 +1205,7 @@
             this.time += dt;
             this.shake *= Math.pow(0.02, dt);
             if (this.passLine) { this.passLine.t -= dt; if (this.passLine.t <= 0) this.passLine = null; }
+            this.updateTrail(dt);
             this.updateFx(dt);
 
             if (this.state === 'countdown') {
@@ -1407,15 +1408,6 @@
                 }
             }
 
-            // Vệt bóng khi đi nhanh
-            if (Math.hypot(b.vx, b.vy) > 300) {
-                this.trail.push({ x: b.x, y: b.y, life: 0.28 });
-                if (this.trail.length > 24) this.trail.shift();
-            }
-            for (let i = this.trail.length - 1; i >= 0; i--) {
-                this.trail[i].life -= dt;
-                if (this.trail[i].life <= 0) this.trail.splice(i, 1);
-            }
         },
 
         /* Tranh bóng.
@@ -1843,6 +1835,23 @@
             const m = Math.floor(t / 60), s = t % 60;
             this.el.clock.textContent = `${m}:${String(s).padStart(2, '0')}`;
             this.el.clock.classList.toggle('urgent', t <= 10 && this.state === 'playing');
+        },
+
+        /* Vệt bóng phải tự mờ đi ở MỌI trạng thái.
+           Trước kia đoạn này nằm trong stepBall, mà stepBall lại thoát sớm khi
+           có người rê bóng hoặc thủ môn ôm bóng — thế là vệt cũ đứng hình
+           giữa sân cho tới lúc bóng lại lăn tự do. */
+        updateTrail(dt) {
+            const b = this.ball;
+            if (this.owner < 0 && !this.keepers.some(k => k.holdT > 0)
+                && Math.hypot(b.vx, b.vy) > 300) {
+                this.trail.push({ x: b.x, y: b.y, life: 0.28 });
+                if (this.trail.length > 24) this.trail.shift();
+            }
+            for (let i = this.trail.length - 1; i >= 0; i--) {
+                this.trail[i].life -= dt;
+                if (this.trail[i].life <= 0) this.trail.splice(i, 1);
+            }
         },
 
         updateFx(dt) {

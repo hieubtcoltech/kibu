@@ -208,47 +208,24 @@ body {
 /* Hàng bi còn lại */
 .p-balls {
     display: flex;
-    gap: 3px;
+    gap: 4px;
     flex-wrap: wrap;
-    max-width: 46%;
+    max-width: 58%;
     justify-content: flex-end;
 }
 
+/* Ảnh bi 3D do game.js tô sẵn (cùng bộ tô với bi trên bàn) */
 .mini-ball {
-    width: 17px;
-    height: 17px;
-    border-radius: 50%;
-    font-size: 9px;
-    font-weight: 800;
-    display: grid;
-    place-items: center;
-    color: #1a1a1a;
-    box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.5);
-    position: relative;
-    overflow: hidden;
+    width: 26px;
+    height: 26px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+    flex-shrink: 0;
 }
 
-.mini-ball span {
-    position: relative;
-    z-index: 2;
-    background: #fff;
-    border-radius: 50%;
-    width: 11px;
-    height: 11px;
-    display: grid;
-    place-items: center;
-    line-height: 1;
-}
-
-.mini-ball.striped::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: #fff;
-    clip-path: polygon(0 0, 100% 0, 100% 28%, 0 28%, 0 72%, 100% 72%, 100% 100%, 0 100%);
-}
-
-.mini-ball.done { opacity: 0.22; filter: grayscale(1); }
+.mini-ball.done { opacity: 0.2; filter: grayscale(1); }
 
 .turn-indicator {
     flex: 0 0 auto;
@@ -533,8 +510,7 @@ body {
     .turn-text { font-size: 0.88rem; }
     .turn-sub { display: none; }
     .turn-indicator { padding: 6px 12px; }
-    .mini-ball { width: 14px; height: 14px; font-size: 8px; }
-    .mini-ball span { width: 9px; height: 9px; }
+    .mini-ball { width: 21px; height: 21px; }
     .panel { padding: 18px 16px 22px; }
     .panel-title { font-size: 1.5rem; }
     .rules-grid { grid-template-columns: 1fr; }
