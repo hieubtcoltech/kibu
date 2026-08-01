@@ -39,7 +39,7 @@
         ['Trang Chủ', 'Home'],
         ['Về Menu', 'Main Menu'],
         ['Về Chúng Tôi', 'About Us'],
-        ['Chơi Game', 'Play Games'],
+        ['Chơi Game', 'Play Games', 'x'],        // substring of "Sân Chơi Game Trực Tuyến"
         ['Âm Thanh', 'Sound'],
         ['Nhạc Nền', 'Music'],
         ['Chơi Lại', 'Restart'],
@@ -624,7 +624,7 @@
         ['của thiết bị', 'your device'],
         [', không phải của trang web. Máy chưa tải giọng cao cấp thì chỉ có giọng nén đời cũ nghe rất máy móc. Tải thêm giọng',
             ', not from this website. Without a premium voice installed you only get an old compressed one that sounds very robotic. Install extra voices'],
-        ['miễn phí', 'for free'],
+        ['miễn phí', 'for free', 'x'],           // far too common to splice into a sentence
         ['như sau:', 'like this:'],
         ['🖥️ Trên máy Mac', '🖥️ On a Mac'],
         ['📱 Trên iPad / iPhone', '📱 On iPad / iPhone'],
@@ -869,6 +869,18 @@
         });
     }
 
+    /* Page titles are deliberately bilingual for SEO
+     * ("KIBU Games - Free Online Games … | Sân Chơi Game Trực Tuyến Miễn Phí").
+     * Substituting phrase by phrase inside one produces exactly the mess this
+     * engine exists to prevent — "Sân Play Games Trực Tuyến for free" — so a
+     * title only ever changes on a whole-string dictionary match. */
+    function tWholeOnly(str) {
+        if (typeof str !== 'string' || !str) return str;
+        var flat = norm(str);
+        var hit = exactMap[flat.toLowerCase()];
+        return hit == null ? str : applyCase(flat, hit);
+    }
+
     function t(str) {
         if (typeof str !== 'string' || !str) return str;
         var flat = norm(str);
@@ -1018,7 +1030,7 @@
             translateMarkup(document);
             translateTree(document.body);
             translateAttrs(document);
-            var title = t(document.title);
+            var title = tWholeOnly(document.title);
             if (title !== document.title) document.title = title;
         });
     }
