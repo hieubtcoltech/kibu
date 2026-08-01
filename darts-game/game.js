@@ -1142,10 +1142,15 @@
                 ctx.restore();
             }
 
-            // --- Mũi tên ngắm, bắt đầu từ bàn tay ---
+            /* --- Mũi tên ngắm ---
+               Vẽ sát người hơn hẳn tầm với của cánh tay: để đúng ở bàn tay thì
+               mũi tên trông rời khỏi nhân vật, bé khó thấy nó gắn với ai. Điểm
+               ném thật (hx, hy) không đổi nên đường bay vẫn y nguyên. */
+            const AIM_GAP = ARM * 0.35;
+            const ax = this.cx + dx * AIM_GAP, ay = THROW_Y + dy * AIM_GAP;
             const len = 42 + this.power * 34;
             ctx.save();
-            ctx.translate(hx, hy);
+            ctx.translate(ax, ay);
             ctx.rotate(-this.angle);
             ctx.strokeStyle = c.color;
             ctx.lineWidth = 4;
