@@ -88,37 +88,33 @@ body > .unified-nav {
     min-width: 0;          /* cho tiêu đề cắt bớt thay vì đẩy dãy nút */
 }
 
-/* The KIBU logo doubles as the way back to the game list. */
+/* The KIBU logo doubles as the way back to the game list. It stands on its own
+ * now — no chip behind it — so the mark reads at full size instead of being
+ * boxed in; hover is a lift and a glow rather than a panel that lights up. */
 .nav-home {
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 40px;
-    padding: 0 12px;
-    border-radius: 12px;
     color: #fff;
     text-decoration: none;
-    background: rgba(255, 255, 255, 0.10);
-    border: 1px solid rgba(255, 255, 255, 0.22);
     cursor: pointer;
-    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .nav-home img {
-    height: 26px;
+    height: 39px;
     width: auto;
     display: block;
 }
 
 .nav-home:hover,
 .nav-home:focus-visible {
-    background: rgba(255, 255, 255, 0.20);
-    border-color: rgba(255, 255, 255, 0.42);
-    transform: translateY(-1px);
+    transform: translateY(-1px) scale(1.04);
+    filter: drop-shadow(0 3px 10px rgba(255, 255, 255, 0.35));
 }
 
-.nav-home:active { transform: translateY(0); }
+.nav-home:active { transform: translateY(0) scale(1); }
 
 /* The brand block keeps whatever the game already gave it; it just must not
  * stretch now that it shares a row with the home button. */
@@ -299,9 +295,7 @@ body.chrome-fit > .game-wrapper {
 }
 
 @media (max-width: 560px) {
-    /* keep it a chip that fits the logo, not a square that squashes it */
-    .nav-home { height: 34px; padding: 0 9px; border-radius: 10px; }
-    .nav-home img { height: 22px; }
+    .nav-home img { height: 33px; }
     .nav-left { gap: 8px; }
     .unified-nav { padding: 8px 12px; border-radius: 16px; gap: 10px; }
     /* Chỉ còn logo KIBU + icon game + dãy nút icon, gọn trên một hàng */
