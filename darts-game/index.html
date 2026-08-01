@@ -66,9 +66,10 @@
             </div>
 
             <div class="nav-actions">
-            <button id="btn-global-lang" class="badge-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); cursor: pointer; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 30px;">
-                <i class="fa-solid fa-globe"></i> <span id="global-lang-text">EN</span>
-            </button>
+            <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; font-size: 1.3rem; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: auto;">
+    <span id="global-lang-flag">🇻🇳</span>
+</button>
+            
                 <a href="../index.html" class="btn btn-home">
                     <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
                 </a>
@@ -85,7 +86,8 @@
                     <i class="fa-solid fa-rotate-right"></i> <span>Chơi Lại</span>
                 </button>
             </div>
-        </header>
+            
+</header>
 
         <main class="game-viewport">
             <canvas id="game-canvas"></canvas>
@@ -252,18 +254,21 @@
 
     <script src="game.js"></script>
 
-    <!-- Global Language Switcher Script -->
+    
+
+    
+    <!-- Global Flag Language Switcher Script -->
     <script>
     (function() {
         const LANG_KEY = "kibu_global_lang";
         const btn = document.getElementById("btn-global-lang");
-        const langText = document.getElementById("global-lang-text");
+        const flagSpan = document.getElementById("global-lang-flag");
         
         let currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
 
         function updateLangUI() {
-            if (langText) {
-                langText.textContent = currentLang === "vi" ? "🇻🇳 VI" : "🇬🇧 EN";
+            if (flagSpan) {
+                flagSpan.textContent = currentLang === "vi" ? "🇻🇳" : "🇬🇧";
             }
             document.documentElement.lang = currentLang;
         }
@@ -280,6 +285,5 @@
         updateLangUI();
     })();
     </script>
-
 </body>
 </html>
