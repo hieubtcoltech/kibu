@@ -321,7 +321,6 @@
         g.font = size + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
         CanvasRenderingContext2D.prototype.fillText.call(g, ch, c.width / 2, c.height / 2 + size * 0.04);
         spriteCache.set(key, c);
-        widenPassages(c);
         return c;
     }
 
@@ -868,6 +867,7 @@
             }
         }
 
+        widenPassages(c);
         return c;
     }
 
@@ -1151,7 +1151,7 @@
                 if (tileAt(level, this.x, this.y + TILE) !== T_WATER) walls++;
                 if (tileAt(level, this.x, this.y - TILE) !== T_WATER) walls++;
             }
-            if (this.stuckT > 0.6 && walls >= 3) {
+            if (this.stuckT > 0.6 && walls >= 4) {
                 const col = Math.floor(this.x / TILE), row = Math.floor(this.y / TILE);
                 outer:
                 for (let rad = 1; rad <= 4; rad++) {
@@ -1241,6 +1241,9 @@
                     const t = tileAt(level, tx + 1, ty + 1);
                     if (t === T_WATER) continue;
                     if (t === T_CORAL && canBreak) { breakTile(level, tx + 1, ty + 1); continue; }
+                    // Vị trí đã đổi sau cú đẩy trước đó -> đo lại xem còn chạm không
+                    if (this.x + rr2 <= tx || this.x - rr2 >= tx + TILE ||
+                        this.y + rr2 <= ty || this.y - rr2 >= ty + TILE) continue;
                     if (horizontal) {
                         if (delta > 0) this.x = tx - rr2;
                         else if (delta < 0) this.x = tx + TILE + rr2;
@@ -2753,25 +2756,6 @@
        ===================================================== */
 
     function boot() {
-        window.__SCAN = (n) => {
-            let worst = 99, bad = 0, cols = 0;
-            for (let w = 0; w < WORLDS.length; w++) {
-                for (let i = 2; i < n; i++) {
-                    const ch = newChunk(i, WORLDS[w], makeRng((w * 7919 + i * 104729) >>> 0));
-                    for (let col = 0; col < CHUNK_COLS; col++) {
-                        let best = 0, cur = 0;
-                        for (let r = 0; r < ROWS; r++) {
-                            if (ch.grid[r * CHUNK_COLS + col] === 0) { cur++; if (cur > best) best = cur; } else cur = 0;
-                        }
-                        cols++;
-                        if (best < worst) worst = best;
-                        if (best < 3) bad++;
-                    }
-                }
-            }
-            return { cols, worst, bad };
-        };
-        window.__AD = () => { const p=G.players[0]; if(!p) return null; const c=Math.floor(p.x/TILE), r=Math.floor(p.y/TILE); let n=''; for(let dr=-1;dr<=1;dr++){for(let dc=-1;dc<=1;dc++){n += tileAt(G.level,(c+dc+0.5)*TILE,(r+dr+0.5)*TILE)===0?'.':'#';} n+='|';} return {x:Math.round(p.x),y:Math.round(p.y),out:p.out,stuck:+(p.stuckT||0).toFixed(2),inRock:tileAt(G.level,p.x,p.y)!==0,stun:+p.stun.toFixed(2),trap:+p.trap.toFixed(2),slow:+p.slow.toFixed(2),n}; };
         cacheDom();
         Store.load();
         canvas = document.getElementById('game-canvas');
