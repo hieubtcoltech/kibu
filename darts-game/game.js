@@ -49,7 +49,7 @@
         { key: 'bomb',  name: 'BÓNG BOM',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true },
         /* Bóng thần kỳ: hiếm gặp, nổ được thì 5 giây tiếp theo mỗi lần phi ra
            một chùm ba mũi toả về ba hướng. */
-        { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 900, magic: true }
+        { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true }
     ];
 
     const TRIPLE_TIME = 5;            // giây được bắn chùm
