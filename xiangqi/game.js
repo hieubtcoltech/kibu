@@ -532,7 +532,7 @@
             // Rớt mạng: thử nối lại vài lần rồi mới chịu thua
             S.retry++;
             if (S.retry > 8) { note('Mất kết nối tới máy chủ.', true); return; }
-            boardMsg('Đang kết nối lại...');
+            boardMsg('Reconnecting...');
             setTimeout(() => connect(() => send({ t: 'rejoin', code: S.code, token: S.token })), Math.min(4000, 400 * S.retry));
         };
         ws.onerror = () => { };
@@ -616,7 +616,7 @@
             prevPhase = S.phase;
         }
         if (S.check && S.phase === 'playing') {
-            if (S.turn === S.mySide) { boardMsg('Chiếu tướng!'); audio.check(); }
+            if (S.turn === S.mySide) { boardMsg('Check!'); audio.check(); }
         }
 
         clearSel();
@@ -642,7 +642,7 @@
         const tick = () => {
             const left = Math.ceil((ms - (Date.now() - t0)) / 1000);
             if (left <= 0) {
-                box.querySelector('span').textContent = tr('Bắt đầu!');
+                box.querySelector('span').textContent = tr('Go!');
                 audio.beep(true);
                 clearInterval(countdownTimer);
                 setTimeout(() => { box.hidden = true; }, 500);
@@ -736,7 +736,7 @@
 
         S.localHistory.push({ key: X.positionKey(S.board, S.turn), mover: S.turn === 'red' ? 'black' : 'red', check: X.inCheck(S.board, S.turn) });
         S.check = X.inCheck(S.board, S.turn);
-        if (S.check && S.turn === S.mySide) { boardMsg('Chiếu tướng!'); audio.check(); }
+        if (S.check && S.turn === S.mySide) { boardMsg('Check!'); audio.check(); }
 
         const st = X.status(S.board, S.turn, S.localHistory);
         clearSel();
@@ -765,7 +765,7 @@
         S.result = null;
         el('captured').innerHTML = '';
         S.clock = { red: S.minutes * 60000, black: S.minutes * 60000 };
-        S.players = { red: { name: nameOf(), online: true }, black: { name: 'Máy', online: true } };
+        S.players = { red: { name: nameOf(), online: true }, black: { name: 'AI', online: true } };
         prevMoveCount = -1; prevBoard = '';
         showScreen('game');
         el('countdown').hidden = true;
@@ -823,8 +823,8 @@
         const r = S.players.red, b = S.players.black;
         const seatR = el('seat-red'), seatB = el('seat-black');
         seatR.querySelector('.seat-name').textContent = r ? r.name : '—';
-        seatB.querySelector('.seat-name').textContent = b ? b.name : tr('Đang chờ...');
-        if (S.phase === 'waiting') note('Đang chờ người thứ hai vào phòng...');
+        seatB.querySelector('.seat-name').textContent = b ? b.name : tr('Waiting...');
+        if (S.phase === 'waiting') note('Waiting for a second player...');
     }
 
     function renderGame() {
@@ -835,7 +835,7 @@
             const p = S.players[side];
             strip.querySelector('.ps-dot').className = 'ps-dot ' + side;
             strip.querySelector('.ps-name').textContent =
-                (p ? p.name : '—') + (side === S.mySide && S.mode !== 'ai' ? ' (' + tr('bạn') + ')' : '');
+                (p ? p.name : '—') + (side === S.mySide && S.mode !== 'ai' ? ' (' + tr('you') + ')' : '');
             const clockEl = strip.querySelector('.ps-clock');
             clockEl.textContent = fmtClock(S.clock[side]);
             clockEl.classList.toggle('low', S.clock[side] < 30000);
@@ -845,15 +845,15 @@
     }
 
     const REASONS = {
-        checkmate: 'Chiếu bí!',
-        stalemate: 'Hết nước đi!',
-        timeout: 'Hết giờ!',
+        checkmate: 'Checkmate!',
+        stalemate: 'No legal moves left!',
+        timeout: 'Out of time!',
         resign: 'Xin thua.',
-        disconnect: 'Đối thủ mất kết nối.',
-        left: 'Đối thủ đã rời phòng.',
-        perpetual: 'Chiếu mãi không được phép.',
-        repetition: 'Lặp nước ba lần — hoà.',
-        idle: 'Sáu mươi nước không ăn quân — hoà.'
+        disconnect: 'Your opponent disconnected.',
+        left: 'Your opponent left the room.',
+        perpetual: 'Perpetual check is not allowed.',
+        repetition: 'Threefold repetition — draw.',
+        idle: 'Sixty moves without a capture — draw.'
     };
 
     function showEnd() {
@@ -861,8 +861,8 @@
         const won = res.winner && res.winner === S.mySide;
         el('end-emblem').textContent = res.winner ? (won ? '🏆' : '😢') : '🤝';
         el('end-title').textContent = res.winner
-            ? (won ? tr('BẠN THẮNG!') : tr('BẠN THUA'))
-            : tr('HOÀ CỜ');
+            ? (won ? tr('YOU WIN!') : tr('YOU LOSE'))
+            : tr('DRAW');
         el('end-reason').textContent = tr(REASONS[res.reason] || '');
         renderRematch();
         el('modal-end').classList.add('active');
@@ -882,8 +882,8 @@
         const mine = !!(S.rematch && S.rematch[S.mySide]);
         const theirs = !!(S.rematch && S.rematch[other]);
         btn.disabled = mine;
-        if (mine && !theirs) note.textContent = tr('Đang chờ đối thủ đồng ý...');
-        else if (theirs && !mine) note.textContent = tr('Đối thủ muốn đánh ván nữa!');
+        if (mine && !theirs) note.textContent = tr('Waiting for your opponent...');
+        else if (theirs && !mine) note.textContent = tr('Your opponent wants a rematch!');
         else note.textContent = '';
     }
 
@@ -923,7 +923,7 @@
         el('btn-create').addEventListener('click', () => {
             audio.init();
             S.mode = 'online';
-            note('Đang tạo phòng...');
+            note('Creating room...');
             connect(() => send({ t: 'create', name: nameOf(), minutes: S.minutes }));
             saveLocal();
         });
@@ -945,10 +945,10 @@
 
         const doJoin = () => {
             const code = (el('input-code').value || '').trim().toUpperCase();
-            if (code.length !== 6) { note('Mã phòng gồm 6 ký tự.', true); return; }
+            if (code.length !== 6) { note('A room code has 6 characters.', true); return; }
             audio.init();
             S.mode = 'online';
-            note('Đang vào phòng...');
+            note('Joining room...');
             connect(() => send({ t: 'join', code, name: nameOf() }));
             saveLocal();
         };
@@ -959,24 +959,24 @@
         el('btn-copy').addEventListener('click', async () => {
             try {
                 await navigator.clipboard.writeText(S.code);
-                toast('Đã sao chép mã phòng!');
+                toast('Room code copied!');
             } catch (e) {
                 const t = document.createElement('textarea');
                 t.value = S.code;
                 document.body.appendChild(t);
                 t.select();
-                try { document.execCommand('copy'); toast('Đã sao chép mã phòng!'); } catch (e2) { toast('Không sao chép được, bạn tự chép nhé!'); }
+                try { document.execCommand('copy'); toast('Room code copied!'); } catch (e2) { toast('Không sao chép được, bạn tự chép nhé!'); }
                 document.body.removeChild(t);
             }
         });
 
         el('btn-share').addEventListener('click', async () => {
-            const text = tr('Vào đánh cờ tướng với mình nhé! Mã phòng: ') + S.code;
+            const text = tr('Come play Xiangqi with me! Room code:') + S.code;
             const url = location.origin + location.pathname + '?room=' + S.code;
             if (navigator.share) {
-                try { await navigator.share({ title: 'Cờ Tướng KIBU', text, url }); return; } catch (e) { }
+                try { await navigator.share({ title: 'XIANGQI KIBU', text, url }); return; } catch (e) { }
             }
-            try { await navigator.clipboard.writeText(text + ' — ' + url); toast('Đã chép lời mời, gửi cho bạn nhé!'); }
+            try { await navigator.clipboard.writeText(text + ' — ' + url); toast('Invite copied — send it to your friend!'); }
             catch (e) { toast(text); }
         });
 
@@ -987,7 +987,7 @@
 
         el('btn-resign').addEventListener('click', () => {
             if (S.phase !== 'playing') return;
-            if (!confirm(tr('Bạn chắc chắn muốn xin thua?'))) return;
+            if (!confirm(tr('Are you sure you want to resign?'))) return;
             if (S.mode === 'ai') finishLocal(S.mySide === 'red' ? 'black' : 'red', 'resign');
             else send({ t: 'resign' });
         });
@@ -1047,7 +1047,7 @@
             S.code = saved.code;
             S.token = saved.token;
             S.wantReconnect = true;
-            note('Đang tìm lại ván đang chơi...');
+            note('Looking for your game...');
             connect(() => send({ t: 'rejoin', code: saved.code, token: saved.token }));
             setTimeout(() => {
                 if (S.screen === 'home') {

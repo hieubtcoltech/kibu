@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Cờ Tướng Online - Play Xiangqi with a Friend | KIBU Games</title>
+    <title>XIANGQI ONLINE - Play Xiangqi with a Friend | KIBU Games</title>
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="Play Xiangqi (Chinese Chess) online with a friend on KIBU Games. Create a room, share a 6-character code, and start playing in seconds. No sign-up, free forever.">
@@ -74,22 +74,22 @@
     <div class="app-wrapper">
         <header class="unified-nav">
             <div class="nav-left">
-                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
                     <img src="/logo.png" alt="KIBU Games">
                 </a>
                 <div class="brand">
                     <img src="/xiangqi/icon.jpg" alt="" class="brand-img"
                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                     <span class="brand-icon xq-piece" aria-hidden="true"><span class="xq-top">帥</span></span>
-                    <h1 class="brand-title">CỜ TƯỚNG</h1>
+                    <h1 class="brand-title">XIANGQI</h1>
                 </div>
             </div>
             <div class="nav-actions">
-                <button id="btn-sound" class="btn" title="Bật / tắt âm thanh">
-                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                <button id="btn-sound" class="btn" title="Turn sound on / off">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
                 </button>
-                <button id="btn-menu-nav" class="btn" title="Về màn hình chính">
-                    <i class="fa-solid fa-house"></i> <span>Màn Hình Chính</span>
+                <button id="btn-menu-nav" class="btn" title="Back to the main screen">
+                    <i class="fa-solid fa-house"></i> <span>Main Menu</span>
                 </button>
             </div>
         </header>
@@ -99,42 +99,42 @@
             <section id="screen-home" class="screen active">
                 <div class="home-card">
                     <div class="home-emblem">將</div>
-                    <h2 class="home-title">CỜ TƯỚNG ONLINE</h2>
-                    <p class="home-sub">Tạo phòng, gửi mã cho bạn, đánh ngay. Không cần đăng ký.</p>
+                    <h2 class="home-title">XIANGQI ONLINE</h2>
+                    <p class="home-sub">Create a room, send the code to a friend, start playing. No sign-up.</p>
 
                     <label class="field">
-                        <span class="field-label">Tên của bạn</span>
-                        <input id="input-name" class="field-input" type="text" maxlength="16" placeholder="Nhập tên..." autocomplete="off">
+                        <span class="field-label">Your name</span>
+                        <input id="input-name" class="field-input" type="text" maxlength="16" placeholder="Enter your name..." autocomplete="off">
                     </label>
 
                     <div class="setup-row">
-                        <span class="field-label">Thời gian mỗi bên</span>
+                        <span class="field-label">Time per player</span>
                         <div class="pill-row" id="time-row">
-                            <button class="pill time-btn" data-min="5">5 phút</button>
-                            <button class="pill time-btn active" data-min="10">10 phút</button>
-                            <button class="pill time-btn" data-min="15">15 phút</button>
+                            <button class="pill time-btn" data-min="5">5 minutes</button>
+                            <button class="pill time-btn active" data-min="10">10 minutes</button>
+                            <button class="pill time-btn" data-min="15">15 minutes</button>
                         </div>
                     </div>
 
                     <div class="home-actions">
-                        <button id="btn-create" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tạo Phòng</button>
-                        <button id="btn-join-open" class="btn"><i class="fa-solid fa-right-to-bracket"></i> Vào Phòng</button>
-                        <button id="btn-ai" class="btn"><i class="fa-solid fa-robot"></i> Đánh Với Máy</button>
+                        <button id="btn-create" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Create Room</button>
+                        <button id="btn-join-open" class="btn"><i class="fa-solid fa-right-to-bracket"></i> Join Room</button>
+                        <button id="btn-ai" class="btn"><i class="fa-solid fa-robot"></i> Play vs AI</button>
                     </div>
 
                     <div id="join-box" class="join-box" hidden>
                         <input id="input-code" class="field-input code-input" type="text" maxlength="6"
-                            placeholder="MÃ PHÒNG" autocomplete="off" autocapitalize="characters" spellcheck="false">
-                        <button id="btn-join" class="btn btn-primary">Vào</button>
+                            placeholder="ROOM CODE" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                        <button id="btn-join" class="btn btn-primary">Join</button>
                     </div>
 
                     <div id="ai-box" class="join-box" hidden>
                         <div class="pill-row" id="ai-row">
-                            <button class="pill ai-btn active" data-level="1">Dễ</button>
-                            <button class="pill ai-btn" data-level="2">Vừa</button>
-                            <button class="pill ai-btn" data-level="3">Khó</button>
+                            <button class="pill ai-btn active" data-level="1">Easy</button>
+                            <button class="pill ai-btn" data-level="2">Medium</button>
+                            <button class="pill ai-btn" data-level="3">Hard</button>
                         </div>
-                        <button id="btn-ai-start" class="btn btn-primary">Bắt Đầu</button>
+                        <button id="btn-ai-start" class="btn btn-primary">Start</button>
                     </div>
 
                     <p class="home-note" id="home-note"></p>
@@ -144,31 +144,31 @@
             <!-- ======== Phòng chờ ======== -->
             <section id="screen-lobby" class="screen">
                 <div class="home-card">
-                    <h2 class="home-title">PHÒNG CHỜ</h2>
-                    <p class="home-sub">Gửi mã này cho bạn của bạn để cùng vào đánh</p>
+                    <h2 class="home-title">WAITING ROOM</h2>
+                    <p class="home-sub">Send this code to your friend so they can join</p>
 
                     <div class="code-display" id="room-code">------</div>
                     <div class="code-actions">
-                        <button id="btn-copy" class="btn"><i class="fa-regular fa-copy"></i> Sao Chép</button>
-                        <button id="btn-share" class="btn"><i class="fa-solid fa-share-nodes"></i> Chia Sẻ</button>
+                        <button id="btn-copy" class="btn"><i class="fa-regular fa-copy"></i> Copy</button>
+                        <button id="btn-share" class="btn"><i class="fa-solid fa-share-nodes"></i> Share</button>
                     </div>
 
                     <div class="lobby-players">
                         <div class="lobby-seat" id="seat-red">
                             <div class="seat-dot red"></div>
                             <div class="seat-name">—</div>
-                            <div class="seat-tag">ĐỎ · đi trước</div>
+                            <div class="seat-tag">RED · moves first</div>
                         </div>
                         <div class="lobby-vs">VS</div>
                         <div class="lobby-seat" id="seat-black">
                             <div class="seat-dot black"></div>
-                            <div class="seat-name">Đang chờ...</div>
-                            <div class="seat-tag">ĐEN</div>
+                            <div class="seat-name">Waiting...</div>
+                            <div class="seat-tag">BLACK</div>
                         </div>
                     </div>
 
-                    <p class="home-note" id="lobby-note">Đang chờ người thứ hai vào phòng...</p>
-                    <button id="btn-leave-lobby" class="btn"><i class="fa-solid fa-arrow-left"></i> Rời Phòng</button>
+                    <p class="home-note" id="lobby-note">Waiting for a second player...</p>
+                    <button id="btn-leave-lobby" class="btn"><i class="fa-solid fa-arrow-left"></i> Leave Room</button>
                 </div>
             </section>
 
@@ -195,7 +195,7 @@
                         <div class="captured" id="captured"></div>
                         <div class="game-buttons">
                             <button id="btn-resign" class="btn btn-small"><i class="fa-solid fa-flag"></i> <span>Xin Thua</span></button>
-                            <button id="btn-exit" class="btn btn-small"><i class="fa-solid fa-door-open"></i> <span>Thoát</span></button>
+                            <button id="btn-exit" class="btn btn-small"><i class="fa-solid fa-door-open"></i> <span>Exit</span></button>
                         </div>
                     </div>
                 </div>
@@ -217,11 +217,11 @@
     <div id="modal-end" class="modal-overlay">
         <div class="modal-card">
             <div class="end-emblem" id="end-emblem">🏆</div>
-            <h2 class="modal-title" id="end-title">HẾT VÁN</h2>
+            <h2 class="modal-title" id="end-title">GAME OVER</h2>
             <p class="modal-subtitle" id="end-reason"></p>
             <div class="end-buttons">
-                <button id="btn-rematch" class="btn btn-primary"><i class="fa-solid fa-rotate-right"></i> Đánh Ván Nữa</button>
-                <button id="btn-end-exit" class="btn"><i class="fa-solid fa-house"></i> Màn Hình Chính</button>
+                <button id="btn-rematch" class="btn btn-primary"><i class="fa-solid fa-rotate-right"></i> Play Again</button>
+                <button id="btn-end-exit" class="btn"><i class="fa-solid fa-house"></i> Main Menu</button>
             </div>
             <p class="home-note" id="rematch-note"></p>
         </div>

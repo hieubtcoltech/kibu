@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -80,7 +80,7 @@
         <!-- Top Navigation Bar -->
         <header class="unified-nav">
             <div class="nav-left">
-                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
                     <img src="/logo.png" alt="KIBU Games">
                 </a>
                 <div class="brand">
@@ -94,7 +94,7 @@
             
             
                 <button id="btn-sound" class="btn">
-                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
                 </button>
             </div>
             
@@ -115,7 +115,7 @@
 
                     <div class="hud-box nitro-bar-container">
                         <div class="nitro-header">
-                            <span>BÌNH NITRO 🚀</span>
+                            <span>NITRO TANK 🚀</span>
                             <span id="nitro-text">100%</span>
                         </div>
                         <div class="nitro-track">
@@ -125,7 +125,7 @@
 
                     <div class="hud-box" style="text-align: right;">
                         <div id="score-val" style="font-family: var(--font-display); font-size: 1.6rem; font-weight: 800; color: #ffd700;">0m</div>
-                        <div style="font-size: 0.75rem; color: #94a3b8;">QUÃNG ĐƯỜNG</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;">DISTANCE</div>
                     </div>
                 </div>
 
@@ -159,30 +159,30 @@
     <div id="modal-start" class="modal-overlay active">
         <div class="modal-card">
             <div class="modal-icon" style="color: #ffd700;"><i class="fa-solid fa-flag-checkered"></i></div>
-            <h2 class="modal-title" style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">ĐƯỜNG ĐUA SIÊU TỐC</h2>
-            <p style="color: #94a3b8; margin-bottom: 20px;">Lái siêu xe né chướng ngại vật, ăn bình Nitro 🚀 phóng bứt tốc độ!</p>
+            <h2 class="modal-title" style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">TURBO SPEEDWAY</h2>
+            <p style="color: #94a3b8; margin-bottom: 20px;">Drive a supercar, dodge the obstacles and grab Nitro 🚀 for a burst of speed!</p>
 
-            <div style="font-size: 1.05rem; font-weight: 800; color: #00f0ff; margin-bottom: 10px;">CHỌN SIÊU XE CỦA BÉ:</div>
+            <div style="font-size: 1.05rem; font-weight: 800; color: #00f0ff; margin-bottom: 10px;">PICK YOUR SUPERCAR:</div>
             <div class="car-grid">
                 <div class="car-card selected" data-car="red">
                     <div class="car-icon">🏎️</div>
-                    <div class="car-name">Siêu Xe Đỏ</div>
-                    <div style="font-size: 0.8rem; color: #39ff14;">Tốc độ cao</div>
+                    <div class="car-name">Red Supercar</div>
+                    <div style="font-size: 0.8rem; color: #39ff14;">High top speed</div>
                 </div>
                 <div class="car-card" data-car="truck">
                     <div class="car-icon">🚙</div>
                     <div class="car-name">Monster Truck</div>
-                    <div style="font-size: 0.8rem; color: #ff3366;">Húc văng vệt dầu</div>
+                    <div style="font-size: 0.8rem; color: #ff3366;">Smashes through oil slicks</div>
                 </div>
                 <div class="car-card" data-car="cyber">
                     <div class="car-icon">🏎️</div>
                     <div class="car-name">Cyber Turbo</div>
-                    <div style="font-size: 0.8rem; color: #00f0ff;">Hồi Nitro siêu nhanh</div>
+                    <div style="font-size: 0.8rem; color: #00f0ff;">Super fast Nitro recharge</div>
                 </div>
             </div>
 
             <button id="btn-start-race" class="btn btn-cyber" style="font-size: 1.3rem; padding: 14px 40px; border-radius: 20px; width: 100%;">
-                BẮT ĐẦU ĐUA XE <i class="fa-solid fa-play"></i>
+                START RACING <i class="fa-solid fa-play"></i>
             </button>
         </div>
     </div>
@@ -191,19 +191,19 @@
     <div id="modal-end" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-icon" style="color: #ff3366;"><i class="fa-solid fa-explosion"></i></div>
-            <h2 class="modal-title" style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">VA CHẠM RỒI!</h2>
-            <p style="color: #cbd5e1; margin-bottom: 20px;">Đừng nản lòng, hãy nhấn Chơi Lại để lập kỷ lục đường đua mới nhé!</p>
+            <h2 class="modal-title" style="font-family: var(--font-display); font-size: 2.2rem; font-weight: 800;">CRASHED!</h2>
+            <p style="color: #cbd5e1; margin-bottom: 20px;">Don't give up — hit Restart and set a brand new track record!</p>
 
             <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 16px; margin-bottom: 20px;">
-                <div style="font-size: 1.2rem; font-weight: 800;">Quãng đường đua được: <span id="end-dist" style="color: #ffd700;">0m</span></div>
+                <div style="font-size: 1.2rem; font-weight: 800;">Distance covered: <span id="end-dist" style="color: #ffd700;">0m</span></div>
             </div>
 
             <div style="display: flex; gap: 14px; justify-content: center;">
                 <button id="btn-restart-race" class="btn btn-cyber">
-                    <i class="fa-solid fa-rotate-right"></i> Đua Lại
+                    <i class="fa-solid fa-rotate-right"></i> Race Again
                 </button>
                 <button id="btn-menu-race" class="btn">
-                    <i class="fa-solid fa-house"></i> Về Menu
+                    <i class="fa-solid fa-house"></i> Main Menu
                 </button>
             </div>
         </div>

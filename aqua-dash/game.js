@@ -45,15 +45,15 @@
     /* Bộ đồ lặn: đúng dải màu trong bảng thiết kế nhân vật (xanh dương, đỏ,
        xanh lá, tím, đen, trắng). Bé 1 được chọn, các bé sau lấy màu còn lại. */
     const SUITS = [
-        { id: 'blue', name: 'Xanh Biển', body: '#2f6fd0', dark: '#1d4a94', light: '#5b9df0', trim: '#ffc247', fin: '#ff8c1a' },
-        { id: 'red', name: 'Đỏ Lửa', body: '#d93b3b', dark: '#9b2020', light: '#ff7676', trim: '#ffd76b', fin: '#ff8c1a' },
-        { id: 'green', name: 'Xanh Lá', body: '#4aa832', dark: '#2f7020', light: '#84d95f', trim: '#ffe07a', fin: '#ff9f2e' },
-        { id: 'purple', name: 'Tím Mộng', body: '#8c4ad4', dark: '#5f2c96', light: '#bb8bff', trim: '#ffd76b', fin: '#ff8c1a' },
-        { id: 'dark', name: 'Đen Bí Ẩn', body: '#3b4250', dark: '#232833', light: '#69748a', trim: '#ffb545', fin: '#ff8c1a' },
-        { id: 'white', name: 'Trắng Băng', body: '#e6edf5', dark: '#b3c0d1', light: '#ffffff', trim: '#57c9ff', fin: '#7fd8ff' }
+        { id: 'blue', name: 'Ocean Blue', body: '#2f6fd0', dark: '#1d4a94', light: '#5b9df0', trim: '#ffc247', fin: '#ff8c1a' },
+        { id: 'red', name: 'Fire Red', body: '#d93b3b', dark: '#9b2020', light: '#ff7676', trim: '#ffd76b', fin: '#ff8c1a' },
+        { id: 'green', name: 'Leaf Green', body: '#4aa832', dark: '#2f7020', light: '#84d95f', trim: '#ffe07a', fin: '#ff9f2e' },
+        { id: 'purple', name: 'Dreamy Purple', body: '#8c4ad4', dark: '#5f2c96', light: '#bb8bff', trim: '#ffd76b', fin: '#ff8c1a' },
+        { id: 'dark', name: 'Mystery Black', body: '#3b4250', dark: '#232833', light: '#69748a', trim: '#ffb545', fin: '#ff8c1a' },
+        { id: 'white', name: 'Ice White', body: '#e6edf5', dark: '#b3c0d1', light: '#ffffff', trim: '#57c9ff', fin: '#7fd8ff' }
     ];
 
-    const PLAYER_NAMES = ['BÉ 1', 'BÉ 2', 'BÉ 3', 'BÉ 4'];
+    const PLAYER_NAMES = ['KID 1', 'KID 2', 'KID 3', 'KID 4'];
     const RING_COLORS = ['#ff6b6b', '#4dc3ff', '#6bf178', '#ffd93d'];
 
     /* ---------- Tám vùng biển ----------
@@ -61,49 +61,49 @@
        dark = độ tối, cur = độ mạnh dòng nước. */
     const WORLDS = [
         {
-            id: 'reef', emoji: '🪸', name: 'RẠN SAN HÔ', diff: 1,
+            id: 'reef', emoji: '🪸', name: 'CORAL REEF', diff: 1,
             speed: 0.92, dense: 0.75, dark: 0, cur: 0.6,
             hazards: ['jelly', 'urchin', 'crab', 'weed'],
             pal: { far: '#0a5f86', mid: '#0d7ba6', near: '#16a2c4', rock: '#04202f', rockLit: '#2a86a0', plant: '#3fd8a0', accent: '#ff8fa3' }
         },
         {
-            id: 'kelp', emoji: '🌿', name: 'RỪNG TẢO BIỂN', diff: 2,
+            id: 'kelp', emoji: '🌿', name: 'KELP FOREST', diff: 2,
             speed: 0.99, dense: 0.9, dark: 0.12, cur: 0.8,
             hazards: ['jelly', 'urchin', 'crab', 'weed', 'eel'],
             pal: { far: '#0a5340', mid: '#0d7355', near: '#19a878', rock: '#03180f', rockLit: '#2e7a58', plant: '#7ceb86', accent: '#ffd76b' }
         },
         {
-            id: 'wreck', emoji: '🏴‍☠️', name: 'TÀU CƯỚP BIỂN ĐẮM', diff: 3,
+            id: 'wreck', emoji: '🏴‍☠️', name: 'SUNKEN PIRATE SHIP', diff: 3,
             speed: 1.05, dense: 1.0, dark: 0.26, cur: 0.85,
             hazards: ['jelly', 'urchin', 'eel', 'octo', 'mine', 'clam'],
             pal: { far: '#4a3418', mid: '#6b4a22', near: '#9c6f34', rock: '#180f06', rockLit: '#6f5837', plant: '#8fbf6a', accent: '#ffd76b' }
         },
         {
-            id: 'crystal', emoji: '💎', name: 'HANG PHA LÊ', diff: 4,
+            id: 'crystal', emoji: '💎', name: 'CRYSTAL CAVE', diff: 4,
             speed: 1.11, dense: 1.12, dark: 0.4, cur: 0.95,
             hazards: ['jelly', 'urchin', 'eel', 'rock', 'clam', 'mine'],
             pal: { far: '#2b2470', mid: '#3d349b', near: '#6a5fd0', rock: '#0c0929', rockLit: '#5b50b4', plant: '#8fd7ff', accent: '#ff9df0' }
         },
         {
-            id: 'frozen', emoji: '🧊', name: 'BIỂN BĂNG GIÁ', diff: 5,
+            id: 'frozen', emoji: '🧊', name: 'FROZEN OCEAN', diff: 5,
             speed: 1.16, dense: 1.2, dark: 0.2, cur: 1.1,
             hazards: ['urchin', 'weed', 'rock', 'clam', 'jelly', 'eel'],
             pal: { far: '#2c6b8f', mid: '#4a9ec0', near: '#8fd8ef', rock: '#0d2f45', rockLit: '#79b8d4', plant: '#c9f4ff', accent: '#ffffff' }
         },
         {
-            id: 'volcano', emoji: '🌋', name: 'NÚI LỬA ĐÁY BIỂN', diff: 6,
+            id: 'volcano', emoji: '🌋', name: 'UNDERWATER VOLCANO', diff: 6,
             speed: 1.21, dense: 1.3, dark: 0.3, cur: 1.2,
             hazards: ['urchin', 'crab', 'eel', 'rock', 'mine', 'shark'],
             pal: { far: '#5c1a12', mid: '#8a2c17', near: '#c9552a', rock: '#20080a', rockLit: '#8c3c23', plant: '#ffb648', accent: '#ff5d3d' }
         },
         {
-            id: 'abyss', emoji: '🕳️', name: 'VỰC THẲM', diff: 7,
+            id: 'abyss', emoji: '🕳️', name: 'THE DEEP ABYSS', diff: 7,
             speed: 1.26, dense: 1.4, dark: 0.66, cur: 1.25,
             hazards: ['jelly', 'eel', 'octo', 'shark', 'mine', 'clam'],
             pal: { far: '#04101e', mid: '#0a2138', near: '#17527a', rock: '#020a12', rockLit: '#1e4257', plant: '#37d0ff', accent: '#9d7dff' }
         },
         {
-            id: 'atlantis', emoji: '🏛️', name: 'ATLANTIS CỔ ĐẠI', diff: 8,
+            id: 'atlantis', emoji: '🏛️', name: 'ANCIENT ATLANTIS', diff: 8,
             speed: 1.32, dense: 1.5, dark: 0.42, cur: 1.35,
             hazards: ['jelly', 'urchin', 'eel', 'octo', 'shark', 'mine', 'clam', 'rock'],
             pal: { far: '#0d3b4f', mid: '#186b83', near: '#3fb4b0', rock: '#04161f', rockLit: '#5f9a93', plant: '#9ff7d8', accent: '#ffe08a' }
@@ -121,23 +121,23 @@
 
     /* ---------- Cá cho cưỡi ---------- */
     const MOUNTS = {
-        dolphin: { emoji: '🐬', name: 'Cá Heo', dur: 10, speed: 1.75, accel: 1.6, note: 'Nhanh như tên lửa!' },
-        turtle: { emoji: '🐢', name: 'Rùa Biển', dur: 13, speed: 1.0, accel: 1.05, invuln: true, note: 'Mai rùa chắn hết bẫy!' },
-        sword: { emoji: '🗡️', name: 'Cá Kiếm', dur: 10, speed: 1.6, accel: 1.5, breaks: true, note: 'Húc thủng san hô!' },
-        octo: { emoji: '🐙', name: 'Bạch Tuộc', dur: 11, speed: 1.15, accel: 1.2, ability: 'ink', note: 'Bấm lướt để phun mực!' },
-        puffer: { emoji: '🐡', name: 'Cá Nóc', dur: 11, speed: 1.05, accel: 1.15, ability: 'push', note: 'Bấm lướt để hất bạn ra!' },
-        manta: { emoji: '🐟', name: 'Cá Đuối', dur: 12, speed: 1.4, accel: 1.15, ignoreCurrent: true, note: 'Dòng nước chịu thua!' }
+        dolphin: { emoji: '🐬', name: 'Dolphin', dur: 10, speed: 1.75, accel: 1.6, note: 'Fast as a rocket!' },
+        turtle: { emoji: '🐢', name: 'Sea Turtle', dur: 13, speed: 1.0, accel: 1.05, invuln: true, note: 'The shell blocks every hazard!' },
+        sword: { emoji: '🗡️', name: 'Swordfish', dur: 10, speed: 1.6, accel: 1.5, breaks: true, note: 'Húc thủng san hô!' },
+        octo: { emoji: '🐙', name: 'Octopus', dur: 11, speed: 1.15, accel: 1.2, ability: 'ink', note: 'Press dash to squirt ink!' },
+        puffer: { emoji: '🐡', name: 'Puffer Fish', dur: 11, speed: 1.05, accel: 1.15, ability: 'push', note: 'Bấm lướt để hất bạn ra!' },
+        manta: { emoji: '🐟', name: 'Manta Ray', dur: 12, speed: 1.4, accel: 1.15, ignoreCurrent: true, note: 'Dòng nước chịu thua!' }
     };
     const MOUNT_KEYS = Object.keys(MOUNTS);
 
     /* ---------- Bảo bối ---------- */
     const POWERS = {
-        speed: { emoji: '⚡', name: 'Bong Bóng Tốc Độ', dur: 7 },
-        magnet: { emoji: '🧲', name: 'Nam Châm Kho Báu', dur: 8 },
-        shield: { emoji: '🛡️', name: 'Khiên San Hô', dur: 9 },
-        double: { emoji: '✨', name: 'Nhân Đôi Điểm', dur: 8 },
-        combo: { emoji: '🔥', name: 'Giữ Chuỗi Lâu Hơn', dur: 11 },
-        radar: { emoji: '📡', name: 'Ra-đa Kho Báu', dur: 11 },
+        speed: { emoji: '⚡', name: 'Speed Bubble', dur: 7 },
+        magnet: { emoji: '🧲', name: 'Treasure Magnet', dur: 8 },
+        shield: { emoji: '🛡️', name: 'Coral Shield', dur: 9 },
+        double: { emoji: '✨', name: 'Double Score', dur: 8 },
+        combo: { emoji: '🔥', name: 'Combo Booster', dur: 11 },
+        radar: { emoji: '📡', name: 'Treasure Radar', dur: 11 },
         time: { emoji: '⏱️', name: 'Thêm 15 Giây', dur: 0 }
     };
     const POWER_KEYS = Object.keys(POWERS);
@@ -1298,7 +1298,7 @@
             if (p.kind === 'chest') {
                 this.stats.chests++;
                 audio.chest();
-                floatText(p.x, p.y - 24, 'RƯƠNG KHO BÁU!', '#ffd76b');
+                floatText(p.x, p.y - 24, 'TREASURE CHEST!', '#ffd76b');
                 burst(p.x, p.y, '#ffd76b', 20);
                 G.shake = Math.max(G.shake, 7);
                 for (let i = 0; i < 6; i++) {
@@ -1323,7 +1323,7 @@
             burst(pod.x, pod.y, '#5cf0c0', 12);
             if (pod.type === 'time') {
                 G.time = Math.min(G.raceTime, G.time + 15);
-                floatText(this.x, this.y - 32, '+15 GIÂY!', '#5cf0c0');
+                floatText(this.x, this.y - 32, '+15 SECONDS!', '#5cf0c0');
             } else {
                 this.buffs[pod.type] = POWERS[pod.type].dur;
                 floatText(this.x, this.y - 32, POWERS[pod.type].emoji + ' ' + POWERS[pod.type].name, '#5cf0c0');
@@ -1347,7 +1347,7 @@
             G.players.forEach(o => {
                 if (o !== this && !o.out && o.x < this.x && dist(o.x, o.y, this.x, this.y) < 200) {
                     o.blind = Math.max(o.blind, 3);
-                    floatText(o.x, o.y - 28, 'MÙ MỰC!', '#b79bff');
+                    floatText(o.x, o.y - 28, 'INKED!', '#b79bff');
                 }
             });
         }
@@ -1361,7 +1361,7 @@
                     o.vx += Math.cos(a) * 480;
                     o.vy += Math.sin(a) * 480;
                     o.combo = 0;
-                    floatText(o.x, o.y - 28, 'VĂNG!', '#ff8fa3');
+                    floatText(o.x, o.y - 28, 'BLASTED!', '#ff8fa3');
                 }
             });
             burst(this.x, this.y, '#ffd76b', 16);
@@ -1372,9 +1372,9 @@
             const meta = h.meta;
             const m = this.mount ? MOUNTS[this.mount] : null;
 
-            if (m && m.invuln) { floatText(this.x, this.y - 28, '🐢 MAI RÙA CHẶN!', '#5cf0c0'); this.invuln = 0.5; return; }
+            if (m && m.invuln) { floatText(this.x, this.y - 28, '🐢 SHELL BLOCKED IT!', '#5cf0c0'); this.invuln = 0.5; return; }
             if (this.buffs.shield > 0) {
-                floatText(this.x, this.y - 28, '🛡️ KHIÊN ĐỠ!', '#5cf0c0');
+                floatText(this.x, this.y - 28, '🛡️ SHIELD HELD!', '#5cf0c0');
                 this.invuln = 0.6; burst(this.x, this.y, '#5cf0c0', 10);
                 return;
             }
@@ -1393,7 +1393,7 @@
             if (meta.stun) this.stun = meta.stun;
             if (meta.slow) this.slow = meta.slow;
             if (meta.blind) this.blind = meta.blind;
-            if (meta.trap) { this.trap = meta.trap; floatText(this.x, this.y - 44, '🐚 BỊ KẸP!', '#ff7676'); }
+            if (meta.trap) { this.trap = meta.trap; floatText(this.x, this.y - 44, '🐚 CLAMPED!', '#ff7676'); }
             if (meta.knock) {
                 const a = Math.atan2(this.y - h.y, this.x - h.x);
                 this.vx += Math.cos(a) * meta.knock - 60;      // luôn đẩy lùi một chút
@@ -1413,7 +1413,7 @@
                 const a = rnd(0, 6.28), s = rnd(110, 230);
                 G.drops.push({ kind: 'coin', x: this.x, y: this.y, r: 13, alive: true, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 10, t: 0 });
             }
-            floatText(this.x, this.y - 44, 'RƠI MẤT KHO BÁU!', '#ff7676');
+            floatText(this.x, this.y - 44, 'DROPPED SOME TREASURE!', '#ff7676');
         }
 
         eliminate() {
@@ -1423,7 +1423,7 @@
             this.vx = 0; this.vy = -20;
             audio.out();
             showEvent('💨 ' + this.name + ' BỊ TỤT LẠI PHÍA SAU!');
-            floatText(this.x, this.y - 40, 'BỊ LOẠI!', '#ff7676');
+            floatText(this.x, this.y - 40, 'KNOCKED OUT!', '#ff7676');
         }
     }
 
@@ -1617,7 +1617,7 @@
 
         switch (kind) {
             case 'treasureRush':
-                showEvent('💰 CƠN LŨ KHO BÁU!');
+                showEvent('💰 TREASURE RUSH!');
                 for (let i = 0; i < 26; i++) {
                     G.drops.push({
                         kind: i % 5 === 0 ? 'pearl' : 'coin', x: aheadX(), y: rnd(TILE * 3, WORLD_H - TILE * 3),
@@ -1628,7 +1628,7 @@
                 break;
 
             case 'goldRain':
-                showEvent('🪙 MƯA VÀNG!');
+                showEvent('🪙 GOLD RAIN!');
                 for (let i = 0; i < 30; i++) {
                     G.drops.push({ kind: 'coin', x: aheadX(), y: rnd(TILE, TILE * 4), r: 13, alive: true, vx: rnd(-20, 20), vy: rnd(60, 140), life: 18, t: 0 });
                 }
@@ -1636,7 +1636,7 @@
                 break;
 
             case 'jellyStorm': {
-                showEvent('🪼 BÃO SỨA TRÀN TỚI!');
+                showEvent('🪼 JELLYFISH STORM!');
                 const ch = chunkAt(level, camX + viewW);
                 if (ch) {
                     for (let i = 0; i < 9; i++) {
@@ -1652,7 +1652,7 @@
             }
 
             case 'sharkFrenzy':
-                showEvent('🦈 ĐÀN CÁ MẬP LAO TỚI!');
+                showEvent('🦈 SHARK FRENZY!');
                 G.eventData = {
                     t: 9, x: camX + viewW + 200, y: rnd(WORLD_H * 0.2, WORLD_H * 0.8), vx: -190,
                     fins: Array.from({ length: 4 }, (_, i) => ({ ox: i * 130, oy: rnd(-120, 120) }))
@@ -1666,24 +1666,24 @@
                 break;
 
             case 'darkness':
-                showEvent('🌑 BIỂN TỐI SẦM LẠI!');
+                showEvent('🌑 THE SEA GOES DARK!');
                 G.darkBoost = 0.78;
                 G.eventData = { t: 7 };
                 break;
 
             case 'reverse':
-                showEvent('🔄 DÒNG NƯỚC ĐỔI CHIỀU!');
+                showEvent('🔄 THE CURRENTS REVERSE!');
                 G.currentFlip = -1;
                 G.eventData = { t: 9 };
                 break;
 
             case 'whale':
-                showEvent('🐋 CÁ VOI KHỔNG LỒ BƠI QUA!');
+                showEvent('🐋 A GIANT WHALE SWIMS BY!');
                 G.eventData = { t: 11, x: camX + viewW + 260, y: rnd(WORLD_H * 0.25, WORLD_H * 0.75), vx: -150 };
                 break;
 
             case 'kraken':
-                showEvent('🦑 KRAKEN QUẬT VÒI KHẮP NƠI!');
+                showEvent('🦑 THE KRAKEN IS SMASHING EVERYWHERE!');
                 G.eventData = { t: 8, strikeT: 0.4, arms: [] };
                 break;
         }
@@ -2335,12 +2335,12 @@
             if (p.dom.buffs.textContent !== buffs) p.dom.buffs.textContent = buffs;
 
             let state = '';
-            if (p.out) state = 'Bị loại';
-            else if (p.trap > 0) state = 'Bị kẹp!';
-            else if (p.stun > 0) state = 'Choáng!';
-            else if (p.slow > 0) state = 'Bơi chậm';
-            else if (p.blind > 0) state = 'Mù mực';
-            else if (p.warn > 0) state = 'Sắp bị bỏ lại!';
+            if (p.out) state = 'Knocked out';
+            else if (p.trap > 0) state = 'Trapped!';
+            else if (p.stun > 0) state = 'Dizzy!';
+            else if (p.slow > 0) state = 'Slowed';
+            else if (p.blind > 0) state = 'Inked';
+            else if (p.warn > 0) state = 'Falling behind!';
             setText(p.dom.state, state);
         });
     }
@@ -2433,7 +2433,7 @@
                 '<div class="rank-face"><span class="rank-suit" style="background:' + p.suit.body + ';border-color:' + p.ring + '"></span></div>' +
                 '<div class="rank-info"><div class="rank-name">' + p.name + '</div>' +
                 '<div class="rank-detail">🏁 ' + p.meters + 'm · 🧰 ' + p.stats.chests + ' rương · 💎 ' + p.stats.gems +
-                ' đá quý · 🔥 chuỗi ' + p.bestCombo + (p.out ? ' · bị loại' : '') + '</div></div>' +
+                ' đá quý · 🔥 chuỗi ' + p.bestCombo + (p.out ? ' · knocked out' : '') + '</div></div>' +
                 '<div class="rank-score">' + Math.floor(p.score).toLocaleString('vi-VN') + '</div>';
             el['rank-list'].appendChild(row);
         });
@@ -2443,7 +2443,7 @@
         const far = best(p => p.meters);
         if (far) awards.push('🏁 Bơi xa nhất: ' + far.name + ' (' + far.meters + 'm)');
         const cb = best(p => p.bestCombo);
-        if (cb && cb.bestCombo >= 4) awards.push('🔥 Chuỗi dài nhất: ' + cb.name + ' (' + cb.bestCombo + ')');
+        if (cb && cb.bestCombo >= 4) awards.push('🔥 Longest streak: ' + cb.name + ' (' + cb.bestCombo + ')');
         const rd = best(p => p.stats.rides);
         if (rd && rd.stats.rides > 0) awards.push('🐬 Nài cá cừ nhất: ' + rd.name);
         const clean = G.players.slice().sort((a, b) => a.stats.hits - b.stats.hits)[0];
@@ -2452,9 +2452,9 @@
 
         const champ = ranked[0];
         el['end-emoji'].textContent = G.playerCount === 1 ? '🤿' : '🏆';
-        el['end-title'].textContent = G.playerCount === 1 ? 'VỀ ĐÍCH!' : champ.name + ' VÔ ĐỊCH!';
+        el['end-title'].textContent = G.playerCount === 1 ? 'FINISHED!' : champ.name + ' VÔ ĐỊCH!';
         el['end-sub'].textContent = G.playerCount === 1
-            ? 'Bé bơi được ' + champ.meters + 'm và gom ' + Math.floor(champ.score).toLocaleString('vi-VN') + ' điểm!'
+            ? 'Bé bơi được ' + champ.meters + 'm and gom ' + Math.floor(champ.score).toLocaleString('vi-VN') + ' điểm!'
             : 'Cùng vỗ tay cho nhà vô địch nào!';
 
         el['modal-end'].classList.add('active');
@@ -2487,7 +2487,7 @@
             if (G.state === 'COUNTDOWN') {
                 G.countdown -= dt;
                 const n = Math.ceil(G.countdown - 0.2);
-                el['countdown-text'].textContent = n > 0 ? String(n) : 'BƠI!';
+                el['countdown-text'].textContent = n > 0 ? String(n) : 'SWIM!';
                 if (n !== lastCount) { lastCount = n; audio.beep(n <= 0); }
                 if (G.countdown <= 0) { G.state = 'RACING'; el['countdown-overlay'].classList.remove('show'); }
                 G.players.forEach(p => { p.kick += dt * 3; });
@@ -2713,7 +2713,7 @@
             return '<div class="key-line"><span class="who">' + PLAYER_NAMES[i] + '</span>' + keys +
                 '<span class="kbd">' + c.dashLabel + '</span></div>';
         }).join('') + '<div class="key-line"><span class="who">📱</span>' +
-            '<span class="kbd">cần gạt</span><span class="kbd">⚡</span></div>';
+            '<span class="kbd">joystick</span><span class="kbd">⚡</span></div>';
     }
 
     function pillGroup(rowId, attr, onPick) {

@@ -42,10 +42,10 @@
     const SLOTS = { 1: [0], 2: [0, 3], 3: [0, 1, 3], 4: [0, 1, 2, 3] };
 
     const PLAYER_STYLE = [
-        { name: 'BÉ 1', color: '#ff6b6b', glow: '255,107,107', face: '🐣' },
-        { name: 'BÉ 2', color: '#4dc3ff', glow: '77,195,255', face: '🐧' },
-        { name: 'BÉ 3', color: '#6bf178', glow: '107,241,120', face: '🐢' },
-        { name: 'BÉ 4', color: '#ffd93d', glow: '255,217,61', face: '🦆' }
+        { name: 'KID 1', color: '#ff6b6b', glow: '255,107,107', face: '🐣' },
+        { name: 'KID 2', color: '#4dc3ff', glow: '77,195,255', face: '🐧' },
+        { name: 'KID 3', color: '#6bf178', glow: '107,241,120', face: '🐢' },
+        { name: 'KID 4', color: '#ffd93d', glow: '255,217,61', face: '🦆' }
     ];
 
     /* ---------- Bảy vùng biển ----------
@@ -53,43 +53,43 @@
        "wall" là tỉ lệ đá lúc gieo nhiễu ban đầu — số càng lớn hang càng chật. */
     const WORLDS = [
         {
-            id: 'reef', emoji: '🪸', name: 'RẠN SAN HÔ', diff: 1, unlock: 0,
+            id: 'reef', emoji: '🪸', name: 'CORAL REEF', diff: 1, unlock: 0,
             cols: 40, rows: 24, wall: 0.40, dark: 0, current: 0.5, hazards: 0.7, mines: 0,
             hazardKinds: ['jelly', 'urchin', 'crab', 'seaweed'],
             palette: { deep: '#03395c', mid: '#0a6e96', top: '#3fc7d8', rock: '#07293a', rockLit: '#2f8496', plant: '#41dda6', accent: '#ff8fa3' }
         },
         {
-            id: 'kelp', emoji: '🌿', name: 'RỪNG TẢO BIỂN', diff: 2, unlock: 1500,
+            id: 'kelp', emoji: '🌿', name: 'KELP FOREST', diff: 2, unlock: 1500,
             cols: 44, rows: 26, wall: 0.44, dark: 0.15, current: 0.75, hazards: 0.95, mines: 0,
             hazardKinds: ['jelly', 'urchin', 'crab', 'seaweed', 'eel'],
             palette: { deep: '#052f2a', mid: '#0a6b52', top: '#48c98d', rock: '#04211c', rockLit: '#33805f', plant: '#7de88a', accent: '#ffd76b' }
         },
         {
-            id: 'wreck', emoji: '🏴‍☠️', name: 'TÀU CƯỚP BIỂN ĐẮM', diff: 3, unlock: 4000,
+            id: 'wreck', emoji: '🏴‍☠️', name: 'SUNKEN PIRATE SHIP', diff: 3, unlock: 4000,
             cols: 46, rows: 28, wall: 0.46, dark: 0.3, current: 0.8, hazards: 1.1, mines: 3,
             hazardKinds: ['jelly', 'urchin', 'crab', 'eel', 'octo', 'mine', 'clam'],
             palette: { deep: '#2a1e12', mid: '#5c3f22', top: '#a8763c', rock: '#1d1409', rockLit: '#6f5837', plant: '#8fbf6a', accent: '#ffd76b' }
         },
         {
-            id: 'crystal', emoji: '💎', name: 'HANG PHA LÊ', diff: 4, unlock: 8000,
+            id: 'crystal', emoji: '💎', name: 'CRYSTAL CAVE', diff: 4, unlock: 8000,
             cols: 48, rows: 30, wall: 0.49, dark: 0.45, current: 0.9, hazards: 1.25, mines: 4,
             hazardKinds: ['jelly', 'urchin', 'eel', 'rock', 'clam', 'mine', 'seaweed'],
             palette: { deep: '#1a1440', mid: '#3b2f8f', top: '#8f7dff', rock: '#120e2e', rockLit: '#5b50b4', plant: '#8fd7ff', accent: '#ff9df0' }
         },
         {
-            id: 'volcano', emoji: '🌋', name: 'NÚI LỬA ĐÁY BIỂN', diff: 5, unlock: 14000,
+            id: 'volcano', emoji: '🌋', name: 'UNDERWATER VOLCANO', diff: 5, unlock: 14000,
             cols: 50, rows: 30, wall: 0.50, dark: 0.35, current: 1.15, hazards: 1.4, mines: 5,
             hazardKinds: ['urchin', 'crab', 'eel', 'rock', 'mine', 'shark', 'coral'],
             palette: { deep: '#3a0f10', mid: '#7d2418', top: '#ff8b3d', rock: '#25090a', rockLit: '#8c3c23', plant: '#ffb648', accent: '#ff5d3d' }
         },
         {
-            id: 'abyss', emoji: '🕳️', name: 'VỰC THẲM', diff: 6, unlock: 22000,
+            id: 'abyss', emoji: '🕳️', name: 'THE DEEP ABYSS', diff: 6, unlock: 22000,
             cols: 52, rows: 32, wall: 0.52, dark: 0.72, current: 1.2, hazards: 1.55, mines: 6,
             hazardKinds: ['jelly', 'eel', 'octo', 'shark', 'mine', 'clam', 'coral'],
             palette: { deep: '#01060f', mid: '#062038', top: '#1f6f9c', rock: '#040c16', rockLit: '#1e4257', plant: '#37d0ff', accent: '#9d7dff' }
         },
         {
-            id: 'atlantis', emoji: '🏛️', name: 'ATLANTIS CỔ ĐẠI', diff: 7, unlock: 32000,
+            id: 'atlantis', emoji: '🏛️', name: 'ANCIENT ATLANTIS', diff: 7, unlock: 32000,
             cols: 54, rows: 34, wall: 0.53, dark: 0.5, current: 1.35, hazards: 1.75, mines: 7,
             hazardKinds: ['jelly', 'urchin', 'eel', 'octo', 'shark', 'mine', 'clam', 'rock', 'coral'],
             palette: { deep: '#0d2a3f', mid: '#1f6a86', top: '#6fe3d6', rock: '#08202f', rockLit: '#5f9a93', plant: '#9ff7d8', accent: '#ffe08a' }
@@ -99,25 +99,25 @@
     /* ---------- Cá cho cưỡi ----------
        Mỗi con chỉ chở bé một lúc rồi bơi đi mất. */
     const MOUNTS = {
-        dolphin: { emoji: '🐬', name: 'Cá Heo', dur: 12, speed: 1.9, accel: 1.7, note: 'Nhanh như tên lửa!' },
-        turtle: { emoji: '🐢', name: 'Rùa Biển', dur: 16, speed: 0.9, accel: 1.0, invuln: true, note: 'Mai rùa chắn hết bẫy!' },
-        sword: { emoji: '🗡️', name: 'Cá Kiếm', dur: 12, speed: 1.55, accel: 1.5, breaks: true, note: 'Húc thủng tường san hô!' },
-        octo: { emoji: '🐙', name: 'Bạch Tuộc', dur: 13, speed: 1.15, accel: 1.2, ability: 'ink', note: 'Bấm lướt để phun mực!' },
-        puffer: { emoji: '🐡', name: 'Cá Nóc', dur: 13, speed: 1.0, accel: 1.1, ability: 'push', note: 'Bấm lướt để hất bạn ra xa!' },
-        manta: { emoji: '🐟', name: 'Cá Đuối', dur: 15, speed: 1.45, accel: 1.15, ignoreCurrent: true, note: 'Lướt êm, dòng nước chịu thua!' }
+        dolphin: { emoji: '🐬', name: 'Dolphin', dur: 12, speed: 1.9, accel: 1.7, note: 'Fast as a rocket!' },
+        turtle: { emoji: '🐢', name: 'Sea Turtle', dur: 16, speed: 0.9, accel: 1.0, invuln: true, note: 'The shell blocks every hazard!' },
+        sword: { emoji: '🗡️', name: 'Swordfish', dur: 12, speed: 1.55, accel: 1.5, breaks: true, note: 'Smash right through coral walls!' },
+        octo: { emoji: '🐙', name: 'Octopus', dur: 13, speed: 1.15, accel: 1.2, ability: 'ink', note: 'Press dash to squirt ink!' },
+        puffer: { emoji: '🐡', name: 'Puffer Fish', dur: 13, speed: 1.0, accel: 1.1, ability: 'push', note: 'Press dash to blast rivals away!' },
+        manta: { emoji: '🐟', name: 'Manta Ray', dur: 15, speed: 1.45, accel: 1.15, ignoreCurrent: true, note: 'Glide smooth — currents can\'t touch you!' }
     };
     const MOUNT_KEYS = Object.keys(MOUNTS);
 
     /* ---------- Bảo bối ---------- */
     const POWERS = {
-        speed: { emoji: '🫧', name: 'Bong Bóng Tốc Độ', dur: 8 },
-        magnet: { emoji: '🧲', name: 'Nam Châm Kho Báu', dur: 9 },
-        shield: { emoji: '🛡️', name: 'Khiên San Hô', dur: 10 },
-        double: { emoji: '✨', name: 'Nhân Đôi Điểm', dur: 9 },
-        radar: { emoji: '📡', name: 'Ra-đa Kho Báu', dur: 12 },
-        combo: { emoji: '🔥', name: 'Giữ Chuỗi Lâu Hơn', dur: 12 },
-        bubble: { emoji: '🎈', name: 'Bong Bóng Đỡ Đòn', dur: 20 },
-        time: { emoji: '⏱️', name: 'Thêm 10 Giây', dur: 0 }
+        speed: { emoji: '🫧', name: 'Speed Bubble', dur: 8 },
+        magnet: { emoji: '🧲', name: 'Treasure Magnet', dur: 9 },
+        shield: { emoji: '🛡️', name: 'Coral Shield', dur: 10 },
+        double: { emoji: '✨', name: 'Double Score', dur: 9 },
+        radar: { emoji: '📡', name: 'Treasure Radar', dur: 12 },
+        combo: { emoji: '🔥', name: 'Combo Booster', dur: 12 },
+        bubble: { emoji: '🎈', name: 'Guard Bubble', dur: 20 },
+        time: { emoji: '⏱️', name: 'Plus 10 Seconds', dur: 0 }
     };
     const POWER_KEYS = Object.keys(POWERS);
 
@@ -148,55 +148,55 @@
 
     /* ---------- Đồ mở khoá ---------- */
     const SKINS = [
-        { id: 'diver', emoji: '🐣', name: 'Bé Lặn', req: 0 },
-        { id: 'mermaid', emoji: '🧜‍♀️', name: 'Tiên Cá', req: 2500 },
-        { id: 'seal', emoji: '🦭', name: 'Hải Cẩu', req: 6000 },
-        { id: 'penguin', emoji: '🐧', name: 'Cánh Cụt', req: 10000 },
-        { id: 'squid', emoji: '🦑', name: 'Bé Mực', req: 16000 },
-        { id: 'shark', emoji: '🦈', name: 'Bé Mập', req: 24000 },
-        { id: 'octo', emoji: '🐙', name: 'Bé Tuộc', req: 32000 },
-        { id: 'lobster', emoji: '🦞', name: 'Tôm Hùm', req: 45000 }
+        { id: 'diver', emoji: '🐣', name: 'Little Diver', req: 0 },
+        { id: 'mermaid', emoji: '🧜‍♀️', name: 'Mermaid', req: 2500 },
+        { id: 'seal', emoji: '🦭', name: 'Seal', req: 6000 },
+        { id: 'penguin', emoji: '🐧', name: 'Penguin', req: 10000 },
+        { id: 'squid', emoji: '🦑', name: 'Baby Squid', req: 16000 },
+        { id: 'shark', emoji: '🦈', name: 'Baby Shark', req: 24000 },
+        { id: 'octo', emoji: '🐙', name: 'Baby Octopus', req: 32000 },
+        { id: 'lobster', emoji: '🦞', name: 'Lobster', req: 45000 }
     ];
 
     const HATS = [
-        { id: 'none', emoji: '🚫', name: 'Không Đội', req: 0 },
-        { id: 'crown', emoji: '👑', name: 'Vương Miện', req: 3000 },
-        { id: 'straw', emoji: '👒', name: 'Nón Rơm', req: 7000 },
-        { id: 'pirate', emoji: '🏴‍☠️', name: 'Mũ Cướp Biển', req: 12000 },
-        { id: 'flower', emoji: '🌺', name: 'Hoa Biển', req: 18000 },
-        { id: 'party', emoji: '🎉', name: 'Nón Tiệc', req: 26000 }
+        { id: 'none', emoji: '🚫', name: 'No Hat', req: 0 },
+        { id: 'crown', emoji: '👑', name: 'Crown', req: 3000 },
+        { id: 'straw', emoji: '👒', name: 'Straw Hat', req: 7000 },
+        { id: 'pirate', emoji: '🏴‍☠️', name: 'Pirate Hat', req: 12000 },
+        { id: 'flower', emoji: '🌺', name: 'Sea Flower', req: 18000 },
+        { id: 'party', emoji: '🎉', name: 'Party Hat', req: 26000 }
     ];
 
     const TRAILS = [
-        { id: 'bubble', emoji: '🫧', name: 'Bong Bóng', req: 0 },
-        { id: 'star', emoji: '⭐', name: 'Ngôi Sao', req: 4000 },
-        { id: 'heart', emoji: '💗', name: 'Trái Tim', req: 9000 },
-        { id: 'spark', emoji: '✨', name: 'Lấp Lánh', req: 15000 },
-        { id: 'rainbow', emoji: '🌈', name: 'Cầu Vồng', req: 22000 },
-        { id: 'fire', emoji: '🔥', name: 'Lửa Biển', req: 30000 }
+        { id: 'bubble', emoji: '🫧', name: 'Bubbles', req: 0 },
+        { id: 'star', emoji: '⭐', name: 'Stars', req: 4000 },
+        { id: 'heart', emoji: '💗', name: 'Hearts', req: 9000 },
+        { id: 'spark', emoji: '✨', name: 'Sparkles', req: 15000 },
+        { id: 'rainbow', emoji: '🌈', name: 'Rainbow', req: 22000 },
+        { id: 'fire', emoji: '🔥', name: 'Sea Fire', req: 30000 }
     ];
 
     const ACHIEVEMENTS = [
-        { id: 'firstDive', emoji: '🤿', name: 'Chuyến Lặn Đầu Tiên', desc: 'Chơi xong một màn' },
-        { id: 'combo5', emoji: '🔥', name: 'Tay Gom Cừ Khôi', desc: 'Đạt chuỗi nhân x5' },
-        { id: 'chest3', emoji: '🧰', name: 'Thợ Săn Rương', desc: 'Mở 3 rương trong một màn' },
-        { id: 'cave2', emoji: '🕳️', name: 'Nhà Thám Hiểm', desc: 'Tìm 2 hang bí mật trong một màn' },
-        { id: 'score1500', emoji: '💰', name: 'Kho Báu Nhỏ', desc: 'Được 1500 điểm trong một màn' },
-        { id: 'score3000', emoji: '👑', name: 'Vua Đáy Biển', desc: 'Được 3000 điểm trong một màn' },
-        { id: 'rider', emoji: '🐬', name: 'Nài Cá Cừ', desc: 'Cưỡi đủ 6 loài sinh vật' },
-        { id: 'untouched', emoji: '🛡️', name: 'Không Một Vết Xước', desc: 'Hết màn mà không dính bẫy nào' },
-        { id: 'sharkRun', emoji: '🦈', name: 'Chạy Thoát Cá Mập', desc: 'Bị cá mập đuổi 10 giây mà không bị đớp' },
-        { id: 'daily', emoji: '📅', name: 'Chăm Chỉ', desc: 'Hoàn thành Thử Thách Hôm Nay' },
-        { id: 'atlantis', emoji: '🏛️', name: 'Chạm Tới Atlantis', desc: 'Mở khoá vùng biển cuối cùng' }
+        { id: 'firstDive', emoji: '🤿', name: 'First Dive', desc: 'Finish one round' },
+        { id: 'combo5', emoji: '🔥', name: 'Combo Master', desc: 'Reach a x5 combo' },
+        { id: 'chest3', emoji: '🧰', name: 'Chest Hunter', desc: 'Open 3 chests in one round' },
+        { id: 'cave2', emoji: '🕳️', name: 'Explorer', desc: 'Find 2 hidden caves in one round' },
+        { id: 'score1500', emoji: '💰', name: 'Small Fortune', desc: 'Score 1500 in one round' },
+        { id: 'score3000', emoji: '👑', name: 'King Of The Deep', desc: 'Score 3000 in one round' },
+        { id: 'rider', emoji: '🐬', name: 'Sea Rider', desc: 'Ride all 6 sea creatures' },
+        { id: 'untouched', emoji: '🛡️', name: 'Untouched', desc: 'Finish a round without a single hit' },
+        { id: 'sharkRun', emoji: '🦈', name: 'Shark Dodger', desc: 'Survive 10 seconds of shark chase' },
+        { id: 'daily', emoji: '📅', name: 'Daily Diver', desc: 'Finish the Daily Challenge' },
+        { id: 'atlantis', emoji: '🏛️', name: 'Reach Atlantis', desc: 'Unlock the final sea' }
     ];
 
     /* Mục tiêu phụ bốc ngẫu nhiên mỗi màn — thưởng thêm cho bé làm xong đầu tiên */
     const OBJECTIVES = [
-        { id: 'gems', text: 'Gom 3 viên đá quý 💎', need: 3, track: 'gems' },
-        { id: 'chests', text: 'Mở 2 rương kho báu 🧰', need: 2, track: 'chests' },
-        { id: 'caves', text: 'Tìm 1 hang bí mật 🕳️', need: 1, track: 'caves' },
-        { id: 'rides', text: 'Cưỡi 2 sinh vật biển 🐬', need: 2, track: 'rides' },
-        { id: 'pearls', text: 'Nhặt 25 viên ngọc trai 🫧', need: 25, track: 'pearls' }
+        { id: 'gems', text: 'Collect 3 rare gems 💎', need: 3, track: 'gems' },
+        { id: 'chests', text: 'Open 2 treasure chests 🧰', need: 2, track: 'chests' },
+        { id: 'caves', text: 'Find 1 hidden cave 🕳️', need: 1, track: 'caves' },
+        { id: 'rides', text: 'Ride 2 sea creatures 🐬', need: 2, track: 'rides' },
+        { id: 'pearls', text: 'Collect 25 pearls 🫧', need: 25, track: 'pearls' }
     ];
 
     /* Sự kiện bất ngờ giữa trận */
@@ -1234,7 +1234,7 @@
             this.combo++;
             this.comboT = COMBO_WINDOW * (this.buffs.combo > 0 ? 2 : 1);
             if (this.combo > this.bestCombo) this.bestCombo = this.combo;
-            if (this.mult >= COMBO_MAX_MULT && Store.award('combo5')) toast('🏅 Thành tích mới: Tay Gom Cừ Khôi!');
+            if (this.mult >= COMBO_MAX_MULT && Store.award('combo5')) toast('🏅 New achievement: Combo Master!');
         }
 
         pickUp(level) {
@@ -1274,7 +1274,7 @@
                 audio.chest();
                 this.addScore(base * this.mult);
                 this.bumpCombo();
-                floatText(p.x, p.y - 24, 'RƯƠNG KHO BÁU!', '#ffd76b');
+                floatText(p.x, p.y - 24, 'TREASURE CHEST!', '#ffd76b');
                 // Rương bật ra một tràng tiền vàng
                 for (let i = 0; i < 8; i++) {
                     const a = rnd(0, 6.28), s = rnd(90, 240);
@@ -1284,7 +1284,7 @@
                 }
                 G.shake = Math.max(G.shake, 8);
                 spawnBurst(p.x, p.y, '#ffd76b', 22);
-                if (this.stats.chests >= 3 && Store.award('chest3')) toast('🏅 Thành tích mới: Thợ Săn Rương!');
+                if (this.stats.chests >= 3 && Store.award('chest3')) toast('🏅 New achievement: Chest Hunter!');
             } else if (p.kind === 'gem') {
                 this.stats.gems++;
                 this.stats.treasures++;
@@ -1317,7 +1317,7 @@
             spawnBurst(pod.x, pod.y, '#4ef2b0', 14);
             if (type === 'time') {
                 G.time = Math.min(G.matchTime, G.time + 10);
-                floatText(this.x, this.y - 30, '+10 GIÂY!', '#4ef2b0');
+                floatText(this.x, this.y - 30, '+10 SECONDS!', '#4ef2b0');
             } else {
                 this.buffs[type] = POWERS[type].dur;
                 floatText(this.x, this.y - 30, POWERS[type].emoji + ' ' + POWERS[type].name, '#4ef2b0');
@@ -1338,7 +1338,7 @@
             spawnBurst(pod.x, pod.y, '#35e0ff', 18);
             floatText(this.x, this.y - 32, MOUNTS[pod.type].note, '#35e0ff');
             if (Object.keys(Store.data.mounted).length >= MOUNT_KEYS.length && Store.award('rider')) {
-                toast('🏅 Thành tích mới: Nài Cá Cừ!');
+                toast('🏅 New achievement: Sea Rider!');
             }
             checkObjective(this, G.level);
         }
@@ -1356,7 +1356,7 @@
                 if (o === this) return;
                 if (dist(o.x, o.y, this.x, this.y) < 180 && (o.x - this.x) * this.face > 0) {
                     o.blind = Math.max(o.blind, 3);
-                    floatText(o.x, o.y - 28, 'MÙ MỰC!', '#a98bff');
+                    floatText(o.x, o.y - 28, 'INKED!', '#a98bff');
                 }
             });
         }
@@ -1370,7 +1370,7 @@
                     o.vx += Math.cos(a) * 520;
                     o.vy += Math.sin(a) * 520;
                     o.combo = 0;
-                    floatText(o.x, o.y - 28, 'VĂNG!', '#ff8fa3');
+                    floatText(o.x, o.y - 28, 'BLASTED!', '#ff8fa3');
                 }
             });
             spawnBurst(this.x, this.y, '#ffd76b', 18);
@@ -1397,8 +1397,8 @@
             audio.cave();
             G.shake = Math.max(G.shake, 6);
             floatText(this.x, this.y - 34, '🕳️ HANG BÍ MẬT! +' + SCORE.cave, '#ffd76b');
-            showEvent('🕳️ ' + this.style.name + ' TÌM RA HANG BÍ MẬT!');
-            if (this.stats.caves >= 2 && Store.award('cave2')) toast('🏅 Thành tích mới: Nhà Thám Hiểm!');
+            showEvent('🕳️ ' + this.style.name + ' FIND A HIDDEN CAVE!');
+            if (this.stats.caves >= 2 && Store.award('cave2')) toast('🏅 New achievement: Explorer!');
             checkObjective(this, level);
         }
 
@@ -1408,12 +1408,12 @@
             const m = this.mount ? MOUNTS[this.mount] : null;
 
             if (m && m.invuln) {
-                floatText(this.x, this.y - 28, '🐢 MAI RÙA CHẶN!', '#4ef2b0');
+                floatText(this.x, this.y - 28, '🐢 SHELL BLOCKED IT!', '#4ef2b0');
                 this.invuln = 0.5;
                 return;
             }
             if (this.buffs.shield > 0) {
-                floatText(this.x, this.y - 28, '🛡️ KHIÊN ĐỠ!', '#4ef2b0');
+                floatText(this.x, this.y - 28, '🛡️ SHIELD HELD!', '#4ef2b0');
                 this.invuln = 0.6;
                 spawnBurst(this.x, this.y, '#4ef2b0', 12);
                 return;
@@ -1421,7 +1421,7 @@
             if (this.buffs.bubble > 0) {
                 this.buffs.bubble = 0;
                 this.invuln = 1;
-                floatText(this.x, this.y - 28, '🎈 BỤP!', '#ffd76b');
+                floatText(this.x, this.y - 28, '🎈 POP!', '#ffd76b');
                 spawnBurst(this.x, this.y, '#ffd76b', 14);
                 return;
             }
@@ -1443,7 +1443,7 @@
             if (meta.blind) this.blind = meta.blind;
             if (meta.trap) {
                 this.trap = meta.trap;
-                floatText(this.x, this.y - 44, '🐚 BỊ KẸP RỒI!', '#ff7676');
+                floatText(this.x, this.y - 44, '🐚 CLAMPED!', '#ff7676');
             }
             if (meta.knock) {
                 const a = Math.atan2(this.y - h.y, this.x - h.x);
@@ -1469,7 +1469,7 @@
                 d.loose = true; d.vx = Math.cos(a) * s; d.vy = Math.sin(a) * s; d.life = 12;
                 G.drops.push(d);
             }
-            floatText(this.x, this.y - 44, 'RƠI MẤT KHO BÁU!', '#ff7676');
+            floatText(this.x, this.y - 44, 'DROPPED SOME TREASURE!', '#ff7676');
         }
     }
 
@@ -1539,7 +1539,7 @@
                         h.angle = a;
                         if (dist(target.x, target.y, h.x, h.y) < 240) {
                             target.sharkTime += dt;
-                            if (target.sharkTime > 10 && Store.award('sharkRun')) toast('🏅 Thành tích mới: Chạy Thoát Cá Mập!');
+                            if (target.sharkTime > 10 && Store.award('sharkRun')) toast('🏅 New achievement: Shark Dodger!');
                         }
                     }
                     // Cá mập bơi xuyên đá cho khỏi kẹt, nhưng bị đẩy ra khỏi tường
@@ -1685,11 +1685,11 @@
         switch (kind) {
             case 'whale':
                 G.eventData = { t: 9, x: -160, y: rnd(level.h * 0.2, level.h * 0.8), vx: level.w / 8.5 };
-                showEvent('🐋 CÁ VOI KHỔNG LỒ BƠI QUA!');
+                showEvent('🐋 A GIANT WHALE SWIMS BY!');
                 break;
 
             case 'treasureRain': {
-                showEvent('🪙 MƯA KHO BÁU!');
+                showEvent('🪙 TREASURE RAIN!');
                 const n = 26 + G.playerCount * 6;
                 for (let i = 0; i < n; i++) {
                     const kind2 = Math.random() < 0.25 ? 'coin' : 'pearl';
@@ -1703,19 +1703,19 @@
 
             case 'bigBubble':
                 G.eventData = { t: 5 };
-                showEvent('🫧 BONG BÓNG KHỔNG LỒ NÂNG CẢ NHÀ LÊN!');
+                showEvent('🫧 A HUGE BUBBLE LIFTS EVERYONE UP!');
                 break;
 
             case 'reverse':
                 G.currentFlip = -1;
                 G.eventData = { t: 8 };
-                showEvent('🔄 DÒNG NƯỚC ĐỔI CHIỀU!');
+                showEvent('🔄 THE CURRENTS REVERSE!');
                 break;
 
             case 'darkness':
                 G.darkBoost = 0.8;
                 G.eventData = { t: 6 };
-                showEvent('🌑 BIỂN TỐI SẦM LẠI!');
+                showEvent('🌑 THE SEA GOES DARK!');
                 break;
 
             case 'fishSchool':
@@ -1723,12 +1723,12 @@
                     t: 8, x: -200, y: rnd(level.h * 0.15, level.h * 0.85), vx: level.w / 7,
                     fish: Array.from({ length: 26 }, () => ({ ox: rnd(-160, 160), oy: rnd(-90, 90), ph: rnd(0, 6.3) }))
                 };
-                showEvent('🐟 ĐÀN CÁ TRÀN QUA CHE HẾT TẦM NHÌN!');
+                showEvent('🐟 A FISH SCHOOL BLOCKS YOUR VIEW!');
                 break;
 
             case 'kraken':
                 G.eventData = { t: 7, strikeT: 0.5, arms: [] };
-                showEvent('🦑 KRAKEN QUẬT VÒI KHẮP NƠI!');
+                showEvent('🦑 THE KRAKEN IS SMASHING EVERYWHERE!');
                 break;
         }
     }
@@ -2598,10 +2598,10 @@
             if (p.dom.buffs.textContent !== buffs) p.dom.buffs.textContent = buffs;
 
             let state = '';
-            if (p.trap > 0) state = 'Bị kẹp!';
-            else if (p.stun > 0) state = 'Choáng!';
-            else if (p.slow > 0) state = 'Bơi chậm';
-            else if (p.blind > 0) state = 'Mù mực';
+            if (p.trap > 0) state = 'Trapped!';
+            else if (p.stun > 0) state = 'Dizzy!';
+            else if (p.slow > 0) state = 'Slowed';
+            else if (p.blind > 0) state = 'Inked';
             setText(p.dom.state, state);
         });
     }
@@ -2746,11 +2746,11 @@
         const t = best(p => p.stats.treasures);
         if (t && t.stats.treasures > 0) awards.push('🧰 Săn kho báu giỏi nhất: ' + t.style.name);
         const c = best(p => p.bestCombo);
-        if (c && c.bestCombo >= 4) awards.push('🔥 Chuỗi dài nhất: ' + c.style.name + ' (' + c.bestCombo + ')');
+        if (c && c.bestCombo >= 4) awards.push('🔥 Longest streak: ' + c.style.name + ' (' + c.bestCombo + ')');
         const r = best(p => p.stats.rides);
         if (r && r.stats.rides > 0) awards.push('🐬 Nài cá cừ nhất: ' + r.style.name);
         const ca = best(p => p.stats.caves);
-        if (ca && ca.stats.caves > 0) awards.push('🕳️ Nhà thám hiểm: ' + ca.style.name);
+        if (ca && ca.stats.caves > 0) awards.push('🕳️ Explorer: ' + ca.style.name);
         const h = G.players.slice().sort((a, b) => a.stats.hits - b.stats.hits)[0];
         if (h && h.stats.hits === 0 && G.playerCount > 1) awards.push('🛡️ Không dính bẫy nào: ' + h.style.name);
 
@@ -2759,11 +2759,11 @@
         const champ = rows[0];
         el['end-emoji'].textContent = G.playerCount === 1 ? '🐠' : '🏆';
         el['end-title'].textContent = G.playerCount === 1
-            ? 'HẾT GIỜ!'
+            ? 'OUT OF TIME!'
             : champ.style.name + ' VÔ ĐỊCH!';
         el['end-sub'].textContent = G.playerCount === 1
             ? 'Bé gom được ' + Math.floor(champ.score).toLocaleString('vi-VN') + ' điểm kho báu!'
-            : 'Cùng vỗ tay cho nhà vô địch đáy biển nào!';
+            : 'Give it up for the champion of the deep!';
 
         // Vừa mở khoá được gì mới?
         const opened = [];
@@ -2994,7 +2994,7 @@
                 '" data-kind="' + kind + '" data-id="' + item.id + '">' +
                 '<div class="unlock-emoji">' + (owned ? item.emoji : '🔒') + '</div>' +
                 '<div class="unlock-name">' + item.name + '</div>' +
-                '<div class="unlock-req">' + (owned ? (eq ? 'Đang dùng' : 'Bấm để dùng') : item.req + ' điểm') + '</div>' +
+                '<div class="unlock-req">' + (owned ? (eq ? 'In use' : 'Tap to use') : item.req + 'score') + '</div>' +
                 '</div>';
         }).join('');
 
@@ -3031,7 +3031,7 @@
             return '<div class="key-line"><span class="who">' + PLAYER_STYLE[i].name + '</span>' + keys +
                 '<span class="kbd">' + c.dashLabel + '</span></div>';
         }).join('') + '<div class="key-line"><span class="who">📱</span>' +
-            '<span class="kbd">cần gạt</span><span class="kbd">⚡</span></div>';
+            '<span class="kbd">joystick</span><span class="kbd">⚡</span></div>';
     }
 
     function pillGroup(rowId, attr, onPick) {

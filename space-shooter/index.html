@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -76,7 +76,7 @@
     <div class="stars-bg"></div>
     <header class="unified-nav">
         <div class="nav-left">
-            <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+            <a href="/" class="nav-home" title="Home" aria-label="Home">
                 <img src="/logo.png" alt="KIBU Games">
             </a>
             <div class="brand">
@@ -140,17 +140,17 @@
                 <p class="logo-subtitle">A Futuristic Particle Space Shooter</p>
                 
                 <div class="controls-guide">
-                    <h3><i class="fa-solid fa-gamepad"></i> HƯỚNG DẪN</h3>
+                    <h3><i class="fa-solid fa-gamepad"></i> HOW TO PLAY</h3>
                     <div class="controls-grid">
-                        <div><kbd>A</kbd> / <kbd>D</kbd> hoặc <kbd>←</kbd> / <kbd>→</kbd> : Di chuyển trái/phải</div>
-                        <div><kbd>W</kbd> / <kbd>S</kbd> hoặc <kbd>↑</kbd> / <kbd>↓</kbd> : Di chuyển lên/xuống</div>
-                        <div><kbd>SPACE</kbd> hoặc <kbd>Click chuột</kbd> : Bắn laser vũ khí</div>
-                        <div>Di chuột / Chạm kéo : Tự động di chuyển & Bắn</div>
+                        <div><kbd>A</kbd> / <kbd>D</kbd> or <kbd>←</kbd> / <kbd>→</kbd> : Move left/right</div>
+                        <div><kbd>W</kbd> / <kbd>S</kbd> or <kbd>↑</kbd> / <kbd>↓</kbd> : Move up/down</div>
+                        <div><kbd>SPACE</kbd> or <kbd>Mouse click</kbd> : Fire the laser</div>
+                        <div>Move the mouse / drag to move and fire automatically</div>
                     </div>
                 </div>
 
                 <div class="ship-select">
-                    <h3>CHỌN TÀU CHIẾN</h3>
+                    <h3>CHOOSE YOUR SHIP</h3>
                     <div class="ship-options">
                         <div class="ship-option active" data-ship="0">
                             <div class="ship-color-preview ship-red"></div>
@@ -167,7 +167,7 @@
                     </div>
                 </div>
 
-                <button id="btn-start" class="btn btn-primary btn-glow">BẮT ĐẦU CHƠI</button>
+                <button id="btn-start" class="btn btn-primary btn-glow">START PLAYING</button>
             </div>
         </div>
 
@@ -175,22 +175,22 @@
         <div id="gameover-overlay" class="overlay hidden">
             <div class="menu-content glass-card pop-in">
                 <h2 class="text-red">MISSION FAILED</h2>
-                <p class="gameover-subtitle">Tàu chiến của bạn đã bị tiêu diệt</p>
+                <p class="gameover-subtitle">Your ship has been destroyed</p>
                 
                 <div class="final-stats">
                     <div class="stat-row">
-                        <span>Điểm số đạt được:</span>
+                        <span>Final score:</span>
                         <span id="final-score" class="text-yellow">0</span>
                     </div>
                     <div class="stat-row">
-                        <span>Sống sót đến Wave:</span>
+                        <span>Survived to wave:</span>
                         <span id="final-wave" class="text-blue">1</span>
                     </div>
                 </div>
 
                 <div class="menu-buttons">
-                    <button id="btn-retry" class="btn btn-primary btn-glow">CHƠI LẠI <i class="fa-solid fa-rotate-right"></i></button>
-                    <button id="btn-menu" class="btn btn-secondary">TRANG CHỦ <i class="fa-solid fa-house"></i></button>
+                    <button id="btn-retry" class="btn btn-primary btn-glow">RESTART <i class="fa-solid fa-rotate-right"></i></button>
+                    <button id="btn-menu" class="btn btn-secondary">HOME <i class="fa-solid fa-house"></i></button>
                 </div>
             </div>
         </div>

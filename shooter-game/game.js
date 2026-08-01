@@ -169,14 +169,14 @@
 
     // --- Weapon Specs ---
     const WEAPONS = {
-        pistol: { name: 'Súng Ngắn', icon: 'fa-gun', ammo: Infinity, speed: 12, cooldown: 220, damage: 25, color: '#00f0ff', count: 1, spread: 0 },
-        shotgun: { name: 'Súng Săn', icon: 'fa-burst', ammo: 40, speed: 10, cooldown: 550, damage: 18, color: '#ff9900', count: 5, spread: 0.35 },
-        plasma: { name: 'Súng Laser', icon: 'fa-bolt', ammo: 60, speed: 18, cooldown: 140, damage: 30, color: '#39ff14', count: 1, spread: 0.05 },
-        rocket: { name: 'Tên Lửa', icon: 'fa-rocket', ammo: 15, speed: 8, cooldown: 800, damage: 120, color: '#ff3366', count: 1, spread: 0, isRocket: true },
-        freeze: { name: 'Súng Băng', icon: 'fa-snowflake', ammo: 50, speed: 11, cooldown: 250, damage: 20, color: '#00d2ff', count: 1, spread: 0.1, isFreeze: true },
-        flame: { name: 'Phun Lửa', icon: 'fa-fire-flame-curved', ammo: 80, speed: 9, cooldown: 80, damage: 12, color: '#ff4500', count: 3, spread: 0.3, isFlame: true },
-        tesla: { name: 'Súng Sấm Sét', icon: 'fa-cloud-bolt', ammo: 45, speed: 22, cooldown: 300, damage: 45, color: '#ffd700', count: 1, spread: 0.02, isTesla: true },
-        katana: { name: 'Kiếm Laser', icon: 'fa-wand-magic-sparkles', ammo: 60, speed: 6, cooldown: 350, damage: 95, color: '#ff007f', count: 1, spread: 0.8, isMelee: true }
+        pistol: { name: 'Pistol', icon: 'fa-gun', ammo: Infinity, speed: 12, cooldown: 220, damage: 25, color: '#00f0ff', count: 1, spread: 0 },
+        shotgun: { name: 'Shotgun', icon: 'fa-burst', ammo: 40, speed: 10, cooldown: 550, damage: 18, color: '#ff9900', count: 5, spread: 0.35 },
+        plasma: { name: 'Laser Gun', icon: 'fa-bolt', ammo: 60, speed: 18, cooldown: 140, damage: 30, color: '#39ff14', count: 1, spread: 0.05 },
+        rocket: { name: 'Rocket Launcher', icon: 'fa-rocket', ammo: 15, speed: 8, cooldown: 800, damage: 120, color: '#ff3366', count: 1, spread: 0, isRocket: true },
+        freeze: { name: 'Freeze Gun', icon: 'fa-snowflake', ammo: 50, speed: 11, cooldown: 250, damage: 20, color: '#00d2ff', count: 1, spread: 0.1, isFreeze: true },
+        flame: { name: 'Flamethrower', icon: 'fa-fire-flame-curved', ammo: 80, speed: 9, cooldown: 80, damage: 12, color: '#ff4500', count: 3, spread: 0.3, isFlame: true },
+        tesla: { name: 'Lightning Gun', icon: 'fa-cloud-bolt', ammo: 45, speed: 22, cooldown: 300, damage: 45, color: '#ffd700', count: 1, spread: 0.02, isTesla: true },
+        katana: { name: 'Laser Sword', icon: 'fa-wand-magic-sparkles', ammo: 60, speed: 6, cooldown: 350, damage: 95, color: '#ff007f', count: 1, spread: 0.8, isMelee: true }
     };
 
     // Equipment Loadout Options
@@ -300,7 +300,7 @@
             if (this.cooldown <= 0 && player && distance(this.x, this.y, player.x, player.y) < this.radius + player.radius) {
                 this.cooldown = 1200;
                 soundFX.playPowerup();
-                showToast('🌀 LÒ XO BẮN SIÊU TỐC!');
+                showToast('🌀 SUPER SPRING LAUNCH!');
 
                 const boostDist = 220;
                 player.x = clamp(player.x + Math.cos(player.angle) * boostDist, player.radius, ARENA.width - player.radius);
@@ -600,7 +600,7 @@
             if (this.weaponKey !== 'pistol') {
                 const currentAmmo = this.ammos[this.weaponKey] || 0;
                 if (currentAmmo <= 0) {
-                    showToast('❌ HẾT ĐẠN! TỰ ĐỔI SÚNG NGẮN!');
+                    showToast('❌ OUT OF AMMO! SWITCHING TO PISTOL!');
                     this.activeSlotIndex = 0;
                     this.weaponKey = 'pistol';
                     updateHUDWeapon();
@@ -1206,7 +1206,7 @@
         bots.forEach(b => {
             if (b.team === 'red') b.takeDamage(500);
         });
-        showToast('💣 BOM HẠT NHÂN DỌN SẠCH BẮN TOÀN BỘ BOT!');
+        showToast('💣 NUKE WIPES OUT EVERY BOT!');
     }
 
     function initGame() {
@@ -1261,9 +1261,9 @@
         }
 
         const waveTitle = document.getElementById('wave-hud');
-        if (waveTitle) waveTitle.textContent = `ĐỢT ${wave}`;
+        if (waveTitle) waveTitle.textContent = `WAVE ${wave}`;
 
-        showToast(`🌊 ĐỢT ${wave}: CÓ THÙNG DẦU NỔ 🛢️ & LÒ XO NHẢY 🌀!`);
+        showToast(`🌊 WAVE ${wave}: EXPLOSIVE BARRELS 🛢️ & BOUNCE PADS 🌀!`);
 
         // If Team mode, spawn 2 friendly blue bots
         if (gameMode === 'team' && bots.filter(b => b.team === 'blue').length < 2) {
@@ -1294,7 +1294,7 @@
             let type = 'gunner';
             if (wave % 5 === 0 && botsToSpawnInWave === 0) {
                 type = 'boss';
-                showToast('👑 CẢNH BÁO: TRÙM ROBOT KHỔNG LỒ XUẤT HIỆN!');
+                showToast('👑 WARNING: GIANT ROBOT BOSS INCOMING!');
             } else {
                 const rand = Math.random();
                 if (rand < 0.3) type = 'speedy';
@@ -1320,12 +1320,12 @@
         if (isVictory) {
             soundFX.playWin();
             endIcon.innerHTML = '<i class="fa-solid fa-crown text-yellow"></i>';
-            endTitle.textContent = 'CHIẾN THẮNG!';
-            endSub.textContent = 'Bé đã xuất sắc đánh bại toàn bộ các đợt Bot!';
+            endTitle.textContent = 'VICTORY!';
+            endSub.textContent = 'You brilliantly defeated every wave of bots!';
         } else {
             endIcon.innerHTML = '<i class="fa-solid fa-face-frown text-red"></i>';
-            endTitle.textContent = 'THẤT BẠI!';
-            endSub.textContent = 'Đừng nản lòng, hãy thử lại để bắn gục Bot nhé!';
+            endTitle.textContent = 'DEFEAT!';
+            endSub.textContent = 'Don\'t give up — try again and take those bots down!';
         }
 
         endScore.textContent = score;
@@ -1357,7 +1357,7 @@
         updateHUDWeapon();
         soundFX.playPowerup();
         const w = WEAPONS[player.weaponKey];
-        showToast(`🔫 ĐÃ ĐỔI SÚNG: ${w.name.toUpperCase()}`);
+        showToast(`🔫 WEAPON SWITCHED: ${w.name.toUpperCase()}`);
     }
 
     function updateHUDWeapon() {
@@ -1468,25 +1468,25 @@
                         soundFX.playPowerup();
                         if (p.type === 'shield') {
                             player.buffs.shield = 6000;
-                            showToast('🛡️ ĐÃ BẬT KHIÊN NĂNG LƯỢNG!');
+                            showToast('🛡️ ENERGY SHIELD ACTIVATED!');
                         } else if (p.type === 'health') {
                             player.hp = Math.min(player.maxHp, player.hp + 40);
                             updateHUDHealth();
-                            showToast('❤️ HỒI MÁU CẤP TỐC!');
+                            showToast('❤️ RAPID HEAL!');
                         } else if (p.type === 'speed') {
                             player.buffs.speed = 5000;
-                            showToast('⚡ TĂNG TỐC ĐỘ DI CHUYỂN!');
+                            showToast('⚡ MOVEMENT SPEED UP!');
                         } else if (p.type === 'nuke') {
                             triggerNuke();
                         } else if (p.type === 'damage') {
                             player.buffs.damage = 5000;
-                            showToast('🔥 SIÊU SÁT THƯƠNG GẤP ĐÔI!');
+                            showToast('🔥 DOUBLE DAMAGE BOOST!');
                         } else if (WEAPONS[p.type]) {
                             player.equippedSlots[player.activeSlotIndex] = p.type;
                             player.weaponKey = p.type;
                             player.ammos[p.type] = (player.ammos[p.type] || 0) + WEAPONS[p.type].ammo;
                             updateHUDWeapon();
-                            showToast(`🔫 ĐÃ TRANG BỊ & NẠP ĐẠN: ${WEAPONS[p.type].name.toUpperCase()}!`);
+                            showToast(`🔫 EQUIPPED & LOADED: ${WEAPONS[p.type].name.toUpperCase()}!`);
                         }
                         powerups.splice(i, 1);
                     }
@@ -1640,8 +1640,8 @@
             btnAutoAim.addEventListener('click', () => {
                 autoAim = !autoAim;
                 btnAutoAim.classList.toggle('active', autoAim);
-                document.getElementById('auto-aim-label').textContent = autoAim ? 'Tự Ngắm: BẬT' : 'Tự Ngắm: TẮT';
-                showToast(autoAim ? '🎯 Đã BẬT Tự Động Ngắm Bắn' : '🎯 Đã TẮT Tự Động Ngắm Bắn');
+                document.getElementById('auto-aim-label').textContent = autoAim ? 'Auto Aim: On' : 'Auto Aim: Off';
+                showToast(autoAim ? '🎯 Auto aim turned ON' : '🎯 Auto aim turned OFF');
             });
         }
 
@@ -1699,7 +1699,7 @@
                 document.querySelectorAll(`.loadout-btn[data-type="${type}"]`).forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 LOADOUTS[type] = btn.dataset.val;
-                showToast(`🛡️ Đã trang bị ${btn.textContent}`);
+                showToast(`🛡️ Equipped ${btn.textContent}`);
             });
         });
 
@@ -1734,17 +1734,17 @@
             upgrades[type]++;
             saveUserData();
             updateShopUI();
-            showToast('🎉 NÂNG CẤP THÀNH CÔNG!');
+            showToast('🎉 UPGRADE COMPLETE!');
         } else {
-            showToast('❌ BẠN KHÔNG ĐỦ XU!');
+            showToast('❌ NOT ENOUGH COINS!');
         }
     }
 
     function updateShopUI() {
         document.getElementById('shop-coins-val').textContent = coins;
-        document.getElementById('shop-hp-lvl').textContent = `Cấp ${upgrades.hp} (+${(upgrades.hp - 1) * 20} Máu)`;
-        document.getElementById('shop-speed-lvl').textContent = `Cấp ${upgrades.speed} (+${(upgrades.speed - 1) * 10}% Tốc)`;
-        document.getElementById('shop-damage-lvl').textContent = `Cấp ${upgrades.damage} (+${(upgrades.damage - 1) * 15}% ST)`;
+        document.getElementById('shop-hp-lvl').textContent = `Level ${upgrades.hp} (+${(upgrades.hp - 1) * 20} Health)`;
+        document.getElementById('shop-speed-lvl').textContent = `Level ${upgrades.speed} (+${(upgrades.speed - 1) * 10}% Speed)`;
+        document.getElementById('shop-damage-lvl').textContent = `Level ${upgrades.damage} (+${(upgrades.damage - 1) * 15}% DMG)`;
     }
 
     function setupTouchControls() {

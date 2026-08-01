@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -77,7 +77,7 @@
     <div class="app-wrapper">
         <header class="unified-nav">
             <div class="nav-left">
-                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
                     <img src="/logo.png" alt="KIBU Games">
                 </a>
                 <div class="brand">
@@ -90,17 +90,17 @@
             <div class="nav-actions">
             
             
-                <button id="btn-help" class="btn btn-toggle active" title="Hiện đường bay dự đoán giúp bé ngắm dễ hơn">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="help-label">Trợ Giúp Bé: BẬT</span>
+                <button id="btn-help" class="btn btn-toggle active" title="Show the predicted flight path to make aiming easier">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="help-label">Aim Helper: On</span>
                 </button>
                 <button id="btn-sound" class="btn">
-                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
                 </button>
                 <button id="btn-menu" class="btn">
-                    <i class="fa-solid fa-list"></i> <span>Đổi Chế Độ</span>
+                    <i class="fa-solid fa-list"></i> <span>Change Mode</span>
                 </button>
                 <button id="btn-restart" class="btn">
-                    <i class="fa-solid fa-rotate-right"></i> <span>Chơi Lại</span>
+                    <i class="fa-solid fa-rotate-right"></i> <span>Restart</span>
                 </button>
             </div>
             
@@ -113,14 +113,14 @@
                 <div class="hud-top">
                     <div id="score-left" class="score-strip"></div>
                     <div class="clock-box">
-                        <div id="clock-label" class="clock-label">ĐỐI KHÁNG</div>
+                        <div id="clock-label" class="clock-label">VERSUS</div>
                         <div id="clock" class="clock-time">1:30</div>
                     </div>
                     <div id="score-right" class="score-strip right"></div>
                 </div>
 
                 <div class="hud-bottom">
-                    <div id="control-hint" class="control-hint">🐯 A · 🐼 L — Mũi tên tự lắc, giữ phím lấy lực rồi thả để phi</div>
+                    <div id="control-hint" class="control-hint">🐯 A · 🐼 L — the arrow swings by itself; hold to charge, release to throw</div>
                 </div>
             </div>
 
@@ -128,94 +128,91 @@
             <div id="screen-menu" class="screen">
                 <div class="panel">
                     <div class="panel-emoji">🎯🎈</div>
-                    <h2 class="panel-title">PHI TIÊU BONG BÓNG</h2>
+                    <h2 class="panel-title">BALLOON DARTS</h2>
                     <p class="panel-desc">
-                        Từ <b>1 đến 4 bé</b> cùng chơi trên một máy — mỗi bé một gian hàng riêng.
-                        Bóng bay bay lên liên tục, bé <b>ngắm rồi phi tiêu</b> cho nổ thật nhiều.
-                        Mũi tiêu bay theo <b>đúng vật lý thật</b>: có trọng lực kéo xuống, có sức cản
-                        không khí, và <b>tự xoay mũi theo hướng bay</b> y như phi tiêu ngoài đời.
+                        <b>1 to 4 kids</b> play on one device — each kid gets their own booth. Balloons keep floating up, and kids <b>aim and throw darts</b> to pop as many as they can. Each dart flies with <b>true-to-life physics</b>: gravity pulls it down, air resists it, and <b>the tip turns to follow the flight path</b> just like a real dart.
                     </p>
 
                     <div class="setup-block">
-                        <div class="setup-label"><i class="fa-solid fa-users"></i> SỐ NGƯỜI CHƠI</div>
+                        <div class="setup-label"><i class="fa-solid fa-users"></i> NUMBER OF PLAYERS</div>
                         <div class="opt-row">
                             <button class="opt" data-players="1">
                                 <span class="opt-icon">🐯</span>
-                                <span class="opt-name">1 BÉ</span>
-                                <span class="opt-desc">Chơi một mình, phá kỷ lục của chính mình</span>
+                                <span class="opt-name">1 KID</span>
+                                <span class="opt-desc">Play solo and beat your own record</span>
                             </button>
                             <button class="opt sel" data-players="2">
                                 <span class="opt-icon">🐯🐼</span>
-                                <span class="opt-name">2 BÉ</span>
-                                <span class="opt-desc">Gian hàng rộng nhất, bóng to nhất</span>
+                                <span class="opt-name">2 KIDS</span>
+                                <span class="opt-desc">Widest booth, biggest balloons</span>
                             </button>
                             <button class="opt" data-players="3">
                                 <span class="opt-icon">🐯🐼🐸</span>
-                                <span class="opt-name">3 BÉ</span>
-                                <span class="opt-desc">Ba gian cạnh nhau</span>
+                                <span class="opt-name">3 KIDS</span>
+                                <span class="opt-desc">Three booths side by side</span>
                             </button>
                             <button class="opt" data-players="4">
                                 <span class="opt-icon">🐯🐼🐸🦊</span>
-                                <span class="opt-name">4 BÉ</span>
-                                <span class="opt-desc">Bốn gian, ngắm phải chuẩn hơn</span>
+                                <span class="opt-name">4 KIDS</span>
+                                <span class="opt-desc">Four booths — aim has to be sharper</span>
                             </button>
                         </div>
                     </div>
 
                     <div class="setup-block">
-                        <div class="setup-label"><i class="fa-solid fa-gamepad"></i> CHỌN CHẾ ĐỘ CHƠI</div>
+                        <div class="setup-label"><i class="fa-solid fa-gamepad"></i> CHOOSE A GAME MODE</div>
                         <div class="opt-row">
                             <button class="opt sel" data-mode="versus">
                                 <span class="opt-icon">⚔️</span>
-                                <span class="opt-name">ĐỐI KHÁNG</span>
-                                <span class="opt-desc">90 giây · ai nổ được nhiều điểm hơn thì thắng</span>
+                                <span class="opt-name">VERSUS</span>
+                                <span class="opt-desc">90 seconds · the most points from pops wins</span>
                             </button>
                             <button class="opt" data-mode="sniper">
                                 <span class="opt-icon">🥇</span>
-                                <span class="opt-name">SĂN BÓNG VÀNG</span>
-                                <span class="opt-desc">60 giây · bóng nhỏ, bay nhanh, điểm nhân đôi</span>
+                                <span class="opt-name">GOLDEN BALLOON HUNT</span>
+                                <span class="opt-desc">60 seconds · small, fast balloons, double points</span>
                             </button>
                             <button class="opt" data-mode="practice">
                                 <span class="opt-icon">🧘</span>
-                                <span class="opt-name">LUYỆN TẬP</span>
-                                <span class="opt-desc">Không tính giờ · phi thoải mái</span>
+                                <span class="opt-name">PRACTICE</span>
+                                <span class="opt-desc">No timer · throw as long as you like</span>
                             </button>
                         </div>
                     </div>
 
                     <div class="setup-grid">
                         <div class="setup-block">
-                            <div class="setup-label"><i class="fa-solid fa-signal"></i> ĐỘ KHÓ</div>
+                            <div class="setup-label"><i class="fa-solid fa-signal"></i> DIFFICULTY</div>
                             <div class="opt-row small">
                                 <button class="opt" data-diff="easy">
-                                    <span class="opt-name">DỄ</span>
-                                    <span class="opt-desc">Mũi tên &amp; thanh lực chạy chậm</span>
+                                    <span class="opt-name">EASY</span>
+                                    <span class="opt-desc">Slow-moving arrow and power bar</span>
                                 </button>
                                 <button class="opt sel" data-diff="normal">
-                                    <span class="opt-name">VỪA</span>
-                                    <span class="opt-desc">Cân bằng</span>
+                                    <span class="opt-name">MEDIUM</span>
+                                    <span class="opt-desc">Balanced</span>
                                 </button>
                                 <button class="opt" data-diff="hard">
-                                    <span class="opt-name">KHÓ</span>
-                                    <span class="opt-desc">Chạy nhanh, không có đường bay dự đoán</span>
+                                    <span class="opt-name">HARD</span>
+                                    <span class="opt-desc">Fast moving, no predicted flight path</span>
                                 </button>
                                 <button class="opt opt-insane" data-diff="insane">
-                                    <span class="opt-name">🔥 SIÊU KHÓ</span>
-                                    <span class="opt-desc">Gió giật liên tục thổi bay cả mũi tiêu!</span>
+                                    <span class="opt-name">🔥 INSANE</span>
+                                    <span class="opt-desc">Constant gusts blow the darts off course!</span>
                                 </button>
                             </div>
                         </div>
 
                         <div class="setup-block">
-                            <div class="setup-label"><i class="fa-solid fa-hand-pointer"></i> CÁCH NGẮM</div>
+                            <div class="setup-label"><i class="fa-solid fa-hand-pointer"></i> HOW TO AIM</div>
                             <div class="opt-row small">
                                 <button class="opt sel" data-ctrl="sweep">
-                                    <span class="opt-name">GIỮ &amp; THẢ</span>
-                                    <span class="opt-desc">Mũi tên tự lắc, giữ phím lấy lực rồi thả</span>
+                                    <span class="opt-name">HOLD &amp; RELEASE</span>
+                                    <span class="opt-desc">The arrow swings by itself — hold to charge, release to fire</span>
                                 </button>
                                 <button class="opt" data-ctrl="drag">
-                                    <span class="opt-name">KÉO &amp; THẢ</span>
-                                    <span class="opt-desc">Kéo lùi như bắn ná (hợp với màn hình cảm ứng)</span>
+                                    <span class="opt-name">DRAG &amp; RELEASE</span>
+                                    <span class="opt-desc">Drag back like a slingshot (great on touch screens)</span>
                                 </button>
                             </div>
                         </div>
@@ -225,21 +222,21 @@
                          trên (xem updateHint / syncHints trong game.js). Máy chỉ có cảm
                          ứng thì CSS giấu cả bảng, chỉ để lại dòng hướng dẫn chạm. -->
                     <div class="keys-note">
-                        <div class="keys-head" id="keys-head"><i class="fa-solid fa-keyboard"></i> PHÍM CỦA TỪNG BÉ</div>
+                        <div class="keys-head" id="keys-head"><i class="fa-solid fa-keyboard"></i> KEYS FOR EACH KID</div>
                         <div class="keys-list" id="keys-list"></div>
-                        <p class="keys-touch"><i class="fa-solid fa-hand-pointer"></i> Trên máy cảm ứng: mỗi bé chạm vào <b>gian hàng của mình</b>.</p>
+                        <p class="keys-touch"><i class="fa-solid fa-hand-pointer"></i> On a touch screen each kid taps <b>their own booth</b>.</p>
                     </div>
 
                     <div class="point-legend">
-                        <span class="pt pt-2">🎈 BÓNG TO · 1 ĐIỂM</span>
-                        <span class="pt pt-3">🎈 BÓNG NHỎ · 3 ĐIỂM</span>
-                        <span class="pt pt-s">🥇 BÓNG VÀNG · 5 ĐIỂM</span>
-                        <span class="pt pt-f">🔥 3 mũi trúng liên tiếp = BỐC LỬA +1</span>
-                        <span class="pt pt-b">💣 BÓNG BOM · TRỪ 3 ĐIỂM, đừng phi vào!</span>
+                        <span class="pt pt-2">🎈 BIG BALLOON · 1 POINT</span>
+                        <span class="pt pt-3">🎈 SMALL BALLOON · 3 POINTS</span>
+                        <span class="pt pt-s">🥇 GOLDEN BALLOON · 5 POINTS</span>
+                        <span class="pt pt-f">🔥 3 hits in a row = ON FIRE +1</span>
+                        <span class="pt pt-b">💣 BOMB BALLOON · MINUS 3 POINTS — do not hit it!</span>
                     </div>
 
                     <button id="btn-start" class="big-btn">
-                        <i class="fa-solid fa-play"></i> BẮT ĐẦU THI TÀI
+                        <i class="fa-solid fa-play"></i> START THE CONTEST
                     </button>
                 </div>
             </div>
@@ -248,11 +245,11 @@
             <div id="screen-pause" class="screen hidden">
                 <div class="panel panel-small">
                     <div class="panel-emoji">⏸️</div>
-                    <h2 class="panel-title">TẠM DỪNG</h2>
-                    <p class="panel-desc">Nghỉ một chút rồi chơi tiếp nhé!</p>
+                    <h2 class="panel-title">PAUSED</h2>
+                    <p class="panel-desc">Take a short break, then jump back in!</p>
                     <div class="over-actions">
-                        <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> CHƠI TIẾP</button>
-                        <button id="btn-back-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> ĐỔI CHẾ ĐỘ</button>
+                        <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> RESUME</button>
+                        <button id="btn-back-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> CHANGE MODE</button>
                     </div>
                 </div>
             </div>
@@ -261,9 +258,9 @@
             <div id="screen-over" class="screen hidden">
                 <div class="panel">
                     <div id="over-emoji" class="panel-emoji">🏆</div>
-                    <h2 id="over-title" class="panel-title">BÉ 1 THẮNG!</h2>
+                    <h2 id="over-title" class="panel-title">KID 1 WINS!</h2>
                     <div id="over-stars" class="solo-stars" hidden></div>
-                    <p id="over-desc" class="panel-desc">Tay phi tiêu cừ khôi!</p>
+                    <p id="over-desc" class="panel-desc">A brilliant dart thrower!</p>
 
                     <div id="final-grid" class="final-grid cols-2"></div>
 
@@ -272,8 +269,8 @@
                     <div id="solo-share" class="share-box" hidden></div>
 
                     <div class="over-actions">
-                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> THI LẠI</button>
-                        <a href="/" class="big-btn btn-ghost"><i class="fa-solid fa-house"></i> TRANG CHỦ</a>
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> PLAY AGAIN</button>
+                        <a href="/" class="big-btn btn-ghost"><i class="fa-solid fa-house"></i> HOME</a>
                     </div>
                 </div>
             </div>

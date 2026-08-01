@@ -86,15 +86,15 @@
 
     // Mô tả cho từng điểm chạm, tra theo `${x},${y}`
     const SPIN_HINT = {
-        '0,0': 'Đánh GIỮA bi — bi lăn tự nhiên, chạm xong còn trôi theo quán tính',
-        '0,1': 'Đánh CAO — bi trắng chạy tiếp theo bi mục tiêu',
-        '0,-1': 'Đánh THẤP — bi trắng lùi ngược trở lại',
-        '-1,0': 'Xoáy TRÁI — bi trắng ăn băng rồi lệch sang trái',
-        '1,0': 'Xoáy PHẢI — bi trắng ăn băng rồi lệch sang phải',
-        '-1,1': 'CAO + xoáy TRÁI — chạy tiếp và bạt sang trái',
-        '1,1': 'CAO + xoáy PHẢI — chạy tiếp và bạt sang phải',
-        '-1,-1': 'THẤP + xoáy TRÁI — lùi lại và bạt sang trái',
-        '1,-1': 'THẤP + xoáy PHẢI — lùi lại và bạt sang phải'
+        '0,0': 'CENTRE hit — natural roll, the cue keeps drifting after contact',
+        '0,1': 'TOP spin — the cue follows the object ball',
+        '0,-1': 'BOTTOM spin — the cue draws back',
+        '-1,0': 'LEFT english — the cue kicks left off the cushion',
+        '1,0': 'RIGHT english — the cue kicks right off the cushion',
+        '-1,1': 'TOP + LEFT — follows through and veers left',
+        '1,1': 'TOP + RIGHT — follows through and veers right',
+        '-1,-1': 'BOTTOM + LEFT — draws back and veers left',
+        '1,-1': 'BOTTOM + RIGHT — draws back and veers right'
     };
 
     // ---------- Màu bi ----------
@@ -115,8 +115,8 @@
     ];
 
     const PLAYERS = [
-        { name: 'NGƯỜI CHƠI 1', emoji: '🦊', color: '#ff6b3d' },
-        { name: 'NGƯỜI CHƠI 2', emoji: '🐧', color: '#3da5ff' }
+        { name: 'PLAYER 1', emoji: '🦊', color: '#ff6b3d' },
+        { name: 'PLAYER 2', emoji: '🐧', color: '#3da5ff' }
     ];
 
     const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
@@ -455,7 +455,7 @@
                 this.helpMode = !this.helpMode;
                 helpBtn.classList.toggle('active', this.helpMode);
                 document.getElementById('help-label').textContent =
-                    'Đường Ngắm: ' + (this.helpMode ? 'BẬT' : 'TẮT');
+                    'Aim Line:' + (this.helpMode ? 'ON' : 'OFF');
             };
 
             const soundBtn = document.getElementById('btn-sound');
@@ -912,9 +912,9 @@
             if (potted8) {
                 const legal = this.canShootEight(cur) && !this.cueScratched;
                 this.declareWinner(legal ? cur : other,
-                    legal ? 'Cú kết thúc hoàn hảo với bi số 8!'
-                        : (this.cueScratched ? 'Bi trắng rơi lỗ cùng bi số 8 — thua ngay!'
-                            : 'Đưa bi số 8 vào lỗ quá sớm — thua ngay!'));
+                    legal ? 'A perfect finish on the 8 ball!'
+                        : (this.cueScratched ? 'Cue ball potted with the 8 — instant loss!'
+                            : 'Potted the 8 ball too early — instant loss!'));
                 return;
             }
 
@@ -930,7 +930,7 @@
                     this.groups[cur] = g;
                     this.groups[other] = g === 'solid' ? 'stripe' : 'solid';
                     this.openTable = false;
-                    assignedMsg = `${PLAYERS[cur].emoji} nhận ${g === 'solid' ? 'BI TRƠN 1-7' : 'BI SỌC 9-15'}! `;
+                    assignedMsg = `${PLAYERS[cur].emoji} takes ${g === 'solid' ? 'BI TRƠN 1-7' : 'BI SỌC 9-15'}!`;
                 }
             }
             this.isBreak = false;
@@ -945,24 +945,24 @@
             }
 
             if (foul) {
-                let why = 'Bi trắng rơi lỗ!';
-                if (!this.cueScratched && this.firstContact === null) why = 'Không chạm được bi nào!';
+                let why = 'Cue ball potted!';
+                if (!this.cueScratched && this.firstContact === null) why = 'No ball was hit!';
                 else if (!this.cueScratched && badHit) {
-                    why = this.canShootEight(cur) ? 'Phải chạm bi số 8 trước!' : 'Chạm nhầm bi của đối thủ!';
+                    why = this.canShootEight(cur) ? 'You must hit the 8 ball first!' : 'Hit the opponent\'s ball first!';
                 }
                 this.turn = other;
                 this.state = 'ballinhand';
                 this.ghostCue = null;
                 Sfx.foul();
-                this.showToast(`⚠️ ${why} ${PLAYERS[other].emoji} được cầm bi trắng đặt tự do.`, 'bad');
+                this.showToast(`⚠️ ${why} ${PLAYERS[other].emoji} gets ball in hand.`, 'bad');
             } else if (ownPotted) {
                 this.state = 'aim';
-                this.showToast(`${assignedMsg}✅ Vào lỗ đẹp — ${PLAYERS[cur].emoji} đánh tiếp!`, 'good');
+                this.showToast(`${assignedMsg}✅ Nice pot — ${PLAYERS[cur].emoji} shoots again!`, 'good');
             } else {
                 this.turn = other;
                 this.state = 'aim';
-                this.showToast(assignedMsg ? `${assignedMsg}Đến lượt ${PLAYERS[other].emoji}` :
-                    `Chưa ăn được bi — đến lượt ${PLAYERS[other].emoji} ${PLAYERS[other].name}`, 'info');
+                this.showToast(assignedMsg ? `${assignedMsg}${PLAYERS[other].emoji}'s turn` :
+                    `Nothing potted — ${PLAYERS[other].emoji} ${PLAYERS[other].name}'s turn`, 'info');
             }
 
             // Nếu bi trắng vẫn đang nằm trong lỗ (trường hợp hiếm) thì đưa về chấm đầu bàn
@@ -979,7 +979,7 @@
             this.state = 'over';
             document.getElementById('over-emoji').textContent = '🏆';
             document.getElementById('over-title').textContent =
-                `${PLAYERS[player].emoji} ${PLAYERS[player].name} THẮNG!`;
+                `${PLAYERS[player].emoji} ${PLAYERS[player].name} WINS!`;
             document.getElementById('over-desc').textContent = reason;
             this.el.over.classList.remove('hidden');
             this.hideToast();
@@ -1000,11 +1000,11 @@
 
         // ---------- HUD ----------
         syncHUD() {
-            const label = g => g === 'solid' ? 'BI TRƠN 1-7' : g === 'stripe' ? 'BI SỌC 9-15' : 'Chưa chọn nhóm bi';
+            const label = g => g === 'solid' ? 'SOLIDS 1-7' : g === 'stripe' ? 'STRIPES 9-15' : 'No group assigned yet';
             [0, 1].forEach(i => {
                 const gEl = i === 0 ? this.el.p1group : this.el.p2group;
                 const g = this.groups[i];
-                gEl.textContent = this.canShootEight(i) ? '🎱 ĐÁNH BI SỐ 8!' : label(g);
+                gEl.textContent = this.canShootEight(i) ? '🎱 SHOOT THE 8 BALL!' : label(g);
                 gEl.className = 'p-group' + (g ? ' ' + g : '');
 
                 const holder = i === 0 ? this.el.p1balls : this.el.p2balls;
@@ -1022,14 +1022,14 @@
             this.el.panel2.classList.toggle('active', this.turn === 1 && this.state !== 'over');
 
             if (this.state === 'over') {
-                this.el.turnText.textContent = 'KẾT THÚC';
-                this.el.turnSub.textContent = 'Bấm ĐẤU LẠI để chơi ván mới';
+                this.el.turnText.textContent = 'FRAME OVER';
+                this.el.turnSub.textContent = 'Press PLAY AGAIN for a new frame';
             } else {
-                this.el.turnText.textContent = `LƯỢT CỦA ${PLAYERS[this.turn].emoji} BÉ ${this.turn + 1}`;
+                this.el.turnText.textContent = `${PLAYERS[this.turn].emoji} KID ${this.turn + 1}'S TURN`;
                 this.el.turnSub.textContent =
-                    this.state === 'ballinhand' ? 'Kéo đặt bi trắng vào chỗ đẹp' :
-                        this.state === 'rolling' ? 'Bi đang lăn...' :
-                            this.isBreak ? 'Phá bi nào!' : 'Kéo lùi từ bi trắng rồi thả';
+                    this.state === 'ballinhand' ? 'Drag the cue ball to a good spot' :
+                        this.state === 'rolling' ? 'Balls are rolling...' :
+                            this.isBreak ? 'Time to break!' : 'Drag back from the cue ball and release';
             }
         },
 
@@ -1228,11 +1228,11 @@
             ctx.textAlign = 'left';
             ctx.textBaseline = 'alphabetic';
             ctx.fillStyle = 'rgba(255,255,255,0.55)';
-            line('ĐIỂM CHẠM BI CÁI', 13, 'bold', '"Baloo 2", sans-serif', SPIN_CY - 22);
+            line('CUE BALL CONTACT POINT', 13, 'bold', '"Baloo 2", sans-serif', SPIN_CY - 22);
             ctx.fillStyle = this.spin.x === 0 && this.spin.y === 0 ? 'rgba(255,255,255,0.78)' : '#ffe08a';
             line(hint, 18, 'bold', '"Baloo 2", sans-serif', SPIN_CY + 4);
             ctx.fillStyle = 'rgba(255,255,255,0.42)';
-            line('Chạm vào bi cái để chọn — đánh xong tự về giữa', 13, '', '"Nunito", sans-serif', SPIN_CY + 26);
+            line('Tap the cue ball to pick a spot — it resets to centre after the shot', 13, '', '"Nunito", sans-serif', SPIN_CY + 26);
             ctx.restore();
         },
 

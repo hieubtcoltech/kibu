@@ -348,15 +348,15 @@
                 if (tl.lightState === 'red') {
                     if (currentSpeed > 50) {
                         soundFX.playCrash();
-                        showToast('🚨 VI PHẠM VƯỢT ĐÈN ĐỎ! CẢNH SÁT BẮT XOAY XE!');
+                        showToast('🚨 RAN A RED LIGHT! THE POLICE SPIN YOU OUT!');
                         playerCar.spinTimer = 800;
                     } else {
                         soundFX.playPickup();
                         distanceTraveled += 100;
-                        showToast('🟢 LÁI XE AN TOÀN DỪNG ĐÈN ĐỎ! THƯỞNG +100m!');
+                        showToast('🟢 SAFE STOP AT THE RED LIGHT! BONUS +100m!');
                     }
                 } else if (tl.lightState === 'green') {
-                    showToast('🟢 ĐÈN XANH: PHÓNG TỐC ĐỘ GO GO GO!');
+                    showToast('🟢 GREEN LIGHT: GO GO GO!');
                 }
             }
 
@@ -394,7 +394,7 @@
                 if (playerCar.shieldTimer > 0 || selectedCar === 'truck') {
                     soundFX.playCrash();
                     traffic.splice(i, 1);
-                    showToast('💥 ĐÃ HÚC VĂNG XE CHẠY ẨU!');
+                    showToast('💥 SMASHED THAT RECKLESS DRIVER AWAY!');
                 } else {
                     soundFX.playCrash();
                     endRace();
@@ -418,17 +418,17 @@
                 soundFX.playPickup();
                 if (item.type === 'nitro') {
                     nitroPct = Math.min(100, nitroPct + 50);
-                    showToast('🚀 ĐÃ NẠP THÊM 50% NITRO!');
+                    showToast('🚀 NITRO REFILLED BY 50%!');
                 } else if (item.type === 'coin') {
                     distanceTraveled += 50;
-                    showToast('🪙 THƯỞNG +50m QUÃNG ĐƯỜNG!');
+                    showToast('🪙 BONUS +50m DISTANCE!');
                 } else if (item.type === 'shield') {
                     playerCar.shieldTimer = 5000;
-                    showToast('🛡️ BẬT KHIÊN BẢO VỆ XE!');
+                    showToast('🛡️ CAR SHIELD ACTIVATED!');
                 } else if (item.type === 'oil') {
                     if (selectedCar !== 'truck' && playerCar.shieldTimer <= 0) {
                         playerCar.spinTimer = 800;
-                        showToast('🌀 VỆT DẦU TRƠN! XOAY TÍT XE!');
+                        showToast('🌀 SLIPPERY OIL! SPINNING OUT!');
                     }
                 } else if (item.type === 'block') {
                     if (playerCar.shieldTimer <= 0) {

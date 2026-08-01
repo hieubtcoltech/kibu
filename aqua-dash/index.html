@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -74,7 +74,7 @@
     <div class="app-wrapper">
         <header class="unified-nav">
             <div class="nav-left">
-                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
                     <img src="/logo.png" alt="KIBU Games">
                 </a>
                 <div class="brand">
@@ -84,14 +84,14 @@
                 </div>
             </div>
             <div class="nav-actions">
-                <button id="btn-sound" class="btn" title="Bật / tắt âm thanh">
-                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                <button id="btn-sound" class="btn" title="Turn sound on / off">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
                 </button>
-                <button id="btn-help" class="btn" title="Cách chơi">
-                    <i class="fa-solid fa-circle-question"></i> <span>Cách Chơi</span>
+                <button id="btn-help" class="btn" title="How To Play">
+                    <i class="fa-solid fa-circle-question"></i> <span>How To Play</span>
                 </button>
-                <button id="btn-menu-nav" class="btn" title="Về màn hình chọn">
-                    <i class="fa-solid fa-list"></i> <span>Chọn Lại</span>
+                <button id="btn-menu-nav" class="btn" title="Back to the menu">
+                    <i class="fa-solid fa-list"></i> <span>Change Setup</span>
                 </button>
             </div>
         </header>
@@ -102,17 +102,17 @@
             <div class="hud-overlay">
                 <div class="hud-top">
                     <div class="hud-box hud-world">
-                        <div class="world-name" id="hud-world">RẠN SAN HÔ</div>
-                        <div class="world-meta"><span id="hud-distance">0m</span> · <span id="hud-speed">Tốc độ x1.0</span></div>
+                        <div class="world-name" id="hud-world">CORAL REEF</div>
+                        <div class="world-meta"><span id="hud-distance">0m</span> · <span id="hud-speed">Speed x1.0</span></div>
                     </div>
 
                     <div class="hud-box hud-clock" id="hud-clock">
                         <div class="clock-value" id="hud-timer">3:00</div>
-                        <div class="clock-label">Thời Gian</div>
+                        <div class="clock-label">Time Left</div>
                     </div>
 
                     <div class="hud-box hud-lead">
-                        <div class="lead-label">Dẫn Đầu</div>
+                        <div class="lead-label">Leader</div>
                         <div class="lead-name" id="hud-lead-name">—</div>
                     </div>
                 </div>
@@ -126,7 +126,7 @@
                 <div class="touch-joystick-zone" id="joystick-zone">
                     <div class="joystick-knob" id="joystick-knob"></div>
                 </div>
-                <button class="touch-dash-btn" id="dash-btn" aria-label="Bơi nhanh">
+                <button class="touch-dash-btn" id="dash-btn" aria-label="Swim fast">
                     <i class="fa-solid fa-bolt"></i>
                 </button>
             </div>
@@ -148,45 +148,45 @@
     <!-- ============ Màn hình chọn ============ -->
     <div id="modal-start" class="modal-overlay active">
         <div class="modal-card modal-wide">
-            <h2 class="modal-title">🤿 CUỘC ĐUA ĐÁY BIỂN 🐬</h2>
-            <p class="modal-subtitle">Bơi theo màn hình, gom kho báu — tụt lại là bị loại!</p>
+            <h2 class="modal-title">🤿 THE GREAT SEA RACE 🐬</h2>
+            <p class="modal-subtitle">Keep up with the screen, grab treasure — fall behind and you are out!</p>
 
             <div class="setup-section">
-                <div class="setup-label"><i class="fa-solid fa-users"></i> SỐ BÉ</div>
+                <div class="setup-label"><i class="fa-solid fa-users"></i> PLAYERS</div>
                 <div class="pill-row" id="count-row">
-                    <button class="pill count-btn active" data-count="1">1 Bé</button>
-                    <button class="pill count-btn" data-count="2">2 Bé</button>
-                    <button class="pill count-btn" data-count="3">3 Bé</button>
-                    <button class="pill count-btn" data-count="4">4 Bé</button>
+                    <button class="pill count-btn active" data-count="1">1 KID</button>
+                    <button class="pill count-btn" data-count="2">2 KIDS</button>
+                    <button class="pill count-btn" data-count="3">3 KIDS</button>
+                    <button class="pill count-btn" data-count="4">4 KIDS</button>
                 </div>
             </div>
 
             <div class="setup-section">
-                <div class="setup-label"><i class="fa-solid fa-shirt"></i> BỘ ĐỒ CỦA BÉ 1</div>
+                <div class="setup-label"><i class="fa-solid fa-shirt"></i> KID 1'S WETSUIT</div>
                 <canvas id="suit-preview" class="suit-preview" width="320" height="150"></canvas>
                 <div class="skin-row" id="skin-row"></div>
             </div>
 
             <div class="setup-section">
-                <div class="setup-label"><i class="fa-solid fa-map"></i> VÙNG BIỂN</div>
+                <div class="setup-label"><i class="fa-solid fa-map"></i> PICK YOUR SEA</div>
                 <div class="world-grid" id="world-grid"></div>
             </div>
 
             <div class="setup-section">
-                <div class="setup-label"><i class="fa-solid fa-stopwatch"></i> THỜI LƯỢNG</div>
+                <div class="setup-label"><i class="fa-solid fa-stopwatch"></i> ROUND TIME</div>
                 <div class="pill-row" id="time-row">
-                    <button class="pill time-btn active" data-time="180">3 phút</button>
-                    <button class="pill time-btn" data-time="240">4 phút</button>
-                    <button class="pill time-btn" data-time="300">5 phút</button>
+                    <button class="pill time-btn active" data-time="180">3 minutes</button>
+                    <button class="pill time-btn" data-time="240">4 mins</button>
+                    <button class="pill time-btn" data-time="300">5 minutes</button>
                 </div>
             </div>
 
             <p class="setup-hint" id="setup-hint"></p>
 
-            <button id="btn-start-race" class="btn btn-play">XUẤT PHÁT! <i class="fa-solid fa-forward"></i></button>
+            <button id="btn-start-race" class="btn btn-play">GO! <i class="fa-solid fa-forward"></i></button>
 
             <div class="menu-links">
-                <button id="btn-help-2" class="pill"><i class="fa-solid fa-circle-question"></i> Cách Chơi</button>
+                <button id="btn-help-2" class="pill"><i class="fa-solid fa-circle-question"></i> How To Play</button>
             </div>
         </div>
     </div>
@@ -194,25 +194,25 @@
     <!-- ============ Cách chơi ============ -->
     <div id="modal-help" class="modal-overlay">
         <div class="modal-card modal-wide">
-            <h2 class="modal-title">CÁCH CHƠI</h2>
+            <h2 class="modal-title">HOW TO PLAY</h2>
 
             <div class="help-block">
-                <div class="help-head"><span>🕹️</span> Điều khiển</div>
+                <div class="help-head"><span>🕹️</span> Controls</div>
                 <div class="key-rows" id="help-controls"></div>
             </div>
 
             <div class="help-block">
-                <div class="help-head"><span>🏁</span> Luật đua</div>
+                <div class="help-head"><span>🏁</span> Race rules</div>
                 <div class="rule-row">
-                    <div class="rule"><b>➡️</b> Màn hình tự trôi</div>
-                    <div class="rule"><b>💨</b> Tụt lại là bị loại</div>
-                    <div class="rule"><b>⏱️</b> Hết giờ, nhiều điểm nhất thắng</div>
-                    <div class="rule"><b>🛣️</b> 3 đường: khó thì nhiều kho báu</div>
+                    <div class="rule"><b>➡️</b> The screen scrolls</div>
+                    <div class="rule"><b>💨</b> Fall behind, you are out</div>
+                    <div class="rule"><b>⏱️</b> Highest score at the buzzer wins</div>
+                    <div class="rule"><b>🛣️</b> 3 routes: riskier means richer</div>
                 </div>
             </div>
 
             <div class="help-block">
-                <div class="help-head"><span>💎</span> Ăn điểm</div>
+                <div class="help-head"><span>💎</span> Scoring</div>
                 <div class="icon-grid">
                     <div class="ig"><b>🪙</b><i>20</i></div>
                     <div class="ig"><b>🫧</b><i>35</i></div>
@@ -221,33 +221,33 @@
                     <div class="ig"><b>🧰</b><i>280</i></div>
                     <div class="ig hot"><b>🔥</b><i>x5</i></div>
                 </div>
-                <p class="help-note">Mỗi mét bơi được thêm 2 điểm</p>
+                <p class="help-note">Every metre swum adds 2 points</p>
             </div>
 
             <div class="help-block">
-                <div class="help-head"><span>🦈</span> Tránh xa</div>
+                <div class="help-head"><span>🦈</span> Avoid</div>
                 <div class="icon-row">🪼 🦔 ⚡ 🌿 🦀 🪨 🦑 💣 🐚 🦈</div>
-                <p class="help-note">Cá mập đuổi bé đang đứng chót</p>
+                <p class="help-note">Sharks chase whoever is last</p>
             </div>
 
             <div class="help-block">
-                <div class="help-head"><span>🐬</span> Cưỡi cá &amp; bảo bối</div>
+                <div class="help-head"><span>🐬</span> Rides &amp; power-ups</div>
                 <div class="icon-row">🐬 🐢 🗡️ 🐙 🐡 🐟</div>
                 <div class="icon-row">⚡ 🧲 🛡️ ✨ 🔥 📡 ⏱️</div>
             </div>
 
-            <button id="btn-close-help" class="btn btn-play">Hiểu Rồi!</button>
+            <button id="btn-close-help" class="btn btn-play">Got It!</button>
         </div>
     </div>
-            <h2 class="modal-title" id="end-title">VỀ ĐÍCH!</h2>
+            <h2 class="modal-title" id="end-title">FINISHED!</h2>
             <p class="modal-subtitle" id="end-sub"></p>
 
             <div class="rank-list" id="rank-list"></div>
             <div class="award-row" id="award-row"></div>
 
             <div class="end-buttons">
-                <button id="btn-replay" class="btn btn-play"><i class="fa-solid fa-rotate-right"></i> Đua Lại</button>
-                <button id="btn-menu-race" class="btn"><i class="fa-solid fa-list"></i> Đổi Màn</button>
+                <button id="btn-replay" class="btn btn-play"><i class="fa-solid fa-rotate-right"></i> Race Again</button>
+                <button id="btn-menu-race" class="btn"><i class="fa-solid fa-list"></i> Change Stage</button>
             </div>
         </div>
     </div>

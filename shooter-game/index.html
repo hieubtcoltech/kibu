@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -80,7 +80,7 @@
         <!-- Top Navigation Bar -->
         <header class="unified-nav">
             <div class="nav-left">
-                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
                     <img src="/logo.png" alt="KIBU Games">
                 </a>
                 <div class="brand">
@@ -93,14 +93,14 @@
             <div class="nav-actions">
             
             
-                <button id="btn-auto-aim" class="btn btn-toggle active" title="Tự động ngắm bắn cho bé">
-                    <i class="fa-solid fa-bullseye"></i> <span id="auto-aim-label">Tự Ngắm: BẬT</span>
+                <button id="btn-auto-aim" class="btn btn-toggle active" title="Auto aim for kids">
+                    <i class="fa-solid fa-bullseye"></i> <span id="auto-aim-label">Auto Aim: On</span>
                 </button>
                 <button id="btn-sound" class="btn">
-                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
                 </button>
                 <button id="btn-shop" class="btn">
-                    <i class="fa-solid fa-store text-yellow"></i> <span>Cửa Hàng</span>
+                    <i class="fa-solid fa-store text-yellow"></i> <span>Shop</span>
                 </button>
             </div>
             
@@ -120,7 +120,7 @@
                         </div>
                         <div class="status-details">
                             <div class="bar-header">
-                                <span id="player-name-hud">Đặc Nhiệm Con Người</span>
+                                <span id="player-name-hud">Human Special Forces</span>
                                 <span id="hp-text">100/100</span>
                             </div>
                             <div class="health-track">
@@ -130,18 +130,18 @@
                     </div>
 
                     <div class="hud-box hud-center">
-                        <div id="wave-hud" class="wave-title">ĐỢT 1</div>
-                        <div id="bots-left-hud" class="bots-remaining"><i class="fa-solid fa-skull"></i> Bot Còn Lại: 5</div>
+                        <div id="wave-hud" class="wave-title">WAVE 1</div>
+                        <div id="bots-left-hud" class="bots-remaining"><i class="fa-solid fa-skull"></i> Bots Left: 5</div>
                     </div>
 
                     <div class="hud-box hud-right">
                         <div class="stat-item">
                             <div id="score-hud" class="stat-val">0</div>
-                            <div class="stat-lbl">Điểm Số</div>
+                            <div class="stat-lbl">Score</div>
                         </div>
                         <div class="stat-item" style="margin-left: 14px;">
                             <div id="coins-hud" class="stat-val text-yellow"><i class="fa-solid fa-coins"></i> 0</div>
-                            <div class="stat-lbl">Xu Thưởng</div>
+                            <div class="stat-lbl">Coins</div>
                         </div>
                     </div>
                 </div>
@@ -153,25 +153,25 @@
                 <!-- Bottom 4 Weapons Quick-Switch Bar & Buff Bar -->
                 <div class="hud-bottom">
                     <div class="hud-box weapon-slots-bar" id="weapon-slots">
-                        <div class="weapon-slot active" data-slot="0" data-key="pistol" title="Bấm phím 1 để chọn">
+                        <div class="weapon-slot active" data-slot="0" data-key="pistol" title="Press 1 to select">
                             <span class="slot-num">1</span>
                             <div class="slot-icon"><i class="fa-solid fa-gun"></i></div>
-                            <div class="slot-name">Súng Ngắn</div>
+                            <div class="slot-name">Pistol</div>
                             <div class="slot-ammo" id="ammo-0">∞</div>
                         </div>
-                        <div class="weapon-slot" data-slot="1" data-key="shotgun" title="Bấm phím 2 để chọn">
+                        <div class="weapon-slot" data-slot="1" data-key="shotgun" title="Press 2 to select">
                             <span class="slot-num">2</span>
                             <div class="slot-icon"><i class="fa-solid fa-burst"></i></div>
-                            <div class="slot-name">Súng Săn</div>
+                            <div class="slot-name">Shotgun</div>
                             <div class="slot-ammo" id="ammo-1">40</div>
                         </div>
-                        <div class="weapon-slot" data-slot="2" data-key="rocket" title="Bấm phím 3 để chọn">
+                        <div class="weapon-slot" data-slot="2" data-key="rocket" title="Press 3 to select">
                             <span class="slot-num">3</span>
                             <div class="slot-icon"><i class="fa-solid fa-rocket"></i></div>
-                            <div class="slot-name">Tên Lửa</div>
+                            <div class="slot-name">Rocket Launcher</div>
                             <div class="slot-ammo" id="ammo-2">15</div>
                         </div>
-                        <div class="weapon-slot" data-slot="3" data-key="plasma" title="Bấm phím 4 để chọn">
+                        <div class="weapon-slot" data-slot="3" data-key="plasma" title="Press 4 to select">
                             <span class="slot-num">4</span>
                             <div class="slot-icon"><i class="fa-solid fa-bolt"></i></div>
                             <div class="slot-name">Laser</div>
@@ -213,46 +213,46 @@
     <div id="modal-start" class="modal-overlay active">
         <div class="modal-card">
             <div class="modal-icon"><i class="fa-solid fa-gamepad"></i></div>
-            <h2 class="modal-title">CON NGƯỜI CẦM SÚNG 🧑‍✈️🔫 VS ROBOT 🤖</h2>
-            <p class="modal-subtitle">Bé nhập vai <b>CON NGƯỜI CẦM SÚNG 🧑‍✈️🔫</b> dũng cảm tiêu diệt các binh đoàn <b>ROBOT 🤖</b> độc ác!</p>
+            <h2 class="modal-title">HUMAN GUNNER 🧑‍✈️🔫 VS ROBOTS 🤖</h2>
+            <p class="modal-subtitle">Play as a <b>HUMAN GUNNER 🧑‍✈️🔫</b> and bravely wipe out the legions of <b>ROBOT 🤖</b> evil robots!</p>
 
             <div class="mode-grid">
                 <div class="mode-card selected" data-mode="survival">
                     <div class="mode-icon text-yellow"><i class="fa-solid fa-person-rifle"></i></div>
-                    <div class="mode-name">Con Người Sinh Tồn</div>
-                    <div class="mode-desc">Bé cầm súng tiêu diệt từng đợt Robot địch & Trùm Robot Khổng Lồ!</div>
+                    <div class="mode-name">Human Survival</div>
+                    <div class="mode-desc">Take on wave after wave of enemy robots and the giant robot boss!</div>
                 </div>
                 <div class="mode-card" data-mode="team">
                     <div class="mode-icon text-blue"><i class="fa-solid fa-user-shield"></i></div>
-                    <div class="mode-name">Con Người Đấu Đội</div>
-                    <div class="mode-desc">Bé (Con Người) cùng đội Robot bảo vệ tiêu diệt Binh Đoàn Robot Đỏ!</div>
+                    <div class="mode-name">Human Team Battle</div>
+                    <div class="mode-desc">Team up with the guardian robots to destroy the Red Robot Legion!</div>
                 </div>
             </div>
 
             <!-- Loadout & Equipment Selector -->
             <div class="setup-box">
                 <div class="setup-label">
-                    <i class="fa-solid fa-vest-patches"></i> CHỌN TRANG BỊ & VŨ KHÍ CHO NHÂN VẬT:
+                    <i class="fa-solid fa-vest-patches"></i> CHOOSE YOUR GEAR &amp; WEAPON:
                 </div>
                 <div class="setup-btns">
-                    <button class="btn btn-toggle active loadout-btn" data-type="armor" data-val="tactical">🛡️ Giáp Đặc Nhiệm (+Tốc)</button>
-                    <button class="btn btn-toggle loadout-btn" data-type="armor" data-val="heavy">🛡️ Giáp Thép Kevlar (+Máu)</button>
-                    <button class="btn btn-toggle active loadout-btn" data-type="helmet" data-val="bandana">🪖 Băng Rôn (+Sát Thương)</button>
-                    <button class="btn btn-toggle loadout-btn" data-type="helmet" data-val="helmet">🪖 Mũ Thép (Chống Bẫy)</button>
+                    <button class="btn btn-toggle active loadout-btn" data-type="armor" data-val="tactical">🛡️ Special Forces Armour (+Speed)</button>
+                    <button class="btn btn-toggle loadout-btn" data-type="armor" data-val="heavy">🛡️ Kevlar Steel Armour (+Health)</button>
+                    <button class="btn btn-toggle active loadout-btn" data-type="helmet" data-val="bandana">🪖 Headband (+Damage)</button>
+                    <button class="btn btn-toggle loadout-btn" data-type="helmet" data-val="helmet">🪖 Steel Helmet (Trap Proof)</button>
                 </div>
             </div>
 
             <div class="setup-row">
-                <label class="setup-label-inline">Độ Khó Đấu Trường:</label>
+                <label class="setup-label-inline">Arena Difficulty:</label>
                 <div class="setup-btns">
-                    <button class="btn btn-toggle active difficulty-btn" data-diff="easy">Dễ (Vui Vẻ)</button>
-                    <button class="btn btn-toggle difficulty-btn" data-diff="normal">Vừa (Thử Thách)</button>
-                    <button class="btn btn-toggle difficulty-btn" data-diff="hard">Khó (Dũng Sĩ)</button>
+                    <button class="btn btn-toggle active difficulty-btn" data-diff="easy">Easy (Just Fun)</button>
+                    <button class="btn btn-toggle difficulty-btn" data-diff="normal">Medium (Challenge)</button>
+                    <button class="btn btn-toggle difficulty-btn" data-diff="hard">Hard (Hero)</button>
                 </div>
             </div>
 
             <button id="btn-play-game" class="btn btn-cyber btn-primary btn-play">
-                BẮT ĐẦU CHƠI <i class="fa-solid fa-play"></i>
+                START PLAYING <i class="fa-solid fa-play"></i>
             </button>
         </div>
     </div>
@@ -261,31 +261,31 @@
     <div id="modal-shop" class="modal-overlay">
         <div class="modal-card" style="max-width: 650px;">
             <div class="modal-icon text-yellow"><i class="fa-solid fa-cart-shopping"></i></div>
-            <h2 class="modal-title">CỬA HÀNG NÂNG CẤP</h2>
-            <p class="modal-subtitle">Số xu hiện có: <b id="shop-coins-val" style="color: #ffd700;">0</b> Xu</p>
+            <h2 class="modal-title">UPGRADE SHOP</h2>
+            <p class="modal-subtitle">Coins available: <b id="shop-coins-val" style="color: #ffd700;">0</b> Xu</p>
 
             <div class="shop-grid">
                 <div class="shop-item">
                     <div class="shop-item-icon"><i class="fa-solid fa-heart-pulse"></i></div>
-                    <div class="shop-item-title">Máu Tối Đa</div>
-                    <div class="shop-item-level" id="shop-hp-lvl">Cấp 1 (+20 Máu)</div>
+                    <div class="shop-item-title">Max Health</div>
+                    <div class="shop-item-level" id="shop-hp-lvl">Level 1 (+20 Health)</div>
                     <button class="btn btn-primary shop-buy-btn" id="btn-buy-hp">50 Xu</button>
                 </div>
                 <div class="shop-item">
                     <div class="shop-item-icon"><i class="fa-solid fa-person-running"></i></div>
-                    <div class="shop-item-title">Tốc Độ Chạy</div>
-                    <div class="shop-item-level" id="shop-speed-lvl">Cấp 1 (+10% Tốc)</div>
+                    <div class="shop-item-title">Move Speed</div>
+                    <div class="shop-item-level" id="shop-speed-lvl">Level 1 (+10% Speed)</div>
                     <button class="btn btn-primary shop-buy-btn" id="btn-buy-speed">50 Xu</button>
                 </div>
                 <div class="shop-item">
                     <div class="shop-item-icon"><i class="fa-solid fa-burst"></i></div>
-                    <div class="shop-item-title">Sát Thương Súng</div>
-                    <div class="shop-item-level" id="shop-damage-lvl">Cấp 1 (+15% ST)</div>
+                    <div class="shop-item-title">Weapon Damage</div>
+                    <div class="shop-item-level" id="shop-damage-lvl">Level 1 (+15% DMG)</div>
                     <button class="btn btn-primary shop-buy-btn" id="btn-buy-damage">75 Xu</button>
                 </div>
             </div>
 
-            <button id="btn-close-shop" class="btn btn-primary" style="margin-top: 10px;">Đóng Cửa Hàng</button>
+            <button id="btn-close-shop" class="btn btn-primary" style="margin-top: 10px;">Close Shop</button>
         </div>
     </div>
 
@@ -293,20 +293,20 @@
     <div id="modal-end" class="modal-overlay">
         <div class="modal-card">
             <div class="modal-icon" id="end-icon"><i class="fa-solid fa-trophy"></i></div>
-            <h2 class="modal-title" id="end-title">CHIẾN THẮNG!</h2>
-            <p class="modal-subtitle" id="end-sub">Bạn đã hạ gục toàn bộ các đợt Bot!</p>
+            <h2 class="modal-title" id="end-title">VICTORY!</h2>
+            <p class="modal-subtitle" id="end-sub">You took down every wave of bots!</p>
 
             <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 16px; margin-bottom: 20px;">
-                <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">Điểm số đạt được: <span id="end-score" style="color:#00f0ff">0</span></div>
-                <div style="font-size: 1rem; color:#ffd700;">Xu thưởng kiếm được: +<span id="end-coins">0</span> Xu</div>
+                <div style="font-size: 1.1rem; font-weight: 700; margin-bottom: 6px;">Final score: <span id="end-score" style="color:#00f0ff">0</span></div>
+                <div style="font-size: 1rem; color:#ffd700;">Coins earned: +<span id="end-coins">0</span> Xu</div>
             </div>
 
             <div style="display: flex; gap: 14px; justify-content: center;">
                 <button id="btn-restart-game" class="btn btn-cyber">
-                    <i class="fa-solid fa-rotate-right"></i> Chơi Lại
+                    <i class="fa-solid fa-rotate-right"></i> Restart
                 </button>
                 <button id="btn-menu-game" class="btn">
-                    <i class="fa-solid fa-house"></i> Về Menu
+                    <i class="fa-solid fa-house"></i> Main Menu
                 </button>
             </div>
         </div>

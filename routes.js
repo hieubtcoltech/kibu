@@ -17,7 +17,7 @@
     'use strict';
 
     var LANGS = ['vi', 'en'];
-    var DEFAULT_LANG = 'vi';
+    var DEFAULT_LANG = 'en';   // web viết gốc bằng tiếng Anh, tiếng Việt là bản dịch
 
     /* folder on disk  →  slug in the URL (the game's own brand name) */
     var GAMES = [

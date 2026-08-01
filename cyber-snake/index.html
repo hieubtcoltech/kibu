@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -76,7 +76,7 @@
     <div class="matrix-grid-bg"></div>
     <header class="unified-nav">
         <div class="nav-left">
-            <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+            <a href="/" class="nav-home" title="Home" aria-label="Home">
                 <img src="/logo.png" alt="KIBU Games">
             </a>
             <div class="brand">
@@ -135,23 +135,23 @@
                 <p class="logo-subtitle">Neon Grid Grid Cybernetic Hack</p>
 
                 <div class="legend-box">
-                    <h3>HỆ THỐNG POWER-UP CORES</h3>
+                    <h3>POWER-UP CORE SYSTEM</h3>
                     <div class="legend-grid">
-                        <div class="legend-item"><span class="core-dot bg-green"></span> <span><b>Nano</b>: Mồi thường (+100đ, dài +1)</span></div>
-                        <div class="legend-item"><span class="core-dot bg-yellow"></span> <span><b>Overdrive</b>: Nhân đôi điểm + Siêu tốc (5s)</span></div>
-                        <div class="legend-item"><span class="core-dot bg-blue"></span> <span><b>Cryo</b>: Làm chậm tốc độ di chuyển (5s)</span></div>
-                        <div class="legend-item"><span class="core-dot bg-red"></span> <span><b>EMP</b>: Phá hủy giật lùi đuôi (-2 đốt thân)</span></div>
-                        <div class="legend-item"><span class="core-dot bg-rainbow"></span> <span><b>Glitch</b>: Cho điểm cực lớn (+500đ)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-green"></span> <span><b>Nano</b>: Standard core (+100 pts, +1 length)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-yellow"></span> <span><b>Overdrive</b>: Double points + overdrive (5s)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-blue"></span> <span><b>Cryo</b>: Slows movement down (5s)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-red"></span> <span><b>EMP</b>: Destroys the tail (-2 body segments)</span></div>
+                        <div class="legend-item"><span class="core-dot bg-rainbow"></span> <span><b>Glitch</b>: Huge score bonus (+500 pts)</span></div>
                     </div>
                 </div>
 
                 <div class="controls-guide">
-                    <h3>ĐIỀU KHIỂN</h3>
-                    <p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / <kbd>↑</kbd> <kbd>←</kbd> <kbd>↓</kbd> <kbd>→</kbd> để điều khiển hướng đi.</p>
-                    <p>Trên di động: <b>Vuốt màn hình</b> theo hướng muốn rẽ.</p>
+                    <h3>CONTROLS</h3>
+                    <p><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> / <kbd>↑</kbd> <kbd>←</kbd> <kbd>↓</kbd> <kbd>→</kbd> to steer.</p>
+                    <p>On mobile: <b>Swipe the screen</b> in the direction you want to turn.</p>
                 </div>
 
-                <button id="btn-start" class="btn btn-primary btn-glow">BẮT ĐẦU HACK GRID</button>
+                <button id="btn-start" class="btn btn-primary btn-glow">START HACKING THE GRID</button>
             </div>
         </div>
 
@@ -159,23 +159,23 @@
         <div id="gameover-overlay" class="overlay hidden">
             <div class="menu-content glass-card pop-in">
                 <h2 class="text-red">GRID COLLUSION DETECTED</h2>
-                <p class="gameover-subtitle">Kết nối mạng lưới đã bị ngắt</p>
+                <p class="gameover-subtitle">Grid connection terminated</p>
 
                 <div class="final-stats">
                     <div class="stat-row">
-                        <span>Điểm số hack được:</span>
+                        <span>Score hacked:</span>
                         <span id="final-score" class="text-yellow">0</span>
                     </div>
                     <div class="stat-row">
-                        <span>Đạt tới Level:</span>
+                        <span>Level reached:</span>
                         <span id="final-level" class="text-green">1</span>
                     </div>
-                    <div id="new-high-badge" class="new-high-badge hidden">KỶ LỤC MỚI ĐÃ ĐƯỢC THIẾT LẬP!</div>
+                    <div id="new-high-badge" class="new-high-badge hidden">NEW RECORD SET!</div>
                 </div>
 
                 <div class="menu-buttons">
-                    <button id="btn-retry" class="btn btn-primary btn-glow">HACK LẠI <i class="fa-solid fa-rotate-right"></i></button>
-                    <button id="btn-menu" class="btn btn-secondary">TRANG CHỦ <i class="fa-solid fa-house"></i></button>
+                    <button id="btn-retry" class="btn btn-primary btn-glow">HACK AGAIN <i class="fa-solid fa-rotate-right"></i></button>
+                    <button id="btn-menu" class="btn btn-secondary">HOME <i class="fa-solid fa-house"></i></button>
                 </div>
             </div>
         </div>

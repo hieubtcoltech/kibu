@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -77,7 +77,7 @@
     <div class="app-wrapper">
         <header class="unified-nav">
             <div class="nav-left">
-                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
                     <img src="/logo.png" alt="KIBU Games">
                 </a>
                 <div class="brand">
@@ -90,13 +90,13 @@
             
             
                 <button id="btn-sound" class="btn">
-                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
                 </button>
                 <button id="btn-menu" class="btn">
-                    <i class="fa-solid fa-list"></i> <span>Đổi Đội Hình</span>
+                    <i class="fa-solid fa-list"></i> <span>Change Lineup</span>
                 </button>
                 <button id="btn-restart" class="btn">
-                    <i class="fa-solid fa-rotate-right"></i> <span>Đá Lại</span>
+                    <i class="fa-solid fa-rotate-right"></i> <span>Rematch</span>
                 </button>
             </div>
             
@@ -109,16 +109,16 @@
                 <div class="hud-top">
                     <div id="score-strip" class="scoreboard">
                         <div class="team-side team-a">
-                            <span id="team-a-name" class="team-name">ĐỘI ĐỎ</span>
+                            <span id="team-a-name" class="team-name">RED TEAM</span>
                             <span id="score-a" class="team-score">0</span>
                         </div>
                         <div class="clock-box">
-                            <div class="clock-label">THỜI GIAN</div>
+                            <div class="clock-label">TIME LEFT</div>
                             <div id="clock" class="clock-time">2:30</div>
                         </div>
                         <div class="team-side team-b">
                             <span id="score-b" class="team-score">0</span>
-                            <span id="team-b-name" class="team-name">ĐỘI XANH</span>
+                            <span id="team-b-name" class="team-name">BLUE TEAM</span>
                         </div>
                     </div>
                 </div>
@@ -132,86 +132,86 @@
             <div id="screen-menu" class="screen">
                 <div class="panel">
                     <div class="panel-emoji">⚽🥅</div>
-                    <h2 class="panel-title">BÓNG ĐÁ MINI</h2>
-                    <p class="panel-desc" data-i18n-html="soc_desc">Từ <b>2 đến 4 bé</b> cùng đá trên một máy. Rê bóng qua người, chuyền cho đồng đội rồi tung cú sút qua <b>thủ môn</b> vào lưới đối phương! Sân vẽ theo <b>luật futsal</b>: vòng cấm hình vòng cung, hai chấm phạt đền, khu thay người.</p>
+                    <h2 class="panel-title">MINI SOCCER</h2>
+                    <p class="panel-desc" data-i18n-html="soc_desc">With <b>2 to 4 kids</b> on one device: dribble past defenders, pass to a teammate and fire a shot past the <b>goalie</b>! The pitch follows <b>futsal rules</b> — an arc-shaped penalty area, two penalty spots and substitution zones.<b>2 to 4 kids</b> play together on one device. Dribble past defenders, pass to a teammate, then fire a shot past the <b>goalie</b> into the net! The pitch follows <b>futsal rules</b>: an arc-shaped penalty area, two penalty spots and substitution zones.</p>
 
                     <div class="setup-block">
-                        <div class="setup-label"><i class="fa-solid fa-users"></i> SỐ NGƯỜI CHƠI</div>
+                        <div class="setup-label"><i class="fa-solid fa-users"></i> NUMBER OF PLAYERS</div>
                         <div class="opt-row">
                             <button class="opt" data-players="2">
                                 <span class="opt-icon">🐯⚔️🦊</span>
-                                <span class="opt-name">2 BÉ · 1-1</span>
-                                <span class="opt-desc">Đối đầu tay đôi</span>
+                                <span class="opt-name">2 KIDS · 1-1</span>
+                                <span class="opt-desc">Head-to-head duel</span>
                             </button>
                             <button class="opt" data-players="3">
                                 <span class="opt-icon">🐯🐼⚔️🦊</span>
-                                <span class="opt-name">3 BÉ · 2-1</span>
-                                <span class="opt-desc">Bé chơi một mình chạy nhanh và sút mạnh hơn ⭐</span>
+                                <span class="opt-name">3 KIDS · 2-1</span>
+                                <span class="opt-desc">The solo kid runs faster and shoots harder ⭐</span>
                             </button>
                             <button class="opt sel" data-players="4">
                                 <span class="opt-icon">🐯🐼⚔️🐸🦊</span>
-                                <span class="opt-name">4 BÉ · 2-2</span>
-                                <span class="opt-desc">Hai đội, tha hồ chuyền bóng</span>
+                                <span class="opt-name">4 KIDS · 2-2</span>
+                                <span class="opt-desc">Two teams — pass all you like</span>
                             </button>
                         </div>
                     </div>
 
                     <div class="setup-block">
-                        <div class="setup-label"><i class="fa-solid fa-stopwatch"></i> THỜI GIAN TRẬN ĐẤU</div>
+                        <div class="setup-label"><i class="fa-solid fa-stopwatch"></i> MATCH DURATION</div>
                         <div class="opt-row">
                             <button class="opt" data-len="short">
-                                <span class="opt-name">1 PHÚT 30</span>
-                                <span class="opt-desc">Đá nhanh</span>
+                                <span class="opt-name">1 MIN 30</span>
+                                <span class="opt-desc">Quick match</span>
                             </button>
                             <button class="opt sel" data-len="normal">
-                                <span class="opt-name">2 PHÚT 30</span>
-                                <span class="opt-desc">Vừa đủ</span>
+                                <span class="opt-name">2 MIN 30</span>
+                                <span class="opt-desc">Just right</span>
                             </button>
                             <button class="opt" data-len="long">
-                                <span class="opt-name">4 PHÚT</span>
-                                <span class="opt-desc">Trận dài</span>
+                                <span class="opt-name">4 MINS</span>
+                                <span class="opt-desc">Long match</span>
                             </button>
                         </div>
                     </div>
 
                     <div class="setup-block">
-                        <div class="setup-label"><i class="fa-solid fa-shirt"></i> ĐỘI HÌNH &amp; PHÍM BẤM</div>
+                        <div class="setup-label"><i class="fa-solid fa-shirt"></i> LINEUP &amp; CONTROLS</div>
                         <div id="lineup" class="lineup"></div>
                     </div>
 
                     <div class="skills">
                         <div class="skill">
                             <span class="skill-icon">🏃</span>
-                            <div><b data-i18n="sk_dribble_t">RÊ BÓNG</b><br><span data-i18n="sk_dribble_d">Có bóng rồi cứ chạy, bóng dính theo chân bé</span></div>
+                            <div><b data-i18n="sk_dribble_t">DRIBBLING</b><br><span data-i18n="sk_dribble_d">Once you have the ball just run — it sticks to your feet</span></div>
                         </div>
                         <div class="skill">
                             <span class="skill-icon">🤝</span>
-                            <div><b data-i18n="sk_pass_t">CHUYỀN BÓNG</b><br><span data-i18n-html="sk_pass_d"><i>Bấm nhanh</i> phím hành động để chuyền cho đồng đội</span></div>
+                            <div><b data-i18n="sk_pass_t">PASSING</b><br><span data-i18n-html="sk_pass_d"><i>Tap</i> the action key to pass to a teammate<i>Bấm nhanh</i> phím hành động để chuyền cho đồng đội</span></div>
                         </div>
                         <div class="skill">
                             <span class="skill-icon">👟</span>
-                            <div><b data-i18n="sk_soft_t">SÚT NHẸ</b><br><span data-i18n-html="sk_soft_d"><i>Giữ một chút</i> rồi thả — bóng đi vừa phải, dễ đặt lòng</span></div>
+                            <div><b data-i18n="sk_soft_t">SOFT SHOT</b><br><span data-i18n-html="sk_soft_d"><i>Hold briefly</i> then release — a gentle, easy-to-place shot<i>Giữ một chút</i> rồi thả — bóng đi vừa phải, dễ đặt lòng</span></div>
                         </div>
                         <div class="skill">
                             <span class="skill-icon">💥</span>
-                            <div><b data-i18n="sk_power_t">SÚT MẠNH</b><br><span data-i18n-html="sk_power_d"><i>Giữ lâu</i> cho thanh lực qua vạch trắng rồi thả — bóng bay như tên lửa</span></div>
+                            <div><b data-i18n="sk_power_t">POWER SHOT</b><br><span data-i18n-html="sk_power_d"><i>Hold longer</i> until the power bar passes the white line, then release — a rocket<i>Giữ lâu</i> cho thanh lực qua vạch trắng rồi thả — bóng bay như tên lửa</span></div>
                         </div>
                         <div class="skill">
                             <span class="skill-icon">🌀</span>
-                            <div><b data-i18n="sk_curve_t">ĐÁ XOÁY</b><br><span data-i18n-html="sk_curve_d">Dùng <i>phím thứ hai</i> — bóng bay cong vòng qua thủ môn, đổi lại đi nhẹ hơn chút</span></div>
+                            <div><b data-i18n="sk_curve_t">CURVE SHOT</b><br><span data-i18n-html="sk_curve_d">Use the <i>second key</i> — the ball bends around the keeper, but travels a little softer<i>Key thứ hai</i> — bóng bay cong vòng qua goalie, đổi lại đi nhẹ hơn chút</span></div>
                         </div>
                         <div class="skill">
                             <span class="skill-icon">🧤</span>
-                            <div><b data-i18n="sk_goalie_t">QUA MẶT THỦ MÔN</b><br><span data-i18n-html="sk_goalie_d">Sút thẳng thì bị bắt — hãy <i>chạy dạt sang một bên</i> rồi sút vào góc trống!</span></div>
+                            <div><b data-i18n="sk_goalie_t">BEATING THE GOALIE</b><br><span data-i18n-html="sk_goalie_d">Straight shots get saved — <i>run out wide</i> first, then fire into the open corner!<i>chạy dạt sang một bên</i> rồi sút vào góc trống!</span></div>
                         </div>
                         <div class="skill">
                             <span class="skill-icon">🥅</span>
-                            <div><b data-i18n="sk_penalty_t">ĐÁ LUÂN LƯU</b><br><span data-i18n-html="sk_penalty_d">Hết giờ mà hoà thì hai đội <i>đá luân lưu 3 quả</i>, vẫn hoà thì đấu súng tới khi phân thắng bại</span></div>
+                            <div><b data-i18n="sk_penalty_t">PENALTY SHOOTOUT</b><br><span data-i18n-html="sk_penalty_d">Still level at full time? <i>Three penalties each</i> — then sudden death until someone wins<i>penalty shootout 3 quả</i>, vẫn hoà thì đấu súng tới khi phân thắng bại</span></div>
                         </div>
                     </div>
 
                     <button id="btn-start" class="big-btn">
-                        <i class="fa-solid fa-play"></i> VÀO SÂN THI ĐẤU
+                        <i class="fa-solid fa-play"></i> KICK OFF MATCH
                     </button>
                 </div>
             </div>
@@ -220,11 +220,11 @@
             <div id="screen-pause" class="screen hidden">
                 <div class="panel panel-small">
                     <div class="panel-emoji">⏸️</div>
-                    <h2 class="panel-title">TẠM DỪNG</h2>
-                    <p class="panel-desc">Nghỉ giải lao một chút rồi đá tiếp nhé!</p>
+                    <h2 class="panel-title">PAUSED</h2>
+                    <p class="panel-desc">Take a short break, then get back on the pitch!</p>
                     <div class="over-actions">
-                        <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> ĐÁ TIẾP</button>
-                        <button id="btn-back-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> ĐỔI ĐỘI HÌNH</button>
+                        <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> RESUME MATCH</button>
+                        <button id="btn-back-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> CHANGE LINEUP</button>
                     </div>
                 </div>
             </div>
@@ -233,12 +233,12 @@
             <div id="screen-over" class="screen hidden">
                 <div class="panel">
                     <div id="over-emoji" class="panel-emoji">🏆</div>
-                    <h2 id="over-title" class="panel-title">ĐỘI ĐỎ VÔ ĐỊCH!</h2>
-                    <p id="over-desc" class="panel-desc">Một trận cầu quá hay!</p>
+                    <h2 id="over-title" class="panel-title">RED TEAM CHAMPION!</h2>
+                    <p id="over-desc" class="panel-desc">What a match!</p>
                     <div id="final-grid" class="final-grid cols-4"></div>
                     <div class="over-actions">
-                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> ĐÁ LẠI</button>
-                        <a href="/" class="big-btn btn-ghost"><i class="fa-solid fa-house"></i> TRANG CHỦ</a>
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> REMATCH</button>
+                        <a href="/" class="big-btn btn-ghost"><i class="fa-solid fa-house"></i> HOME</a>
                     </div>
                 </div>
             </div>

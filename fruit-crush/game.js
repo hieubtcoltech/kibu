@@ -510,7 +510,7 @@ function detectLanguage() {
         const saved = localStorage.getItem(LANG_KEY);
         if (saved && I18N[saved]) return saved;
     } catch (e) { /* bỏ qua */ }
-    const nav = (navigator.language || navigator.userLanguage || 'vi').toLowerCase();
+    const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
     return nav.startsWith('vi') ? 'vi' : 'en';
 }
 

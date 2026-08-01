@@ -109,8 +109,8 @@
 
     // ---------- Đội & người chơi ----------
     const TEAMS = [
-        { name: 'ĐỘI ĐỎ', color: '#ff4d4d', dark: '#a81f1f', light: '#ff9a9a', glow: '255,77,77' },
-        { name: 'ĐỘI XANH', color: '#3da5ff', dark: '#14538f', light: '#a8d8ff', glow: '61,165,255' }
+        { name: 'RED TEAM', color: '#ff4d4d', dark: '#a81f1f', light: '#ff9a9a', glow: '255,77,77' },
+        { name: 'BLUE TEAM', color: '#3da5ff', dark: '#14538f', light: '#a8d8ff', glow: '61,165,255' }
     ];
 
     // Bốn bộ phím trải đều bàn phím để 4 bé ngồi cạnh nhau không vướng tay
@@ -125,7 +125,7 @@
     const SLOTS = { 2: [0, 3], 3: [0, 1, 3], 4: [0, 1, 2, 3] };
     const TEAM_OF = { 2: [0, 1], 3: [0, 0, 1], 4: [0, 0, 1, 1] };
 
-    const NAMES = ['BÉ 1', 'BÉ 2', 'BÉ 3', 'BÉ 4'];
+    const NAMES = ['KID 1', 'KID 2', 'KID 3', 'KID 4'];
     const EMOJIS = ['🐯', '🐼', '🐸', '🦊'];
 
     const MATCH_TIMES = { short: 90, normal: 150, long: 240 };
@@ -600,9 +600,9 @@
             ctx.font = `bold ${(11 * (0.78 + 0.22 * s)).toFixed(1)}px "Nunito", sans-serif`;
             const ly = sy_(this.y) + 16 * s;
             ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.fillText('THỦ MÔN', sx_(this.x, this.y), ly + 1);
+            ctx.fillText('GOALIE', sx_(this.x, this.y), ly + 1);
             ctx.fillStyle = '#ffe98a';
-            ctx.fillText('THỦ MÔN', sx_(this.x, this.y), ly);
+            ctx.fillText('GOALIE', sx_(this.x, this.y), ly);
             ctx.restore();
         }
     }
@@ -767,7 +767,7 @@
             Game.releaseBall(this, 0.22);
             this.kickAnim = 1;
             Sfx.pass();
-            Game.addFx(b.x, b.y, curve ? '🌀 CHUYỀN XOÁY!' : (mate ? 'PASS!' : 'DRIBBLE!'),
+            Game.addFx(b.x, b.y, curve ? '🌀 CURVED PASS!' : (mate ? 'PASS!' : 'DRIBBLE!'),
                 curve ? '#c9a7ff' : this.cfg.light, 0.7, 17);
             if (mate) Game.passLine = { x1: this.x, y1: this.y, x2: mate.x, y2: mate.y, t: 0.5, color: this.cfg.light };
         }
@@ -788,7 +788,7 @@
             if (curve) this.curves = (this.curves || 0) + 1;
             Sfx.kick(power);
             Game.addFx(this.x, this.y,
-                curve ? (strong ? '🌀 SÚT XOÁY MẠNH!' : '🌀 CURVE SHOT!')
+                curve ? (strong ? '🌀 POWER CURVE SHOT!' : '🌀 CURVE SHOT!')
                     : (strong ? '💥 POWER SHOT!' : 'SOFT SHOT!'),
                 curve ? '#c9a7ff' : (strong ? '#ffd700' : this.cfg.light),
                 0.9, strong ? 22 : 18);
@@ -911,7 +911,7 @@
             if (this.solo) {
                 ctx.font = `${(11 * (0.78 + 0.22 * s)).toFixed(1)}px "Nunito", sans-serif`;
                 ctx.fillStyle = '#ffd700';
-                ctx.fillText('⭐ SIÊU SAO', nx, ny + 13 * s);
+                ctx.fillText('⭐ SUPERSTAR', nx, ny + 13 * s);
             }
             ctx.restore();
         }
@@ -1020,7 +1020,7 @@
         syncHints() {
             if (!this.el.hint) return;
             this.el.hint.innerHTML =
-                'Bấm nhanh = <b>CHUYỀN</b> · Giữ rồi thả = <b>SÚT</b> · Phím thứ hai = <b>ĐÁ XOÁY</b> (bóng bay cong) · Chạy khi có bóng = <b>RÊ BÓNG</b>';
+                'Tap = <b>PASS</b> · Hold and release = <b>SHOOT</b> · Second key = <b>CURVE SHOT</b> (the ball bends) · Run with the ball = <b>DRIBBLE</b>';
         },
 
         // ---------- Bố trí lại đội hình khi giao bóng ----------
@@ -1352,7 +1352,7 @@
                             const vn = b.vx * nx + b.vy * ny;
                             b.vx -= 1.7 * vn * nx; b.vy -= 1.7 * vn * ny;
                             Sfx.post();
-                            this.addFx(gx, gy, 'CỘT DỌC!', '#ffd700', 0.8, 18);
+                            this.addFx(gx, gy, 'OFF THE POST!', '#ffd700', 0.8, 18);
                         }
                     }
                 }
@@ -1374,7 +1374,7 @@
                         k.saveFlash = 1;
                         this.owner = -1;
                         b.vx = 0; b.vy = 0; b.shotBy = -1;
-                        this.addFx(k.x, k.y - 30, 'BẮT GỌN!', '#ffe98a', 1, 20);
+                        this.addFx(k.x, k.y - 30, 'CAUGHT IT!', '#ffe98a', 1, 20);
                         Sfx.steal();
                     } else {
                         // Đấm bóng ra
@@ -1385,7 +1385,7 @@
                         k.diveT = Math.max(k.diveT, 0.8);
                         this.owner = -1;
                         this.shake = Math.max(this.shake, 5);
-                        this.addFx(k.x, k.y - 34, '🧤 CỨU THUA!', '#ffd700', 1.1, 22);
+                        this.addFx(k.x, k.y - 34, '🧤 WHAT A SAVE!', '#ffd700', 1.1, 22);
                         this.burst(b.x, b.y, '#ffe98a', 10, 220);
                         Sfx.post();
                     }
@@ -1430,7 +1430,7 @@
                         b.shotBy = -1;
                         Sfx.steal();
                         this.burst(b.x, b.y, '#ffffff', 9, 190);
-                        this.addFx(b.x, b.y - 18, 'CƯỚP BÓNG!', '#ffd700', 0.65, 15);
+                        this.addFx(b.x, b.y - 18, 'TACKLE!', '#ffd700', 0.65, 15);
                         return;
                     }
                 }
@@ -1504,7 +1504,7 @@
             this.ownerLock = 0.2;
             k.holdT = 0;
             Sfx.kick(0.5);
-            this.addFx(k.x, k.y - 30, 'PHÁT BÓNG!', '#ffe98a', 0.8, 18);
+            this.addFx(k.x, k.y - 30, 'GOAL KICK!', '#ffe98a', 0.8, 18);
         },
 
         scoreGoal(team) {
@@ -1518,8 +1518,8 @@
             const scorer = this.ball.shotBy >= 0 ? this.players[this.ball.shotBy] : null;
             if (scorer && scorer.team === team) scorer.goals++;
             this.goalText = scorer && scorer.team === team
-                ? `${scorer.emoji} ${scorer.name} GHI BÀN!`
-                : `${TEAMS[team].name} GHI BÀN!`;
+                ? `${scorer.emoji} ${scorer.name} SCORES!`
+                : `${TEAMS[team].name} SCORES!`;
             // Cả đội ghi bàn cùng ăn mừng, đội thủng lưới thì gục xuống
             this.players.forEach(p => {
                 p.celebrate = p.team === team ? 'happy' : 'sad';
@@ -1702,11 +1702,11 @@
                 case 'fly': {
                     this.stepBall(dt);
                     const past = pk.dir < 0 ? b.x < pk.goalX - B_R : b.x > pk.goalX + B_R;
-                    if (b.inNet !== 0) this.pkFinishShot(true, '⚽ VÀO RỒI!');
-                    else if (b.savedBy !== undefined || gk.holdT > 0) this.pkFinishShot(false, '🧤 THỦ MÔN CẢN!');
-                    else if (past) this.pkFinishShot(false, '😮 SÚT HỤT!');
+                    if (b.inNet !== 0) this.pkFinishShot(true, '⚽ GOAL!');
+                    else if (b.savedBy !== undefined || gk.holdT > 0) this.pkFinishShot(false, '🧤 KEEPER SAVES!');
+                    else if (past) this.pkFinishShot(false, '😮 MISSED!');
                     else if (pk.t > 3.2 || (Math.hypot(b.vx, b.vy) < 5 && pk.t > 0.6))
-                        this.pkFinishShot(false, '😮 KHÔNG VÀO!');
+                        this.pkFinishShot(false, '😮 NO GOAL!');
                     break;
                 }
                 case 'result': {
@@ -1789,20 +1789,20 @@
             let title, desc, emoji;
             if (this.pk && this.pk.over) {
                 const w = this.pk.winner;
-                title = `${TEAMS[w].name} THẮNG LUÂN LƯU!`;
-                desc = `Hoà ${a} - ${b} sau thời gian thi đấu, ${TEAMS[w].name} thắng ` +
-                    `${this.pk.goals[w]} - ${this.pk.goals[1 - w]} trên chấm phạt đền. Chúc mừng ` +
-                    this.players.filter(p => p.team === w).map(p => p.emoji + ' ' + p.name).join(' và ') + '!';
+                title = `${TEAMS[w].name} WINS THE SHOOTOUT!`;
+                desc = `Level at ${a} - ${b} after full time — ${TEAMS[w].name} win` +
+                    `${this.pk.goals[w]} - ${this.pk.goals[1 - w]} on penalties. Congratulations` +
+                    this.players.filter(p => p.team === w).map(p => p.emoji + ' ' + p.name).join('and') + '!';
                 emoji = '🥅';
             } else if (a === b) {
-                title = 'HOÀ RỒI!';
-                desc = `Tỉ số ${a} - ${b}. Hai đội ngang tài ngang sức, đá lại một trận nữa nhé!`;
+                title = 'IT\'S A DRAW!';
+                desc = `It ends ${a} - ${b}. Evenly matched — time for a rematch!`;
                 emoji = '🤝';
             } else {
                 const w = a > b ? 0 : 1;
-                title = `${TEAMS[w].name} VÔ ĐỊCH!`;
-                desc = `Thắng ${Math.max(a, b)} - ${Math.min(a, b)}. Chúc mừng ` +
-                    this.players.filter(p => p.team === w).map(p => p.emoji + ' ' + p.name).join(' và ') + '!';
+                title = `${TEAMS[w].name} WINS!`;
+                desc = `Winning ${Math.max(a, b)} - ${Math.min(a, b)}. Congratulations` +
+                    this.players.filter(p => p.team === w).map(p => p.emoji + ' ' + p.name).join('and') + '!';
                 emoji = '🏆';
             }
             el('over-title').textContent = title;
@@ -1815,12 +1815,12 @@
                     <div class="final-avatar">${p.emoji}</div>
                     <div class="final-name">${p.name}${p.solo ? ' ⭐' : ''}</div>
                     <div class="final-score">${p.goals}</div>
-                    <div class="final-sub">bàn thắng</div>
+                    <div class="final-sub">goals</div>
                     <div class="final-stats">
-                        <div><span>Sút</span><b>${p.shots}</b></div>
-                        <div><span>Chuyền</span><b>${p.passes}</b></div>
-                        <div><span>Cướp bóng</span><b>${p.steals}</b></div>
-                        <div><span>Sút xoáy</span><b>${p.curves || 0}</b></div>
+                        <div><span>Shots</span><b>${p.shots}</b></div>
+                        <div><span>Passes</span><b>${p.passes}</b></div>
+                        <div><span>Tackles</span><b>${p.steals}</b></div>
+                        <div><span>Curve shots</span><b>${p.curves || 0}</b></div>
                     </div>
                 </div>`).join('');
             this.el.over.classList.remove('hidden');
@@ -2166,7 +2166,7 @@
                 ctx.fillStyle = TEAMS[side].light;
                 ctx.shadowColor = 'rgba(0,0,0,0.85)';
                 ctx.shadowBlur = 6;
-                ctx.fillText(`KHUNG THÀNH ${TEAMS[side].name}`, sx_(gx, MID_Y), sy_(MID_Y, GOAL_Z) - 12);
+                ctx.fillText(`${TEAMS[side].name} GOAL`, sx_(gx, MID_Y), sy_(MID_Y, GOAL_Z) - 12);
                 ctx.restore();
             });
         },
@@ -2252,7 +2252,7 @@
             ctx.shadowColor = 'rgba(0,0,0,0.8)';
             ctx.shadowBlur = 12;
             const extra = Math.min(pk.taken[0], pk.taken[1]) >= PK_ROUNDS;
-            ctx.fillText(extra ? '🥅 ĐẤU SÚNG!' : '🥅 ĐÁ LUÂN LƯU', W / 2, 46);
+            ctx.fillText(extra ? '🥅 SUDDEN DEATH!' : '🥅 PENALTY SHOOTOUT', W / 2, 46);
 
             // Đang tới lượt ai
             ctx.font = 'bold 21px "Baloo 2", sans-serif';
@@ -2354,8 +2354,8 @@
             ctx.font = 'bold 15px "Nunito", sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,0.7)';
             ctx.fillText(
-                pk.phase === 'aim' ? `Giữ phím ${pk.shooter.ctrl.actLabel} để lấy lực` :
-                    pk.phase === 'charge' ? 'Thả ra để sút!' : '',
+                pk.phase === 'aim' ? `Hold ${pk.shooter.ctrl.actLabel} to charge` :
+                    pk.phase === 'charge' ? 'Release to shoot!' : '',
                 W / 2, H - 26);
             ctx.restore();
         },
@@ -2371,7 +2371,7 @@
             ctx.fillStyle = TEAMS[this.goalTeam].color;
             ctx.shadowColor = TEAMS[this.goalTeam].color;
             ctx.shadowBlur = 40;
-            ctx.fillText('VÀO RỒI!', 0, 0);
+            ctx.fillText('GOAL!', 0, 0);
             ctx.shadowBlur = 8;
             ctx.font = 'bold 30px "Baloo 2", sans-serif';
             ctx.fillStyle = '#ffffff';
@@ -2391,11 +2391,11 @@
             ctx.shadowBlur = 16;
             if (a === b) {
                 ctx.fillStyle = '#b9ffb0';
-                ctx.fillText('🤝 HOÀ NHAU!', 0, 0);
+                ctx.fillText('🤝 IT\'S A DRAW!', 0, 0);
             } else {
                 const w = a > b ? 0 : 1;
                 ctx.fillStyle = TEAMS[w].color;
-                ctx.fillText(`🏆 ${TEAMS[w].name} VÔ ĐỊCH!`, 0, 0);
+                ctx.fillText(`🏆 ${TEAMS[w].name} WINS!`, 0, 0);
             }
             ctx.restore();
         },
@@ -2403,7 +2403,7 @@
         drawCountdown(ctx) {
             const n = Math.ceil(this.countdown);
             const frac = this.countdown - Math.floor(this.countdown);
-            const label = n > 0 ? String(n) : 'VÀO SÂN!';
+            const label = n > 0 ? String(n) : 'KICK OFF!';
             const s = n > 0 ? 1 + (1 - frac) * 0.5 : 1.2;
             ctx.save();
             ctx.fillStyle = 'rgba(4,10,6,0.55)';

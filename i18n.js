@@ -669,6 +669,9 @@
         ['🎯 Mình vừa được {0} điểm ở Phi Tiêu Bong Bóng trên KIBU Games! Bạn phá được kỷ lục này không?',
             '🎯 I just scored {0} points on Balloon Darts at KIBU Games! Think you can beat that?'],
 
+        ['Bấm nhanh = <b>CHUYỀN</b> · Giữ rồi thả = <b>SÚT</b> · Phím thứ hai = <b>ĐÁ XOÁY</b> (bóng bay cong) · Chạy khi có bóng = <b>RÊ BÓNG</b>',
+            'Tap = <b>PASS</b> · Hold and release = <b>SHOOT</b> · Second key = <b>CURVE SHOT</b> (the ball bends) · Run with the ball = <b>DRIBBLE</b>'],
+
         /* ---------- Billiards — Pool Masters ---------- */
         ['Bi-a 8 Bi — Song Đấu', '8-Ball Pool — Duel'],
         ['Bắt Đầu Ván Đấu', 'Start The Frame'],
@@ -1068,14 +1071,14 @@
     var domEnabled = mode !== 'off';
     var fragEnabled = domEnabled && mode !== 'exact';
 
-    /* ---- Chặn cái nháy tiếng Việt trên bản tiếng Anh ----
-     * Trang game viết sẵn bằng tiếng Việt, bản /en dịch ở trình duyệt sau khi
-     * DOM dựng xong — nên người dùng thấy tiếng Việt loé lên rồi mới đổi.
+    /* ---- Chặn cái nháy ngôn ngữ gốc trên bản dịch ----
+     * Trang game nay viết sẵn bằng tiếng Anh, bản /vi dịch ở trình duyệt sau khi
+     * DOM dựng xong — nên người dùng thấy tiếng Anh loé lên rồi mới đổi.
      * Tệp này là script chặn trong <head>, chạy trước khi <body> được vẽ, nên
      * chỉ cần giấu trang tới lúc dịch xong là hết nháy. Có hẹn giờ mở lại phòng
      * khi dịch lỗi — thà chữ sai ngôn ngữ còn hơn màn hình trắng. */
     var veil = null;
-    if (domEnabled && lang !== 'vi') {
+    if (domEnabled && lang !== 'en') {
         try {
             veil = document.createElement('style');
             veil.id = 'kibu-i18n-veil';

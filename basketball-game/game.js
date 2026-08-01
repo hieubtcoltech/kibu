@@ -81,20 +81,20 @@
 
     // ---------- Chế độ chơi ----------
     const MODES = {
-        versus: { key: 'versus', name: 'ĐỐI KHÁNG', time: 90, icon: '⚔️' },
-        three: { key: 'three', name: 'THI 3 ĐIỂM', time: 60, icon: '🎯' },
-        practice: { key: 'practice', name: 'LUYỆN TẬP', time: 0, icon: '🧘' }
+        versus: { key: 'versus', name: 'VERSUS', time: 90, icon: '⚔️' },
+        three: { key: 'three', name: '3-POINT CONTEST', time: 60, icon: '🎯' },
+        practice: { key: 'practice', name: 'PRACTICE', time: 0, icon: '🧘' }
     };
 
     // ---------- Độ khó ----------
     // post = bán kính va chạm của ống vành. Vành thật ø18mm (~1px) nên mức DỄ
     // gần đúng thật, mức khó hơn thì ống dày hơn -> cửa lọt hẹp lại.
     const DIFFS = {
-        easy: { key: 'easy', name: 'DỄ', sweep: 0.30, power: 1.05, post: 1.6, guide: true },
-        normal: { key: 'normal', name: 'VỪA', sweep: 0.46, power: 1.45, post: 2.6, guide: true },
-        hard: { key: 'hard', name: 'KHÓ', sweep: 0.64, power: 1.85, post: 3.6, guide: false },
+        easy: { key: 'easy', name: 'EASY', sweep: 0.30, power: 1.05, post: 1.6, guide: true },
+        normal: { key: 'normal', name: 'MEDIUM', sweep: 0.46, power: 1.45, post: 2.6, guide: true },
+        hard: { key: 'hard', name: 'HARD', sweep: 0.64, power: 1.85, post: 3.6, guide: false },
         insane: {
-            key: 'insane', name: 'SIÊU KHÓ', sweep: 0.72, power: 2.0, post: 3.6, guide: false,
+            key: 'insane', name: 'INSANE', sweep: 0.72, power: 2.0, post: 3.6, guide: false,
             moveHoop: true, hoopRange: M(0.55), hoopSpeed: 0.85   // rổ trượt lên xuống
         }
     };
@@ -328,10 +328,10 @@
 
     // ---------- Hai người chơi ----------
     const PLAYERS = [
-        { name: 'BÉ 1', emoji: '🐯', jersey: '#ff8a1a', jersey2: '#c4530a', skin: '#f5c396', hair: '#2b1b12', num: '1', accent: '#ffb347' },
-        { name: 'BÉ 2', emoji: '🐼', jersey: '#00d0ff', jersey2: '#0470a0', skin: '#e8b98a', hair: '#1a1a24', num: '2', accent: '#7fe8ff' },
-        { name: 'BÉ 3', emoji: '🐸', jersey: '#39d353', jersey2: '#177a2b', skin: '#f0c9a0', hair: '#3a2414', num: '3', accent: '#9dfba8' },
-        { name: 'BÉ 4', emoji: '🦊', jersey: '#c77dff', jersey2: '#6f2fa8', skin: '#eec2a0', hair: '#241428', num: '4', accent: '#e0b6ff' }
+        { name: 'KID 1', emoji: '🐯', jersey: '#ff8a1a', jersey2: '#c4530a', skin: '#f5c396', hair: '#2b1b12', num: '1', accent: '#ffb347' },
+        { name: 'KID 2', emoji: '🐼', jersey: '#00d0ff', jersey2: '#0470a0', skin: '#e8b98a', hair: '#1a1a24', num: '2', accent: '#7fe8ff' },
+        { name: 'KID 3', emoji: '🐸', jersey: '#39d353', jersey2: '#177a2b', skin: '#f0c9a0', hair: '#3a2414', num: '3', accent: '#9dfba8' },
+        { name: 'KID 4', emoji: '🦊', jersey: '#c77dff', jersey2: '#6f2fa8', skin: '#eec2a0', hair: '#241428', num: '4', accent: '#e0b6ff' }
     ];
 
     // =========================================================
@@ -664,14 +664,14 @@
             this.addPopup(RIM_CX, this.rimY - 52, `+${pts}`,
                 this.isThree || this.isMoneyBall ? '#d9b3ff' : '#9fe8ff', 1.5, 36);
             if (swish) this.addPopup(RIM_CX, this.rimY - 92, 'SWISH! +1', '#b9ffb0', 1.4, 23);
-            if (wasFire) this.addPopup(RIM_CX, this.rimY - 124, '🔥 BỐC LỬA +1', '#ffca8a', 1.4, 21);
+            if (wasFire) this.addPopup(RIM_CX, this.rimY - 124, '🔥 ON FIRE +1', '#ffca8a', 1.4, 21);
             if (b.hitBoard && !swish) this.addPopup(RIM_CX, this.rimY - 92, 'BANK SHOT!', '#ffd700', 1.2, 21);
 
             this.burst(RIM_CX, this.rimY + 14, swish ? '#39ff14' : this.cfg.accent, swish ? 36 : 26);
 
             if (!this.onFire && this.streak >= 3) {
                 this.onFire = true;
-                this.addPopup(this.px, FLOOR_Y - M(2.6), '🔥 ĐANG NÓNG MÁY!', '#ff7a1a', 1.6, 23);
+                this.addPopup(this.px, FLOOR_Y - M(2.6), '🔥 HEATING UP!', '#ff7a1a', 1.6, 23);
                 Sfx.fire();
             }
             if (swish) Sfx.swish();
@@ -685,7 +685,7 @@
         onMiss() {
             this.streak = 0;
             this.onFire = false;
-            this.addPopup(this.px, FLOOR_Y - M(2.4), 'Trượt rồi!', '#94a3b8', 0.9, 19);
+            this.addPopup(this.px, FLOOR_Y - M(2.4), 'Missed!', '#94a3b8', 0.9, 19);
             Sfx.miss();
             if (this.state !== 'result') { this.state = 'result'; this.resultT = MISS_DELAY; }
             else this.resultT = Math.min(this.resultT, MISS_DELAY);
@@ -1460,7 +1460,7 @@
             ctx.fillText(`${this.cfg.emoji} ${this.cfg.name}`, cx, CH - 26);
             ctx.font = 'bold 13px "Nunito", sans-serif';
             ctx.fillStyle = 'rgba(255,255,255,0.72)';
-            ctx.fillText(`Phím ${Game.keyLabel(this.idx)}`, cx, CH - 9);
+            ctx.fillText(`Key ${Game.keyLabel(this.idx)}`, cx, CH - 9);
             ctx.shadowBlur = 0;
 
             if (!this.outcome && (this.state === 'aim' || this.state === 'charge')) {
@@ -1469,10 +1469,10 @@
                 ctx.shadowBlur = 6;
                 if (Game.mode === 'three') {
                     ctx.fillStyle = this.isMoneyBall ? '#ffd700' : '#9fe8ff';
-                    ctx.fillText(this.isMoneyBall ? '★ BÓNG VÀNG · 2 ĐIỂM' : '1 ĐIỂM', zx, FLOOR_Y + 52);
+                    ctx.fillText(this.isMoneyBall ? '★ GOLDEN BALL · 2 POINTS' : '1 POINT', zx, FLOOR_Y + 52);
                 } else {
                     ctx.fillStyle = this.isThree ? '#d9b3ff' : '#9fe8ff';
-                    ctx.fillText(this.isThree ? '3 ĐIỂM' : '2 ĐIỂM', zx, FLOOR_Y + 52);
+                    ctx.fillText(this.isThree ? '3 POINTS' : '2 POINTS', zx, FLOOR_Y + 52);
                 }
             }
 
@@ -1486,13 +1486,13 @@
                 ctx.scale(pulse, pulse);
                 if (this.outcome === 'win') {
                     ctx.fillStyle = '#ffd700';
-                    ctx.fillText('🏆 CHIẾN THẮNG! 🏆', 0, 0);
+                    ctx.fillText('🏆 VICTORY! 🏆', 0, 0);
                 } else if (this.outcome === 'lose') {
                     ctx.fillStyle = '#94a3b8';
-                    ctx.fillText('😭 HU HU... THUA RỒI', 0, 0);
+                    ctx.fillText('😭 BOO HOO... WE LOST', 0, 0);
                 } else {
                     ctx.fillStyle = '#b9ffb0';
-                    ctx.fillText('🤝 HOÀ NHAU!', 0, 0);
+                    ctx.fillText('🤝 IT\'S A DRAW!', 0, 0);
                 }
                 ctx.restore();
             }
@@ -1590,7 +1590,7 @@
                     <div class="score-info">
                         <div class="score-name">${c.cfg.name} <span class="key-tag">${this.keyLabel(i)}</span></div>
                         <div class="score-sub">
-                            <span class="streak-tag" data-streak="${i}">Chuỗi: 0</span>
+                            <span class="streak-tag" data-streak="${i}">Streak: 0</span>
                             <span class="streak-tag" data-acc="${i}">0/0</span>
                         </div>
                     </div>
@@ -1613,9 +1613,9 @@
                     <div class="final-name">${c.cfg.name}</div>
                     <div class="final-score" data-fscore="${i}">0</div>
                     <div class="final-stats">
-                        <div><span>Vào rổ</span><b data-fmade="${i}">0/0</b></div>
-                        <div><span>Chính xác</span><b data-facc="${i}">0%</b></div>
-                        <div><span>Chuỗi dài nhất</span><b data-fbest="${i}">0</b></div>
+                        <div><span>Made</span><b data-fmade="${i}">0/0</b></div>
+                        <div><span>Accuracy</span><b data-facc="${i}">0%</b></div>
+                        <div><span>Longest streak</span><b data-fbest="${i}">0</b></div>
                         <div><span>Swish</span><b data-fswish="${i}">0</b></div>
                     </div>
                 </div>`).join('');
@@ -1667,7 +1667,7 @@
                 this.helpMode = !this.helpMode;
                 helpBtn.classList.toggle('active', this.helpMode);
                 document.getElementById('help-label').textContent =
-                    'Trợ Giúp Bé: ' + (this.helpMode ? 'BẬT' : 'TẮT');
+                    'Aim Helper:' + (this.helpMode ? 'ON' : 'OFF');
             };
 
             const soundBtn = document.getElementById('btn-sound');
@@ -1683,8 +1683,8 @@
         syncHints() {
             this.buildKeysList();
             const how = this.control === 'sweep'
-                ? 'Giữ phím để lấy lực — Thả đúng lúc để ném'
-                : 'Kéo lùi rồi thả như bắn ná (chạm phần sân của mình)';
+                ? 'Hold to charge — release at the right moment to shoot'
+                : 'Drag back and release like a slingshot (tap your own half)';
             const keys = this.courts.map((c, i) => `${c.cfg.emoji} ${this.keyLabel(i)}`).join('   ·   ');
             if (this.el.hint) this.el.hint.textContent = `${keys}   —   ${how}`;
         },
@@ -1916,15 +1916,15 @@
             const el = id => document.getElementById(id);
             let title, desc, emoji;
             if (leaders.length > 1) {
-                title = 'HOÀ RỒI!';
-                desc = `${leaders.map(c => c.cfg.emoji + ' ' + c.cfg.name).join(' và ')} cùng được ${top} điểm — ngang tài ngang sức!`;
+                title = 'IT\'S A DRAW!';
+                desc = `${leaders.map(c => c.cfg.emoji + ' ' + c.cfg.name).join(' và ')} both scored ${top} — perfectly matched!`;
                 emoji = '🤝';
             } else {
                 const win = leaders[0];
                 const others = this.courts.filter(c => c !== win).map(c => c.score).join(' - ');
-                title = `${win.cfg.emoji} ${win.cfg.name} THẮNG!`;
-                desc = `Ghi ${win.score} điểm (các bạn còn lại: ${others}). ` +
-                    `Chuỗi ghi điểm dài nhất: ${win.bestStreak} quả liên tiếp!`;
+                title = `${win.cfg.emoji} ${win.cfg.name} WINS!`;
+                desc = `Scored ${win.score} points (the others: ${others}).` +
+                    `Longest scoring streak: ${win.bestStreak} in a row!`;
                 emoji = '🏆';
             }
             el('over-title').textContent = title;
@@ -1936,7 +1936,7 @@
         syncHUD() {
             this.courts.forEach((c, i) => {
                 this.scoreEls[i].textContent = c.score;
-                this.streakEls[i].textContent = (c.onFire ? '🔥 ' : '') + 'Chuỗi: ' + c.streak;
+                this.streakEls[i].textContent = (c.onFire ? '🔥 ' : '') + 'Streak:' + c.streak;
                 this.streakEls[i].classList.toggle('fire', c.onFire);
                 this.accEls[i].textContent = `${c.made}/${c.shots}`;
             });
@@ -1950,7 +1950,7 @@
             } else {
                 this.el.clock.textContent = '∞';
                 this.el.clock.classList.remove('urgent');
-                if (this.el.clockLabel) this.el.clockLabel.textContent = 'LUYỆN TẬP';
+                if (this.el.clockLabel) this.el.clockLabel.textContent = 'PRACTICE';
             }
         },
 
@@ -1995,7 +1995,7 @@
         drawCountdown(ctx) {
             const n = Math.ceil(this.countdown);
             const frac = this.countdown - Math.floor(this.countdown);
-            const label = n > 0 ? String(n) : 'BẮT ĐẦU!';
+            const label = n > 0 ? String(n) : 'GO!';
             const scale = n > 0 ? 1 + (1 - frac) * 0.5 : 1.2;
 
             ctx.save();

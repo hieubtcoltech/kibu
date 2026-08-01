@@ -42,11 +42,11 @@
        Bóng bay hội chợ đường kính thật 21 - 38cm. Tốc độ bay lên đã được
        giảm xuống so với bóng bơm khí heli thật (1-2 m/s) để bé kịp ngắm. */
     const KINDS = [
-        { key: 'big',   name: 'BÓNG TO',   r: MS(0.19),  pts: 1,  vy: [34, 56],   w: 28 },
-        { key: 'mid',   name: 'BÓNG VỪA',  r: MS(0.145), pts: 2,  vy: [48, 76],   w: 32 },
-        { key: 'small', name: 'BÓNG NHỎ',  r: MS(0.105), pts: 3,  vy: [66, 100],  w: 24 },
-        { key: 'gold',  name: 'BÓNG VÀNG', r: MS(0.098), pts: 5,  vy: [98, 132],  w: 7,  gold: true },
-        { key: 'bomb',  name: 'BÓNG BOM',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true },
+        { key: 'big',   name: 'BIG BALLOON',   r: MS(0.19),  pts: 1,  vy: [34, 56],   w: 28 },
+        { key: 'mid',   name: 'MEDIUM BALLOON',  r: MS(0.145), pts: 2,  vy: [48, 76],   w: 32 },
+        { key: 'small', name: 'SMALL BALLOON',  r: MS(0.105), pts: 3,  vy: [66, 100],  w: 24 },
+        { key: 'gold',  name: 'GOLDEN BALLOON', r: MS(0.098), pts: 5,  vy: [98, 132],  w: 7,  gold: true },
+        { key: 'bomb',  name: 'BOMB BALLOON',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true },
         /* Bóng thần kỳ: hiếm gặp, nổ được thì 5 giây tiếp theo mỗi lần phi ra
            một chùm ba mũi toả về ba hướng. */
         { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true },
@@ -78,10 +78,10 @@
 
     // ---------- Người chơi ----------
     const PLAYERS = [
-        { name: 'BÉ 1', emoji: '🐯', color: '#ff8a3d', dark: '#a8430c', light: '#ffcda3', glow: '255,138,61' },
-        { name: 'BÉ 2', emoji: '🐼', color: '#4dd2ff', dark: '#0d5f80', light: '#bceaff', glow: '77,210,255' },
-        { name: 'BÉ 3', emoji: '🐸', color: '#5ee06a', dark: '#1a7a2c', light: '#c2f6c8', glow: '94,224,106' },
-        { name: 'BÉ 4', emoji: '🦊', color: '#c77dff', dark: '#6a2ba8', light: '#e7ccff', glow: '199,125,255' }
+        { name: 'KID 1', emoji: '🐯', color: '#ff8a3d', dark: '#a8430c', light: '#ffcda3', glow: '255,138,61' },
+        { name: 'KID 2', emoji: '🐼', color: '#4dd2ff', dark: '#0d5f80', light: '#bceaff', glow: '77,210,255' },
+        { name: 'KID 3', emoji: '🐸', color: '#5ee06a', dark: '#1a7a2c', light: '#c2f6c8', glow: '94,224,106' },
+        { name: 'KID 4', emoji: '🦊', color: '#c77dff', dark: '#6a2ba8', light: '#e7ccff', glow: '199,125,255' }
     ];
     const KEYSETS = {
         1: ['Space'],
@@ -99,16 +99,16 @@
     }
 
     const MODES = {
-        versus:   { key: 'versus',   name: 'ĐỐI KHÁNG',      time: 90, mult: 1, alive: 5 },
-        sniper:   { key: 'sniper',   name: 'SĂN BÓNG VÀNG',  time: 60, mult: 2, alive: 4, small: true },
-        practice: { key: 'practice', name: 'LUYỆN TẬP',      time: 0,  mult: 1, alive: 5 }
+        versus:   { key: 'versus',   name: 'VERSUS',      time: 90, mult: 1, alive: 5 },
+        sniper:   { key: 'sniper',   name: 'GOLDEN BALLOON HUNT',  time: 60, mult: 2, alive: 4, small: true },
+        practice: { key: 'practice', name: 'PRACTICE',      time: 0,  mult: 1, alive: 5 }
     };
 
     const DIFFS = {
-        easy:   { key: 'easy',   name: 'DỄ',       sweep: 0.55, power: 1.00, guide: true,  wind: 0,    rise: 0.85 },
-        normal: { key: 'normal', name: 'VỪA',      sweep: 0.85, power: 1.45, guide: true,  wind: 0.28, rise: 1.00 },
-        hard:   { key: 'hard',   name: 'KHÓ',      sweep: 1.15, power: 1.90, guide: false, wind: 0.60, rise: 1.15 },
-        insane: { key: 'insane', name: 'SIÊU KHÓ', sweep: 1.35, power: 2.20, guide: false, wind: 1.15, rise: 1.30, gust: true }
+        easy:   { key: 'easy',   name: 'EASY',       sweep: 0.55, power: 1.00, guide: true,  wind: 0,    rise: 0.85 },
+        normal: { key: 'normal', name: 'MEDIUM',      sweep: 0.85, power: 1.45, guide: true,  wind: 0.28, rise: 1.00 },
+        hard:   { key: 'hard',   name: 'HARD',      sweep: 1.15, power: 1.90, guide: false, wind: 0.60, rise: 1.15 },
+        insane: { key: 'insane', name: 'INSANE', sweep: 1.35, power: 2.20, guide: false, wind: 1.15, rise: 1.30, gust: true }
     };
 
     const WIND_BAL = 46;                   // gió thổi bóng bay lệch bao nhiêu px/giây
@@ -907,7 +907,7 @@
                 // Mũi tiêu vừa rồi không trúng quả nào -> đứt chuỗi
                 this.streak = 0;
                 this.onFire = false;
-                this.addFx('TRƯỢT', '#ffb3b3', this.cx, THROW_Y - 130, 20);
+                this.addFx('MISS', '#ffb3b3', this.cx, THROW_Y - 130, 20);
                 Sfx.miss();
             }
             this.pendingHits = 0;
@@ -988,7 +988,7 @@
 
             if (this.streak === 3 && !this.onFire) {
                 this.onFire = true;
-                this.addFx('🔥 BỐC LỬA!', '#ffb347', this.cx, THROW_Y - 170, 24);
+                this.addFx('🔥 ON FIRE!', '#ffb347', this.cx, THROW_Y - 170, 24);
                 Sfx.fire();
             }
             if (this.onFire) { pts += 1; label += ' 🔥'; }
@@ -1464,7 +1464,7 @@
                     <div class="score-info">
                         <div class="score-name">${b.cfg.name} <span class="key-tag">${this.keyLabel(i)}</span></div>
                         <div class="score-sub">
-                            <span class="streak-tag" data-streak="${i}">Chuỗi: 0</span>
+                            <span class="streak-tag" data-streak="${i}">Streak: 0</span>
                             <span class="streak-tag" data-acc="${i}">0/0</span>
                         </div>
                     </div>
@@ -1486,10 +1486,10 @@
                     <div class="final-name">${b.cfg.name}</div>
                     <div class="final-score" data-fscore="${i}">0</div>
                     <div class="final-stats">
-                        <div><span data-fhit="${i}">0/0</span> mũi phi trúng</div>
-                        <div><span data-fpop="${i}">0</span> quả bóng nổ</div>
-                        <div>Chuỗi dài nhất: <span data-fstreak="${i}">0</span> quả</div>
-                        <div>Bóng vàng: <span data-fgold="${i}">0</span> · Bom: <span data-fbomb="${i}">0</span></div>
+                        <div><span data-fhit="${i}">0/0</span> darts on target</div>
+                        <div><span data-fpop="${i}">0</span> balloons popped</div>
+                        <div>Longest streak: <span data-fstreak="${i}">0</span> in a row</div>
+                        <div>Golden: <span data-fgold="${i}">0</span> · Bom: <span data-fbomb="${i}">0</span></div>
                     </div>
                 </div>`).join('');
             this.finalEls = this.booths.map((_, i) => ({
@@ -1510,8 +1510,8 @@
             this.buildKeysList();
             const keys = this.booths.map((b, i) => `${b.cfg.emoji} ${this.keyLabel(i)}`).join(' · ');
             this.el.hint.textContent = this.control === 'sweep'
-                ? `${keys} — Mũi tên tự lắc, giữ phím lấy lực rồi thả để phi`
-                : `${keys} — Kéo lùi trong gian hàng của mình rồi thả, như bắn ná`;
+                ? `${keys} — the arrow swings by itself; hold to charge, release to throw`
+                : `${keys} — drag back inside your own booth and release, like a slingshot`;
         },
 
         /* Bảng phím ở màn hình cấu hình: mỗi bé một dòng, dựng lại mỗi khi đổi
@@ -1549,7 +1549,7 @@
             document.getElementById('btn-resume').onclick = () => this.resume();
             document.getElementById('btn-help').onclick = () => {
                 this.guideOn = !this.guideOn;
-                this.el.helpLabel.textContent = 'Trợ Giúp Bé: ' + (this.guideOn ? 'BẬT' : 'TẮT');
+                this.el.helpLabel.textContent = 'Aim Helper:' + (this.guideOn ? 'ON' : 'OFF');
                 this.el.helpBtn.classList.toggle('active', this.guideOn);
             };
             document.getElementById('btn-sound').onclick = () => {
@@ -1659,7 +1659,7 @@
            đổi tên và đổi lời mô tả cho khỏi vô lý. */
         modeName() {
             const m = this.modeCfg;
-            return (this.playerCount === 1 && m.key === 'versus') ? 'THỬ TÀI' : m.name;
+            return (this.playerCount === 1 && m.key === 'versus') ? 'SOLO RUN' : m.name;
         },
 
         syncSoloTexts() {
@@ -1667,9 +1667,9 @@
             const opt = document.querySelector('[data-mode="versus"]');
             if (!opt) return;
             const nm = opt.querySelector('.opt-name'), ds = opt.querySelector('.opt-desc');
-            const nmTxt = solo ? 'THỬ TÀI' : 'ĐỐI KHÁNG';
-            const dsTxt = solo ? '90 giây · ghi càng nhiều điểm càng tốt'
-                : '90 giây · ai nổ được nhiều điểm hơn thì thắng';
+            const nmTxt = solo ? 'SOLO RUN' : 'VERSUS';
+            const dsTxt = solo ? '90 seconds · score as many points as you can'
+                : '90 seconds · the most points from pops wins';
             if (nm && nm.textContent !== nmTxt) nm.textContent = nmTxt;
             if (ds && ds.textContent !== dsTxt) ds.textContent = dsTxt;
         },
@@ -1706,11 +1706,11 @@
             this.finalEls[0].box.classList.toggle('winner', stars >= 2);
 
             this.el.overEmoji.textContent = isRecord ? '🏅' : stars >= 2 ? '🎯' : '🎈';
-            this.el.overTitle.textContent = isRecord ? 'KỶ LỤC MỚI!' : `ĐƯỢC ${b.score} ĐIỂM!`;
+            this.el.overTitle.textContent = isRecord ? 'NEW RECORD!' : `${b.score} POINTS!`;
 
-            const parts = [`nổ ${b.pops} quả bóng`, `${b.hits}/${b.throws} mũi phi trúng`];
-            if (b.bestStreak >= 3) parts.push(`chuỗi ${b.bestStreak} quả liên tiếp`);
-            if (prev > 0) parts.push(isRecord ? `kỷ lục cũ ${prev} điểm` : `kỷ lục của bé: ${prev} điểm`);
+            const parts = [`popped ${b.pops} balloons`, `${b.hits}/${b.throws} darts on target`];
+            if (b.bestStreak >= 3) parts.push(`a streak of ${b.bestStreak} in a row`);
+            if (prev > 0) parts.push(isRecord ? `previous best ${prev} points` : `your record: ${prev} points`);
             this.el.overDesc.textContent = parts.join(' · ');
             this.el.overStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
             this.el.overStars.hidden = false;
@@ -1738,19 +1738,19 @@
             /* Câu này đi ra ngoài trang (clipboard, hộp chia sẻ của máy) nên bộ
                dịch theo DOM không với tới được — phải tự gọi dịch. Sao gắn vào
                sau khi dịch để câu gốc chỉ còn một chỗ trống, khỏi lệch mẫu. */
-            const text = tr(`🎯 Mình vừa được ${score} điểm ở Phi Tiêu Bong Bóng trên KIBU Games! Bạn phá được kỷ lục này không?`)
+            const text = tr(`🎯 I just scored ${score} points on Balloon Darts at KIBU Games! Think you can beat that?`)
                 + (stars ? ' ' + '⭐'.repeat(stars) : '');
             const url = this.shareUrl();
             const canNative = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
             box.hidden = false;
             box.innerHTML = `
-                <div class="share-title">Khoe thành tích</div>
+                <div class="share-title">Show it off</div>
                 <div class="share-row">
                     ${canNative ? '<button class="share-btn share-native"><i class="fa-solid fa-share-nodes"></i> Chia Sẻ</button>' : ''}
                     <button class="share-btn share-fb"${url ? '' : ' disabled'}><i class="fa-brands fa-facebook-f"></i> Facebook</button>
                     <button class="share-btn share-x"><i class="fa-brands fa-x-twitter"></i></button>
-                    <button class="share-btn share-copy"><i class="fa-solid fa-copy"></i> Sao Chép</button>
+                    <button class="share-btn share-copy"><i class="fa-solid fa-copy"></i> Copy</button>
                 </div>`;
 
             /* Không đặt noopener: hộp thoại của Facebook cần gọi ngược về trang
@@ -1759,11 +1759,11 @@
             const pop = u => window.open(u, 'kibu_share', 'width=620,height=560');
             const nat = box.querySelector('.share-native');
             if (nat) nat.onclick = () => {
-                navigator.share({ title: 'Phi Tiêu Bong Bóng — KIBU Games', text: text, url: url || undefined })
+                navigator.share({ title: 'Balloon Darts — KIBU Games', text: text, url: url || undefined })
                     .catch(() => { });     // bé bấm huỷ thì thôi, không báo gì
             };
             box.querySelector('.share-fb').onclick = () => {
-                if (!url) { this.toast('Cần đăng trò chơi lên mạng mới chia sẻ Facebook được', 'warn'); return; }
+                if (!url) { this.toast('Facebook sharing needs the game hosted online', 'warn'); return; }
                 pop('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url));
             };
             box.querySelector('.share-x').onclick = () => {
@@ -1789,7 +1789,7 @@
                         ok = document.execCommand('copy'); a.remove();
                     } catch (e) { }
                 }
-                this.toast(ok ? 'Đã sao chép!' : 'Không sao chép được', ok ? '' : 'warn');
+                this.toast(ok ? 'Copied!' : 'Copy failed', ok ? '' : 'warn');
             };
         },
 
@@ -1830,16 +1830,16 @@
 
             if (winners.length === this.booths.length) {
                 this.el.overEmoji.textContent = '🤝';
-                this.el.overTitle.textContent = 'HOÀ RỒI!';
-                this.el.overDesc.textContent = `Cả nhà cùng được ${best} điểm — thi lại một ván nữa nhé!`;
+                this.el.overTitle.textContent = 'IT\'S A DRAW!';
+                this.el.overDesc.textContent = `Everyone finished on ${best} points — time for another round!`;
             } else {
                 const w = winners[0];
-                const parts = [`${w.score} điểm`, `nổ ${w.pops} quả bóng`, `${w.hits}/${w.throws} mũi phi trúng`];
-                if (w.bestStreak >= 3) parts.push(`chuỗi ${w.bestStreak} quả liên tiếp`);
-                if (w.golds > 0) parts.push(`${w.golds} quả bóng vàng`);
+                const parts = [`${w.score} points`, `popped ${w.pops} balloons`, `${w.hits}/${w.throws} darts on target`];
+                if (w.bestStreak >= 3) parts.push(`a streak of ${w.bestStreak} in a row`);
+                if (w.golds > 0) parts.push(`${w.golds} golden balloons`);
                 this.el.overEmoji.textContent = '🏆';
-                this.el.overTitle.textContent = `${w.cfg.emoji} ${w.cfg.name} THẮNG!`;
-                this.el.overDesc.textContent = parts.join(' · ') + ' — tay phi tiêu cừ khôi của gian hàng!';
+                this.el.overTitle.textContent = `${w.cfg.emoji} ${w.cfg.name} WINS!`;
+                this.el.overDesc.textContent = parts.join(' · ') + '— the sharpest dart thrower at the fair!';
             }
             this.el.over.classList.remove('hidden');
             Sfx.win();
@@ -1857,7 +1857,7 @@
             this.booths.forEach((b, i) => {
                 if (this.scoreEls[i]) this.scoreEls[i].textContent = b.score;
                 if (this.streakEls[i]) {
-                    this.streakEls[i].textContent = b.onFire ? `🔥 Chuỗi: ${b.streak}` : `Chuỗi: ${b.streak}`;
+                    this.streakEls[i].textContent = b.onFire ? `🔥 Streak: ${b.streak}` : `Streak: ${b.streak}`;
                 }
                 if (this.accEls[i]) this.accEls[i].textContent = `${b.hits}/${b.throws}`;
             });
@@ -1944,7 +1944,7 @@
             ctx.fillStyle = 'rgba(255,255,255,0.8)';
             ctx.font = 'bold 13px "Nunito", sans-serif';
             ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('GIÓ', -50, 0);
+            ctx.fillText('WIND', -50, 0);
             // mũi tên gió
             const dir = w >= 0 ? 1 : -1;
             const len = 18 + Math.abs(w) * 34;
