@@ -62,49 +62,49 @@
     const WORLDS = [
         {
             id: 'reef', emoji: '🪸', name: 'RẠN SAN HÔ', diff: 1,
-            speed: 1.00, dense: 0.75, dark: 0, cur: 0.6,
+            speed: 0.92, dense: 0.75, dark: 0, cur: 0.6,
             hazards: ['jelly', 'urchin', 'crab', 'weed'],
             pal: { far: '#0a5f86', mid: '#0d7ba6', near: '#16a2c4', rock: '#04202f', rockLit: '#2a86a0', plant: '#3fd8a0', accent: '#ff8fa3' }
         },
         {
             id: 'kelp', emoji: '🌿', name: 'RỪNG TẢO BIỂN', diff: 2,
-            speed: 1.08, dense: 0.9, dark: 0.12, cur: 0.8,
+            speed: 0.99, dense: 0.9, dark: 0.12, cur: 0.8,
             hazards: ['jelly', 'urchin', 'crab', 'weed', 'eel'],
             pal: { far: '#0a5340', mid: '#0d7355', near: '#19a878', rock: '#03180f', rockLit: '#2e7a58', plant: '#7ceb86', accent: '#ffd76b' }
         },
         {
             id: 'wreck', emoji: '🏴‍☠️', name: 'TÀU CƯỚP BIỂN ĐẮM', diff: 3,
-            speed: 1.16, dense: 1.0, dark: 0.26, cur: 0.85,
+            speed: 1.05, dense: 1.0, dark: 0.26, cur: 0.85,
             hazards: ['jelly', 'urchin', 'eel', 'octo', 'mine', 'clam'],
             pal: { far: '#4a3418', mid: '#6b4a22', near: '#9c6f34', rock: '#180f06', rockLit: '#6f5837', plant: '#8fbf6a', accent: '#ffd76b' }
         },
         {
             id: 'crystal', emoji: '💎', name: 'HANG PHA LÊ', diff: 4,
-            speed: 1.24, dense: 1.12, dark: 0.4, cur: 0.95,
+            speed: 1.11, dense: 1.12, dark: 0.4, cur: 0.95,
             hazards: ['jelly', 'urchin', 'eel', 'rock', 'clam', 'mine'],
             pal: { far: '#2b2470', mid: '#3d349b', near: '#6a5fd0', rock: '#0c0929', rockLit: '#5b50b4', plant: '#8fd7ff', accent: '#ff9df0' }
         },
         {
             id: 'frozen', emoji: '🧊', name: 'BIỂN BĂNG GIÁ', diff: 5,
-            speed: 1.32, dense: 1.2, dark: 0.2, cur: 1.1,
+            speed: 1.16, dense: 1.2, dark: 0.2, cur: 1.1,
             hazards: ['urchin', 'weed', 'rock', 'clam', 'jelly', 'eel'],
             pal: { far: '#2c6b8f', mid: '#4a9ec0', near: '#8fd8ef', rock: '#0d2f45', rockLit: '#79b8d4', plant: '#c9f4ff', accent: '#ffffff' }
         },
         {
             id: 'volcano', emoji: '🌋', name: 'NÚI LỬA ĐÁY BIỂN', diff: 6,
-            speed: 1.4, dense: 1.3, dark: 0.3, cur: 1.2,
+            speed: 1.21, dense: 1.3, dark: 0.3, cur: 1.2,
             hazards: ['urchin', 'crab', 'eel', 'rock', 'mine', 'shark'],
             pal: { far: '#5c1a12', mid: '#8a2c17', near: '#c9552a', rock: '#20080a', rockLit: '#8c3c23', plant: '#ffb648', accent: '#ff5d3d' }
         },
         {
             id: 'abyss', emoji: '🕳️', name: 'VỰC THẲM', diff: 7,
-            speed: 1.48, dense: 1.4, dark: 0.66, cur: 1.25,
+            speed: 1.26, dense: 1.4, dark: 0.66, cur: 1.25,
             hazards: ['jelly', 'eel', 'octo', 'shark', 'mine', 'clam'],
             pal: { far: '#04101e', mid: '#0a2138', near: '#17527a', rock: '#020a12', rockLit: '#1e4257', plant: '#37d0ff', accent: '#9d7dff' }
         },
         {
             id: 'atlantis', emoji: '🏛️', name: 'ATLANTIS CỔ ĐẠI', diff: 8,
-            speed: 1.56, dense: 1.5, dark: 0.42, cur: 1.35,
+            speed: 1.32, dense: 1.5, dark: 0.42, cur: 1.35,
             hazards: ['jelly', 'urchin', 'eel', 'octo', 'shark', 'mine', 'clam', 'rock'],
             pal: { far: '#0d3b4f', mid: '#186b83', near: '#3fb4b0', rock: '#04161f', rockLit: '#5f9a93', plant: '#9ff7d8', accent: '#ffe08a' }
         }
@@ -865,7 +865,7 @@
     const touch = { active: false, dx: 0, dy: 0, dash: false };
 
     const BASE_SCROLL = 138;
-    const BASE_ACCEL = 1250;
+    const BASE_ACCEL = 1400;
     const BASE_DRAG = 3.2;
     const SINK = 26;
     const DASH_IMPULSE = 430;
@@ -1071,12 +1071,17 @@
             }
             if (G.event === 'bubbleBoost') this.vy -= 200 * dt;
 
-            /* Dây chun: bé nào rơi vào 30% bên trái màn hình được nước đẩy nhẹ
-               về phía trước. Không có nó thì chỉ cần lỡ nhịp một chút là bị bỏ
-               lại luôn — thử 48 giây với 4 bé thì cả bốn rớt sau 5 giây. */
-            const behindBy = (G.camera.x + worldViewW() * 0.3) - this.x;
-            if (behindBy > 0) {
-                this.vx += Math.min(1, behindBy / (worldViewW() * 0.3)) * G.scroll * 1.1 * dt;
+            /* Dây chun: bé nào rơi vào 32% bên trái màn hình được dòng nước đẩy
+               theo, càng tụt xa càng đẩy mạnh — sát mép thì nhanh hơn cả tốc độ
+               trôi nên luôn bò lại được. Đặt thành SÀN tốc độ chứ không cộng gia
+               tốc: cộng gia tốc bị lực cản nước ăn hết, thử 48 giây thì cả bốn
+               bé vẫn rớt. */
+            const zone = worldViewW() * 0.32;
+            const behindBy = (G.camera.x + zone) - this.x;
+            if (behindBy > 0 && !frozen) {
+                const k = Math.min(1, behindBy / zone);
+                const floor = G.scroll * (0.3 + 0.85 * k);
+                if (this.vx < floor) this.vx = lerp(this.vx, floor, Math.min(1, dt * 6));
             }
 
             let drag = BASE_DRAG;
