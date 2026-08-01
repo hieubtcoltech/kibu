@@ -517,26 +517,8 @@
     <script src="/routes.js"></script>
     <script src="/i18n.js"></script>
     <script src="/presence.js" defer></script>
-    <!-- Firebase App & Analytics SDKs -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
-
-      const firebaseConfig = {
-        apiKey: "AIzaSyCqxLyJzhKND5BSY0axRLzcUjCWziMHm1k",
-        authDomain: "kibu-world.firebaseapp.com",
-        projectId: "kibu-world",
-        storageBucket: "kibu-world.firebasestorage.app",
-        messagingSenderId: "466171110853",
-        appId: "1:466171110853:web:0143134de5fa4f421657ac",
-        measurementId: "G-9SP0KGJ5PW"
-      };
-
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
-      window.firebaseApp = app;
-      window.firebaseAnalytics = analytics;
-    </script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
     <!-- Favicon -->
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
