@@ -49,7 +49,10 @@
         { key: 'bomb',  name: 'BÓNG BOM',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true },
         /* Bóng thần kỳ: hiếm gặp, nổ được thì 5 giây tiếp theo mỗi lần phi ra
            một chùm ba mũi toả về ba hướng. */
-        { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true }
+        { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true },
+        /* Bóng quậy: bay lắt léo, khó ngắm. Đổi lại nổ được nó thì cả màn hình
+           nổ theo, và bom dính chùm cũng không bị trừ điểm. */
+        { key: 'crazy', name: 'BÓNG QUẬY', r: MS(0.12), pts: 4, vy: [70, 104], w: 5, crazy: true }
     ];
 
     const TRIPLE_TIME = 5;            // giây được bắn chùm
@@ -60,6 +63,7 @@
        hàm vẽ dựng gradient từ light/main/dark, đưa vào một chuỗi màu trần là
        addColorStop nhận undefined rồi ném lỗi, vòng vẽ chết và game đứng hình. */
     const MAGIC_COLOR = { main: '#4fd8ff', dark: '#0b6ea8', light: '#ccf4ff' };
+    const CRAZY_COLOR = { main: '#ff7ae0', dark: '#8d1b74', light: '#ffd0f4' };
 
     const BAL_COLORS = [
         { main: '#ff4d5e', dark: '#9d1228', light: '#ffb9c0' },
@@ -201,7 +205,7 @@
             this.swayP = rnd(0, TAU);
             this.t = 0;
             this.alive = true;
-            this.col = kind.magic ? MAGIC_COLOR : kind.gold ? GOLD_COLOR : kind.bomb ? BOMB_COLOR : pick(BAL_COLORS);
+            this.col = kind.magic ? MAGIC_COLOR : kind.crazy ? CRAZY_COLOR : kind.gold ? GOLD_COLOR : kind.bomb ? BOMB_COLOR : pick(BAL_COLORS);
             this.tilt = 0;
             this.squash = 0;                    // nhún nhẹ lúc mới thả ra
             this.fuse = 0;
@@ -209,6 +213,22 @@
 
         update(dt, wind, x0, x1) {
             this.t += dt;
+
+            /* Bóng quậy: cứ vài phần giây lại đổi hướng ngang một cách bất chợt,
+               kèm nhịp lên xuống thất thường — không đoán được như bóng thường,
+               nhưng vẫn bay lên đều nên không bao giờ đứng yên trêu ngươi. */
+            if (this.kind.crazy) {
+                this.zigT = (this.zigT || 0) - dt;
+                if (this.zigT <= 0) {
+                    this.zigT = rnd(0.35, 0.85);
+                    this.zigV = rnd(-120, 120);
+                    this.swayW = rnd(2.4, 4.2);
+                    this.swayA = rnd(16, 34);
+                }
+                this.baseX += (this.zigV || 0) * dt;
+                this.y -= Math.sin(this.t * 5.5) * 26 * dt;
+            }
+
             this.y -= this.vy * dt;
             this.baseX += wind * WIND_BAL * dt;
             const sway = Math.sin(this.t * this.swayW + this.swayP) * this.swayA;
@@ -304,6 +324,25 @@
                 ctx.globalAlpha = 0.55 + 0.45 * tw;
                 ctx.fillStyle = '#ffffff';
                 ctx.beginPath(); ctx.arc(r * 0.5, -r * 0.55, r * 0.12 * (0.7 + tw * 0.6), 0, TAU); ctx.fill();
+                ctx.restore();
+            }
+            if (this.kind.crazy) {
+                // Bóng quậy: vòng xoáy quay tít + hai mắt lé, nhìn là biết nó nghịch
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                ctx.lineWidth = Math.max(2, r * 0.1);
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                for (let i = 0; i <= 26; i++) {
+                    const a = i / 26 * Math.PI * 3 + this.t * 3.2;
+                    const rr = r * 0.14 + (i / 26) * r * 0.42;
+                    const px = Math.cos(a) * rr, py = Math.sin(a) * rr - r * 0.05;
+                    i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+                }
+                ctx.stroke();
+                ctx.fillStyle = '#2b1030';
+                ctx.beginPath(); ctx.arc(-r * 0.34, -r * 0.42, r * 0.1, 0, TAU); ctx.fill();
+                ctx.beginPath(); ctx.arc(r * 0.36, -r * 0.36, r * 0.13, 0, TAU); ctx.fill();
                 ctx.restore();
             }
             if (this.kind.bomb) {
@@ -883,6 +922,40 @@
             this.bestStreak = Math.max(this.bestStreak, this.streak);
             let pts = k.pts * mode.mult;
             let label = `+${pts}`;
+
+            if (k.crazy && !this.chaining) {
+                /* Nổ dây chuyền cả màn hình. Cờ chaining chặn đệ quy: nếu trong
+                   đám có quả bóng quậy thứ hai thì nó không được kích nổ lại từ
+                   đầu, không thì hai quả gọi nhau vòng vo. */
+                this.chaining = true;
+                const rest = this.balloons.filter(o => o !== b && o.alive);
+                let chainPts = 0, chainCount = 0;
+                for (const o of rest) {
+                    o.alive = false;
+                    if (o.kind.bomb) {
+                        // Bom dính chùm: nổ cho vui mắt nhưng KHÔNG trừ điểm
+                        this.shocks.push(new Shock(o.x, o.y, o.r, '#ffb03a'));
+                        for (let i = 0; i < 10; i++) this.shreds.push(new Shred(o.x, o.y, o.col, o.r));
+                        continue;
+                    }
+                    chainCount++;
+                    chainPts += o.kind.pts * mode.mult;
+                    this.pops++;
+                    const n = Math.round(9 + o.r / 5);
+                    for (let i = 0; i < n; i++) this.shreds.push(new Shred(o.x, o.y, o.col, o.r));
+                    for (let i = 0; i < 10; i++) this.drops.push(new Droplet(o.x, o.y, o.col.light));
+                    this.shocks.push(new Shock(o.x, o.y, o.r, o.col.light));
+                    this.necks.push(new Neck(o.x, o.y + o.r, o.col, o.r));
+                    if (o.kind.magic) this.tripleT = TRIPLE_TIME;   // vẫn ăn phép nếu quét trúng
+                }
+                this.balloons = this.balloons.filter(o => o.alive);
+                this.chaining = false;
+                pts += chainPts;
+                label = `💥 NỔ HẾT! +${pts}`;
+                this.shake = 22;
+                this.addFx(`💥 NỔ TUNG ${chainCount} QUẢ!`, '#ff9ae8', this.cx, THROW_Y - 200, 26);
+                Sfx.gold();
+            }
 
             if (k.magic) {
                 this.tripleT = TRIPLE_TIME;
