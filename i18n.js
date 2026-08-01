@@ -1048,8 +1048,20 @@
     var queue = [];
     var queued = false;
 
+    function scheduleFlush() {
+        if (queued) return;
+        queued = true;
+        // rAF keeps us in step with the game loop, but a throttled or hidden
+        // tab may never call it — the timer guarantees the flush still happens.
+        if (window.requestAnimationFrame) window.requestAnimationFrame(flushQueue);
+        window.setTimeout(flushQueue, 50);
+    }
+
     function flushQueue() {
         queued = false;
+        // A pass is already running; come back rather than dropping the batch,
+        // which used to leave those nodes untranslated for good.
+        if (busy) return scheduleFlush();
         var nodes = queue;
         queue = [];
         if (!nodes.length) return;   // the paired rAF/timer already drained it
@@ -1070,8 +1082,10 @@
         });
     }
 
+    /* Never discards a batch: our own edits cannot show up here because the
+     * observer is disconnected while they run, so everything delivered is a
+     * genuine change from the game and has to be translated. */
     function onMutations(records) {
-        if (busy) return;
         for (var i = 0; i < records.length; i++) {
             var r = records[i];
             if (r.type === 'characterData') {
@@ -1080,12 +1094,7 @@
                 for (var j = 0; j < r.addedNodes.length; j++) queue.push(r.addedNodes[j]);
             }
         }
-        if (!queue.length || queued) return;
-        queued = true;
-        // rAF keeps us in step with the game loop, but a throttled or hidden
-        // tab may never call it — the timer guarantees the flush still happens.
-        if (window.requestAnimationFrame) window.requestAnimationFrame(flushQueue);
-        window.setTimeout(flushQueue, 50);
+        if (queue.length) scheduleFlush();
     }
 
     /* ---- internal links ----
