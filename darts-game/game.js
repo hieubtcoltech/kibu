@@ -49,12 +49,17 @@
         { key: 'bomb',  name: 'BÓNG BOM',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true },
         /* Bóng thần kỳ: hiếm gặp, nổ được thì 5 giây tiếp theo mỗi lần phi ra
            một chùm ba mũi toả về ba hướng. */
-        { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true }
+        { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 900, magic: true }
     ];
 
     const TRIPLE_TIME = 5;            // giây được bắn chùm
     const TRIPLE_SPREAD = 0.20;       // độ toả của hai mũi bên (radian)
     const KIND = Object.fromEntries(KINDS.map(k => [k.key, k]));
+
+    /* Bóng thần kỳ dùng bảng màu riêng. Phải đủ ba sắc độ như mọi bóng khác:
+       hàm vẽ dựng gradient từ light/main/dark, đưa vào một chuỗi màu trần là
+       addColorStop nhận undefined rồi ném lỗi, vòng vẽ chết và game đứng hình. */
+    const MAGIC_COLOR = { main: '#4fd8ff', dark: '#0b6ea8', light: '#ccf4ff' };
 
     const BAL_COLORS = [
         { main: '#ff4d5e', dark: '#9d1228', light: '#ffb9c0' },
@@ -196,7 +201,7 @@
             this.swayP = rnd(0, TAU);
             this.t = 0;
             this.alive = true;
-            this.col = kind.magic ? '#6ad2ff' : kind.gold ? GOLD_COLOR : kind.bomb ? BOMB_COLOR : pick(BAL_COLORS);
+            this.col = kind.magic ? MAGIC_COLOR : kind.gold ? GOLD_COLOR : kind.bomb ? BOMB_COLOR : pick(BAL_COLORS);
             this.tilt = 0;
             this.squash = 0;                    // nhún nhẹ lúc mới thả ra
             this.fuse = 0;
