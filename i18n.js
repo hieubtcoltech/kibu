@@ -298,7 +298,7 @@
         ['MỚI', 'NEW'],
         ['Xếp 3 viên ngọt ngào', 'Match-3 sweetness'],
         ['2-4 bé, chung một máy', '2-4 kids, one screen'],
-        ['Bi-a 8 bi cho 2 bé', '8-ball for two'],
+        ['Bi-a 8 bi cho 2 bé', 'Two-player 8-ball'],
         ['Đại tiệc bóng đá mini', 'Mini football party'],
         ['{0} bé đang chơi', '{0} kids playing now'],
         ['KIBU Games - Game miễn phí 100%, làm bằng tình yêu dành cho các bé và gia đình.',
@@ -1286,9 +1286,16 @@
     function wireSwitcher() {
         var btn = document.getElementById('btn-global-lang');
         var flag = document.getElementById('global-lang-flag');
+        /* Nút hiện lá cờ của ngôn ngữ sẽ CHUYỂN SANG, không phải ngôn ngữ đang
+         * xem: bấm vào cờ Anh thì ra tiếng Anh. Hiện cờ ngôn ngữ hiện tại thì
+         * người dùng tưởng bấm vào sẽ giữ nguyên. */
         if (flag) {
-            flag.src = lang === 'vi' ? 'https://flagcdn.com/w40/vn.png' : 'https://flagcdn.com/w40/gb.png';
-            flag.alt = lang === 'vi' ? 'Tiếng Việt' : 'English';
+            var toVi = lang !== 'vi';
+            flag.src = toVi ? 'https://flagcdn.com/w40/vn.png' : 'https://flagcdn.com/w40/gb.png';
+            flag.alt = toVi ? 'Chuyển sang Tiếng Việt' : 'Switch to English';
+        }
+        if (btn) {
+            btn.title = lang === 'vi' ? 'Switch to English' : 'Chuyển sang Tiếng Việt';
         }
         if (btn && !btn.dataset.kibuWired) {
             btn.dataset.kibuWired = '1';
