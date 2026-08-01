@@ -76,8 +76,8 @@
                     <img src="/logo.png" alt="KIBU Games">
                 </a>
                 <div class="brand">
-                    <img src="/darts-game/icon.png" alt="" class="brand-img"
-                        onload="this.nextElementSibling.hidden=true" onerror="this.remove()"><span class="brand-icon">🎯</span>
+                    <img src="/darts-game/icon.jpg" alt="" class="brand-img"
+                        onload="this.nextElementSibling.hidden=true" onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><span class="brand-icon">🎯</span>
                     <h1 class="brand-title">BALLOON DARTS</h1>
                 </div>
             </div>
