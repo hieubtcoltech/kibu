@@ -142,7 +142,7 @@ body > .unified-nav {
 
 .site-footer p { margin: 0; }
 
-/* A game page footer holds only the flag, so keep it hard right. An explicit
+/* Kept for any page that still carries nothing but the flag button. An explicit
  * class rather than :has(), which older iPad Safari does not support. */
 .site-footer.footer-lang-only { justify-content: flex-end; }
 
