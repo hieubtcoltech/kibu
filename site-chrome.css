@@ -39,6 +39,21 @@ body > .unified-nav {
     margin: 14px auto 0;
 }
 
+/* The page shell basketball-game uses: a centred column with a small gutter, so
+ * the header card never runs into the screen edge. bot-arena and neon-racer
+ * had width:100vw with no padding, which pinned their header to the edges. */
+.app-wrapper {
+    width: 100%;
+    max-width: 1400px;
+    height: 100vh;
+    margin: 0 auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 14px 14px;
+    gap: 10px;
+}
+
 .brand {
     display: flex;
     align-items: center;
@@ -46,13 +61,15 @@ body > .unified-nav {
     min-width: 0;
 }
 
-.brand-title {
+/* Scoped to .unified-nav because several games already style the brand that
+ * way, and a bare .brand-title would lose to them on specificity. */
+.unified-nav .brand-title {
     font-size: 1.5rem;
     letter-spacing: 1px;
     white-space: nowrap;
 }
 
-.brand-icon {
+.unified-nav .brand-icon {
     font-size: 1.8rem;
     flex-shrink: 0;
 }
