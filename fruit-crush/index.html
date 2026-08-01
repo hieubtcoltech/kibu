@@ -60,6 +60,7 @@
     <link rel="stylesheet" href="/site-chrome.css">
     <script src="/routes.js"></script>
     <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="/favicon.png">
     <link rel="shortcut icon" type="image/png" href="/favicon.png">
@@ -269,10 +270,14 @@
     <!-- Thông báo nổi -->
     <div id="toast" class="toast"></div>
 
-    <footer class="site-footer footer-lang-only">
+    <footer class="site-footer">
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+        <div class="footer-tools">
+        <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
         <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
             <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
         </button>
+        </div>
     </footer>
 
     <script src="/fruit-crush/game.js"></script>

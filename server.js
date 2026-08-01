@@ -156,6 +156,28 @@ function injectSeo(html, route) {
     return html;
 }
 
+/* ---------- Đếm số người đang chơi ----------
+   Mỗi tab tự sinh một mã ngẫu nhiên rồi cứ ~20 giây gọi /api/online một lần.
+   Không nghe tin quá PRESENCE_TTL thì coi như đã đóng trang. Đếm trong bộ nhớ
+   nên chỉ đúng khi chạy một tiến trình (pm2 hiện chạy đúng một) và số sẽ về 0
+   sau mỗi lần khởi động lại — chấp nhận được, đây là con số cho vui.
+   PRESENCE_MAX chặn trên để một con bot gọi liên tục với mã khác nhau không
+   làm phình bộ nhớ. */
+const PRESENCE_TTL = 45000;
+const PRESENCE_MAX = 5000;
+const presence = new Map();
+
+function touchPresence(id) {
+    const now = Date.now();
+    for (const [key, seen] of presence) {
+        if (now - seen > PRESENCE_TTL) presence.delete(key);
+    }
+    if (id && (presence.has(id) || presence.size < PRESENCE_MAX)) {
+        presence.set(id, now);
+    }
+    return presence.size;
+}
+
 /* ---------- Xử lý request ---------- */
 async function handle(req, res) {
     const started = Date.now();
@@ -198,6 +220,17 @@ async function handle(req, res) {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
         send(res, 405, 'Method Not Allowed', { 'Allow': 'GET, HEAD' });
         return log(405);
+    }
+
+    // Nhịp tim của từng tab đang mở; trả về tổng số người đang chơi.
+    if (pathname === '/api/online') {
+        const id = new URLSearchParams(parsed.query || '').get('id');
+        const body = JSON.stringify({ online: touchPresence(id) });
+        send(res, 200, body, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store'
+        });
+        return log(200);
     }
 
     /* ---------- URL sạch có tiền tố ngôn ngữ ----------

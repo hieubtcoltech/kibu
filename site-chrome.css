@@ -146,6 +146,69 @@ body > .unified-nav {
  * class rather than :has(), which older iPad Safari does not support. */
 .site-footer.footer-lang-only { justify-content: flex-end; }
 
+/* ---------- Footer content shared with the home page ----------
+ * Game pages used to carry nothing but the flag button, so the credit line and
+ * the About link only existed on the home page. Same markup everywhere now. */
+.footer-credit {
+    margin: 0;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.footer-credit i { color: #ff007f; }
+
+.footer-credit a {
+    color: #38bdf8;
+    text-decoration: underline;
+    margin-left: 6px;
+}
+
+.footer-tools {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ---------- Live player count ---------- */
+.online-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(57, 255, 20, 0.10);
+    border: 1px solid rgba(57, 255, 20, 0.35);
+    color: #7ef29a;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.online-badge .online-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #39ff14;
+    box-shadow: 0 0 8px rgba(57, 255, 20, 0.9);
+    animation: onlinePulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+}
+
+@keyframes onlinePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.45; transform: scale(0.82); }
+}
+
+/* Con số chỉ có khi máy chủ trả lời — trước đó phần tử mang [hidden] nên không
+   để lại một viên thuốc rỗng trong footer. */
+.online-badge[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    .online-badge .online-dot { animation: none; }
+}
+
 /* The home and about pages keep their own footer styling; this only lines the
  * switcher up on the same row as the credit line instead of below it. */
 .poki-footer {
@@ -248,4 +311,10 @@ body.chrome-fit > .game-wrapper {
     .unified-nav .btn { padding: 7px 9px; font-size: 0.9rem; }
     .unified-nav .nav-actions { gap: 6px; }
     .site-footer { padding: 8px 12px; font-size: 0.78rem; }
+
+    /* Không đủ bề ngang cho cả câu giới thiệu lẫn hai nút: câu chữ xuống dòng
+       riêng, huy hiệu và lá cờ giữ nguyên một hàng bên dưới. */
+    .site-footer { flex-wrap: wrap; justify-content: center; text-align: center; }
+    .footer-credit { flex-basis: 100%; }
+    .online-badge { font-size: 0.74rem; padding: 3px 10px; }
 }
