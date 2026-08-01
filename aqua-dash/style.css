@@ -894,7 +894,24 @@ body.is-touch .event-banner { margin-bottom: 8px; }
 body.is-touch .player-cards { margin-bottom: auto; }
 
 /* Modal thu nhỏ dần theo chiều cao thật của cửa sổ */
+/* Thêm ô xem trước nhân vật nên bảng chọn của game này cao hơn Ocean Party —
+   phải thu sớm hơn một nấc thì nút XUẤT PHÁT mới nằm trong tầm nhìn. */
+@media (max-height: 830px) {
+    .suit-preview { max-width: 190px; margin-bottom: 6px; }
+    .skin-swatch { width: 38px; height: 38px; border-radius: 11px; }
+    .modal-title { font-size: 1.35rem; }
+    .modal-subtitle { font-size: 0.84rem; margin-bottom: 10px; }
+    .setup-section { margin-bottom: 9px; }
+    .setup-label { font-size: 0.78rem; margin-bottom: 5px; }
+    .world-card { padding: 6px 4px 5px; }
+    .world-emoji { font-size: 1.25rem; }
+    .setup-hint { margin: 2px 0 10px; }
+    .menu-links { margin-top: 8px; }
+}
+
 @media (max-height: 700px) {
+    .suit-preview { max-width: 150px; }
+    .skin-swatch { width: 32px; height: 32px; border-radius: 9px; }
     .modal-card { padding: 14px 18px; }
     .modal-title { font-size: 1.25rem; }
     .modal-subtitle { font-size: 0.8rem; margin-bottom: 8px; }
@@ -934,6 +951,9 @@ body.is-touch .player-cards { margin-bottom: auto; }
 /* Điện thoại nằm ngang (~390px cao): bảng chọn phải gọn hết mức thì nút LẶN
    THÔI mới nằm trong tầm nhìn mà không cần cuộn. */
 @media (max-height: 430px) {
+    .menu-links { display: none; }
+    .skin-swatch { width: 26px; height: 26px; border-radius: 8px; }
+    .skin-row { gap: 6px; }
     .modal-card { padding: 10px 14px; }
     .modal-title { font-size: 1rem; margin-bottom: 2px; }
     .setup-section { margin-bottom: 5px; }
