@@ -52,9 +52,12 @@
         }
 
         /* Navbar */
+        /* Cùng bề ngang với trang chủ (1240px) — trước đây nav 1000px và nội
+           dung 900px nên chuyển qua lại giữa hai trang thấy logo và khung nhảy
+           vị trí. */
         .poki-navbar {
             width: 100%;
-            max-width: 1000px;
+            max-width: 1240px;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -106,7 +109,7 @@
         /* Container */
         .about-container {
             width: 100%;
-            max-width: 900px;
+            max-width: 1240px;
             display: flex;
             flex-direction: column;
             gap: 32px;
@@ -284,6 +287,9 @@
         }
 
         .story-text {
+            /* Khung rộng 1240px mà để chữ chạy hết thì một dòng dài quá, mỏi
+               mắt; giữ đoạn văn ở khổ đọc thoải mái. */
+            max-width: 860px;
             font-size: 1.08rem;
             color: #e2e8f0;
             line-height: 1.75;

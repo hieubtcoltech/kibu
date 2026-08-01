@@ -210,13 +210,18 @@ body > .unified-nav {
 }
 
 /* The home and about pages keep their own footer styling; this only lines the
- * switcher up on the same row as the credit line instead of below it. */
+ * switcher up on the same row as the credit line instead of below it, and pins
+ * it to the same 1240px column both pages use for their header and content. */
 .poki-footer {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
     gap: 14px;
+    width: 100%;
+    max-width: 1240px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 /* ---------- Language switcher ---------- */
