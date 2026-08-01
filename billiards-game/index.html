@@ -238,7 +238,8 @@
     })();
     </script>
     
-    <!-- Comprehensive Global I18n UI Localizer Script -->
+    
+    <!-- Deep Tree Global I18n UI Localizer Script -->
     <script>
     (function() {
         const LANG_KEY = "kibu_global_lang";
@@ -246,6 +247,8 @@
 
         const dictEn = {
             "Trang Chủ": "Home",
+            "Đổi Đội Hình": "Lineup",
+            "Đá Lại": "Restart Match",
             "Âm Thanh": "Sound",
             "Nhạc Nền": "Music",
             "Chọn Màn": "Levels",
@@ -259,6 +262,7 @@
             "Về Menu": "Main Menu",
             "BẮT ĐẦU CHƠI": "START PLAYING",
             "BẮT ĐẦU VÁN ĐẤU": "START MATCH",
+            "VÀO SÂN THI ĐẤU": "KICK OFF MATCH",
             "ĐẤU LẠI": "PLAY AGAIN",
             "TRANG CHỦ": "HOME",
             "Tự Ngắm: BẬT": "Aim Guide: ON",
@@ -267,9 +271,35 @@
             "Đường Ngắm: TẮT": "Aim Line: OFF",
             "Điểm Số": "Score",
             "Xu Thưởng": "Coins",
-            "Luật chơi": "How to play",
-            "Hoa quả đặc biệt": "Special Fruits",
-            "Chướng ngại vật": "Obstacles",
+            "THỜI GIAN": "TIME",
+            "ĐỘI ĐỎ": "RED TEAM",
+            "ĐỘI XANH": "BLUE TEAM",
+            "BÓNG ĐÁ MINI": "MINI SOCCER",
+            "SỐ NGƯỜI CHƠI": "NUMBER OF PLAYERS",
+            "THỜI GIAN TRẬN ĐẤU": "MATCH DURATION",
+            "ĐỘI HÌNH & PHÍM BẤM": "LINEUP & CONTROLS",
+            "ĐÁ TIẾP": "RESUME MATCH",
+            "TẠM DỪNG": "PAUSED",
+            "ĐỘI ĐỎ VÔ ĐỊCH!": "RED TEAM CHAMPION!",
+            "ĐỘI XANH VÔ ĐỊCH!": "BLUE TEAM CHAMPION!",
+            "RÊ BÓNG": "DRIBBLING",
+            "CHUYỀN BÓNG": "PASSING",
+            "SÚT NHẸ": "SOFT SHOT",
+            "SÚT MẠNH": "POWER SHOT",
+            "ĐÁ XOÁY": "CURVE SHOT",
+            "QUA MẶT THỦ MÔN": "BYPASS GOALIE",
+            "ĐÁ LUÂN LƯU": "PENALTY SHOOTOUT",
+            "1 PHÚT 30": "1M 30S",
+            "2 PHÚT 30": "2M 30S",
+            "4 PHÚT": "4 MINS",
+            "Đá nhanh": "Quick Match",
+            "Vừa đủ": "Standard",
+            "Trận dài": "Long Match",
+            "2 BÉ · 1-1": "2 PLAYERS (1-1)",
+            "3 BÉ · 2-1": "3 PLAYERS (2-1)",
+            "4 BÉ · 2-2": "4 PLAYERS (2-2)",
+            "Đối đầu tay đôi": "Head to Head",
+            "Hai đội, tha hồ chuyền bóng": "Two teams, passing play",
             "Màn": "Level",
             "Mục tiêu": "Target",
             "Lượt Đi": "Moves",
@@ -280,46 +310,46 @@
             "Bản Đồ Màn Chơi": "Level Map",
             "Thử Lại": "Try Again",
             "Đóng": "Close",
-            "ĐỢT 1": "WAVE 1",
-            "CỬA HÀNG NÂNG CẤP": "UPGRADE SHOP",
-            "Máu Tối Đa": "Max Health",
-            "Tốc Độ Chạy": "Movement Speed",
-            "Sát Thương Súng": "Weapon Damage",
-            "BI-A 8 BI — SONG ĐẤU": "8-BALL POOL DUEL",
-            "NGƯỜI CHƠI 1": "PLAYER 1",
-            "NGƯỜI CHƠI 2": "PLAYER 2",
-            "NGƯỜI CHƠI 1 THẮNG!": "PLAYER 1 WINS!",
-            "NGƯỜI CHƠI 2 THẮNG!": "PLAYER 2 WINS!",
-            "LUẬT CHƠI": "GAME RULES",
-            "ĐẪ HIỂU": "GOT IT",
             "100% FREE": "100% FREE",
             "BUILT WITH LOVE FOR KIDS": "BUILT WITH LOVE FOR KIDS"
         };
 
         if (currentLang === "en") {
-            function translateDOM() {
-                // Translate buttons, spans, headers, subheadings, text nodes
-                const targets = document.querySelectorAll("span, a, button, h1, h2, h3, div.stat-lbl, div.stat-label, div.mode-name, div.p-name, div.panel-title, div.rule-name, div.slot-name, button.btn");
-                targets.forEach(el => {
-                    if (el.children.length === 0 || el.querySelectorAll("i, img").length > 0) {
-                        // Avoid overwriting nested icons
-                        for (let node of el.childNodes) {
-                            if (node.nodeType === Node.TEXT_NODE) {
-                                const text = node.textContent.trim();
-                                if (dictEn[text]) {
-                                    node.textContent = node.textContent.replace(text, dictEn[text]);
-                                }
-                            }
-                        }
+            function walkAndTranslate(root) {
+                const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+                let node;
+                while (node = walker.nextNode()) {
+                    const parentTag = node.parentElement ? node.parentElement.tagName.toLowerCase() : "";
+                    if (["script", "style", "title"].includes(parentTag)) continue;
+                    
+                    const text = node.nodeValue.trim();
+                    if (dictEn[text]) {
+                        node.nodeValue = node.nodeValue.replace(text, dictEn[text]);
                     }
-                });
+                }
+            }
+
+            function translateAll() {
+                walkAndTranslate(document.body);
             }
 
             if (document.readyState === "loading") {
-                window.addEventListener("DOMContentLoaded", translateDOM);
+                window.addEventListener("DOMContentLoaded", translateAll);
             } else {
-                translateDOM();
+                translateAll();
             }
+
+            // Observe dynamic UI popups or screens appearing later
+            const observer = new MutationObserver(mutations => {
+                mutations.forEach(m => {
+                    m.addedNodes.forEach(node => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            walkAndTranslate(node);
+                        }
+                    });
+                });
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
         }
     })();
     </script>
