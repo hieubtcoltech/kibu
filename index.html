@@ -442,12 +442,34 @@
            lại biểu tượng ảnh vỡ. */
         .tile-fallback { display: inline-block; }
 
+        /* Icon phủ kín cả ô: ảnh của game chính là hình nền, không còn là hình
+           vuông nhỏ đặt giữa nền gradient. Gradient vẫn giữ để làm nền cho
+           những game chưa có icon riêng. */
         .tile-img {
-            width: 1.72em;
-            height: 1.72em;
-            border-radius: 22%;
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: inherit;
             display: block;
+            z-index: 0;
         }
+
+        /* Vệt tối dưới đáy ảnh để tên game luôn đọc được */
+        .poki-tile:has(.tile-img)::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 46%;
+            background: linear-gradient(to top, rgba(6, 10, 20, 0.88), transparent);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .tile-label { z-index: 2; }
 
         /* Quân TƯỚNG đỏ dựng bằng CSS — biểu tượng của game.
            Khối trụ có bề dày thật: một lớp thành gỗ sẫm phía dưới, mặt trên vát sáng,
