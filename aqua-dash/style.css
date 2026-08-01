@@ -705,7 +705,9 @@ body > .app-wrapper {
 
 .icon-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
+    /* Sáu ô đúng một hàng trên máy tính, hai hàng ba trên điện thoại — auto-fit
+       hay cho ra 5+1 lệch lạc. */
+    grid-template-columns: repeat(6, 1fr);
     gap: 7px;
 }
 
@@ -775,6 +777,7 @@ body > .app-wrapper {
 }
 
 @media (max-width: 620px) {
+    .icon-grid { grid-template-columns: repeat(3, 1fr); }
     .icon-row { font-size: 1.35rem; letter-spacing: 2px; }
     .ig b { font-size: 1.3rem; }
     .help-block { padding: 8px 10px; margin-bottom: 8px; }
@@ -1087,7 +1090,8 @@ body.is-touch .player-cards { margin-bottom: auto; }
 /* Điện thoại nằm ngang (~390px cao): bảng chọn phải gọn hết mức thì nút LẶN
    THÔI mới nằm trong tầm nhìn mà không cần cuộn. */
 @media (max-height: 430px) {
-    .menu-links { display: none; }
+    .menu-links { margin-top: 4px; }
+    .menu-links .pill { padding: 2px 8px; font-size: 0.66rem; }
     .skin-swatch { width: 24px; height: 24px; border-radius: 7px; }
     .skin-row { gap: 5px; }
     .setup-section { margin-bottom: 4px; }

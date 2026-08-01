@@ -2707,7 +2707,7 @@
     function buildHelp() {
         // Chip phím thay cho câu chữ: nhìn phát biết ngay, và tự xuống dòng gọn
         // trên điện thoại thay vì thành một đoạn văn dài.
-        el('help-controls').innerHTML = SLOTS[4].map((s, i) => {
+        el['help-controls'].innerHTML = SLOTS[4].map((s, i) => {
             const c = CONTROLS[s];
             const keys = c.label.split(/\s+/).map(k => '<span class="kbd">' + k + '</span>').join('');
             return '<div class="key-line"><span class="who">' + PLAYER_NAMES[i] + '</span>' + keys +

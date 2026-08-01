@@ -657,7 +657,9 @@ body > .app-wrapper {
 
 .icon-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(52px, 1fr));
+    /* Sáu ô đúng một hàng trên máy tính, hai hàng ba trên điện thoại — auto-fit
+       hay cho ra 5+1 lệch lạc. */
+    grid-template-columns: repeat(6, 1fr);
     gap: 7px;
 }
 
@@ -727,6 +729,7 @@ body > .app-wrapper {
 }
 
 @media (max-width: 620px) {
+    .icon-grid { grid-template-columns: repeat(3, 1fr); }
     .icon-row { font-size: 1.35rem; letter-spacing: 2px; }
     .ig b { font-size: 1.3rem; }
     .help-block { padding: 8px 10px; margin-bottom: 8px; }
