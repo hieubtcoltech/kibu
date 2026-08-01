@@ -211,7 +211,12 @@ body.chrome-fit > .game-wrapper {
 
 /* ---------- Narrow screens ---------- */
 @media (max-width: 560px) {
-    .nav-home { width: 36px; height: 36px; border-radius: 10px; }
+    /* keep it a chip that fits the logo, not a square that squashes it */
+    .nav-home { height: 34px; padding: 0 9px; border-radius: 10px; }
+    .nav-home img { height: 22px; }
     .nav-left { gap: 8px; }
+    .unified-nav { padding: 8px 12px; border-radius: 16px; }
+    .unified-nav .brand-title { font-size: 1.2rem; }
+    .unified-nav .brand-icon { font-size: 1.5rem; }
     .site-footer { padding: 8px 12px; font-size: 0.78rem; }
 }
