@@ -3116,7 +3116,7 @@
        ===================================================== */
 
     function boot() {
-        window.__OD = () => ({p:G.players.map(x=>({x:Math.round(x.x),y:Math.round(x.y)}))});
+        window.__OD = () => { const p = G.players[0], L = G.level; const c = Math.floor(p.x/TILE), r = Math.floor(p.y/TILE); let n=''; for (let dr=-1;dr<=1;dr++){for(let dc=-1;dc<=1;dc++){const cc=c+dc,rr2=r+dr; n += (cc<0||rr2<0||cc>=L.cols||rr2>=L.rows)?'#':(L.grid[rr2*L.cols+cc]===0?'.':'#');} n+='|';} return {x:Math.round(p.x),y:Math.round(p.y),trap:+p.trap.toFixed(2),stun:+p.stun.toFixed(2),slow:+p.slow.toFixed(2),n}; };
         cacheDom();
         Store.load();
 
