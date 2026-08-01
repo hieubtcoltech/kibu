@@ -513,7 +513,7 @@
     function connect(onOpen) {
         if (S.ws && (S.ws.readyState === 0 || S.ws.readyState === 1)) { if (onOpen) onOpen(); return; }
         let ws;
-        try { ws = new WebSocket(wsUrl()); } catch (e) { note('Không kết nối được máy chủ.', true); return; }
+        try { ws = new WebSocket(wsUrl()); } catch (e) { note('Could not reach the server.', true); return; }
         S.ws = ws;
 
         ws.onopen = () => {
@@ -531,7 +531,7 @@
             if (!S.wantReconnect) return;
             // Rớt mạng: thử nối lại vài lần rồi mới chịu thua
             S.retry++;
-            if (S.retry > 8) { note('Mất kết nối tới máy chủ.', true); return; }
+            if (S.retry > 8) { note('Lost connection to the server.', true); return; }
             boardMsg('Reconnecting...');
             setTimeout(() => connect(() => send({ t: 'rejoin', code: S.code, token: S.token })), Math.min(4000, 400 * S.retry));
         };
@@ -815,7 +815,7 @@
 
     function nameOf() {
         const v = (el('input-name').value || '').trim();
-        return v || 'Người chơi';
+        return v || 'Player';
     }
 
     function renderLobby() {
@@ -965,7 +965,7 @@
                 t.value = S.code;
                 document.body.appendChild(t);
                 t.select();
-                try { document.execCommand('copy'); toast('Room code copied!'); } catch (e2) { toast('Không sao chép được, bạn tự chép nhé!'); }
+                try { document.execCommand('copy'); toast('Room code copied!'); } catch (e2) { toast('Could not copy — please copy it yourself!'); }
                 document.body.removeChild(t);
             }
         });
@@ -1037,7 +1037,7 @@
         if (m) {
             el('input-code').value = m[1].toUpperCase();
             el('join-box').hidden = false;
-            note('Bấm "Vào" để tham gia phòng ' + m[1].toUpperCase());
+            note(`Tap "Join" to enter room ${m[1].toUpperCase()}`);
         } else if (saved.code && saved.token) {
             /* Lỡ tay tải lại trang hay điện thoại tự làm mới tab thì phải quay
                về đúng ván đang dở, chứ không phải mất ván. Máy chủ giữ chỗ một

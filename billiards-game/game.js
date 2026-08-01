@@ -930,7 +930,7 @@
                     this.groups[cur] = g;
                     this.groups[other] = g === 'solid' ? 'stripe' : 'solid';
                     this.openTable = false;
-                    assignedMsg = `${PLAYERS[cur].emoji} takes ${g === 'solid' ? 'BI TRƠN 1-7' : 'BI SỌC 9-15'}!`;
+                    assignedMsg = `${PLAYERS[cur].emoji} takes ${g === 'solid' ? 'SOLIDS 1-7' : 'STRIPES 9-15'}!`;
                 }
             }
             this.isBreak = false;

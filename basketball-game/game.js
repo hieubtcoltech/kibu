@@ -1917,7 +1917,7 @@
             let title, desc, emoji;
             if (leaders.length > 1) {
                 title = 'IT\'S A DRAW!';
-                desc = `${leaders.map(c => c.cfg.emoji + ' ' + c.cfg.name).join(' và ')} both scored ${top} — perfectly matched!`;
+                desc = `${leaders.map(c => c.cfg.emoji + ' ' + c.cfg.name).join(' and ')} both scored ${top} — perfectly matched!`;
                 emoji = '🤝';
             } else {
                 const win = leaders[0];

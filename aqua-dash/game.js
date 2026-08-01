@@ -123,10 +123,10 @@
     const MOUNTS = {
         dolphin: { emoji: '🐬', name: 'Dolphin', dur: 10, speed: 1.75, accel: 1.6, note: 'Fast as a rocket!' },
         turtle: { emoji: '🐢', name: 'Sea Turtle', dur: 13, speed: 1.0, accel: 1.05, invuln: true, note: 'The shell blocks every hazard!' },
-        sword: { emoji: '🗡️', name: 'Swordfish', dur: 10, speed: 1.6, accel: 1.5, breaks: true, note: 'Húc thủng san hô!' },
+        sword: { emoji: '🗡️', name: 'Swordfish', dur: 10, speed: 1.6, accel: 1.5, breaks: true, note: 'Smashed through the coral!' },
         octo: { emoji: '🐙', name: 'Octopus', dur: 11, speed: 1.15, accel: 1.2, ability: 'ink', note: 'Press dash to squirt ink!' },
-        puffer: { emoji: '🐡', name: 'Puffer Fish', dur: 11, speed: 1.05, accel: 1.15, ability: 'push', note: 'Bấm lướt để hất bạn ra!' },
-        manta: { emoji: '🐟', name: 'Manta Ray', dur: 12, speed: 1.4, accel: 1.15, ignoreCurrent: true, note: 'Dòng nước chịu thua!' }
+        puffer: { emoji: '🐡', name: 'Puffer Fish', dur: 11, speed: 1.05, accel: 1.15, ability: 'push', note: 'Tap dash to shove others away!' },
+        manta: { emoji: '🐟', name: 'Manta Ray', dur: 12, speed: 1.4, accel: 1.15, ignoreCurrent: true, note: 'The current gives up!' }
     };
     const MOUNT_KEYS = Object.keys(MOUNTS);
 
@@ -138,23 +138,23 @@
         double: { emoji: '✨', name: 'Double Score', dur: 8 },
         combo: { emoji: '🔥', name: 'Combo Booster', dur: 11 },
         radar: { emoji: '📡', name: 'Treasure Radar', dur: 11 },
-        time: { emoji: '⏱️', name: 'Thêm 15 Giây', dur: 0 }
+        time: { emoji: '⏱️', name: '+15 Seconds', dur: 0 }
     };
     const POWER_KEYS = Object.keys(POWERS);
 
     /* ---------- Bẫy ---------- */
     const HAZARDS = {
-        jelly: { emoji: '🪼', name: 'Sứa', r: 20, pen: 25, stun: 0.9, move: 'drift', speed: 26 },
-        urchin: { emoji: '🦔', name: 'Nhím Biển', r: 17, pen: 30, knock: 300, move: 'static' },
-        coral: { emoji: '☠️', name: 'San Hô Độc', r: 18, pen: 40, slow: 3, move: 'static' },
-        weed: { emoji: '🌿', name: 'Rong Dính', r: 26, pen: 0, slow: 2.4, move: 'static' },
-        eel: { emoji: '⚡', name: 'Lươn Điện', r: 19, pen: 35, stun: 0.8, knock: 240, move: 'patrolY', speed: 96 },
-        crab: { emoji: '🦀', name: 'Cua Cáu Kỉnh', r: 18, pen: 28, knock: 280, move: 'chase', speed: 92, range: 230 },
-        rock: { emoji: '🪨', name: 'Đá Rơi', r: 19, pen: 32, stun: 0.6, move: 'fall', speed: 170 },
-        octo: { emoji: '🦑', name: 'Mực Phun', r: 20, pen: 20, blind: 4, move: 'patrolY', speed: 54 },
-        mine: { emoji: '💣', name: 'Mìn Biển', r: 20, pen: 55, knock: 420, drop: true, move: 'static' },
-        clam: { emoji: '🐚', name: 'Sò Khổng Lồ', r: 22, pen: 20, trap: 1.4, move: 'static' },
-        shark: { emoji: '🦈', name: 'Cá Mập', r: 30, pen: 60, knock: 360, stun: 0.5, drop: true, move: 'hunt', speed: 150 }
+        jelly: { emoji: '🪼', name: 'Jellyfish', r: 20, pen: 25, stun: 0.9, move: 'drift', speed: 26 },
+        urchin: { emoji: '🦔', name: 'Sea Urchin', r: 17, pen: 30, knock: 300, move: 'static' },
+        coral: { emoji: '☠️', name: 'Stinging Coral', r: 18, pen: 40, slow: 3, move: 'static' },
+        weed: { emoji: '🌿', name: 'Sticky Weed', r: 26, pen: 0, slow: 2.4, move: 'static' },
+        eel: { emoji: '⚡', name: 'Electric Eel', r: 19, pen: 35, stun: 0.8, knock: 240, move: 'patrolY', speed: 96 },
+        crab: { emoji: '🦀', name: 'Grumpy Crab', r: 18, pen: 28, knock: 280, move: 'chase', speed: 92, range: 230 },
+        rock: { emoji: '🪨', name: 'Falling Rock', r: 19, pen: 32, stun: 0.6, move: 'fall', speed: 170 },
+        octo: { emoji: '🦑', name: 'Inky Squid', r: 20, pen: 20, blind: 4, move: 'patrolY', speed: 54 },
+        mine: { emoji: '💣', name: 'Sea Mine', r: 20, pen: 55, knock: 420, drop: true, move: 'static' },
+        clam: { emoji: '🐚', name: 'Giant Clam', r: 22, pen: 20, trap: 1.4, move: 'static' },
+        shark: { emoji: '🦈', name: 'Shark', r: 30, pen: 60, knock: 360, stun: 0.5, drop: true, move: 'hunt', speed: 150 }
     };
 
     const SCORE_PER_METER = 2;
@@ -1038,7 +1038,7 @@
             if (this.mount) {
                 this.mountT -= dt;
                 if (this.mountT <= 0) {
-                    floatText(this.x, this.y - 30, MOUNTS[this.mount].emoji + ' tạm biệt!', '#8fd7ff');
+                    floatText(this.x, this.y - 30, `${MOUNTS[this.mount].emoji} says goodbye!`, '#8fd7ff');
                     this.mount = null;
                 }
             }
@@ -1400,7 +1400,7 @@
                 this.vy += Math.sin(a) * meta.knock;
             }
             if (meta.drop) this.dropLoot();
-            if (this.mount) { floatText(this.x, this.y - 40, MOUNTS[this.mount].emoji + ' chạy mất!', '#ff7676'); this.mount = null; }
+            if (this.mount) { floatText(this.x, this.y - 40, `${MOUNTS[this.mount].emoji} ran away!`, '#ff7676'); this.mount = null; }
             burst(this.x, this.y, '#ff7676', 12);
         }
 
@@ -1422,7 +1422,7 @@
             this.outAt = G.time;
             this.vx = 0; this.vy = -20;
             audio.out();
-            showEvent('💨 ' + this.name + ' BỊ TỤT LẠI PHÍA SAU!');
+            showEvent(`💨 ${this.name} FELL BEHIND!`);
             floatText(this.x, this.y - 40, 'KNOCKED OUT!', '#ff7676');
         }
     }
@@ -1660,7 +1660,7 @@
                 break;
 
             case 'bubbleBoost':
-                showEvent('🫧 BONG BÓNG NÂNG CẢ NHÀ LÊN!');
+                showEvent('🫧 BUBBLES LIFT EVERYONE UP!');
                 G.boost = 1;
                 G.eventData = { t: 6 };
                 break;
@@ -2316,7 +2316,7 @@
 
         const front = G.players.reduce((a, p) => Math.max(a, p.meters), 0);
         setText(el['hud-distance'], front + 'm');
-        setText(el['hud-speed'], 'Tốc độ x' + (G.scroll / BASE_SCROLL).toFixed(1));
+        setText(el['hud-speed'], `Speed x${(G.scroll / BASE_SCROLL).toFixed(1)}`);
 
         G.players.forEach(p => {
             if (!p.dom) return;
@@ -2432,8 +2432,7 @@
                 '<div class="rank-medal' + (i === 0 ? ' dance' : '') + '">' + medals[Math.min(i, 3)] + '</div>' +
                 '<div class="rank-face"><span class="rank-suit" style="background:' + p.suit.body + ';border-color:' + p.ring + '"></span></div>' +
                 '<div class="rank-info"><div class="rank-name">' + p.name + '</div>' +
-                '<div class="rank-detail">🏁 ' + p.meters + 'm · 🧰 ' + p.stats.chests + ' rương · 💎 ' + p.stats.gems +
-                ' đá quý · 🔥 chuỗi ' + p.bestCombo + (p.out ? ' · knocked out' : '') + '</div></div>' +
+                `<div class="rank-detail">🏁 ${p.meters}m · 🧰 ${p.stats.chests} chests · 💎 ${p.stats.gems} gems · 🔥 combo ${p.bestCombo}${p.out ? ' · knocked out' : ''}</div></div>` +
                 '<div class="rank-score">' + Math.floor(p.score).toLocaleString('vi-VN') + '</div>';
             el['rank-list'].appendChild(row);
         });
@@ -2441,21 +2440,21 @@
         const awards = [];
         const best = fn => G.players.slice().sort((a, b) => fn(b) - fn(a))[0];
         const far = best(p => p.meters);
-        if (far) awards.push('🏁 Bơi xa nhất: ' + far.name + ' (' + far.meters + 'm)');
+        if (far) awards.push(`🏁 Longest swim: ${far.name} (${far.meters}m)`);
         const cb = best(p => p.bestCombo);
         if (cb && cb.bestCombo >= 4) awards.push('🔥 Longest streak: ' + cb.name + ' (' + cb.bestCombo + ')');
         const rd = best(p => p.stats.rides);
-        if (rd && rd.stats.rides > 0) awards.push('🐬 Nài cá cừ nhất: ' + rd.name);
+        if (rd && rd.stats.rides > 0) awards.push(`🐬 Best sea rider: ${rd.name}`);
         const clean = G.players.slice().sort((a, b) => a.stats.hits - b.stats.hits)[0];
-        if (clean && clean.stats.hits === 0 && G.playerCount > 1) awards.push('🛡️ Không dính bẫy nào: ' + clean.name);
+        if (clean && clean.stats.hits === 0 && G.playerCount > 1) awards.push(`🛡️ Never got hit: ${clean.name}`);
         el['award-row'].innerHTML = awards.map(a => '<span class="award-chip">' + a + '</span>').join('');
 
         const champ = ranked[0];
         el['end-emoji'].textContent = G.playerCount === 1 ? '🤿' : '🏆';
-        el['end-title'].textContent = G.playerCount === 1 ? 'FINISHED!' : champ.name + ' VÔ ĐỊCH!';
+        el['end-title'].textContent = G.playerCount === 1 ? 'FINISHED!' : `${champ.name} WINS!`;
         el['end-sub'].textContent = G.playerCount === 1
-            ? 'Bé bơi được ' + champ.meters + 'm and gom ' + Math.floor(champ.score).toLocaleString('vi-VN') + ' điểm!'
-            : 'Cùng vỗ tay cho nhà vô địch nào!';
+            ? `You swam ${champ.meters}m and collected ${Math.floor(champ.score).toLocaleString('en-US')} points!`
+            : 'Let us clap for the champion!';
 
         el['modal-end'].classList.add('active');
     }

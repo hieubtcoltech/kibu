@@ -1340,7 +1340,7 @@
         document.getElementById('score-hud').textContent = score;
         document.getElementById('coins-hud').innerHTML = `<i class="fa-solid fa-coins"></i> ${coins}`;
         const remainingRed = bots.filter(b => b.team === 'red').length + botsToSpawnInWave;
-        document.getElementById('bots-left-hud').innerHTML = `<i class="fa-solid fa-skull"></i> Bot Còn Lại: ${remainingRed}`;
+        document.getElementById('bots-left-hud').innerHTML = `<i class="fa-solid fa-skull"></i> Bots Left: ${remainingRed}`;
     }
 
     function updateHUDHealth() {

@@ -49,10 +49,10 @@
         { key: 'bomb',  name: 'BOMB BALLOON',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true },
         /* Bóng thần kỳ: hiếm gặp, nổ được thì 5 giây tiếp theo mỗi lần phi ra
            một chùm ba mũi toả về ba hướng. */
-        { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true },
+        { key: 'magic', name: 'MAGIC BALLOON', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true },
         /* Bóng quậy: bay lắt léo, khó ngắm. Đổi lại nổ được nó thì cả màn hình
            nổ theo, và bom dính chùm cũng không bị trừ điểm. */
-        { key: 'crazy', name: 'BÓNG QUẬY', r: MS(0.12), pts: 4, vy: [70, 104], w: 5, crazy: true }
+        { key: 'crazy', name: 'CRAZY BALLOON', r: MS(0.12), pts: 4, vy: [70, 104], w: 5, crazy: true }
     ];
 
     const TRIPLE_TIME = 5;            // giây được bắn chùm
@@ -819,7 +819,7 @@
 
             if (this.tripleT > 0) {
                 this.tripleT = Math.max(0, this.tripleT - dt);
-                if (this.tripleT === 0) this.addFx('Hết phép chùm', '#9fb3c8', this.cx, THROW_Y - 170, 18);
+                if (this.tripleT === 0) this.addFx('Triple shot over', '#9fb3c8', this.cx, THROW_Y - 170, 18);
             }
 
             if (this.outcome) this.updateCelebration(dt);
@@ -971,16 +971,16 @@
                 this.balloons = this.balloons.filter(o => o.alive);
                 this.chaining = false;
                 pts += chainPts;
-                label = `💥 NỔ HẾT! +${pts}`;
+                label = `💥 POPPED THEM ALL! +${pts}`;
                 this.shake = 22;
-                this.addFx(`💥 NỔ TUNG ${chainCount} QUẢ!`, '#ff9ae8', this.cx, THROW_Y - 200, 26);
+                this.addFx(`💥 ${chainCount} BALLOONS BLOWN UP!`, '#ff9ae8', this.cx, THROW_Y - 200, 26);
                 Sfx.gold();
             }
 
             if (k.magic) {
                 this.tripleT = TRIPLE_TIME;
-                label = `✨ CHÙM 3 MŨI! +${pts}`;
-                this.addFx('✨ CHÙM 3 MŨI — 5 GIÂY!', '#7bdcff', this.cx, THROW_Y - 200, 26);
+                label = `✨ TRIPLE SHOT! +${pts}`;
+                this.addFx('✨ TRIPLE SHOT — 5 SECONDS!', '#7bdcff', this.cx, THROW_Y - 200, 26);
                 Sfx.gold();
             }
             else if (k.gold) { this.golds++; Sfx.gold(); label = `🥇 +${pts}`; }
@@ -1747,7 +1747,7 @@
             box.innerHTML = `
                 <div class="share-title">Show it off</div>
                 <div class="share-row">
-                    ${canNative ? '<button class="share-btn share-native"><i class="fa-solid fa-share-nodes"></i> Chia Sẻ</button>' : ''}
+                    ${canNative ? '<button class="share-btn share-native"><i class="fa-solid fa-share-nodes"></i> Share</button>' : ''}
                     <button class="share-btn share-fb"${url ? '' : ' disabled'}><i class="fa-brands fa-facebook-f"></i> Facebook</button>
                     <button class="share-btn share-x"><i class="fa-brands fa-x-twitter"></i></button>
                     <button class="share-btn share-copy"><i class="fa-solid fa-copy"></i> Copy</button>

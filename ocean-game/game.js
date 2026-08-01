@@ -124,17 +124,17 @@
     /* ---------- Bẫy & sinh vật nguy hiểm ----------
        pen: điểm bị trừ. Mỗi loại còn một tác dụng phụ riêng xử lý trong hit(). */
     const HAZARDS = {
-        jelly: { emoji: '🪼', name: 'Sứa', r: 20, pen: 25, stun: 1.1, speed: 26, move: 'drift' },
-        urchin: { emoji: '🦔', name: 'Nhím Biển', r: 17, pen: 30, knock: 320, speed: 0, move: 'static' },
-        coral: { emoji: '☠️', name: 'San Hô Độc', r: 18, pen: 45, slow: 3.5, speed: 0, move: 'static' },
-        eel: { emoji: '⚡', name: 'Lươn Điện', r: 19, pen: 35, stun: 0.9, knock: 260, speed: 74, move: 'patrol' },
-        seaweed: { emoji: '🌿', name: 'Rong Dính', r: 26, pen: 0, slow: 2.6, speed: 0, move: 'static' },
-        crab: { emoji: '🦀', name: 'Cua Cáu Kỉnh', r: 18, pen: 30, knock: 300, speed: 96, move: 'chase', range: 240 },
-        rock: { emoji: '🪨', name: 'Đá Rơi', r: 19, pen: 35, stun: 0.7, speed: 150, move: 'fall' },
-        octo: { emoji: '🦑', name: 'Mực Phun', r: 20, pen: 20, blind: 4.5, speed: 52, move: 'patrol' },
-        mine: { emoji: '💣', name: 'Mìn Biển', r: 20, pen: 60, knock: 460, drop: true, speed: 0, move: 'static' },
-        shark: { emoji: '🦈', name: 'Cá Mập', r: 30, pen: 70, knock: 380, stun: 0.6, drop: true, speed: 132, move: 'hunt' },
-        clam: { emoji: '🐚', name: 'Sò Khổng Lồ', r: 22, pen: 20, trap: 1.6, speed: 0, move: 'static' }
+        jelly: { emoji: '🪼', name: 'Jellyfish', r: 20, pen: 25, stun: 1.1, speed: 26, move: 'drift' },
+        urchin: { emoji: '🦔', name: 'Sea Urchin', r: 17, pen: 30, knock: 320, speed: 0, move: 'static' },
+        coral: { emoji: '☠️', name: 'Stinging Coral', r: 18, pen: 45, slow: 3.5, speed: 0, move: 'static' },
+        eel: { emoji: '⚡', name: 'Electric Eel', r: 19, pen: 35, stun: 0.9, knock: 260, speed: 74, move: 'patrol' },
+        seaweed: { emoji: '🌿', name: 'Sticky Weed', r: 26, pen: 0, slow: 2.6, speed: 0, move: 'static' },
+        crab: { emoji: '🦀', name: 'Grumpy Crab', r: 18, pen: 30, knock: 300, speed: 96, move: 'chase', range: 240 },
+        rock: { emoji: '🪨', name: 'Falling Rock', r: 19, pen: 35, stun: 0.7, speed: 150, move: 'fall' },
+        octo: { emoji: '🦑', name: 'Inky Squid', r: 20, pen: 20, blind: 4.5, speed: 52, move: 'patrol' },
+        mine: { emoji: '💣', name: 'Sea Mine', r: 20, pen: 60, knock: 460, drop: true, speed: 0, move: 'static' },
+        shark: { emoji: '🦈', name: 'Shark', r: 30, pen: 70, knock: 380, stun: 0.6, drop: true, speed: 132, move: 'hunt' },
+        clam: { emoji: '🐚', name: 'Giant Clam', r: 22, pen: 20, trap: 1.6, speed: 0, move: 'static' }
     };
 
     /* ---------- Điểm ---------- */
@@ -1040,7 +1040,7 @@
                 this.stats.rideTime += dt;
                 this.addScore(SCORE.mountPerSec * dt, null, true);
                 if (this.mountT <= 0) {
-                    floatText(this.x, this.y - 26, MOUNTS[this.mount].emoji + ' tạm biệt!', '#8fd7ff');
+                    floatText(this.x, this.y - 26, `${MOUNTS[this.mount].emoji} says goodbye!`, '#8fd7ff');
                     this.mount = null;
                 }
             }
@@ -1396,7 +1396,7 @@
             this.bumpCombo();
             audio.cave();
             G.shake = Math.max(G.shake, 6);
-            floatText(this.x, this.y - 34, '🕳️ HANG BÍ MẬT! +' + SCORE.cave, '#ffd76b');
+            floatText(this.x, this.y - 34, `🕳️ HIDDEN CAVE! +${SCORE.cave}`, '#ffd76b');
             showEvent('🕳️ ' + this.style.name + ' FIND A HIDDEN CAVE!');
             if (this.stats.caves >= 2 && Store.award('cave2')) toast('🏅 New achievement: Explorer!');
             checkObjective(this, level);
@@ -1452,7 +1452,7 @@
             }
             if (meta.drop) this.dropTreasure();
             if (this.mount) {
-                floatText(this.x, this.y - 40, MOUNTS[this.mount].emoji + ' chạy mất!', '#ff7676');
+                floatText(this.x, this.y - 40, `${MOUNTS[this.mount].emoji} ran away!`, '#ff7676');
                 this.mount = null;
             }
             spawnBurst(this.x, this.y, '#ff7676', 14);
@@ -1745,7 +1745,7 @@
             o.winner = player.index;
             player.addScore(SCORE.objective * player.mult);
             audio.power();
-            showEvent('🎯 ' + player.style.name + ' XONG NHIỆM VỤ! +' + SCORE.objective);
+            showEvent(`🎯 ${player.style.name} FINISHED THE MISSION! +${SCORE.objective}`);
         }
     }
 
@@ -2664,7 +2664,7 @@
         G.camera.y = G.players[0].y;
         G.camera.zoom = 0.8;
 
-        el['hud-world'].textContent = world.name + (G.mode === 'tournament' ? ' — MÀN ' + (G.round + 1) + '/' + G.rounds : '');
+        el['hud-world'].textContent = world.name + (G.mode === 'tournament' ? ` — ROUND ${G.round + 1}/${G.rounds}` : '');
         el['hud-objective'].textContent = G.level.objective.text;
 
         buildPlayerCards();
@@ -2733,8 +2733,7 @@
                 '<div class="rank-face">' + p.skin + '</div>' +
                 '<div class="rank-info">' +
                 '<div class="rank-name">' + p.style.name + '</div>' +
-                '<div class="rank-detail">🧰 ' + p.stats.chests + ' rương · 💎 ' + p.stats.gems +
-                ' đá quý · 🕳️ ' + p.stats.caves + ' hang · 🔥 chuỗi ' + p.bestCombo + '</div>' +
+                `<div class="rank-detail">🧰 ${p.stats.chests} chests · 💎 ${p.stats.gems} gems · 🕳️ ${p.stats.caves} caves · 🔥 combo ${p.bestCombo}</div>` +
                 '</div>' +
                 '<div class="rank-score">' + shown.toLocaleString('vi-VN') + '</div>';
             list.appendChild(row);
@@ -2744,15 +2743,15 @@
         const awards = [];
         const best = (fn) => G.players.slice().sort((a, b) => fn(b) - fn(a))[0];
         const t = best(p => p.stats.treasures);
-        if (t && t.stats.treasures > 0) awards.push('🧰 Săn kho báu giỏi nhất: ' + t.style.name);
+        if (t && t.stats.treasures > 0) awards.push(`🧰 Best treasure hunter: ${t.style.name}`);
         const c = best(p => p.bestCombo);
         if (c && c.bestCombo >= 4) awards.push('🔥 Longest streak: ' + c.style.name + ' (' + c.bestCombo + ')');
         const r = best(p => p.stats.rides);
-        if (r && r.stats.rides > 0) awards.push('🐬 Nài cá cừ nhất: ' + r.style.name);
+        if (r && r.stats.rides > 0) awards.push(`🐬 Best sea rider: ${r.style.name}`);
         const ca = best(p => p.stats.caves);
         if (ca && ca.stats.caves > 0) awards.push('🕳️ Explorer: ' + ca.style.name);
         const h = G.players.slice().sort((a, b) => a.stats.hits - b.stats.hits)[0];
-        if (h && h.stats.hits === 0 && G.playerCount > 1) awards.push('🛡️ Không dính bẫy nào: ' + h.style.name);
+        if (h && h.stats.hits === 0 && G.playerCount > 1) awards.push(`🛡️ Never got hit: ${h.style.name}`);
 
         el['award-row'].innerHTML = awards.map(a => '<span class="award-chip">' + a + '</span>').join('');
 
@@ -2760,9 +2759,9 @@
         el['end-emoji'].textContent = G.playerCount === 1 ? '🐠' : '🏆';
         el['end-title'].textContent = G.playerCount === 1
             ? 'OUT OF TIME!'
-            : champ.style.name + ' VÔ ĐỊCH!';
+            : `${champ.style.name} WINS!`;
         el['end-sub'].textContent = G.playerCount === 1
-            ? 'Bé gom được ' + Math.floor(champ.score).toLocaleString('vi-VN') + ' điểm kho báu!'
+            ? `You collected ${Math.floor(champ.score).toLocaleString('en-US')} treasure points!`
             : 'Give it up for the champion of the deep!';
 
         // Vừa mở khoá được gì mới?
@@ -2775,7 +2774,7 @@
         const ut = el['unlock-toast'];
         if (opened.length) {
             ut.hidden = false;
-            ut.textContent = '🎁 Vừa mở khoá: ' + opened.join(' · ');
+            ut.textContent = `🎁 Just unlocked: ${opened.join(' · ')}`;
         } else {
             ut.hidden = true;
         }
@@ -2814,7 +2813,7 @@
             if (G.state === 'COUNTDOWN') {
                 G.countdown -= dt;
                 const n = Math.ceil(G.countdown - 0.2);
-                el['countdown-text'].textContent = n > 0 ? String(n) : 'LẶN!';
+                el['countdown-text'].textContent = n > 0 ? String(n) : 'DIVE!';
                 if (n !== lastCount) {
                     lastCount = n;
                     audio.beep(n <= 0);
@@ -2982,7 +2981,7 @@
         el['world-section'].style.display = G.mode === 'daily' ? 'none' : '';
         const done = Store.data.daily.day === todayKey();
         if (G.mode === 'daily' && done) {
-            toast('📅 Hôm nay bé đã chơi rồi: ' + Store.data.daily.score + ' điểm. Chơi lại vẫn được nhé!');
+            toast(`📅 You already played today: ${Store.data.daily.score} points. Feel free to play again!`);
         }
     }
 
