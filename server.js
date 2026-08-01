@@ -131,6 +131,32 @@ async function handle(req, res) {
             `${color}${status}${C.reset} ${req.method} ${pathname} ${C.dim}(${ms}ms)${C.reset}`);
     };
 
+    // GitHub Webhook Auto-Deploy Endpoint
+    if (pathname === '/api/webhook' && req.method === 'POST') {
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', () => {
+            try {
+                const payload = JSON.parse(body || '{}');
+                if (payload.ref === 'refs/heads/main' || !payload.ref) {
+                    console.log(`${C.cyan}🚀 GitHub Push received! Auto-deploying...${C.reset}`);
+                    const { exec } = require('child_process');
+                    exec('git pull && pm2 restart kibu', { cwd: ROOT }, (err, stdout, stderr) => {
+                        if (err) console.error(`${C.red}Auto-deploy error:${C.reset}`, err);
+                        else console.log(`${C.green}Auto-deploy successful!${C.reset}\n`, stdout);
+                    });
+                    send(res, 200, JSON.stringify({ status: 'success', message: 'Deploy triggered' }), { 'Content-Type': 'application/json' });
+                } else {
+                    send(res, 200, JSON.stringify({ status: 'ignored', message: 'Not main branch' }), { 'Content-Type': 'application/json' });
+                }
+            } catch (e) {
+                send(res, 400, 'Invalid Payload');
+            }
+            log(200);
+        });
+        return;
+    }
+
     if (req.method !== 'GET' && req.method !== 'HEAD') {
         send(res, 405, 'Method Not Allowed', { 'Allow': 'GET, HEAD' });
         return log(405);
