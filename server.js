@@ -324,8 +324,12 @@ async function handle(req, res) {
             'Content-Length': stat.size,
             'ETag': etag,
             'Last-Modified': stat.mtime.toUTCString(),
-            // Luôn hỏi lại server để các con thấy ngay nội dung vừa sửa
-            'Cache-Control': 'no-cache',
+            /* Ảnh/âm thanh/phông chữ gần như không đổi mà lại nặng nhất trang —
+               cho trình duyệt giữ hẳn 7 ngày, vào lại là hiện tức thì. Còn
+               HTML/JS/CSS vẫn hỏi lại mỗi lần để các con thấy ngay bản vừa sửa. */
+            'Cache-Control': /\.(png|jpe?g|gif|webp|svg|ico|mp3|wav|ogg|woff2?|ttf)$/i.test(filePath)
+                ? 'public, max-age=604800'
+                : 'no-cache',
             'X-Content-Type-Options': 'nosniff'
         };
 
