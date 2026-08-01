@@ -54,26 +54,27 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../site-chrome.css">
+    <script src="../i18n.js"></script>
 </head>
 <body>
     <div class="bg-court-glow"></div>
 
     <div class="app-wrapper">
         <header class="unified-nav">
-            <div class="brand">
-                <span class="brand-icon">🎯</span>
-                <h1 class="brand-title">PHI TIÊU BONG BÓNG</h1>
+            <div class="nav-left">
+                <a href="../index.html" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <div class="brand">
+                    <span class="brand-icon">🎯</span>
+                    <h1 class="brand-title">BALLOON DARTS</h1>
+                </div>
             </div>
 
             <div class="nav-actions">
-            <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; padding: 4px 8px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: auto; outline: none;">
-    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language" style="width: 24px; height: 16px; object-fit: cover; border-radius: 3px; display: block; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
-</button>
             
             
-                <a href="../index.html" class="btn btn-home">
-                    <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
-                </a>
                 <button id="btn-help" class="btn btn-toggle active" title="Hiện đường bay dự đoán giúp bé ngắm dễ hơn">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> <span id="help-label">Trợ Giúp Bé: BẬT</span>
                 </button>
@@ -251,6 +252,12 @@
                 </div>
             </div>
         </main>
+
+        <footer class="site-footer footer-lang-only">
+            <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+            </button>
+        </footer>
     </div>
 
     <script src="game.js"></script>
@@ -259,163 +266,5 @@
 
     
     
-    <!-- Global SVG Flag Language Switcher Script -->
-    <script>
-    (function() {
-        const LANG_KEY = "kibu_global_lang";
-        const btn = document.getElementById("btn-global-lang");
-        const flagImg = document.getElementById("global-lang-flag");
-        
-        let currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
-
-        function updateLangUI() {
-            if (flagImg) {
-                // Show SVG flag based on active language
-                flagImg.src = currentLang === "vi" ? "https://flagcdn.com/w40/vn.png" : "https://flagcdn.com/w40/gb.png";
-                flagImg.alt = currentLang === "vi" ? "Tiếng Việt" : "English";
-            }
-            document.documentElement.lang = currentLang;
-        }
-
-        if (btn) {
-            btn.addEventListener("click", function() {
-                currentLang = currentLang === "vi" ? "en" : "vi";
-                localStorage.setItem(LANG_KEY, currentLang);
-                localStorage.setItem("fruitCrushLang", currentLang);
-                updateLangUI();
-                window.location.reload();
-            });
-        }
-        updateLangUI();
-    })();
-    </script>
-    
-    
-    
-    
-    <!-- Deep Tree Global I18n UI Localizer Script -->
-    <script>
-    (function() {
-        const LANG_KEY = "kibu_global_lang";
-        const currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
-
-        const dictEn = {
-            // General & Headers
-            "Trang Chủ": "Home",
-            "Đổi Đội Hình": "Lineup",
-            "Đá Lại": "Restart Match",
-            "Âm Thanh": "Sound",
-            "Nhạc Nền": "Music",
-            "Chọn Màn": "Levels",
-            "Bảng Vàng": "High Scores",
-            "Chơi Lại": "Restart",
-            "Ván Mới": "New Game",
-            "Luật Chơi": "Rules",
-            "Đã Hiểu": "Got It",
-            "Cửa Hàng": "Shop",
-            "Đóng Cửa Hàng": "Close Shop",
-            "Về Menu": "Main Menu",
-            "BẮT ĐẦU CHƠI": "START PLAYING",
-            "BẮT ĐẦU VÁN ĐẤU": "START MATCH",
-            "VÀO SÂN THI ĐẤU": "KICK OFF MATCH",
-            "ĐẤU LẠI": "PLAY AGAIN",
-            "TRANG CHỦ": "HOME",
-            "Tự Ngắm: BẬT": "Aim Guide: ON",
-            "Tự Ngắm: TẮT": "Aim Guide: OFF",
-            "Đường Ngắm: BẬT": "Aim Line: ON",
-            "Đường Ngắm: TẮT": "Aim Line: OFF",
-            "Điểm Số": "Score",
-            "Xu Thưởng": "Coins",
-            "THỜI GIAN": "TIME",
-            "ĐỘI ĐỎ": "RED TEAM",
-            "ĐỘI XANH": "BLUE TEAM",
-            "ĐỘI ĐỎ VÔ ĐỊCH!": "RED TEAM CHAMPION!",
-            "ĐỘI XANH VÔ ĐỊCH!": "BLUE TEAM CHAMPION!",
-            "BÓNG ĐÁ MINI": "MINI SOCCER",
-            "SỐ NGƯỜI CHƠI": "NUMBER OF PLAYERS",
-            "THỜI GIAN TRẬN ĐẤU": "MATCH DURATION",
-            "ĐỘI HÌNH & PHÍM BẤM": "LINEUP & CONTROLS",
-            "ĐÁ TIẾP": "RESUME MATCH",
-            "TẠM DỪNG": "PAUSED",
-            "BÉ 1": "KID 1",
-            "BÉ 2": "KID 2",
-            "BÉ 3": "KID 3",
-            "BÉ 4": "KID 4",
-
-            // i18n Keys for Soccer Game
-            "sk_dribble_t": "DRIBBLING",
-            "sk_dribble_d": "Once you have the ball, just run — it stays close to your feet",
-            "sk_pass_t": "PASSING",
-            "sk_pass_d": "<i>Tap quickly</i> to pass to your teammate",
-            "sk_soft_t": "SOFT SHOT",
-            "sk_soft_d": "<i>Hold briefly</i> then release — smooth controlled placement shot",
-            "sk_power_t": "POWER SHOT",
-            "sk_power_d": "<i>Hold power bar</i> past white line then release — rocket power shot",
-            "sk_curve_t": "CURVE SHOT",
-            "sk_curve_d": "Use <i>second action key</i> — curves ball around keeper with precision",
-            "sk_goalie_t": "BYPASS GOALIE",
-            "sk_goalie_d": "Don’t shoot straight — <i>side-step first</i> then fire into open corner!",
-            "sk_penalty_t": "PENALTY SHOOTOUT",
-            "sk_penalty_d": "Tied at full time? <i>3-round penalty shootout</i> begins until winner emerges!",
-            "soc_desc": "Play with <b>2 to 4 kids</b> on one device. Dribble past defenders, pass to teammates, and shoot past the <b>goalie</b>! Futsal pitch layout with penalty spots and sub benches.",
-            "kid1": "KID 1",
-            "kid2": "KID 2",
-            "kid3": "KID 3",
-            "kid4": "KID 4",
-
-            // Match options
-            "2 BÉ · 1-1": "2 PLAYERS (1-1)",
-            "3 BÉ · 2-1": "3 PLAYERS (2-1)",
-            "4 BÉ · 2-2": "4 PLAYERS (2-2)",
-            "Đối đầu tay đôi": "Head-to-head duel",
-            "Bé chơi một mình chạy nhanh và sút mạnh hơn ⭐": "Solo player gets extra speed and shot power ⭐",
-            "Hai đội, tha hồ chuyền bóng": "2v2 team play with passing",
-            "1 PHÚT 30": "1M 30S",
-            "2 PHÚT 30": "2M 30S",
-            "4 PHÚT": "4 MINS",
-            "Đá nhanh": "Quick Match",
-            "Vừa đủ": "Standard Match",
-            "Trận dài": "Long Match"
-        };
-
-        if (currentLang === "en") {
-            function translateDOM() {
-                // 1. Translate elements with data-i18n
-                document.querySelectorAll("[data-i18n]").forEach(el => {
-                    const key = el.getAttribute("data-i18n");
-                    if (dictEn[key]) el.textContent = dictEn[key];
-                });
-                document.querySelectorAll("[data-i18n-html]").forEach(el => {
-                    const key = el.getAttribute("data-i18n-html");
-                    if (dictEn[key]) el.innerHTML = dictEn[key];
-                });
-
-                // 2. TreeWalker fallback for all plain text nodes
-                const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-                let node;
-                while (node = walker.nextNode()) {
-                    const parentTag = node.parentElement ? node.parentElement.tagName.toLowerCase() : "";
-                    if (["script", "style", "title"].includes(parentTag)) continue;
-                    
-                    let text = node.nodeValue.trim();
-                    if (!text) continue;
-
-                    if (dictEn[text]) {
-                        node.nodeValue = node.nodeValue.replace(text, dictEn[text]);
-                    }
-                }
-            }
-
-            if (document.readyState === "loading") {
-                window.addEventListener("DOMContentLoaded", translateDOM);
-            } else {
-                translateDOM();
-            }
-
-            const observer = new MutationObserver(() => translateDOM());
-            observer.observe(document.body, { childList: true, subtree: true });
-        }
-    })();
-    </script>
 </body>
 </html>

@@ -1,0 +1,139 @@
+/* ============================================================================
+ * KIBU Games — shared page chrome
+ * ----------------------------------------------------------------------------
+ * Loaded after each page's own stylesheet. It only introduces new class names
+ * (.nav-left, .nav-home, .site-footer, .lang-flag-btn) so nothing a game
+ * already styles is overridden.
+ *
+ * Header order on every page:   [🏠 home]  [game icon]  [game title]  … actions
+ * The language switcher lives in the footer.
+ * ==========================================================================*/
+
+/* ---------- Header: home icon, then the game's own icon and title ---------- */
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;          /* let a long game title shrink instead of pushing */
+}
+
+.nav-home {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 1.05rem;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-home:hover,
+.nav-home:focus-visible {
+    background: rgba(255, 255, 255, 0.20);
+    border-color: rgba(255, 255, 255, 0.42);
+    transform: translateY(-1px);
+}
+
+.nav-home:active { transform: translateY(0); }
+
+/* The brand block keeps whatever the game already gave it; it just must not
+ * stretch now that it shares a row with the home button. */
+.nav-left .brand { min-width: 0; }
+
+/* ---------- Footer ---------- */
+.site-footer {
+    flex-shrink: 0;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    box-sizing: border-box;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.site-footer p { margin: 0; }
+
+/* A game page footer holds only the flag, so keep it hard right. An explicit
+ * class rather than :has(), which older iPad Safari does not support. */
+.site-footer.footer-lang-only { justify-content: flex-end; }
+
+/* The home and about pages keep their own footer styling; this only lines the
+ * switcher up on the same row as the credit line instead of below it. */
+.poki-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+/* ---------- Language switcher ---------- */
+.lang-flag-btn {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.lang-flag-btn:hover,
+.lang-flag-btn:focus-visible {
+    background: rgba(255, 255, 255, 0.20);
+    border-color: rgba(255, 255, 255, 0.45);
+    transform: translateY(-1px);
+}
+
+.lang-flag-btn:active { transform: translateY(0); }
+
+.lang-flag-btn img {
+    width: 24px;
+    height: 16px;
+    object-fit: cover;
+    border-radius: 3px;
+    display: block;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- Pages whose game box is pinned to the viewport ----------
+ * cyber-snake and space-shooter size .game-wrapper with height:100vh, which
+ * already ignored the header and now the footer too, pushing both off screen.
+ * Letting it flex into the space that is actually left keeps the whole chrome
+ * visible; the wrapper's own aspect-ratio still decides its width. */
+body.chrome-fit {
+    height: 100vh;
+    overflow: hidden;
+}
+
+body.chrome-fit > .game-wrapper {
+    height: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 560px) {
+    .nav-home { width: 36px; height: 36px; border-radius: 10px; }
+    .nav-left { gap: 8px; }
+    .site-footer { padding: 8px 12px; font-size: 0.78rem; }
+}

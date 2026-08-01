@@ -600,7 +600,7 @@
             ctx.font = `bold ${(11 * (0.78 + 0.22 * s)).toFixed(1)}px "Nunito", sans-serif`;
             const ly = sy_(this.y) + 16 * s;
             ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.fillText('${(localStorage.getItem("kibu_global_lang")==="en")?"GOALIE":"THỦ MÔN"}', sx_(this.x, this.y), ly + 1);
+            ctx.fillText('THỦ MÔN', sx_(this.x, this.y), ly + 1);
             ctx.fillStyle = '#ffe98a';
             ctx.fillText('THỦ MÔN', sx_(this.x, this.y), ly);
             ctx.restore();

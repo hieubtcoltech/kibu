@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KIBU Games - Free Online Games for Kids | Sân Chơi Game Trực Tuyến Miễn Phí</title>
-    
+
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Welcome to KIBU Games (Kid Built Games)! 100% free online games built with love for kids and families. Play fun arcade, puzzle, racing, and educational games in English and Vietnamese.">
-    <meta name="keywords" content="KIBU Games, Kid Built Games, free kids games, game mien phi cho be, online kids games, arcade games, educational games for kids, puzzle games, tro choi tre em">
+    <meta name="description"
+        content="Welcome to KIBU Games (Kid Built Games)! 100% free online games built with love for kids and families. Play fun arcade, puzzle, racing, and educational games in English and Vietnamese.">
+    <meta name="keywords"
+        content="KIBU Games, Kid Built Games, free kids games, game mien phi cho be, online kids games, arcade games, educational games for kids, puzzle games, tro choi tre em">
     <meta name="author" content="KIBU Games">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://kibugames.com/">
@@ -19,7 +22,8 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kibugames.com/">
     <meta property="og:title" content="KIBU Games - Free Games Built with Love for Kids">
-    <meta property="og:description" content="Play 100% free online games built with pure love for kids and families at KIBU Games (Kid Built Games)! Available in English & Vietnamese.">
+    <meta property="og:description"
+        content="Play 100% free online games built with pure love for kids and families at KIBU Games (Kid Built Games)! Available in English & Vietnamese.">
     <meta property="og:image" content="https://kibugames.com/og-image.png">
     <meta property="og:locale" content="en_US">
     <meta property="og:locale:alternate" content="vi_VN">
@@ -28,7 +32,8 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://kibugames.com/">
     <meta name="twitter:title" content="KIBU Games - Free Games Built with Love for Kids">
-    <meta name="twitter:description" content="100% free, safe, and engaging online games built with love for kids and families at KIBU Games. Support English & Vietnamese.">
+    <meta name="twitter:description"
+        content="100% free, safe, and engaging online games built with love for kids and families at KIBU Games. Support English & Vietnamese.">
     <meta name="twitter:image" content="https://kibugames.com/og-image.png">
 
     <!-- Structured Data (JSON-LD) for SEO -->
@@ -47,7 +52,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap"
+        rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -285,16 +292,45 @@
         }
 
         /* Background Colors per game tile */
-        .tile-fruit { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
-        .tile-shooter { background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%); }
-        .tile-racer { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
-        .tile-english { background: linear-gradient(135deg, #7c3aed 0%, #c084fc 100%); }
-        .tile-space { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); }
-        .tile-snake { background: linear-gradient(135deg, #059669 0%, #34d399 100%); }
-        .tile-basket { background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%); }
-        .tile-pool { background: linear-gradient(135deg, #0f766e 0%, #2dd4bf 100%); }
-        .tile-soccer { background: linear-gradient(135deg, #16a34a 0%, #4ade80 100%); }
-        .tile-darts { background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%); }
+        .tile-fruit {
+            background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%);
+        }
+
+        .tile-shooter {
+            background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+        }
+
+        .tile-racer {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        }
+
+        .tile-english {
+            background: linear-gradient(135deg, #7c3aed 0%, #c084fc 100%);
+        }
+
+        .tile-space {
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+        }
+
+        .tile-snake {
+            background: linear-gradient(135deg, #059669 0%, #34d399 100%);
+        }
+
+        .tile-basket {
+            background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%);
+        }
+
+        .tile-pool {
+            background: linear-gradient(135deg, #0f766e 0%, #2dd4bf 100%);
+        }
+
+        .tile-soccer {
+            background: linear-gradient(135deg, #16a34a 0%, #4ade80 100%);
+        }
+
+        .tile-darts {
+            background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%);
+        }
 
         .tile-emoji {
             font-size: 4rem;
@@ -408,7 +444,10 @@
             color: #ff007f;
         }
     </style>
+    <link rel="stylesheet" href="site-chrome.css">
+    <script src="i18n.js"></script>
 </head>
+
 <body>
 
     <!-- Header Navbar -->
@@ -419,38 +458,29 @@
             </div>
             <div class="poki-logo-brand">
                 <span class="poki-logo-text">KIBU GAMES</span>
-                <span class="poki-logo-sub">Kid Built Games</span>
+                <span class="poki-logo-sub">A world of play</span>
             </div>
         </a>
-
-        <!-- Feature Badges: Free & Love for Kids -->
-        <div class="header-badges">
-            
-            <span class="badge-pill badge-free"><i class="fa-solid fa-gift"></i> 100% FREE</span>
-            <a href="./about.html" class="badge-pill badge-love" style="text-decoration: none;" title="Read our story!"><i class="fa-solid fa-heart"></i> BUILT WITH LOVE FOR KIDS <i class="fa-solid fa-circle-info"></i></a>
-        </div>
-
         <!-- Search Bar -->
         <div class="poki-search">
             <i class="fa-solid fa-magnifying-glass poki-search-icon"></i>
-            <input type="text" id="searchInput" class="poki-search-input" placeholder="Search games..." autocomplete="off">
+            <input type="text" id="searchInput" class="poki-search-input" placeholder="Search games..."
+                autocomplete="off">
             <button type="button" id="clearBtn" class="poki-clear-btn" aria-label="Clear search">
                 <i class="fa-solid fa-xmark"></i>
             </button>
         </div>
-        
-    
-    <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; padding: 4px 8px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: auto; outline: none;">
-    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language" style="width: 24px; height: 16px; object-fit: cover; border-radius: 3px; display: block; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
-</button>
-</header>
+
+
+    </header>
 
     <!-- Poki Main Grid -->
     <main class="poki-grid-container">
         <div class="poki-grid" id="cardsGrid">
-            
+
             <!-- Game 1: Fruit Crush -->
-            <a href="./fruit-crush/index.html" class="poki-tile tile-fruit" data-keywords="fruit crush match 3 candy sweets berries">
+            <a href="./fruit-crush/index.html" class="poki-tile tile-fruit"
+                data-keywords="fruit crush match 3 candy sweets berries">
                 <div class="tile-emoji">🍓</div>
                 <div class="tile-label">Fruit Crush</div>
                 <div class="tile-play-overlay">
@@ -459,7 +489,8 @@
             </a>
 
             <!-- Game 2: Bot Arena -->
-            <a href="./shooter-game/index.html" class="poki-tile tile-shooter" data-keywords="bot arena robot shooter action gun aiming">
+            <a href="./shooter-game/index.html" class="poki-tile tile-shooter"
+                data-keywords="bot arena robot shooter action gun aiming">
                 <div class="tile-emoji">🤖</div>
                 <div class="tile-label">Bot Arena</div>
                 <div class="tile-play-overlay">
@@ -468,7 +499,8 @@
             </a>
 
             <!-- Game 3: Neon Racer -->
-            <a href="./racer-game/index.html" class="poki-tile tile-racer" data-keywords="neon racer racing car speed nitro sports">
+            <a href="./racer-game/index.html" class="poki-tile tile-racer"
+                data-keywords="neon racer racing car speed nitro sports">
                 <div class="tile-emoji">🏎️</div>
                 <div class="tile-label">Neon Racer</div>
                 <div class="tile-play-overlay">
@@ -477,7 +509,8 @@
             </a>
 
             <!-- Game 4: English Quest -->
-            <a href="./english-game/index.html" class="poki-tile tile-english" data-keywords="english quest learn words grammar vocabulary study">
+            <a href="./english-game/index.html" class="poki-tile tile-english"
+                data-keywords="english quest learn words grammar vocabulary study">
                 <div class="tile-emoji">🎓</div>
                 <div class="tile-label">English Quest</div>
                 <div class="tile-play-overlay">
@@ -486,7 +519,8 @@
             </a>
 
             <!-- Game 5: Neon Nebula -->
-            <a href="./space-shooter/index.html" class="poki-tile tile-space" data-keywords="neon nebula space shooter spaceship galaxy alien boss">
+            <a href="./space-shooter/index.html" class="poki-tile tile-space"
+                data-keywords="neon nebula space shooter spaceship galaxy alien boss">
                 <div class="tile-emoji">🚀</div>
                 <div class="tile-label">Neon Nebula</div>
                 <div class="tile-play-overlay">
@@ -495,7 +529,8 @@
             </a>
 
             <!-- Game 6: Cyber Snake -->
-            <a href="./cyber-snake/index.html" class="poki-tile tile-snake" data-keywords="cyber snake retro matrix arcade classic grow">
+            <a href="./cyber-snake/index.html" class="poki-tile tile-snake"
+                data-keywords="cyber snake retro matrix arcade classic grow">
                 <div class="tile-emoji">🐍</div>
                 <div class="tile-label">Cyber Snake</div>
                 <div class="tile-play-overlay">
@@ -504,7 +539,8 @@
             </a>
 
             <!-- Game 7: Basketball Duel -->
-            <a href="./basketball-game/index.html" class="poki-tile tile-basket" data-keywords="basketball duel 2 player sports dunk hoop arcade">
+            <a href="./basketball-game/index.html" class="poki-tile tile-basket"
+                data-keywords="basketball duel 2 player sports dunk hoop arcade">
                 <div class="tile-emoji">🏀</div>
                 <div class="tile-label">Basketball Duel</div>
                 <div class="tile-play-overlay">
@@ -513,7 +549,8 @@
             </a>
 
             <!-- Game 8: Pool Masters -->
-            <a href="./billiards-game/index.html" class="poki-tile tile-pool" data-keywords="pool masters billiards 8 ball 2 player cue snooker">
+            <a href="./billiards-game/index.html" class="poki-tile tile-pool"
+                data-keywords="pool masters billiards 8 ball 2 player cue snooker">
                 <div class="tile-emoji">🎱</div>
                 <div class="tile-label">Pool Masters</div>
                 <div class="tile-play-overlay">
@@ -522,7 +559,8 @@
             </a>
 
             <!-- Game 9: Super Striker -->
-            <a href="./soccer-game/index.html" class="poki-tile tile-soccer" data-keywords="super striker soccer football penalty goalkeeper sports">
+            <a href="./soccer-game/index.html" class="poki-tile tile-soccer"
+                data-keywords="super striker soccer football penalty goalkeeper sports">
                 <div class="tile-emoji">⚽</div>
                 <div class="tile-label">Super Striker</div>
                 <div class="tile-play-overlay">
@@ -531,7 +569,8 @@
             </a>
 
             <!-- Game 10: Balloon Darts -->
-            <a href="./darts-game/index.html" class="poki-tile tile-darts" data-keywords="balloon darts pop carnival target aim throwing">
+            <a href="./darts-game/index.html" class="poki-tile tile-darts"
+                data-keywords="balloon darts pop carnival target aim throwing">
                 <div class="tile-emoji">🎯</div>
                 <div class="tile-label">Balloon Darts</div>
                 <div class="tile-play-overlay">
@@ -548,7 +587,12 @@
     </main>
 
     <footer class="poki-footer">
-        <p><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="./about.html" style="color: #38bdf8; text-decoration: underline; margin-left: 6px;">About Us</a></p>
+        <p><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a
+                href="./about.html" style="color: #38bdf8; text-decoration: underline; margin-left: 6px;">About Us</a>
+        </p>
+        <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+            <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+        </button>
     </footer>
 
     <!-- Search Filtering Script -->
@@ -598,168 +642,10 @@
         });
     </script>
 
-    
 
-    
-    
-    <!-- Global SVG Flag Language Switcher Script -->
-    <script>
-    (function() {
-        const LANG_KEY = "kibu_global_lang";
-        const btn = document.getElementById("btn-global-lang");
-        const flagImg = document.getElementById("global-lang-flag");
-        
-        let currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
 
-        function updateLangUI() {
-            if (flagImg) {
-                // Show SVG flag based on active language
-                flagImg.src = currentLang === "vi" ? "https://flagcdn.com/w40/vn.png" : "https://flagcdn.com/w40/gb.png";
-                flagImg.alt = currentLang === "vi" ? "Tiếng Việt" : "English";
-            }
-            document.documentElement.lang = currentLang;
-        }
 
-        if (btn) {
-            btn.addEventListener("click", function() {
-                currentLang = currentLang === "vi" ? "en" : "vi";
-                localStorage.setItem(LANG_KEY, currentLang);
-                localStorage.setItem("fruitCrushLang", currentLang);
-                updateLangUI();
-                window.location.reload();
-            });
-        }
-        updateLangUI();
-    })();
-    </script>
-    
-    
-    
-    
-    <!-- Deep Tree Global I18n UI Localizer Script -->
-    <script>
-    (function() {
-        const LANG_KEY = "kibu_global_lang";
-        const currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
 
-        const dictEn = {
-            // General & Headers
-            "Trang Chủ": "Home",
-            "Đổi Đội Hình": "Lineup",
-            "Đá Lại": "Restart Match",
-            "Âm Thanh": "Sound",
-            "Nhạc Nền": "Music",
-            "Chọn Màn": "Levels",
-            "Bảng Vàng": "High Scores",
-            "Chơi Lại": "Restart",
-            "Ván Mới": "New Game",
-            "Luật Chơi": "Rules",
-            "Đã Hiểu": "Got It",
-            "Cửa Hàng": "Shop",
-            "Đóng Cửa Hàng": "Close Shop",
-            "Về Menu": "Main Menu",
-            "BẮT ĐẦU CHƠI": "START PLAYING",
-            "BẮT ĐẦU VÁN ĐẤU": "START MATCH",
-            "VÀO SÂN THI ĐẤU": "KICK OFF MATCH",
-            "ĐẤU LẠI": "PLAY AGAIN",
-            "TRANG CHỦ": "HOME",
-            "Tự Ngắm: BẬT": "Aim Guide: ON",
-            "Tự Ngắm: TẮT": "Aim Guide: OFF",
-            "Đường Ngắm: BẬT": "Aim Line: ON",
-            "Đường Ngắm: TẮT": "Aim Line: OFF",
-            "Điểm Số": "Score",
-            "Xu Thưởng": "Coins",
-            "THỜI GIAN": "TIME",
-            "ĐỘI ĐỎ": "RED TEAM",
-            "ĐỘI XANH": "BLUE TEAM",
-            "ĐỘI ĐỎ VÔ ĐỊCH!": "RED TEAM CHAMPION!",
-            "ĐỘI XANH VÔ ĐỊCH!": "BLUE TEAM CHAMPION!",
-            "BÓNG ĐÁ MINI": "MINI SOCCER",
-            "SỐ NGƯỜI CHƠI": "NUMBER OF PLAYERS",
-            "THỜI GIAN TRẬN ĐẤU": "MATCH DURATION",
-            "ĐỘI HÌNH & PHÍM BẤM": "LINEUP & CONTROLS",
-            "ĐÁ TIẾP": "RESUME MATCH",
-            "TẠM DỪNG": "PAUSED",
-            "BÉ 1": "KID 1",
-            "BÉ 2": "KID 2",
-            "BÉ 3": "KID 3",
-            "BÉ 4": "KID 4",
-
-            // i18n Keys for Soccer Game
-            "sk_dribble_t": "DRIBBLING",
-            "sk_dribble_d": "Once you have the ball, just run — it stays close to your feet",
-            "sk_pass_t": "PASSING",
-            "sk_pass_d": "<i>Tap quickly</i> to pass to your teammate",
-            "sk_soft_t": "SOFT SHOT",
-            "sk_soft_d": "<i>Hold briefly</i> then release — smooth controlled placement shot",
-            "sk_power_t": "POWER SHOT",
-            "sk_power_d": "<i>Hold power bar</i> past white line then release — rocket power shot",
-            "sk_curve_t": "CURVE SHOT",
-            "sk_curve_d": "Use <i>second action key</i> — curves ball around keeper with precision",
-            "sk_goalie_t": "BYPASS GOALIE",
-            "sk_goalie_d": "Don’t shoot straight — <i>side-step first</i> then fire into open corner!",
-            "sk_penalty_t": "PENALTY SHOOTOUT",
-            "sk_penalty_d": "Tied at full time? <i>3-round penalty shootout</i> begins until winner emerges!",
-            "soc_desc": "Play with <b>2 to 4 kids</b> on one device. Dribble past defenders, pass to teammates, and shoot past the <b>goalie</b>! Futsal pitch layout with penalty spots and sub benches.",
-            "kid1": "KID 1",
-            "kid2": "KID 2",
-            "kid3": "KID 3",
-            "kid4": "KID 4",
-
-            // Match options
-            "2 BÉ · 1-1": "2 PLAYERS (1-1)",
-            "3 BÉ · 2-1": "3 PLAYERS (2-1)",
-            "4 BÉ · 2-2": "4 PLAYERS (2-2)",
-            "Đối đầu tay đôi": "Head-to-head duel",
-            "Bé chơi một mình chạy nhanh và sút mạnh hơn ⭐": "Solo player gets extra speed and shot power ⭐",
-            "Hai đội, tha hồ chuyền bóng": "2v2 team play with passing",
-            "1 PHÚT 30": "1M 30S",
-            "2 PHÚT 30": "2M 30S",
-            "4 PHÚT": "4 MINS",
-            "Đá nhanh": "Quick Match",
-            "Vừa đủ": "Standard Match",
-            "Trận dài": "Long Match"
-        };
-
-        if (currentLang === "en") {
-            function translateDOM() {
-                // 1. Translate elements with data-i18n
-                document.querySelectorAll("[data-i18n]").forEach(el => {
-                    const key = el.getAttribute("data-i18n");
-                    if (dictEn[key]) el.textContent = dictEn[key];
-                });
-                document.querySelectorAll("[data-i18n-html]").forEach(el => {
-                    const key = el.getAttribute("data-i18n-html");
-                    if (dictEn[key]) el.innerHTML = dictEn[key];
-                });
-
-                // 2. TreeWalker fallback for all plain text nodes
-                const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-                let node;
-                while (node = walker.nextNode()) {
-                    const parentTag = node.parentElement ? node.parentElement.tagName.toLowerCase() : "";
-                    if (["script", "style", "title"].includes(parentTag)) continue;
-                    
-                    let text = node.nodeValue.trim();
-                    if (!text) continue;
-
-                    if (dictEn[text]) {
-                        node.nodeValue = node.nodeValue.replace(text, dictEn[text]);
-                    }
-                }
-            }
-
-            if (document.readyState === "loading") {
-                window.addEventListener("DOMContentLoaded", translateDOM);
-            } else {
-                translateDOM();
-            }
-
-            const observer = new MutationObserver(() => translateDOM());
-            observer.observe(document.body, { childList: true, subtree: true });
-        }
-    })();
-    </script>
 </body>
-</html>
 
+</html>

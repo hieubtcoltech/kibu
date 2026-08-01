@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-kibu-i18n="exact">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,6 +57,8 @@
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../site-chrome.css">
+    <script src="../i18n.js"></script>
 </head>
 <body>
     <div class="bg-gradient-shimmer"></div>
@@ -65,18 +67,17 @@
         <i class="fa-solid fa-flask"></i> <span data-i18n="devBadge">CHẾ ĐỘ THỬ MÀN</span>
     </div>
     <header class="unified-nav">
-        <div class="brand">
-            <i class="fa-solid fa-lemon brand-icon"></i>
-            <h1 class="brand-title">FRUIT CRUSH</h1>
+        <div class="nav-left">
+            <a href="../index.html" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                <i class="fa-solid fa-house"></i>
+            </a>
+            <div class="brand">
+                <i class="fa-solid fa-lemon brand-icon"></i>
+                <h1 class="brand-title">FRUIT CRUSH</h1>
+            </div>
         </div>
         <div class="nav-actions">
-            <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; padding: 4px 8px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: auto; outline: none;">
-    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language" style="width: 24px; height: 16px; object-fit: cover; border-radius: 3px; display: block; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
-</button>
             
-            <a href="../index.html" class="btn btn-home">
-                <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
-            </a>
             
             <button id="btn-levels" class="btn">
                 <i class="fa-solid fa-map"></i> <span data-i18n="btnLevels">Chọn Màn</span>
@@ -263,38 +264,14 @@
     <!-- Thông báo nổi -->
     <div id="toast" class="toast"></div>
 
+    <footer class="site-footer footer-lang-only">
+        <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+            <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+        </button>
+    </footer>
+
     <script src="game.js"></script>
     
     
-    <!-- Global SVG Flag Language Switcher Script -->
-    <script>
-    (function() {
-        const LANG_KEY = "kibu_global_lang";
-        const btn = document.getElementById("btn-global-lang");
-        const flagImg = document.getElementById("global-lang-flag");
-        
-        let currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
-
-        function updateLangUI() {
-            if (flagImg) {
-                // Show SVG flag based on active language
-                flagImg.src = currentLang === "vi" ? "https://flagcdn.com/w40/vn.png" : "https://flagcdn.com/w40/gb.png";
-                flagImg.alt = currentLang === "vi" ? "Tiếng Việt" : "English";
-            }
-            document.documentElement.lang = currentLang;
-        }
-
-        if (btn) {
-            btn.addEventListener("click", function() {
-                currentLang = currentLang === "vi" ? "en" : "vi";
-                localStorage.setItem(LANG_KEY, currentLang);
-                localStorage.setItem("fruitCrushLang", currentLang);
-                updateLangUI();
-                window.location.reload();
-            });
-        }
-        updateLangUI();
-    })();
-    </script>
 </body>
 </html>

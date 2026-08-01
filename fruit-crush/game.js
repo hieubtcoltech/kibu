@@ -496,9 +496,13 @@ const I18N = {
 };
 
 const LANG_KEY = 'fruitCrushLang';
+const GLOBAL_LANG_KEY = 'kibu_global_lang'; // khoá dùng chung cho cả site
 
 function detectLanguage() {
     try {
+        // Ưu tiên lựa chọn ngôn ngữ chung của cả site, rồi mới tới khoá riêng
+        const global = localStorage.getItem(GLOBAL_LANG_KEY);
+        if (global && I18N[global]) return global;
         const saved = localStorage.getItem(LANG_KEY);
         if (saved && I18N[saved]) return saved;
     } catch (e) { /* bỏ qua */ }
@@ -1780,7 +1784,7 @@ function applyLanguage() {
         el.innerHTML = t(el.dataset.i18nHtml);
     });
 
-    langLabel.textContent = t('langSwitch');
+    if (langLabel) langLabel.textContent = t('langSwitch');
     musicIcon.className = music.enabled ? 'fa-solid fa-music' : 'fa-solid fa-volume-xmark';
     btnMusic.classList.toggle('btn-muted', !music.enabled);
     btnMusic.title = music.enabled ? t('musicOn', { theme: music.themeName() }) : t('musicOff');
@@ -1801,7 +1805,10 @@ function applyLanguage() {
 function setLanguage(next) {
     if (!I18N[next] || next === lang) return;
     lang = next;
-    try { localStorage.setItem(LANG_KEY, lang); } catch (e) { /* bỏ qua */ }
+    try {
+        localStorage.setItem(LANG_KEY, lang);
+        localStorage.setItem(GLOBAL_LANG_KEY, lang); // giữ đồng bộ với cả site
+    } catch (e) { /* bỏ qua */ }
     applyLanguage();
 }
 
@@ -3504,9 +3511,14 @@ btnMusic.addEventListener('click', () => {
     btnMusic.title = on ? t('musicOn', { theme: music.themeName() }) : t('musicOff');
 });
 
-btnLang.addEventListener('click', () => {
-    setLanguage(lang === 'vi' ? 'en' : 'vi');
-});
+// Nút đổi ngôn ngữ riêng của màn chơi đã được thay bằng nút cờ chung của cả
+// site, nên phần tử này có thể không còn. Thiếu kiểm tra ở đây thì cả đoạn
+// khởi tạo phía sau sẽ dừng giữa chừng và giao diện không được dịch.
+if (btnLang) {
+    btnLang.addEventListener('click', () => {
+        setLanguage(lang === 'vi' ? 'en' : 'vi');
+    });
+}
 
 btnLevels.addEventListener('click', () => {
     renderLevelMap();
