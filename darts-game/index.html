@@ -125,7 +125,7 @@
                     <div class="panel-emoji">🎯🎈</div>
                     <h2 class="panel-title">PHI TIÊU BONG BÓNG</h2>
                     <p class="panel-desc">
-                        Từ <b>2 đến 4 bé</b> cùng chơi trên một máy — mỗi bé một gian hàng riêng.
+                        Từ <b>1 đến 4 bé</b> cùng chơi trên một máy — mỗi bé một gian hàng riêng.
                         Bóng bay bay lên liên tục, bé <b>ngắm rồi phi tiêu</b> cho nổ thật nhiều.
                         Mũi tiêu bay theo <b>đúng vật lý thật</b>: có trọng lực kéo xuống, có sức cản
                         không khí, và <b>tự xoay mũi theo hướng bay</b> y như phi tiêu ngoài đời.
@@ -134,6 +134,11 @@
                     <div class="setup-block">
                         <div class="setup-label"><i class="fa-solid fa-users"></i> SỐ NGƯỜI CHƠI</div>
                         <div class="opt-row">
+                            <button class="opt" data-players="1">
+                                <span class="opt-icon">🐯</span>
+                                <span class="opt-name">1 BÉ</span>
+                                <span class="opt-desc">Chơi một mình, phá kỷ lục của chính mình</span>
+                            </button>
                             <button class="opt sel" data-players="2">
                                 <span class="opt-icon">🐯🐼</span>
                                 <span class="opt-name">2 BÉ</span>
@@ -252,9 +257,14 @@
                 <div class="panel">
                     <div id="over-emoji" class="panel-emoji">🏆</div>
                     <h2 id="over-title" class="panel-title">BÉ 1 THẮNG!</h2>
+                    <div id="over-stars" class="solo-stars" hidden></div>
                     <p id="over-desc" class="panel-desc">Tay phi tiêu cừ khôi!</p>
 
                     <div id="final-grid" class="final-grid cols-2"></div>
+
+                    <!-- Chỉ hiện khi chơi một mình: lúc đó kết quả là thành tích của
+                         riêng bé nên mới có cái để khoe. -->
+                    <div id="solo-share" class="share-box" hidden></div>
 
                     <div class="over-actions">
                         <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> THI LẠI</button>
@@ -274,6 +284,8 @@
             </div>
         </footer>
     </div>
+
+    <div id="toast" class="toast"></div>
 
     <script src="/darts-game/game.js"></script>
 

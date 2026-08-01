@@ -714,6 +714,7 @@ body {
     margin-bottom: 20px;
 }
 
+.final-grid.cols-1 { grid-template-columns: 1fr; max-width: 380px; margin-inline: auto; }
 .final-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
 .final-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .final-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
@@ -948,3 +949,91 @@ body {
     .keys-head, .keys-list { display: none; }
     .keys-touch { margin-top: 0; }
 }
+
+/* ---------- Khoe thành tích (chỉ có ở chế độ một bé) ---------- */
+.share-box {
+    width: 100%;
+    margin-bottom: 18px;
+}
+
+.share-title {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    margin-bottom: 10px;
+}
+
+.share-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.share-btn {
+    flex: 1 1 auto;
+    min-width: 104px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.share-btn:hover:not([disabled]) { transform: translateY(-2px); }
+.share-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+.share-native {
+    background: linear-gradient(135deg, var(--neon-orange), #ff3d6e);
+    border-color: transparent;
+}
+.share-native:hover { box-shadow: 0 6px 18px rgba(255, 122, 26, 0.45); }
+
+.share-fb { background: #1877f2; border-color: transparent; }
+.share-fb:hover:not([disabled]) { box-shadow: 0 6px 18px rgba(24, 119, 242, 0.5); }
+
+.share-x { background: #000; border-color: rgba(255, 255, 255, 0.25); flex: 0 0 auto; min-width: 58px; }
+.share-x:hover { box-shadow: 0 6px 18px rgba(255, 255, 255, 0.22); }
+
+.share-copy:hover { background: rgba(255, 255, 255, 0.15); }
+
+/* Dải sao thành tích ở màn hình kết quả một bé */
+.solo-stars {
+    font-size: 1.7rem;
+    letter-spacing: 6px;
+    margin-bottom: 6px;
+}
+
+/* ---------- Thông báo nổi ---------- */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 30px;
+    transform: translate(-50%, 24px);
+    z-index: 300;
+    padding: 11px 22px;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #1b0c02;
+    background: linear-gradient(135deg, var(--neon-orange), var(--neon-yellow));
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.warn { background: linear-gradient(135deg, #ff5f5f, #ff2d55); color: #fff; }

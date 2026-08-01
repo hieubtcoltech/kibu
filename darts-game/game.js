@@ -84,11 +84,19 @@
         { name: 'BÉ 4', emoji: '🦊', color: '#c77dff', dark: '#6a2ba8', light: '#e7ccff', glow: '199,125,255' }
     ];
     const KEYSETS = {
+        1: ['Space'],
         2: ['KeyA', 'KeyL'],
         3: ['KeyA', 'KeyG', 'KeyL'],
         4: ['KeyA', 'KeyF', 'KeyJ', 'KeyL']
     };
-    const KEYLABEL = { KeyA: 'A', KeyF: 'F', KeyG: 'G', KeyJ: 'J', KeyL: 'L' };
+    const KEYLABEL = { Space: 'SPACE', KeyA: 'A', KeyF: 'F', KeyG: 'G', KeyJ: 'J', KeyL: 'L' };
+
+    /* Bộ dịch của web làm việc trên DOM; chuỗi nào không nằm trong trang thì
+       phải tự nhờ nó dịch. */
+    function tr(str) {
+        if (window.KibuI18n && window.KibuI18n.t) { try { return window.KibuI18n.t(str); } catch (e) { return str; } }
+        return str;
+    }
 
     const MODES = {
         versus:   { key: 'versus',   name: 'ĐỐI KHÁNG',      time: 90, mult: 1, alive: 5 },
@@ -796,6 +804,13 @@
         }
 
         // ---------- Cập nhật ----------
+        /* Số bóng giữ trên trời. Gian một mình rộng gấp đôi gian hai bé nên cũng
+           cần chừng gấp đôi số bóng, không thì màn hình trông trống trải. */
+        wantCount(mode) {
+            return this.w > 900 ? mode.alive * 2 + 4
+                : mode.alive + (this.w > 500 ? 2 : this.w > 380 ? 1 : 0);
+        }
+
         update(dt, held, mode, diff, wind, playing) {
             // Nạp lại chỉ khi bé đã nhả phím, tránh giữ mãi thành phi liên tục
             if (!held) this.armed = true;
@@ -815,8 +830,7 @@
 
             if (playing) {
                 this.spawnT -= dt;
-                const want = mode.alive + (this.w > 500 ? 2 : this.w > 380 ? 1 : 0);
-                if (this.spawnT <= 0 && this.balloons.length < want) {
+                if (this.spawnT <= 0 && this.balloons.length < this.wantCount(mode)) {
                     this.spawnBalloon(mode, diff, false);
                     this.spawnT = rnd(0.35, 0.9);
                 }
@@ -1410,7 +1424,10 @@
                 overEmoji: document.getElementById('over-emoji'),
                 helpLabel: document.getElementById('help-label'),
                 helpBtn: document.getElementById('btn-help'),
-                soundIcon: document.getElementById('sound-icon')
+                soundIcon: document.getElementById('sound-icon'),
+                share: document.getElementById('solo-share'),
+                overStars: document.getElementById('over-stars'),
+                toast: document.getElementById('toast')
             };
 
             this.build(this.playerCount);
@@ -1485,6 +1502,7 @@
                 bomb: this.el.finals.querySelector(`[data-fbomb="${i}"]`)
             }));
 
+            this.syncSoloTexts();
             this.updateHint();
         },
 
@@ -1542,7 +1560,10 @@
         },
 
         bindInput() {
-            const codeToIdx = code => KEYSETS[this.playerCount].indexOf(code);
+            /* Chơi một mình thì bấm Space hay A đều được — bé không phải nhớ
+               phím nào, tay đặt đâu cũng phi được. */
+            const codeToIdx = code => (this.playerCount === 1 && (code === 'Space' || code === 'KeyA'))
+                ? 0 : KEYSETS[this.playerCount].indexOf(code);
             window.addEventListener('keydown', e => {
                 if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'ArrowDown') e.preventDefault();
                 if (e.code === 'Escape') { this.togglePause(); return; }
@@ -1598,7 +1619,7 @@
             const m = this.modeCfg, d = this.diffCfg;
             this.booths.forEach(b => {
                 b.reset();
-                for (let i = 0; i < m.alive; i++) b.spawnBalloon(m, d, true);
+                for (let i = 0, n = b.wantCount(m); i < n; i++) b.spawnBalloon(m, d, true);
             });
             this.timeLeft = m.time;
             this.countdown = 3;
@@ -1609,7 +1630,7 @@
             this.el.menu.classList.add('hidden');
             this.el.over.classList.add('hidden');
             this.el.pause.classList.add('hidden');
-            this.el.clockLabel.textContent = m.name;
+            this.el.clockLabel.textContent = this.modeName();
             this.syncHud();
             Sfx.ensure();
         },
@@ -1634,13 +1655,152 @@
             this.el.pause.classList.add('hidden');
         },
 
+        /* Chế độ ĐỐI KHÁNG khi chỉ có một bé thì không có ai để đối kháng —
+           đổi tên và đổi lời mô tả cho khỏi vô lý. */
+        modeName() {
+            const m = this.modeCfg;
+            return (this.playerCount === 1 && m.key === 'versus') ? 'THỬ TÀI' : m.name;
+        },
+
+        syncSoloTexts() {
+            const solo = this.playerCount === 1;
+            const opt = document.querySelector('[data-mode="versus"]');
+            if (!opt) return;
+            const nm = opt.querySelector('.opt-name'), ds = opt.querySelector('.opt-desc');
+            const nmTxt = solo ? 'THỬ TÀI' : 'ĐỐI KHÁNG';
+            const dsTxt = solo ? '90 giây · ghi càng nhiều điểm càng tốt'
+                : '90 giây · ai nổ được nhiều điểm hơn thì thắng';
+            if (nm && nm.textContent !== nmTxt) nm.textContent = nmTxt;
+            if (ds && ds.textContent !== dsTxt) ds.textContent = dsTxt;
+        },
+
+        /* ---------- Kỷ lục của riêng bé (chỉ chế độ một bé) ---------- */
+        bestKey() { return this.mode + '_' + this.diff; },
+
+        loadBest() {
+            try { return JSON.parse(localStorage.getItem('kibu_darts_best') || '{}'); }
+            catch (e) { return {}; }
+        },
+
+        saveBest(all) {
+            try { localStorage.setItem('kibu_darts_best', JSON.stringify(all)); } catch (e) { }
+        },
+
+        /* Ba mức sao để bé có mốc phấn đấu. Mốc tính theo từng chế độ vì săn bóng
+           vàng được nhân đôi điểm nên dễ ăn điểm hơn hẳn. */
+        soloStars(score) {
+            const t = this.mode === 'sniper' ? [24, 50, 84] : [15, 34, 60];
+            return score >= t[2] ? 3 : score >= t[1] ? 2 : score >= t[0] ? 1 : 0;
+        },
+
+        finishSolo() {
+            const b = this.booths[0];
+            const stars = this.soloStars(b.score);
+            const all = this.loadBest(), prev = all[this.bestKey()] || 0;
+            /* Ván đầu tiên thì chưa có gì để phá — hô "kỷ lục mới" lúc đó nghe
+               rỗng tuếch. Vẫn lưu điểm lại làm mốc cho những ván sau. */
+            const isRecord = b.score > prev && prev > 0;
+            if (b.score > prev) { all[this.bestKey()] = b.score; this.saveBest(all); }
+
+            b.setOutcome(b.score > 0 ? 'win' : 'lose');
+            this.finalEls[0].box.classList.toggle('winner', stars >= 2);
+
+            this.el.overEmoji.textContent = isRecord ? '🏅' : stars >= 2 ? '🎯' : '🎈';
+            this.el.overTitle.textContent = isRecord ? 'KỶ LỤC MỚI!' : `ĐƯỢC ${b.score} ĐIỂM!`;
+
+            const parts = [`nổ ${b.pops} quả bóng`, `${b.hits}/${b.throws} mũi phi trúng`];
+            if (b.bestStreak >= 3) parts.push(`chuỗi ${b.bestStreak} quả liên tiếp`);
+            if (prev > 0) parts.push(isRecord ? `kỷ lục cũ ${prev} điểm` : `kỷ lục của bé: ${prev} điểm`);
+            this.el.overDesc.textContent = parts.join(' · ');
+            this.el.overStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+            this.el.overStars.hidden = false;
+
+            this.renderShare(b.score, stars);
+            this.el.over.classList.remove('hidden');
+            Sfx.win();
+        },
+
+        /* ---------- Khoe thành tích ----------
+           Cùng cách làm với Fruit Crush: chia sẻ sẵn có của máy nếu có, còn lại
+           là Facebook / X / sao chép. Facebook chỉ nhận đường dẫn http(s) nên mở
+           tệp từ máy thì nút đó tắt. */
+        shareUrl() {
+            try {
+                const pr = location.protocol;
+                if (pr === 'http:' || pr === 'https:') return location.origin + location.pathname;
+            } catch (e) { }
+            return '';
+        },
+
+        renderShare(score, stars) {
+            const box = this.el.share;
+            if (!box) return;
+            /* Câu này đi ra ngoài trang (clipboard, hộp chia sẻ của máy) nên bộ
+               dịch theo DOM không với tới được — phải tự gọi dịch. Sao gắn vào
+               sau khi dịch để câu gốc chỉ còn một chỗ trống, khỏi lệch mẫu. */
+            const text = tr(`🎯 Mình vừa được ${score} điểm ở Phi Tiêu Bong Bóng trên KIBU Games! Bạn phá được kỷ lục này không?`)
+                + (stars ? ' ' + '⭐'.repeat(stars) : '');
+            const url = this.shareUrl();
+            const canNative = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+            box.hidden = false;
+            box.innerHTML = `
+                <div class="share-title">Khoe thành tích</div>
+                <div class="share-row">
+                    ${canNative ? '<button class="share-btn share-native"><i class="fa-solid fa-share-nodes"></i> Chia Sẻ</button>' : ''}
+                    <button class="share-btn share-fb"${url ? '' : ' disabled'}><i class="fa-brands fa-facebook-f"></i> Facebook</button>
+                    <button class="share-btn share-x"><i class="fa-brands fa-x-twitter"></i></button>
+                    <button class="share-btn share-copy"><i class="fa-solid fa-copy"></i> Sao Chép</button>
+                </div>`;
+
+            const pop = u => window.open(u, '_blank', 'noopener,noreferrer,width=620,height=560');
+            const nat = box.querySelector('.share-native');
+            if (nat) nat.onclick = () => {
+                navigator.share({ title: 'Phi Tiêu Bong Bóng — KIBU Games', text: text, url: url || undefined })
+                    .catch(() => { });     // bé bấm huỷ thì thôi, không báo gì
+            };
+            box.querySelector('.share-fb').onclick = () => {
+                if (!url) { this.toast('Cần đăng trò chơi lên mạng mới chia sẻ Facebook được', 'warn'); return; }
+                pop('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url));
+            };
+            box.querySelector('.share-x').onclick = () => {
+                const q = ['text=' + encodeURIComponent(text), 'hashtags=KibuGames'];
+                if (url) q.push('url=' + encodeURIComponent(url));
+                pop('https://x.com/intent/post?' + q.join('&'));
+            };
+            box.querySelector('.share-copy').onclick = async () => {
+                const full = url ? text + '\n' + url : text;
+                let ok = false;
+                try {
+                    if (navigator.clipboard && window.isSecureContext) {
+                        await navigator.clipboard.writeText(full); ok = true;
+                    }
+                } catch (e) { }
+                if (!ok) {
+                    // Đường lui cho trang mở bằng file:// — nơi clipboard bị chặn
+                    try {
+                        const a = document.createElement('textarea');
+                        a.value = full; a.setAttribute('readonly', '');
+                        a.style.cssText = 'position:fixed;opacity:0';
+                        document.body.appendChild(a); a.select();
+                        ok = document.execCommand('copy'); a.remove();
+                    } catch (e) { }
+                }
+                this.toast(ok ? 'Đã sao chép!' : 'Không sao chép được', ok ? '' : 'warn');
+            };
+        },
+
+        toast(msg, kind) {
+            const t = this.el.toast;
+            if (!t) return;
+            t.textContent = msg;
+            t.className = 'toast show' + (kind ? ' ' + kind : '');
+            clearTimeout(this._toastT);
+            this._toastT = setTimeout(() => { t.className = 'toast'; }, 2200);
+        },
+
         finish() {
             this.state = 'over';
-            const best = Math.max(...this.booths.map(b => b.score));
-            const winners = this.booths.filter(b => b.score === best);
-            this.booths.forEach(b => b.setOutcome(
-                winners.length === this.booths.length ? 'draw'
-                    : b.score === best ? 'win' : 'lose'));
 
             this.finalEls.forEach((e, i) => {
                 const b = this.booths[i];
@@ -1650,8 +1810,20 @@
                 e.streak.textContent = b.bestStreak;
                 e.gold.textContent = b.golds;
                 e.bomb.textContent = b.bombs;
-                e.box.classList.toggle('winner', b.score === best);
             });
+
+            // Một bé thì không có kẻ thắng người thua — chỉ có thành tích để khoe
+            if (this.playerCount === 1) return this.finishSolo();
+
+            this.el.share.hidden = true;
+            this.el.overStars.hidden = true;
+            const best = Math.max(...this.booths.map(b => b.score));
+            const winners = this.booths.filter(b => b.score === best);
+            this.booths.forEach(b => b.setOutcome(
+                winners.length === this.booths.length ? 'draw'
+                    : b.score === best ? 'win' : 'lose'));
+
+            this.finalEls.forEach((e, i) => e.box.classList.toggle('winner', this.booths[i].score === best));
 
             if (winners.length === this.booths.length) {
                 this.el.overEmoji.textContent = '🤝';
