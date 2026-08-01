@@ -600,7 +600,7 @@
             ctx.font = `bold ${(11 * (0.78 + 0.22 * s)).toFixed(1)}px "Nunito", sans-serif`;
             const ly = sy_(this.y) + 16 * s;
             ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.fillText('THỦ MÔN', sx_(this.x, this.y), ly + 1);
+            ctx.fillText('${(localStorage.getItem("kibu_global_lang")==="en")?"GOALIE":"THỦ MÔN"}', sx_(this.x, this.y), ly + 1);
             ctx.fillStyle = '#ffe98a';
             ctx.fillText('THỦ MÔN', sx_(this.x, this.y), ly);
             ctx.restore();
@@ -767,7 +767,7 @@
             Game.releaseBall(this, 0.22);
             this.kickAnim = 1;
             Sfx.pass();
-            Game.addFx(b.x, b.y, curve ? '🌀 CHUYỀN XOÁY!' : (mate ? 'CHUYỀN!' : 'ĐẨY BÓNG!'),
+            Game.addFx(b.x, b.y, curve ? '🌀 CHUYỀN XOÁY!' : (mate ? 'PASS!' : 'DRIBBLE!'),
                 curve ? '#c9a7ff' : this.cfg.light, 0.7, 17);
             if (mate) Game.passLine = { x1: this.x, y1: this.y, x2: mate.x, y2: mate.y, t: 0.5, color: this.cfg.light };
         }
@@ -788,8 +788,8 @@
             if (curve) this.curves = (this.curves || 0) + 1;
             Sfx.kick(power);
             Game.addFx(this.x, this.y,
-                curve ? (strong ? '🌀 SÚT XOÁY MẠNH!' : '🌀 SÚT XOÁY!')
-                    : (strong ? '💥 SÚT MẠNH!' : 'SÚT NHẸ!'),
+                curve ? (strong ? '🌀 SÚT XOÁY MẠNH!' : '🌀 CURVE SHOT!')
+                    : (strong ? '💥 POWER SHOT!' : 'SOFT SHOT!'),
                 curve ? '#c9a7ff' : (strong ? '#ffd700' : this.cfg.light),
                 0.9, strong ? 22 : 18);
             Game.shake = Math.max(Game.shake, strong ? power * 7 : 2);
