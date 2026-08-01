@@ -58,7 +58,6 @@ body > .unified-nav {
     display: flex;
     align-items: center;
     gap: 10px;
-    min-width: 0;
 }
 
 /* Scoped to .unified-nav because several games already style the brand that
@@ -86,7 +85,7 @@ body > .unified-nav {
     display: flex;
     align-items: center;
     gap: 12px;
-    min-width: 0;          /* let a long game title shrink instead of pushing */
+    min-width: 0;          /* cho tiêu đề cắt bớt thay vì đẩy dãy nút */
 }
 
 /* The KIBU logo doubles as the way back to the game list. */
@@ -219,6 +218,21 @@ body.chrome-fit > .game-wrapper {
     .unified-nav .btn { padding: 8px 12px; }
     .unified-nav .brand-title { font-size: 1.1rem; }
     .unified-nav .brand-icon { font-size: 1.5rem; }
+
+    /* Keep the icons on a single line — fruit-crush has five of them and they
+     * used to spill onto a second row, doubling the header height. The title
+     * gives up its space first and truncates instead. */
+    .unified-nav .nav-actions {
+        flex-shrink: 0;
+        flex-wrap: nowrap;
+    }
+
+    .unified-nav .brand-title,
+    .unified-nav .brand-sub {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
 
 @media (max-width: 560px) {
@@ -227,8 +241,11 @@ body.chrome-fit > .game-wrapper {
     .nav-home img { height: 22px; }
     .nav-left { gap: 8px; }
     .unified-nav { padding: 8px 12px; border-radius: 16px; gap: 10px; }
-    .unified-nav .brand-title { font-size: 1rem; }
+    /* Chỉ còn logo KIBU + icon game + dãy nút icon, gọn trên một hàng */
+    .unified-nav .brand-title,
+    .unified-nav .brand-sub { display: none; }
     .unified-nav .brand-icon { font-size: 1.35rem; }
-    .unified-nav .btn { padding: 8px 10px; }
+    .unified-nav .btn { padding: 7px 9px; font-size: 0.9rem; }
+    .unified-nav .nav-actions { gap: 6px; }
     .site-footer { padding: 8px 12px; font-size: 0.78rem; }
 }
