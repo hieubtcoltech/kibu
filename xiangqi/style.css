@@ -34,6 +34,11 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+/* Thuộc tính hidden của HTML chỉ ẩn được nhờ style mặc định của trình duyệt,
+   mà style đó thua bất kỳ khai báo display nào của mình — .countdown{display:flex}
+   khiến lớp phủ đếm ngược không bao giờ tắt và chặn luôn click lên bàn cờ. */
+[hidden] { display: none !important; }
+
 body {
     font-family: var(--font-main);
     background-color: var(--bg-dark);
