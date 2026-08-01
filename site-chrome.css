@@ -167,11 +167,15 @@ body > .unified-nav {
 }
 
 /* ---------- Live player count ---------- */
+/* Chỉ con số bên cạnh chấm xanh — chấm nhấp nháy đã đủ nói "đang trực tuyến",
+   câu chữ đầy đủ nằm ở tooltip. */
 .online-badge {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    padding: 4px 12px;
+    justify-content: center;
+    gap: 6px;
+    min-width: 52px;
+    padding: 4px 11px;
     border-radius: 20px;
     background: rgba(57, 255, 20, 0.10);
     border: 1px solid rgba(57, 255, 20, 0.35);

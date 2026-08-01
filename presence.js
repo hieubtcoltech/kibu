@@ -33,22 +33,29 @@
     /* Luôn dựng câu tiếng Việt rồi mới nhờ i18n dịch: đó cũng là cách game.js
      * làm, và tránh cảnh chữ nhấp nháy tiếng Việt một nhịp trên bản tiếng Anh
      * trước khi bộ quan sát của i18n kịp dịch lại. */
-    function label(n) {
-        var text = n + ' bé đang chơi';
+    function tr(text) {
         if (window.KibuI18n && window.KibuI18n.t) {
             try { return window.KibuI18n.t(text); } catch (e) { /* dùng bản gốc */ }
         }
         return text;
     }
 
+    /* Huy hiệu chỉ hiện con số — chấm xanh nhấp nháy đã nói lên "đang trực
+     * tuyến" rồi. Câu đầy đủ chuyển vào tooltip cho ai muốn biết rõ. */
     function paint(n) {
         lastCount = n;
+        var num = String(n);
+        var full = tr(n + ' bé đang chơi');
         var nodes = document.querySelectorAll('[data-online]');
         for (var i = 0; i < nodes.length; i++) {
             var el = nodes[i];
             el.hidden = false;
+            if (el.getAttribute('title') !== full) {
+                el.setAttribute('title', full);
+                el.setAttribute('aria-label', full);
+            }
             var slot = el.querySelector('[data-online-text]') || el;
-            slot.textContent = label(n);
+            if (slot.textContent !== num) slot.textContent = num;
         }
     }
 
