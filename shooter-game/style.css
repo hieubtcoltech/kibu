@@ -37,6 +37,7 @@ body {
     background-color: var(--bg-dark);
     color: #ffffff;
     min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -62,12 +63,12 @@ body {
     100% { filter: hue-rotate(30deg); }
 }
 
-/* App Wrapper */
-.app-wrapper {
-    width: 100vw;
+/* App Wrapper — bố cục chung nằm ở site-chrome.css, ở đây chỉ giữ phần riêng.
+ * Dùng dvh: trên iOS/Android thanh địa chỉ ăn vào 100vh, khiến hàng vũ khí và
+ * nút bắn dưới đáy bị đẩy khuất ra ngoài màn hình. */
+body > .app-wrapper {
     height: 100vh;
-    display: flex;
-    flex-direction: column;
+    height: 100dvh;
     position: relative;
 }
 
@@ -193,12 +194,16 @@ body {
 
 /* Main Viewport */
 .game-viewport {
-    flex: 1;
+    flex: 1 1 auto;
+    /* Không có min-height:0 thì canvas cũ (cao bằng nội dung) sẽ chống cho khung
+     * này giãn ra, đẩy footer xuống dưới đáy màn hình. */
+    min-height: 0;
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    border-radius: 20px;
 }
 
 /* Canvas Game View */
@@ -234,9 +239,13 @@ body {
     backdrop-filter: blur(12px);
     border-radius: 16px;
     padding: 12px 18px;
-    pointer-events: auto;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
+
+/* Chỉ hàng vũ khí cần nhận click. Trước đây mọi hộp HUD đều bắt chuột, nên trên
+ * màn hình nhỏ — nơi chúng chiếm gần hết bề ngang — bấm để bắn vào khu vực đó
+ * lại không ăn. */
+.weapon-slots-bar { pointer-events: auto; }
 
 /* Health Bar HUD */
 .player-status {
@@ -496,8 +505,12 @@ body {
     background: rgba(5, 7, 16, 0.85);
     backdrop-filter: blur(12px);
     display: flex;
-    justify-content: center;
-    align-items: center;
+    /* Không dùng align-items:center: khi thẻ cao hơn màn hình (điện thoại nằm
+     * ngang) nó sẽ tràn cả hai đầu và không cuộn tới được nút BẮT ĐẦU CHƠI.
+     * margin:auto trên thẻ con vừa căn giữa vừa cho cuộn khi thiếu chỗ. */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 16px;
     z-index: 100;
     opacity: 0;
     pointer-events: none;
@@ -515,7 +528,9 @@ body {
     border-radius: 28px;
     padding: 32px;
     max-width: 600px;
-    width: 90%;
+    width: 100%;
+    margin: auto;
+    flex-shrink: 0;
     text-align: center;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
     transform: scale(0.9);
@@ -689,4 +704,152 @@ body {
 .toast-msg.show {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+}
+
+/* =========================================================
+   RESPONSIVE
+   Sân đấu do canvas tự co giãn (xem resizeCanvas trong game.js);
+   phần dưới đây lo cho HUD, cụm điều khiển cảm ứng và các modal
+   để chúng không đè lên nhau khi màn hình hẹp hoặc thấp.
+   ========================================================= */
+
+/* Tai thỏ / thanh gạt home của iPhone khi xoay ngang ăn vào hai mép, nên HUD
+   phải lùi vào theo vùng an toàn thay vì dùng số cố định. */
+.hud-overlay {
+    padding-left: max(24px, env(safe-area-inset-left));
+    padding-right: max(24px, env(safe-area-inset-right));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* ---------- Màn hình vừa: laptop nhỏ, tablet ngang ---------- */
+@media (max-width: 1024px) {
+    .hud-overlay { padding-top: 12px; }
+    .hud-box { padding: 10px 14px; border-radius: 14px; }
+    .player-status { min-width: 210px; gap: 12px; }
+    .avatar-badge { width: 38px; height: 38px; font-size: 1.15rem; }
+    .bar-header { font-size: 0.85rem; }
+    .wave-title { font-size: 1.15rem; }
+    .stat-val { font-size: 1.2rem; }
+    .weapon-slot { min-width: 62px; padding: 6px 8px; }
+    .slot-icon { font-size: 1.2rem; }
+}
+
+/* ---------- Điện thoại ngang & tablet dựng ----------
+   Ở đây chỗ trống theo chiều dọc mới là thứ hiếm, nên HUD phải mỏng lại chứ
+   không chỉ hẹp lại. */
+@media (max-width: 760px), (max-height: 560px) {
+    .hud-overlay { padding-top: 10px; }
+    .hud-top { gap: 8px; }
+    .hud-box { padding: 7px 10px; border-radius: 12px; }
+
+    .player-status { min-width: 0; max-width: 44vw; gap: 8px; }
+    .avatar-badge { width: 30px; height: 30px; font-size: 0.95rem; }
+    .avatar-badge span { font-size: 1rem !important; }
+    .bar-header { font-size: 0.72rem; gap: 8px; margin-bottom: 3px; }
+    /* Tên nhân vật dài nhất trong tiếng Việt là "Đặc Nhiệm Con Người" — cắt bớt
+       thay vì cho nó đẩy thanh máu vỡ hàng. */
+    #player-name-hud {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .health-track { height: 8px; }
+
+    .wave-title { font-size: 0.95rem; }
+    .bots-remaining { font-size: 0.7rem; }
+    .hud-right { gap: 10px; }
+    .stat-val { font-size: 1rem; }
+    .stat-lbl { font-size: 0.6rem; }
+    .stat-item[style] { margin-left: 8px !important; }
+
+    .weapon-slots-bar { gap: 5px; padding: 6px 8px; }
+    .weapon-slot { min-width: 46px; padding: 5px 6px; border-radius: 10px; }
+    .slot-num { font-size: 0.6rem; top: 2px; left: 4px; padding: 0 4px; }
+    .slot-icon { font-size: 1.05rem; margin-top: 6px; }
+    /* Tên súng là thứ đầu tiên bỏ được: đã có icon, số phím và số đạn. */
+    .slot-name { display: none; }
+    .slot-ammo { font-size: 0.68rem; margin-top: 2px; }
+
+    .buff-badge { padding: 4px 8px; font-size: 0.72rem; }
+    .toast-msg { font-size: 0.95rem; padding: 8px 16px; top: 70px; }
+}
+
+/* ---------- Điện thoại dựng ---------- */
+@media (max-width: 560px) {
+    .hud-overlay {
+        padding-left: max(10px, env(safe-area-inset-left));
+        padding-right: max(10px, env(safe-area-inset-right));
+    }
+    .stat-lbl { display: none; }
+    #player-name-hud { display: none; }
+    .bar-header { justify-content: flex-end; }
+    .weapon-slot { min-width: 40px; }
+}
+
+/* ---------- Cụm điều khiển cảm ứng ----------
+   Cần gạt nằm góc trái dưới, đúng chỗ hàng vũ khí vẫn đứng. Trên máy cảm ứng
+   đưa hàng vũ khí vào giữa để nó lọt vào khoảng trống giữa cần gạt và nút bắn,
+   còn huy hiệu buff xếp lên trên thay vì nằm cạnh nút bắn. */
+body.is-touch .hud-bottom {
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 8px;
+}
+
+body.is-touch .buff-container { flex-wrap: wrap; justify-content: center; }
+
+.touch-joystick-zone {
+    left: max(30px, env(safe-area-inset-left));
+    bottom: max(30px, env(safe-area-inset-bottom));
+}
+
+.touch-fire-btn {
+    right: max(40px, env(safe-area-inset-right));
+    bottom: max(40px, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 900px), (max-height: 560px) {
+    .touch-joystick-zone { width: 116px; height: 116px; }
+    .joystick-knob { width: 44px; height: 44px; margin-top: -22px; margin-left: -22px; }
+    .touch-fire-btn { width: 74px; height: 74px; font-size: 1.8rem; }
+}
+
+/* Hẹp tới mức hàng vũ khí căn giữa vẫn chạm vào cần gạt thì cho nó nổi hẳn lên
+   phía trên hai nút điều khiển. */
+@media (max-width: 620px) {
+    body.is-touch .hud-bottom { margin-bottom: 104px; }
+}
+
+/* ---------- Modal ---------- */
+@media (max-width: 620px) {
+    .modal-card { padding: 22px 18px; border-radius: 22px; }
+    .modal-icon { font-size: 2.6rem; }
+    .modal-title { font-size: 1.5rem; }
+    .modal-subtitle { font-size: 0.9rem; margin-bottom: 18px; }
+    .mode-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 18px; }
+    .mode-card { padding: 14px; }
+    .mode-icon { font-size: 1.7rem; margin-bottom: 4px; }
+    .mode-name { font-size: 1.05rem; }
+    .shop-grid { grid-template-columns: 1fr; gap: 10px; }
+    .shop-item { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+    .shop-buy-btn { width: auto; padding: 6px 18px; }
+    /* Hàng nút trang bị/độ khó tự xuống dòng thay vì tràn ngang. */
+    .modal-card .btn { font-size: 0.88rem; padding: 7px 12px; }
+}
+
+/* Điện thoại nằm ngang: chiều cao chỉ còn ~390px, modal phải gọn hết mức thì
+   nút BẮT ĐẦU CHƠI mới nằm trong tầm nhìn. */
+@media (max-height: 500px) {
+    .modal-overlay { padding: 12px; }
+    .modal-card { padding: 16px 20px; border-radius: 20px; }
+    .modal-icon { font-size: 1.8rem; margin-bottom: 4px; }
+    .modal-title { font-size: 1.25rem; }
+    .modal-subtitle { font-size: 0.82rem; margin-bottom: 12px; }
+    .mode-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .mode-card { padding: 10px; }
+    .mode-icon { font-size: 1.4rem; margin-bottom: 2px; }
+    .mode-name { font-size: 0.95rem; }
+    .mode-desc { display: none; }
+    .modal-card .btn { font-size: 0.85rem; padding: 6px 12px; }
+    #btn-play-game { font-size: 1.05rem !important; padding: 10px 26px !important; }
 }

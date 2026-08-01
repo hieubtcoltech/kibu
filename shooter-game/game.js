@@ -187,7 +187,12 @@
 
     // --- Game Engine Variables ---
     let canvas, ctx;
+    // Kích thước khung nhìn tính bằng CSS pixel (không phải pixel vật lý).
     let viewportWidth = 0, viewportHeight = 0;
+    // Tỉ lệ vẽ thế giới lên màn hình, và phần sân thực sự nhìn thấy (đơn vị sân).
+    let renderScale = 1;
+    let viewWorldWidth = 0, viewWorldHeight = 0;
+    let pixelRatio = 1;
 
     // Game state: 'MENU', 'PLAYING', 'GAMEOVER', 'VICTORY'
     let gameState = 'MENU';
@@ -197,6 +202,13 @@
 
     // Arena dimensions
     const ARENA = { width: 1400, height: 900 };
+
+    // Máy để bàn/tablet: thu cả sân vào khung cho vừa, ai cũng thấy y hệt nhau.
+    // Điện thoại: nếu thu hết sân thì nhân vật chỉ còn vài pixel, nên chặn dưới
+    // ở MIN_SCALE và cho camera bám theo người chơi phần sân còn lại.
+    const MIN_SCALE = 0.62;
+    // Trên màn hình rất lớn, phóng to mãi thì đạn và bot to quá mức cần thiết.
+    const MAX_SCALE = 1.7;
 
     // Player State
     let player = null;
@@ -566,14 +578,12 @@
                 if (closest && minDist < 600) {
                     this.angle = Math.atan2(closest.y - this.y, closest.x - this.x);
                 } else {
-                    const worldMouseX = mousePos.x + camera.x;
-                    const worldMouseY = mousePos.y + camera.y;
-                    this.angle = Math.atan2(worldMouseY - this.y, worldMouseX - this.x);
+                    const aim = screenToWorld(mousePos.x, mousePos.y);
+                    this.angle = Math.atan2(aim.y - this.y, aim.x - this.x);
                 }
             } else {
-                const worldMouseX = mousePos.x + camera.x;
-                const worldMouseY = mousePos.y + camera.y;
-                this.angle = Math.atan2(worldMouseY - this.y, worldMouseX - this.x);
+                const aim = screenToWorld(mousePos.x, mousePos.y);
+                this.angle = Math.atan2(aim.y - this.y, aim.x - this.x);
             }
 
             // Auto-fire or click fire
@@ -1493,10 +1503,7 @@
                 }
 
                 // Update Camera follow Player
-                camera.x = player.x - viewportWidth / 2;
-                camera.y = player.y - viewportHeight / 2;
-                camera.x = clamp(camera.x, 0, ARENA.width - viewportWidth);
-                camera.y = clamp(camera.y, 0, ARENA.height - viewportHeight);
+                updateCamera();
 
                 // Update Traps, Barrels & JumpPads
                 for (let i = traps.length - 1; i >= 0; i--) {
@@ -1516,8 +1523,12 @@
             }
 
         // 2. Render Phase
+        // Đặt lại ma trận mỗi khung hình: pixelRatio lo phần nét trên Retina,
+        // renderScale lo phần "sân to bằng nhau trên mọi màn hình".
+        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
         ctx.clearRect(0, 0, viewportWidth, viewportHeight);
         ctx.save();
+        ctx.scale(renderScale, renderScale);
 
         // Apply Screen Shake
         const shakeX = (Math.random() - 0.5) * screenShake;
@@ -1557,6 +1568,15 @@
 
     function setupEventListeners() {
         window.addEventListener('resize', resizeCanvas);
+        // Xoay máy và thanh địa chỉ trượt lên/xuống trên di động đều đổi chiều
+        // cao khung mà không phải lúc nào cũng bắn ra sự kiện 'resize'.
+        window.addEventListener('orientationchange', () => setTimeout(resizeCanvas, 250));
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', resizeCanvas);
+        }
+        if (typeof ResizeObserver === 'function' && canvas && canvas.parentElement) {
+            new ResizeObserver(resizeCanvas).observe(canvas.parentElement);
+        }
 
         window.addEventListener('keydown', e => {
             keys[e.key] = true;
@@ -1733,28 +1753,64 @@
         const knob = document.getElementById('joystick-knob');
         const fireBtn = document.getElementById('fire-btn');
 
-        if ('ontouchstart' in window) {
+        // Chuột kiêm cảm ứng (laptop màn cảm ứng) không cần cần gạt ảo, nên phải
+        // có cả 'pointer: coarse' mới coi là máy chơi bằng ngón tay. Thẻ trên
+        // <body> để CSS dời thanh vũ khí tránh chỗ cần gạt và nút bắn.
+        const isTouch = ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
+            window.matchMedia('(pointer: coarse)').matches;
+        if (isTouch) {
+            document.body.classList.add('is-touch');
             if (touchZone) touchZone.style.display = 'block';
         }
 
         if (!joystickZone) return;
 
+        // Bám theo đúng ngón đã đặt lên cần gạt. Bản cũ luôn đọc touches[0], nên
+        // khi bé giữ nút bắn trước rồi mới di chuyển thì cần gạt lại chạy theo
+        // ngón đang bấm bắn và nhân vật đi loạn xạ.
+        let joystickId = null;
+        let fireTouchId = null;
+        // Bán kính cần gạt lấy từ CSS thật để hai bản mobile/desktop không lệch
+        // nhau khi media query thu nhỏ vòng tròn.
+        function knobRange() {
+            const r = joystickZone.getBoundingClientRect();
+            return Math.max(24, Math.min(r.width, r.height) / 2 - 20);
+        }
+
+        function findTouch(list, id) {
+            for (let i = 0; i < list.length; i++) {
+                if (list[i].identifier === id) return list[i];
+            }
+            return null;
+        }
+
+        function releaseJoystick() {
+            joystickId = null;
+            touchJoystick.active = false;
+            touchJoystick.moveX = 0;
+            touchJoystick.moveY = 0;
+            knob.style.transform = 'translate(0px, 0px)';
+        }
+
         joystickZone.addEventListener('touchstart', e => {
             e.preventDefault();
-            const touch = e.touches[0];
+            if (joystickId !== null) return;
+            const touch = e.changedTouches[0];
             const rect = joystickZone.getBoundingClientRect();
+            joystickId = touch.identifier;
             touchJoystick.active = true;
             touchJoystick.startX = rect.left + rect.width / 2;
             touchJoystick.startY = rect.top + rect.height / 2;
-        });
+        }, { passive: false });
 
         window.addEventListener('touchmove', e => {
-            if (!touchJoystick.active) return;
-            const touch = e.touches[0];
+            if (joystickId === null) return;
+            const touch = findTouch(e.touches, joystickId);
+            if (!touch) return;
             const dx = touch.clientX - touchJoystick.startX;
             const dy = touch.clientY - touchJoystick.startY;
             const dist = Math.hypot(dx, dy);
-            const maxDist = 45;
+            const maxDist = knobRange();
             const angle = Math.atan2(dy, dx);
 
             const knobX = Math.cos(angle) * Math.min(dist, maxDist);
@@ -1763,33 +1819,89 @@
             knob.style.transform = `translate(${knobX}px, ${knobY}px)`;
             touchJoystick.moveX = knobX / maxDist;
             touchJoystick.moveY = knobY / maxDist;
-        });
+        }, { passive: true });
 
-        window.addEventListener('touchend', () => {
-            touchJoystick.active = false;
-            touchJoystick.moveX = 0;
-            touchJoystick.moveY = 0;
-            knob.style.transform = 'translate(0px, 0px)';
-        });
+        function endTouch(e) {
+            if (joystickId !== null && findTouch(e.changedTouches, joystickId)) {
+                releaseJoystick();
+            }
+            if (fireTouchId !== null && findTouch(e.changedTouches, fireTouchId)) {
+                fireTouchId = null;
+                isMouseDown = false;
+            }
+        }
+        window.addEventListener('touchend', endTouch);
+        window.addEventListener('touchcancel', endTouch);
 
         fireBtn.addEventListener('touchstart', e => {
             e.preventDefault();
+            fireTouchId = e.changedTouches[0].identifier;
             isMouseDown = true;
-        });
-        fireBtn.addEventListener('touchend', () => isMouseDown = false);
+            soundFX.init();
+        }, { passive: false });
     }
 
     function resizeCanvas() {
         // Đo theo khung chứa thật, không đoán từ kích thước cửa sổ: header và
         // footer có thể cao thấp khác nhau, nếu trừ cứng 60px thì canvas sẽ to
         // hơn khung và bị cắt mất một phần sân đấu.
-        const box = canvas && canvas.parentElement;
-        viewportWidth = box ? box.clientWidth : window.innerWidth;
-        viewportHeight = box ? box.clientHeight : window.innerHeight;
-        if (canvas) {
-            canvas.width = viewportWidth;
-            canvas.height = viewportHeight;
+        if (!canvas) return;
+        const box = canvas.parentElement;
+        const rect = box ? box.getBoundingClientRect() : null;
+        const w = Math.max(1, Math.round(rect ? rect.width : window.innerWidth));
+        const h = Math.max(1, Math.round(rect ? rect.height : window.innerHeight));
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        // ResizeObserver bên dưới cũng gọi vào đây; bỏ qua khi không có gì đổi
+        // để việc đặt lại canvas.width không tự kích hoạt một vòng đo mới.
+        if (w === viewportWidth && h === viewportHeight && dpr === pixelRatio) return;
+        viewportWidth = w;
+        viewportHeight = h;
+
+        // Bộ đệm vẽ theo pixel vật lý để màn hình Retina không bị mờ, còn kích
+        // thước CSS vẫn đúng bằng khung chứa. Chặn trên ở 2 để máy 3x không phải
+        // vẽ gấp 9 lần số pixel.
+        pixelRatio = dpr;
+        canvas.style.width = viewportWidth + 'px';
+        canvas.style.height = viewportHeight + 'px';
+        canvas.width = Math.round(viewportWidth * pixelRatio);
+        canvas.height = Math.round(viewportHeight * pixelRatio);
+
+        // "Vừa khung" trước, rồi mới chặn hai đầu: màn rộng thấy trọn sân, màn
+        // nhỏ giữ nhân vật đủ to và bù lại bằng camera bám theo.
+        const fit = Math.min(viewportWidth / ARENA.width, viewportHeight / ARENA.height);
+        renderScale = clamp(fit, MIN_SCALE, MAX_SCALE);
+        viewWorldWidth = viewportWidth / renderScale;
+        viewWorldHeight = viewportHeight / renderScale;
+
+        updateCamera();
+    }
+
+    // Camera bám người chơi, nhưng khi khung nhìn rộng hơn sân thì căn giữa sân
+    // thay vì dán vào góc trái — nếu không, màn hình rộng sẽ thấy sân lệch hẳn
+    // sang một bên với một mảng trống bên phải.
+    function updateCamera() {
+        if (viewWorldWidth >= ARENA.width) {
+            camera.x = (ARENA.width - viewWorldWidth) / 2;
+        } else {
+            const cx = player ? player.x : ARENA.width / 2;
+            camera.x = clamp(cx - viewWorldWidth / 2, 0, ARENA.width - viewWorldWidth);
         }
+
+        if (viewWorldHeight >= ARENA.height) {
+            camera.y = (ARENA.height - viewWorldHeight) / 2;
+        } else {
+            const cy = player ? player.y : ARENA.height / 2;
+            camera.y = clamp(cy - viewWorldHeight / 2, 0, ARENA.height - viewWorldHeight);
+        }
+    }
+
+    // Con trỏ/ngón tay nằm trong hệ toạ độ màn hình, phải chia lại cho tỉ lệ vẽ
+    // rồi cộng camera mới ra đúng điểm ngắm trong sân.
+    function screenToWorld(sx, sy) {
+        return {
+            x: sx / renderScale + camera.x,
+            y: sy / renderScale + camera.y
+        };
     }
 
     window.addEventListener('DOMContentLoaded', () => {
