@@ -277,6 +277,9 @@ body > .app-wrapper {
 
 .status-details {
     flex: 1;
+    /* min-width:0 mới cho phép ellipsis của tên nhân vật hoạt động; thiếu nó thì
+       chữ đẩy rộng ra và tràn khỏi nền hộp HUD. */
+    min-width: 0;
 }
 
 .bar-header {
@@ -750,16 +753,16 @@ body > .app-wrapper {
 }
 
 /* Floating Toast Notifications
-   Nằm dưới hàng HUD trên cùng: ở vị trí 80px cũ nó phủ đúng lên chữ "ĐỢT 1" và
-   số bot còn lại, mà thông báo đợt mới lại xuất hiện đúng lúc bé cần đọc hai
-   dòng đó. Giới hạn bề ngang để câu dài không tràn ra hai mép. */
+   Là con giữa của .hud-overlay (flex column, space-between) với margin-bottom:auto,
+   nên nó luôn nằm ngay dưới hàng HUD trên và trên hàng vũ khí — không cần đoán
+   toạ độ top cho từng cỡ màn hình như bản cũ (top: 80px cố định, phủ đúng lên
+   chữ "ĐỢT 1" và số bot còn lại). */
 .toast-msg {
-    position: fixed;
-    top: 200px;
-    max-width: calc(100vw - 32px);
+    align-self: center;
+    margin: 12px 0 auto;
+    max-width: 100%;
     text-align: center;
-    left: 50%;
-    transform: translateX(-50%) translateY(-20px);
+    transform: translateY(-20px);
     background: rgba(15, 23, 42, 0.9);
     border: 1px solid var(--neon-blue);
     box-shadow: var(--glow-blue);
@@ -777,7 +780,7 @@ body > .app-wrapper {
 
 .toast-msg.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
 }
 
 /* =========================================================
@@ -806,7 +809,6 @@ body > .app-wrapper {
     .stat-val { font-size: 1.2rem; }
     .weapon-slot { width: 66px; padding: 6px 4px; }
     .slot-icon { font-size: 1.2rem; }
-    .toast-msg { top: 180px; }
 }
 
 /* ---------- Điện thoại ngang & tablet dựng ----------
@@ -846,22 +848,27 @@ body > .app-wrapper {
     .slot-ammo { font-size: 0.68rem; margin-top: 2px; }
 
     .buff-badge { padding: 4px 8px; font-size: 0.72rem; }
-    .toast-msg { font-size: 0.9rem; padding: 7px 14px; top: 140px; }
+    .toast-msg { font-size: 0.9rem; padding: 7px 14px; margin-top: 8px; }
 }
 
 /* ---------- Màn hình thấp: điện thoại nằm ngang ----------
    Ở chiều cao 390px, header + footer + khoảng đệm ăn mất gần 40% màn hình và
    sân đấu chỉ còn một dải hẹp. Thu gọn khung trang lại để trả chỗ cho canvas. */
+/* Chọn theo .app-wrapper để thắng được các quy tắc cùng tên trong site-chrome.css
+   — tệp đó nạp sau, nên một selector một lớp ở đây sẽ thua dù nằm trong media
+   query. */
 @media (max-height: 560px) {
     body > .app-wrapper { padding: 6px 8px 8px; gap: 6px; }
-    .unified-nav { padding: 5px 10px; border-radius: 14px; }
-    .nav-home { height: 30px; padding: 0 8px; }
-    .nav-home img { height: 20px; }
-    .site-footer { padding: 0; }
-    .lang-flag-btn { padding: 3px 7px; }
-    .lang-flag-btn img { width: 20px; height: 14px; }
+    .app-wrapper > .unified-nav { padding: 4px 10px; border-radius: 14px; }
+    .app-wrapper .nav-home { height: 28px; padding: 0 8px; border-radius: 9px; }
+    .app-wrapper .nav-home img { height: 19px; }
+    .app-wrapper .unified-nav .btn { padding: 5px 9px; font-size: 0.85rem; }
+    .app-wrapper .unified-nav .brand-icon { font-size: 1.2rem; }
+    .app-wrapper .unified-nav .brand-title { font-size: 1rem; }
+    .app-wrapper > .site-footer { padding: 0; }
+    .app-wrapper .lang-flag-btn { padding: 2px 6px; }
+    .app-wrapper .lang-flag-btn img { width: 20px; height: 13px; }
     .game-viewport { border-radius: 14px; }
-    .toast-msg { top: 112px; }
 }
 
 /* ---------- Điện thoại dựng ---------- */
@@ -874,7 +881,7 @@ body > .app-wrapper {
     #player-name-hud { display: none; }
     .bar-header { justify-content: flex-end; }
     .weapon-slot { width: 42px; }
-    .toast-msg { top: 128px; font-size: 0.82rem; }
+    .toast-msg { font-size: 0.82rem; }
 }
 
 /* ---------- Cụm điều khiển cảm ứng ----------

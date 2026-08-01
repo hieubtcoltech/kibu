@@ -156,6 +156,10 @@
                     </div>
                 </div>
 
+                <!-- Notification Toast — nằm giữa hàng HUD trên và hàng vũ khí
+                     dưới nên không bao giờ đè lên hai khối đó, ở mọi cỡ màn hình -->
+                <div id="toast" class="toast-msg"></div>
+
                 <!-- Bottom 4 Weapons Quick-Switch Bar & Buff Bar -->
                 <div class="hud-bottom">
                     <div class="hud-box weapon-slots-bar" id="weapon-slots">
@@ -313,9 +317,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Notification Toast -->
-    <div id="toast" class="toast-msg"></div>
 
     <script src="/shooter-game/game.js"></script>
 
