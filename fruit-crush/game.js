@@ -3294,7 +3294,9 @@ function renderEndgamePanel(recordEl, shareEl, ctx) {
 }
 
 function openShareWindow(url) {
-    window.open(url, '_blank', 'noopener,noreferrer,width=620,height=560');
+    /* Không đặt noopener: hộp thoại của Facebook cần gọi ngược về trang mở nó
+       để báo đã đăng xong. Thiếu đường về đó thì nút Đăng cứ quay mãi. */
+    window.open(url, 'kibu_share', 'width=620,height=560');
 }
 
 /* ============================================================

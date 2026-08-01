@@ -1753,7 +1753,10 @@
                     <button class="share-btn share-copy"><i class="fa-solid fa-copy"></i> Sao Chép</button>
                 </div>`;
 
-            const pop = u => window.open(u, '_blank', 'noopener,noreferrer,width=620,height=560');
+            /* Không đặt noopener: hộp thoại của Facebook cần gọi ngược về trang
+               mở nó để báo đã đăng xong. Thiếu đường về đó thì nút Đăng cứ quay
+               mãi không dứt. Cửa sổ đặt tên để bấm nhiều lần không mở chồng. */
+            const pop = u => window.open(u, 'kibu_share', 'width=620,height=560');
             const nat = box.querySelector('.share-native');
             if (nat) nat.onclick = () => {
                 navigator.share({ title: 'Phi Tiêu Bong Bóng — KIBU Games', text: text, url: url || undefined })
