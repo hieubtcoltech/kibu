@@ -1039,6 +1039,29 @@
     var domEnabled = mode !== 'off';
     var fragEnabled = domEnabled && mode !== 'exact';
 
+    /* ---- Chặn cái nháy tiếng Việt trên bản tiếng Anh ----
+     * Trang game viết sẵn bằng tiếng Việt, bản /en dịch ở trình duyệt sau khi
+     * DOM dựng xong — nên người dùng thấy tiếng Việt loé lên rồi mới đổi.
+     * Tệp này là script chặn trong <head>, chạy trước khi <body> được vẽ, nên
+     * chỉ cần giấu trang tới lúc dịch xong là hết nháy. Có hẹn giờ mở lại phòng
+     * khi dịch lỗi — thà chữ sai ngôn ngữ còn hơn màn hình trắng. */
+    var veil = null;
+    if (domEnabled && lang !== 'vi') {
+        try {
+            veil = document.createElement('style');
+            veil.id = 'kibu-i18n-veil';
+            veil.textContent = 'html{visibility:hidden!important}';
+            (document.head || document.documentElement).appendChild(veil);
+            setTimeout(unveil, 1200);
+        } catch (e) { veil = null; }
+    }
+
+    function unveil() {
+        if (!veil) return;
+        if (veil.parentNode) veil.parentNode.removeChild(veil);
+        veil = null;
+    }
+
     function norm(s) { return s.replace(/\s+/g, ' ').trim(); }
     function esc(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 
@@ -1456,8 +1479,9 @@
         document.documentElement.lang = lang;
         wireSwitcher();
         localizeLinks(document);   // needed even where DOM translation is off
-        if (!domEnabled) return;
+        if (!domEnabled) { unveil(); return; }
         translateAll();
+        unveil();                  // dịch xong mới cho hiện, khỏi nháy tiếng Việt
         observer = new MutationObserver(onMutations);
         observer.observe(document.body, OBSERVE);
     }
