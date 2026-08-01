@@ -358,3 +358,19 @@ body {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
 }
+
+/* ---------- Vừa màn hình nhỏ ----------
+   align-items:center + nội dung cao hơn khung = phần trên bị đẩy ra ngoài vùng
+   cuộn và không tài nào với tới. Dùng margin:auto trên thẻ con thay cho căn
+   giữa bằng flex: vẫn ở giữa khi còn chỗ, mà thiếu chỗ thì cuộn được đủ cả
+   trên lẫn dưới. Điện thoại nằm ngang là chỗ lộ lỗi này rõ nhất. */
+.modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-overlay > .modal-card {
+    margin: auto;
+    flex-shrink: 0;
+}

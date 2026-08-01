@@ -836,7 +836,7 @@ body > .app-wrapper {
     .bots-remaining { font-size: 0.7rem; }
     .hud-right { gap: 10px; }
     .stat-val { font-size: 1rem; }
-    .stat-lbl { font-size: 0.6rem; }
+    .stat-lbl { font-size: 0.66rem; }
     .stat-item[style] { margin-left: 8px !important; }
 
     .weapon-slots-bar { gap: 5px; padding: 6px 8px; }

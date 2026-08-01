@@ -555,7 +555,7 @@ body > .app-wrapper {
     line-height: 1.15;
 }
 
-.world-diff { font-size: 0.62rem; color: var(--sun); letter-spacing: 1px; }
+.world-diff { font-size: 0.66rem; color: var(--sun); letter-spacing: 1px; }
 
 .world-lock {
     position: absolute;
@@ -574,7 +574,7 @@ body > .app-wrapper {
 
 .world-lock span {
     font-family: var(--font-display);
-    font-size: 0.62rem !important;
+    font-size: 0.66rem !important;
     font-weight: 800;
     color: var(--sun);
     margin-left: 0 !important;
@@ -686,7 +686,7 @@ body > .app-wrapper {
 }
 
 .ig b { display: block; font-size: 1.5rem; font-weight: 400; }
-.ig i { display: block; font-style: normal; font-size: 0.78rem; font-weight: 800; color: var(--sun); }
+.ig i { display: block; font-style: normal; font-size: 0.8rem; font-weight: 800; color: var(--sun); }
 .ig.hot i { color: #ff9f43; }
 
 .icon-row {
@@ -933,7 +933,7 @@ body > .app-wrapper {
     .world-name { font-size: 0.82rem; }
     .world-goal { display: none; }
     .clock-value { font-size: 1.2rem; }
-    .clock-label, .lead-label { font-size: 0.55rem; }
+    .clock-label, .lead-label { font-size: 0.66rem; }
     .lead-name { font-size: 0.8rem; }
     .event-banner { font-size: 0.85rem; padding: 6px 14px; margin-top: 6px; }
 
@@ -1008,7 +1008,7 @@ body.is-touch .player-cards { margin-bottom: auto; }
     .modal-card { padding: 18px 14px; border-radius: 20px; }
     .modal-title { font-size: 1.3rem; }
     .world-grid { grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 6px; }
-    .world-label { font-size: 0.66rem; }
+    .world-label { font-size: 0.68rem; }
     .help-grid { grid-template-columns: 1fr; }
     .rank-row { padding: 8px 10px; gap: 8px; }
     .rank-score { font-size: 1.2rem; }
@@ -1025,7 +1025,7 @@ body.is-touch .player-cards { margin-bottom: auto; }
     .world-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; }
     .world-card { padding: 3px 2px 2px; border-radius: 10px; }
     .world-emoji { font-size: 1rem; }
-    .world-label { font-size: 0.55rem; }
+    .world-label { font-size: 0.64rem; }
     .setup-hint { display: none; }
     .btn-play { font-size: 0.9rem; padding: 6px 20px; border-radius: 12px; }
     .menu-links { margin-top: 5px; }

@@ -1339,7 +1339,6 @@ body {
     background: linear-gradient(135deg, #ffd93d, #ff9f43);
 }
 
-}
 
 /* Unified Top Navigation Bar */
 .unified-nav {
@@ -1436,4 +1435,20 @@ body {
     .unified-nav .btn {
         padding: 8px;
     }
+}
+
+/* ---------- Vừa màn hình nhỏ ----------
+   align-items:center + nội dung cao hơn khung = phần trên bị đẩy ra ngoài vùng
+   cuộn và không tài nào với tới. Dùng margin:auto trên thẻ con thay cho căn
+   giữa bằng flex: vẫn ở giữa khi còn chỗ, mà thiếu chỗ thì cuộn được đủ cả
+   trên lẫn dưới. Điện thoại nằm ngang là chỗ lộ lỗi này rõ nhất. */
+.modal-overlay {
+    align-items: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.modal-overlay > .modal-content {
+    margin: auto;
+    flex-shrink: 0;
 }

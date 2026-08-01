@@ -1514,9 +1514,15 @@ function moveCellTo(cell, r, c) {
 }
 
 function repositionAll() {
+    // Trên điện thoại, thanh địa chỉ trượt lên xuống làm bắn sự kiện resize ngay
+    // lúc còn ở màn hình chào — lúc đó bàn cờ chưa dựng nên state.grid rỗng và
+    // hàm này ném lỗi.
+    if (!state.grid || !state.grid.length) return;
     for (let r = 0; r < GRID; r++) {
+        const row = state.grid[r];
+        if (!row) continue;
         for (let c = 0; c < GRID; c++) {
-            const cell = state.grid[r][c];
+            const cell = row[c];
             if (cell) {
                 cell.el.style.width = cellSize + 'px';
                 cell.el.style.height = cellSize + 'px';

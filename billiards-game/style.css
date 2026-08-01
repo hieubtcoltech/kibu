@@ -411,9 +411,11 @@ body {
 }
 
 .howto-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    /* KHÔNG dùng flex: bên trong dòng có <b> xen giữa chữ, mỗi thẻ sẽ thành một
+       ô flex riêng và trên màn hẹp bị bóp lại còn một từ mỗi cột — chữ dựng đứng
+       thành mấy cột song song, không đọc nổi. Để chữ chảy bình thường, chỉ có
+       số thứ tự là khối inline. */
+    display: block;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 11px;
     padding: 8px 13px;
@@ -422,6 +424,12 @@ body {
 }
 
 .step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    margin-right: 8px;
+    flex-shrink: 0;
     font-family: var(--font-display);
     font-weight: 800;
     width: 23px;
@@ -521,4 +529,83 @@ body {
     .p-balls { display: none; }
     .players-bar { gap: 6px; }
     .player-panel { padding: 6px 9px; gap: 7px; }
+}
+
+/* ---------- Vừa màn hình nhỏ ----------
+   align-items:center + nội dung cao hơn khung = phần trên bị đẩy ra ngoài vùng
+   cuộn và không tài nào với tới. Dùng margin:auto trên thẻ con thay cho căn
+   giữa bằng flex: vẫn ở giữa khi còn chỗ, mà thiếu chỗ thì cuộn được đủ cả
+   trên lẫn dưới. Điện thoại nằm ngang là chỗ lộ lỗi này rõ nhất. */
+.screen {
+    align-items: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.screen > .panel {
+    margin: auto;
+    flex-shrink: 0;
+}
+
+/* ---------- Điện thoại: bảng cấu hình phải lọt màn hình ----------
+   Đo trên máy thật: nút bắt đầu nằm dưới mép, người chơi phải cuộn mới thấy —
+   với trẻ con thì coi như không tìm ra. Thu gọn theo chiều cao thật của cửa sổ. */
+@media (max-height: 760px) {
+    .panel { padding: 16px 14px !important; }
+    .panel-title { font-size: 1.3rem !important; margin-bottom: 4px !important; }
+    .panel-sub { font-size: 0.82rem !important; margin-bottom: 10px !important; }
+    .setup-block { margin-bottom: 9px !important; }
+    .setup-label { font-size: 0.72rem !important; margin-bottom: 4px !important; }
+    .btn-toggle, .setup-grid .btn { padding: 6px 12px !important; font-size: 0.84rem !important; }
+    .big-btn { font-size: 1.05rem !important; padding: 10px 26px !important; }
+}
+
+@media (max-height: 520px) {
+    .panel { padding: 10px 12px !important; }
+    .panel-title { font-size: 1.05rem !important; }
+    .panel-sub { display: none !important; }
+    .setup-block { margin-bottom: 6px !important; }
+    .setup-label { font-size: 0.64rem !important; margin-bottom: 2px !important; }
+    .btn-toggle, .setup-grid .btn { padding: 4px 9px !important; font-size: 0.74rem !important; }
+    .big-btn { font-size: 0.9rem !important; padding: 7px 20px !important; }
+}
+
+/* ---------- Điện thoại hẹp: thanh hai người chơi ----------
+   Ba khối (bé 1 · lượt của ai · bé 2) không đủ chỗ trên 390px nên tên bị cắt
+   ngang giữa chữ. Cho co lại và cắt bằng dấu ba chấm cho gọn gàng. */
+@media (max-width: 560px) {
+    .players-bar { gap: 6px; }
+
+    .player-panel {
+        min-width: 0;
+        padding: 6px 8px !important;
+        gap: 6px !important;
+    }
+
+    .p-avatar { font-size: 1.4rem !important; }
+
+    .p-body { min-width: 0; }
+
+    /* Cho tên xuống hai dòng thay vì cắt thành "NGƯỜI C…" — dòng phụ
+       ("Chưa chọn nhóm bi") bỏ đi vì trạng thái đó đã hiện ở ô giữa. */
+    .p-name {
+        font-size: 0.7rem !important;
+        line-height: 1.15;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .p-sub { display: none !important; }
+
+    .turn-chip, .turn-pill {
+        font-size: 0.74rem !important;
+        padding: 6px 9px !important;
+        white-space: nowrap;
+    }
+}
+
+/* Màn hình nhỏ: giấu phần hướng dẫn 5 bước trong bảng vào trận để nút BẮT ĐẦU
+   nằm ngay trong tầm mắt. Luật đầy đủ vẫn mở được bằng nút ❓ trên thanh nav. */
+@media (max-height: 780px), (max-width: 560px) {
+    #screen-menu .howto { display: none; }
 }

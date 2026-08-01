@@ -233,7 +233,7 @@ body {
 }
 
 .clock-label {
-    font-size: 0.62rem;
+    font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 2px;
     color: #94a3b8;
@@ -618,4 +618,43 @@ body {
 @media (max-width: 560px) {
     .app-wrapper { padding: 6px 6px 8px; }
     .final-grid.cols-2, .final-grid.cols-3, .final-grid.cols-4 { grid-template-columns: 1fr; }
+}
+
+/* ---------- Vừa màn hình nhỏ ----------
+   align-items:center + nội dung cao hơn khung = phần trên bị đẩy ra ngoài vùng
+   cuộn và không tài nào với tới. Dùng margin:auto trên thẻ con thay cho căn
+   giữa bằng flex: vẫn ở giữa khi còn chỗ, mà thiếu chỗ thì cuộn được đủ cả
+   trên lẫn dưới. Điện thoại nằm ngang là chỗ lộ lỗi này rõ nhất. */
+.screen {
+    align-items: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.screen > .panel {
+    margin: auto;
+    flex-shrink: 0;
+}
+
+/* ---------- Điện thoại: bảng cấu hình phải lọt màn hình ----------
+   Đo trên máy thật: nút bắt đầu nằm dưới mép, người chơi phải cuộn mới thấy —
+   với trẻ con thì coi như không tìm ra. Thu gọn theo chiều cao thật của cửa sổ. */
+@media (max-height: 760px) {
+    .panel { padding: 16px 14px !important; }
+    .panel-title { font-size: 1.3rem !important; margin-bottom: 4px !important; }
+    .panel-sub { font-size: 0.82rem !important; margin-bottom: 10px !important; }
+    .setup-block { margin-bottom: 9px !important; }
+    .setup-label { font-size: 0.72rem !important; margin-bottom: 4px !important; }
+    .btn-toggle, .setup-grid .btn { padding: 6px 12px !important; font-size: 0.84rem !important; }
+    .big-btn { font-size: 1.05rem !important; padding: 10px 26px !important; }
+}
+
+@media (max-height: 520px) {
+    .panel { padding: 10px 12px !important; }
+    .panel-title { font-size: 1.05rem !important; }
+    .panel-sub { display: none !important; }
+    .setup-block { margin-bottom: 6px !important; }
+    .setup-label { font-size: 0.64rem !important; margin-bottom: 2px !important; }
+    .btn-toggle, .setup-grid .btn { padding: 4px 9px !important; font-size: 0.74rem !important; }
+    .big-btn { font-size: 0.9rem !important; padding: 7px 20px !important; }
 }
