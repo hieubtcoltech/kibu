@@ -17,6 +17,7 @@ const os = require('os');
 const url = require('url');
 
 const ROUTES = require('./routes.js');
+const XIANGQI = require('./xiangqi-server.js');
 
 const ROOT = __dirname;
 const SITE = process.env.SITE_ORIGIN || 'https://kibugames.com';
@@ -352,6 +353,14 @@ async function handle(req, res) {
 /* ---------- Khởi động (tự nhảy cổng nếu bị chiếm) ---------- */
 function listen(port, triesLeft) {
     const server = http.createServer(handle);
+
+    /* Cờ tướng hai người cần kênh hai chiều tức thời. Chỉ đường /ws/xiangqi mới
+       được nâng cấp lên WebSocket, còn lại đóng luôn cho gọn. */
+    server.on('upgrade', (req, socket, head) => {
+        const path = (req.url || '').split('?')[0];
+        if (path === '/ws/xiangqi') XIANGQI.handleUpgrade(req, socket, head);
+        else socket.destroy();
+    });
 
     server.on('error', (err) => {
         if (err.code === 'EADDRINUSE' && triesLeft > 0) {

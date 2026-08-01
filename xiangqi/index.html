@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cờ Tướng Online - Play Xiangqi with a Friend | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Xiangqi (Chinese Chess) online with a friend on KIBU Games. Create a room, share a 6-character code, and start playing in seconds. No sign-up, free forever.">
+    <meta name="keywords" content="Xiangqi, Chinese chess online, co tuong online, choi co tuong voi ban, play xiangqi with friend, room code chess, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/xiangqi/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/xiangqi/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/xiangqi/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/xiangqi/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/xiangqi/">
+    <meta property="og:title" content="Cờ Tướng Online - Play Xiangqi with a Friend | KIBU Games">
+    <meta property="og:description" content="Create a room, share the code, play Xiangqi together in seconds. No sign-up needed.">
+    <meta property="og:image" content="https://kibugames.com/xiangqi/og-image.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/xiangqi/">
+    <meta name="twitter:title" content="Cờ Tướng Online - Play Xiangqi with a Friend">
+    <meta name="twitter:description" content="Create a room, share the code, play Xiangqi together in seconds.">
+    <meta name="twitter:image" content="https://kibugames.com/xiangqi/og-image.png">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Cờ Tướng Online (Xiangqi)",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/xiangqi/",
+      "genre": "Board Game",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&family=Noto+Serif+SC:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/xiangqi/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body>
+    <div class="bg-paper"></div>
+
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                    <img src="/logo.png" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <span class="brand-icon">♟️</span>
+                    <h1 class="brand-title">CỜ TƯỚNG</h1>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <button id="btn-sound" class="btn" title="Bật / tắt âm thanh">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                </button>
+                <button id="btn-menu-nav" class="btn" title="Về màn hình chính">
+                    <i class="fa-solid fa-house"></i> <span>Màn Hình Chính</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="stage">
+            <!-- ======== Màn hình chính ======== -->
+            <section id="screen-home" class="screen active">
+                <div class="home-card">
+                    <div class="home-emblem">將</div>
+                    <h2 class="home-title">CỜ TƯỚNG ONLINE</h2>
+                    <p class="home-sub">Tạo phòng, gửi mã cho bạn, đánh ngay. Không cần đăng ký.</p>
+
+                    <label class="field">
+                        <span class="field-label">Tên của bạn</span>
+                        <input id="input-name" class="field-input" type="text" maxlength="16" placeholder="Nhập tên..." autocomplete="off">
+                    </label>
+
+                    <div class="setup-row">
+                        <span class="field-label">Thời gian mỗi bên</span>
+                        <div class="pill-row" id="time-row">
+                            <button class="pill time-btn" data-min="5">5 phút</button>
+                            <button class="pill time-btn active" data-min="10">10 phút</button>
+                            <button class="pill time-btn" data-min="15">15 phút</button>
+                        </div>
+                    </div>
+
+                    <div class="home-actions">
+                        <button id="btn-create" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Tạo Phòng</button>
+                        <button id="btn-join-open" class="btn"><i class="fa-solid fa-right-to-bracket"></i> Vào Phòng</button>
+                        <button id="btn-ai" class="btn"><i class="fa-solid fa-robot"></i> Đánh Với Máy</button>
+                    </div>
+
+                    <div id="join-box" class="join-box" hidden>
+                        <input id="input-code" class="field-input code-input" type="text" maxlength="6"
+                            placeholder="MÃ PHÒNG" autocomplete="off" autocapitalize="characters" spellcheck="false">
+                        <button id="btn-join" class="btn btn-primary">Vào</button>
+                    </div>
+
+                    <div id="ai-box" class="join-box" hidden>
+                        <div class="pill-row" id="ai-row">
+                            <button class="pill ai-btn active" data-level="1">Dễ</button>
+                            <button class="pill ai-btn" data-level="2">Vừa</button>
+                            <button class="pill ai-btn" data-level="3">Khó</button>
+                        </div>
+                        <button id="btn-ai-start" class="btn btn-primary">Bắt Đầu</button>
+                    </div>
+
+                    <p class="home-note" id="home-note"></p>
+                </div>
+            </section>
+
+            <!-- ======== Phòng chờ ======== -->
+            <section id="screen-lobby" class="screen">
+                <div class="home-card">
+                    <h2 class="home-title">PHÒNG CHỜ</h2>
+                    <p class="home-sub">Gửi mã này cho bạn của bạn để cùng vào đánh</p>
+
+                    <div class="code-display" id="room-code">------</div>
+                    <div class="code-actions">
+                        <button id="btn-copy" class="btn"><i class="fa-regular fa-copy"></i> Sao Chép</button>
+                        <button id="btn-share" class="btn"><i class="fa-solid fa-share-nodes"></i> Chia Sẻ</button>
+                    </div>
+
+                    <div class="lobby-players">
+                        <div class="lobby-seat" id="seat-red">
+                            <div class="seat-dot red"></div>
+                            <div class="seat-name">—</div>
+                            <div class="seat-tag">ĐỎ · đi trước</div>
+                        </div>
+                        <div class="lobby-vs">VS</div>
+                        <div class="lobby-seat" id="seat-black">
+                            <div class="seat-dot black"></div>
+                            <div class="seat-name">Đang chờ...</div>
+                            <div class="seat-tag">ĐEN</div>
+                        </div>
+                    </div>
+
+                    <p class="home-note" id="lobby-note">Đang chờ người thứ hai vào phòng...</p>
+                    <button id="btn-leave-lobby" class="btn"><i class="fa-solid fa-arrow-left"></i> Rời Phòng</button>
+                </div>
+            </section>
+
+            <!-- ======== Bàn cờ ======== -->
+            <section id="screen-game" class="screen">
+                <div class="table">
+                    <div class="player-strip" id="strip-top">
+                        <div class="ps-side"><span class="ps-dot"></span><span class="ps-name">—</span></div>
+                        <div class="ps-clock">10:00</div>
+                    </div>
+
+                    <div class="board-wrap">
+                        <canvas id="board"></canvas>
+                        <div class="board-msg" id="board-msg"></div>
+                        <div class="countdown" id="countdown" hidden><span>3</span></div>
+                    </div>
+
+                    <div class="player-strip" id="strip-bottom">
+                        <div class="ps-side"><span class="ps-dot"></span><span class="ps-name">—</span></div>
+                        <div class="ps-clock">10:00</div>
+                    </div>
+
+                    <div class="game-bar">
+                        <div class="captured" id="captured"></div>
+                        <div class="game-buttons">
+                            <button id="btn-resign" class="btn btn-small"><i class="fa-solid fa-flag"></i> <span>Xin Thua</span></button>
+                            <button id="btn-exit" class="btn btn-small"><i class="fa-solid fa-door-open"></i> <span>Thoát</span></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ======== Kết quả ======== -->
+    <div id="modal-end" class="modal-overlay">
+        <div class="modal-card">
+            <div class="end-emblem" id="end-emblem">🏆</div>
+            <h2 class="modal-title" id="end-title">HẾT VÁN</h2>
+            <p class="modal-subtitle" id="end-reason"></p>
+            <div class="end-buttons">
+                <button id="btn-rematch" class="btn btn-primary"><i class="fa-solid fa-rotate-right"></i> Đánh Ván Nữa</button>
+                <button id="btn-end-exit" class="btn"><i class="fa-solid fa-house"></i> Màn Hình Chính</button>
+            </div>
+            <p class="home-note" id="rematch-note"></p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg"></div>
+
+    <script src="/xiangqi/rules.js"></script>
+    <script src="/xiangqi/game.js"></script>
+</body>
+</html>

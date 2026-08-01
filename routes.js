@@ -32,7 +32,8 @@
         { dir: 'soccer-game', slug: 'super-striker' },
         { dir: 'darts-game', slug: 'balloon-darts' },
         { dir: 'ocean-game', slug: 'ocean-party' },
-        { dir: 'aqua-dash', slug: 'aqua-dash' }
+        { dir: 'aqua-dash', slug: 'aqua-dash' },
+        { dir: 'xiangqi', slug: 'co-tuong' }
     ];
 
     var bySlug = {}, byDir = {};
