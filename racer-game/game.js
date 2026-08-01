@@ -896,8 +896,11 @@
     }
 
     function resizeCanvas() {
-        viewportWidth = window.innerWidth;
-        viewportHeight = window.innerHeight - 60;
+        // Đo theo khung chứa thật thay vì trừ cứng 60px chiều cao thanh nav —
+        // header/footer đổi kích thước là canvas lệch khỏi khung ngay.
+        const box = canvas && canvas.parentElement;
+        viewportWidth = box ? box.clientWidth : window.innerWidth;
+        viewportHeight = box ? box.clientHeight : window.innerHeight;
         if (canvas) {
             canvas.width = viewportWidth;
             canvas.height = viewportHeight;

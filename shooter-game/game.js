@@ -1780,8 +1780,12 @@
     }
 
     function resizeCanvas() {
-        viewportWidth = window.innerWidth;
-        viewportHeight = window.innerHeight - 60; // subtract top navbar height
+        // Đo theo khung chứa thật, không đoán từ kích thước cửa sổ: header và
+        // footer có thể cao thấp khác nhau, nếu trừ cứng 60px thì canvas sẽ to
+        // hơn khung và bị cắt mất một phần sân đấu.
+        const box = canvas && canvas.parentElement;
+        viewportWidth = box ? box.clientWidth : window.innerWidth;
+        viewportHeight = box ? box.clientHeight : window.innerHeight;
         if (canvas) {
             canvas.width = viewportWidth;
             canvas.height = viewportHeight;
