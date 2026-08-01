@@ -69,9 +69,10 @@
             </div>
 
             <div class="nav-actions">
-            <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ" style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; font-size: 1.3rem; padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: auto;">
-    <span id="global-lang-flag">🇻🇳</span>
+            <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); cursor: pointer; padding: 4px 8px; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s ease; margin-left: auto; outline: none;">
+    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language" style="width: 24px; height: 16px; object-fit: cover; border-radius: 3px; display: block; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
 </button>
+            
             
                 <a href="../index.html" class="btn btn-home">
                     <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
@@ -190,18 +191,21 @@
     
 
     
-    <!-- Global Flag Language Switcher Script -->
+    
+    <!-- Global SVG Flag Language Switcher Script -->
     <script>
     (function() {
         const LANG_KEY = "kibu_global_lang";
         const btn = document.getElementById("btn-global-lang");
-        const flagSpan = document.getElementById("global-lang-flag");
+        const flagImg = document.getElementById("global-lang-flag");
         
         let currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
 
         function updateLangUI() {
-            if (flagSpan) {
-                flagSpan.textContent = currentLang === "vi" ? "🇻🇳" : "🇬🇧";
+            if (flagImg) {
+                // Show SVG flag based on active language
+                flagImg.src = currentLang === "vi" ? "https://flagcdn.com/w40/vn.png" : "https://flagcdn.com/w40/gb.png";
+                flagImg.alt = currentLang === "vi" ? "Tiếng Việt" : "English";
             }
             document.documentElement.lang = currentLang;
         }
