@@ -880,6 +880,10 @@ body > .app-wrapper {
     .stat-lbl { display: none; }
     #player-name-hud { display: none; }
     .bar-header { justify-content: flex-end; }
+    /* Bỏ tên rồi thì hộp máu chỉ cần đủ cho avatar và thanh máu — nhường chỗ để
+       hộp "ĐỢT / Bot còn lại" ở giữa không phải xuống bốn dòng. */
+    .player-status { width: 130px; gap: 6px; }
+    .wave-title, .bots-remaining { white-space: nowrap; }
     .weapon-slot { width: 42px; }
     .toast-msg { font-size: 0.82rem; }
 }
