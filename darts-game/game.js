@@ -46,8 +46,14 @@
         { key: 'mid',   name: 'BÓNG VỪA',  r: MS(0.145), pts: 2,  vy: [48, 76],   w: 32 },
         { key: 'small', name: 'BÓNG NHỎ',  r: MS(0.105), pts: 3,  vy: [66, 100],  w: 24 },
         { key: 'gold',  name: 'BÓNG VÀNG', r: MS(0.098), pts: 5,  vy: [98, 132],  w: 7,  gold: true },
-        { key: 'bomb',  name: 'BÓNG BOM',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true }
+        { key: 'bomb',  name: 'BÓNG BOM',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true },
+        /* Bóng thần kỳ: hiếm gặp, nổ được thì 5 giây tiếp theo mỗi lần phi ra
+           một chùm ba mũi toả về ba hướng. */
+        { key: 'magic', name: 'BÓNG THẦN KỲ', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true }
     ];
+
+    const TRIPLE_TIME = 5;            // giây được bắn chùm
+    const TRIPLE_SPREAD = 0.20;       // độ toả của hai mũi bên (radian)
     const KIND = Object.fromEntries(KINDS.map(k => [k.key, k]));
 
     const BAL_COLORS = [
@@ -190,7 +196,7 @@
             this.swayP = rnd(0, TAU);
             this.t = 0;
             this.alive = true;
-            this.col = kind.gold ? GOLD_COLOR : kind.bomb ? BOMB_COLOR : pick(BAL_COLORS);
+            this.col = kind.magic ? '#6ad2ff' : kind.gold ? GOLD_COLOR : kind.bomb ? BOMB_COLOR : pick(BAL_COLORS);
             this.tilt = 0;
             this.squash = 0;                    // nhún nhẹ lúc mới thả ra
             this.fuse = 0;
@@ -271,6 +277,29 @@
                 ctx.font = `bold ${(r * 0.9).toFixed(0)}px "Baloo 2", sans-serif`;
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillText('★', 0, r * 0.06);
+            }
+            if (this.kind.magic) {
+                // Bóng thần kỳ: ba mũi tên nhỏ toả ra, nhìn là đoán được công dụng
+                ctx.save();
+                ctx.strokeStyle = '#eaffff';
+                ctx.lineWidth = Math.max(2, r * 0.11);
+                ctx.lineCap = 'round';
+                for (const a of [-0.55, 0, 0.55]) {
+                    ctx.save();
+                    ctx.rotate(a);
+                    ctx.beginPath();
+                    ctx.moveTo(0, r * 0.34); ctx.lineTo(0, -r * 0.46);
+                    ctx.moveTo(-r * 0.17, -r * 0.24); ctx.lineTo(0, -r * 0.5);
+                    ctx.lineTo(r * 0.17, -r * 0.24);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+                // lấp lánh cho nổi giữa đám bóng thường
+                const tw = 0.5 + 0.5 * Math.sin(this.t * 6);
+                ctx.globalAlpha = 0.55 + 0.45 * tw;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath(); ctx.arc(r * 0.5, -r * 0.55, r * 0.12 * (0.7 + tw * 0.6), 0, TAU); ctx.fill();
+                ctx.restore();
             }
             if (this.kind.bomb) {
                 // Bóng bom: mặt cau có + ngòi nổ xì lửa
@@ -635,6 +664,7 @@
             this.throws = 0;
             this.hits = 0;                  // số MŨI phi có trúng bóng
             this.pops = 0;                  // số QUẢ nổ được (một mũi có thể nổ nhiều quả)
+            this.tripleT = 0;               // còn mấy giây được bắn chùm ba mũi
             this.streak = 0;
             this.bestStreak = 0;
             this.onFire = false;
@@ -695,10 +725,17 @@
 
         doThrow() {
             const speed = lerp(SPEED_MIN, SPEED_MAX, this.power);
+            // Đang có phép thì ba mũi toả ra, hết phép về lại một mũi
+            const angles = this.tripleT > 0
+                ? [this.angle - TRIPLE_SPREAD, this.angle, this.angle + TRIPLE_SPREAD]
+                : [this.angle];
+            for (const a of angles) {
+                const dx = Math.cos(a), dy = -Math.sin(a);
+                this.darts.push(new Dart(
+                    this.cx + dx * ARM, THROW_Y - Math.sin(a) * ARM,
+                    dx * speed, dy * speed, this.cfg));
+            }
             const dx = Math.cos(this.angle), dy = -Math.sin(this.angle);
-            this.darts.push(new Dart(
-                this.cx + dx * ARM, THROW_Y - Math.sin(this.angle) * ARM,
-                dx * speed, dy * speed, this.cfg));
             this.state = 'fly';
             this.throwT = 0;
             this.pendingHits = 0;
@@ -714,6 +751,11 @@
             if (!held) this.armed = true;
             this.flash = Math.max(0, this.flash - dt * 2.2);
             this.shake *= Math.pow(0.02, dt);
+
+            if (this.tripleT > 0) {
+                this.tripleT = Math.max(0, this.tripleT - dt);
+                if (this.tripleT === 0) this.addFx('Hết phép chùm', '#9fb3c8', this.cx, THROW_Y - 170, 18);
+            }
 
             if (this.outcome) this.updateCelebration(dt);
 
@@ -837,7 +879,13 @@
             let pts = k.pts * mode.mult;
             let label = `+${pts}`;
 
-            if (k.gold) { this.golds++; Sfx.gold(); label = `🥇 +${pts}`; }
+            if (k.magic) {
+                this.tripleT = TRIPLE_TIME;
+                label = `✨ CHÙM 3 MŨI! +${pts}`;
+                this.addFx('✨ CHÙM 3 MŨI — 5 GIÂY!', '#7bdcff', this.cx, THROW_Y - 200, 26);
+                Sfx.gold();
+            }
+            else if (k.gold) { this.golds++; Sfx.gold(); label = `🥇 +${pts}`; }
             else Sfx.pop(r);
 
             if (this.streak === 3 && !this.onFire) {
@@ -1147,8 +1195,30 @@
                mũi tên trông rời khỏi nhân vật, bé khó thấy nó gắn với ai. Điểm
                ném thật (hx, hy) không đổi nên đường bay vẫn y nguyên. */
             const AIM_GAP = ARM * 0.35;
-            const ax = this.cx + dx * AIM_GAP, ay = THROW_Y + dy * AIM_GAP;
             const len = 42 + this.power * 34;
+
+            if (this.tripleT > 0) {
+                for (const off of [-TRIPLE_SPREAD, TRIPLE_SPREAD]) {
+                    const a = this.angle + off;
+                    ctx.save();
+                    ctx.globalAlpha = 0.5;
+                    ctx.translate(this.cx + Math.cos(a) * AIM_GAP, THROW_Y - Math.sin(a) * AIM_GAP);
+                    ctx.rotate(-a);
+                    ctx.strokeStyle = c.color;
+                    ctx.lineWidth = 3;
+                    ctx.lineCap = 'round';
+                    ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(len * 0.82, 0); ctx.stroke();
+                    ctx.restore();
+                }
+                ctx.save();
+                ctx.fillStyle = '#7bdcff';
+                ctx.font = '800 15px "Baloo 2", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('✨ ' + this.tripleT.toFixed(1) + 's', this.cx, THROW_Y - 186);
+                ctx.restore();
+            }
+
+            const ax = this.cx + dx * AIM_GAP, ay = THROW_Y + dy * AIM_GAP;
             ctx.save();
             ctx.translate(ax, ay);
             ctx.rotate(-this.angle);
