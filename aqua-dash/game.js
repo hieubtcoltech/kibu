@@ -2103,7 +2103,7 @@
             'modal-start', 'modal-help', 'modal-end', 'toast', 'world-grid', 'skin-row',
             'count-row', 'time-row', 'setup-hint', 'rank-list', 'award-row', 'end-title',
             'end-sub', 'end-emoji', 'help-controls', 'touch-controls', 'joystick-zone',
-            'joystick-knob', 'dash-btn'].forEach(id => { el[id] = document.getElementById(id); });
+            'joystick-knob', 'dash-btn', 'suit-preview'].forEach(id => { el[id] = document.getElementById(id); });
     }
 
     function tr(s) {
@@ -2371,6 +2371,7 @@
             }
 
             if (G.state !== 'MENU') updateHud(dt);
+            else drawPreview(dt);
             draw();
         } catch (err) {
             console.error('Aqua Dash loop error:', err);
@@ -2488,6 +2489,28 @@
                 audio.beep(true);
             });
             row.appendChild(b);
+        });
+    }
+
+    /* Nhân vật nhỏ bơi tại chỗ trong màn hình chọn */
+    let previewKick = 0;
+    function drawPreview(dt) {
+        const cv = el['suit-preview'];
+        if (!cv) return;
+        const g = cv.getContext('2d');
+        previewKick += dt * 7;
+        g.setTransform(1, 0, 0, 1, 0, 0);
+        g.clearRect(0, 0, cv.width, cv.height);
+        const suit = SUITS.find(s => s.id === Store.data.suit) || SUITS[0];
+        // vài bọt nước cho đỡ trống
+        g.fillStyle = 'rgba(200,240,255,0.25)';
+        for (let i = 0; i < 7; i++) {
+            const bx = (i * 47 + (previewKick * 9) % 320) % 320;
+            const by = 130 - ((previewKick * 22 + i * 40) % 150);
+            g.beginPath(); g.arc(bx, by, 2 + (i % 3), 0, 6.28); g.fill();
+        }
+        drawDiver(g, cv.width / 2, cv.height / 2, 1.35, {
+            suit, kick: previewKick, tilt: Math.sin(previewKick * 0.4) * 0.12, face: 1, state: 'swim'
         });
     }
 

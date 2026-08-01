@@ -578,6 +578,22 @@ body > .app-wrapper {
 
 .setup-hint b { color: var(--sun); }
 
+/* Ô xem trước nhân vật: vẽ bằng chính hàm vẽ trong game nên bé thấy đúng cái
+   mình sẽ điều khiển, kể cả nhịp đạp chân. */
+.suit-preview {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    height: auto;
+    margin: 0 auto 8px;
+    border-radius: 16px;
+    background: linear-gradient(160deg, rgba(79,216,255,0.16), rgba(4,24,45,0.5));
+    border: 1px solid rgba(140, 226, 255, 0.2);
+}
+
+@media (max-height: 700px) { .suit-preview { max-width: 210px; } }
+@media (max-height: 430px) { .suit-preview { display: none; } }
+
 /* Hàng chọn bộ đồ lặn cho bé 1 */
 .skin-row {
     display: flex;
