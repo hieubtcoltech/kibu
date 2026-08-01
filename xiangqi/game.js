@@ -544,6 +544,8 @@
 
     function onServer(msg) {
         if (msg.t === 'error') {
+            // Ván cũ hết hạn là chuyện bình thường khi mở lại trang sau một lúc
+            if (S.screen === 'home' && /không nhận ra|không còn/i.test(msg.msg)) { note(''); return; }
             note(msg.msg, true);
             toast(msg.msg);
             audio.deny();
@@ -596,6 +598,13 @@
         if (st.moveCount === 0) S.captured = [];
         prevMoveCount = st.moveCount;
         prevBoard = st.board;
+
+        // Ván mới bắt đầu thì phải dọn bảng kết quả của ván cũ đi
+        if (S.phase !== 'over') {
+            hideEnd();
+            el('btn-rematch').disabled = false;
+            el('rematch-note').textContent = '';
+        }
 
         if (S.phase === 'waiting') showScreen('lobby');
         else if (S.phase === 'countdown') { showScreen('game'); runCountdown(st.countdownIn); }
@@ -855,14 +864,28 @@
             ? (won ? tr('BẠN THẮNG!') : tr('BẠN THUA'))
             : tr('HOÀ CỜ');
         el('end-reason').textContent = tr(REASONS[res.reason] || '');
-        el('btn-rematch').textContent = S.mode === 'ai' ? tr('Đánh Ván Nữa') : tr('Đánh Ván Nữa');
-        el('rematch-note').textContent = '';
+        renderRematch();
         el('modal-end').classList.add('active');
         if (res.winner) (won ? audio.win() : audio.lose());
         else audio.beep(false);
     }
 
     function hideEnd() { el('modal-end').classList.remove('active'); }
+
+    /* Ai đã bấm "đánh ván nữa" thì hiện ra cho bên kia biết. Trước đây showEnd()
+       xoá trắng dòng này mỗi lần máy chủ gửi trạng thái mới, nên vừa bấm xong là
+       chữ "đang chờ đối thủ" biến mất. */
+    function renderRematch() {
+        const note = el('rematch-note'), btn = el('btn-rematch');
+        if (S.mode === 'ai') { note.textContent = ''; btn.disabled = false; return; }
+        const other = S.mySide === 'red' ? 'black' : 'red';
+        const mine = !!(S.rematch && S.rematch[S.mySide]);
+        const theirs = !!(S.rematch && S.rematch[other]);
+        btn.disabled = mine;
+        if (mine && !theirs) note.textContent = tr('Đang chờ đối thủ đồng ý...');
+        else if (theirs && !mine) note.textContent = tr('Đối thủ muốn đánh ván nữa!');
+        else note.textContent = '';
+    }
 
     function pillGroup(rowId, attr, cb) {
         const row = el(rowId);
@@ -972,8 +995,8 @@
         el('btn-rematch').addEventListener('click', () => {
             if (S.mode === 'ai') { hideEnd(); startAiGame(); return; }
             send({ t: 'rematch' });
-            el('rematch-note').textContent = tr('Đang chờ đối thủ đồng ý...');
-            el('btn-rematch').disabled = true;
+            S.rematch[S.mySide] = true;
+            renderRematch();
         });
 
         const btnSound = el('btn-sound');
@@ -996,17 +1019,6 @@
         if (typeof ResizeObserver === 'function') new ResizeObserver(resize).observe(canvas.parentElement);
     }
 
-    /* Ván mới sau khi cả hai bấm "Đánh ván nữa" */
-    function watchRematch() {
-        setInterval(() => {
-            if (S.phase !== 'over') { el('btn-rematch').disabled = false; return; }
-            const other = S.mySide === 'red' ? 'black' : 'red';
-            if (S.rematch && S.rematch[other] && !S.rematch[S.mySide]) {
-                el('rematch-note').textContent = tr('Đối thủ muốn đánh ván nữa!');
-            }
-        }, 500);
-    }
-
     function boot() {
         canvas = el('board');
         ctx = canvas.getContext('2d');
@@ -1026,10 +1038,29 @@
             el('input-code').value = m[1].toUpperCase();
             el('join-box').hidden = false;
             note('Bấm "Vào" để tham gia phòng ' + m[1].toUpperCase());
+        } else if (saved.code && saved.token) {
+            /* Lỡ tay tải lại trang hay điện thoại tự làm mới tab thì phải quay
+               về đúng ván đang dở, chứ không phải mất ván. Máy chủ giữ chỗ một
+               phút; hết hạn hoặc phòng đã dọn thì nó báo lỗi và mình lặng lẽ ở
+               lại màn hình chính. */
+            S.mode = 'online';
+            S.code = saved.code;
+            S.token = saved.token;
+            S.wantReconnect = true;
+            note('Đang tìm lại ván đang chơi...');
+            connect(() => send({ t: 'rejoin', code: saved.code, token: saved.token }));
+            setTimeout(() => {
+                if (S.screen === 'home') {
+                    S.wantReconnect = false;
+                    S.mode = null;
+                    S.code = ''; S.token = '';
+                    saveLocal();
+                    note('');
+                }
+            }, 2500);
         }
 
         wire();
-        watchRematch();
         resize();
         requestAnimationFrame(loop);
     }
