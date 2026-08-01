@@ -216,4 +216,22 @@
       <changefreq>weekly</changefreq>
       <priority>0.8</priority>
    </url>
+   <url>
+      <loc>https://kibugames.com/vi/g/ocean-party</loc>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/g/ocean-party"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/g/ocean-party"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/g/ocean-party"/>
+      <lastmod>2026-08-01</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   <url>
+      <loc>https://kibugames.com/en/g/ocean-party</loc>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/g/ocean-party"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/g/ocean-party"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/g/ocean-party"/>
+      <lastmod>2026-08-01</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
 </urlset>

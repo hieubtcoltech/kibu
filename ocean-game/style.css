@@ -576,6 +576,14 @@ body > .app-wrapper {
 
 .setup-hint b { color: var(--sun); }
 
+/* Hai nút phụ dưới nút Lặn Thôi */
+.menu-links {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 14px;
+}
+
 /* Cách chơi */
 .help-grid {
     display: grid;
@@ -817,12 +825,29 @@ body > .app-wrapper {
     .touch-dash-btn { width: 72px; height: 72px; font-size: 1.6rem; }
 }
 
-/* Thẻ điểm nằm đè lên cần gạt và nút lướt trên máy cảm ứng hẹp */
-@media (max-width: 620px) {
-    body.is-touch .player-cards { margin-bottom: 128px; }
-}
+/* Trên máy cảm ứng, cần gạt và nút lướt chiếm nguyên dải đáy màn hình, nên thẻ
+   điểm chuyển hẳn lên trên — vẫn nhìn thấy mà không vướng ngón tay. */
+body.is-touch .event-banner { margin-bottom: 8px; }
+body.is-touch .player-cards { margin-bottom: auto; }
 
 /* Modal thu nhỏ dần theo chiều cao thật của cửa sổ */
+@media (max-height: 700px) {
+    .modal-card { padding: 14px 18px; }
+    .modal-title { font-size: 1.25rem; }
+    .modal-subtitle { font-size: 0.8rem; margin-bottom: 8px; }
+    .setup-section { margin-bottom: 7px; }
+    .setup-label { font-size: 0.74rem; margin-bottom: 4px; }
+    .pill { padding: 4px 11px; font-size: 0.8rem; }
+    .world-card { padding: 5px 4px 4px; }
+    .world-emoji { font-size: 1.15rem; }
+    .world-diff { display: none; }
+    .setup-hint { font-size: 0.72rem; margin: 2px 0 10px; }
+    .btn-play { font-size: 1rem; padding: 8px 24px; }
+    .menu-links { margin-top: 8px; }
+    .help-list { font-size: 0.76rem; line-height: 1.5; }
+    .unlock-emoji { font-size: 1.25rem; }
+}
+
 @media (max-height: 900px) {
     .modal-card { padding: 20px 22px; }
     .modal-title { font-size: 1.55rem; }

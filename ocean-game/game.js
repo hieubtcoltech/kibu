@@ -2993,18 +2993,16 @@
             startMatch();
         });
 
-        document.getElementById('btn-help').addEventListener('click', () => {
-            buildHelp();
-            el['modal-help'].classList.add('active');
-        });
+        const openHelp = () => { buildHelp(); el['modal-help'].classList.add('active'); };
+        const openCollection = () => { buildCollection(); el['modal-collection'].classList.add('active'); };
+        document.getElementById('btn-help').addEventListener('click', openHelp);
+        document.getElementById('btn-help-2').addEventListener('click', openHelp);
+        document.getElementById('btn-collection-2').addEventListener('click', openCollection);
         document.getElementById('btn-close-help').addEventListener('click', () => {
             el['modal-help'].classList.remove('active');
         });
 
-        document.getElementById('btn-collection').addEventListener('click', () => {
-            buildCollection();
-            el['modal-collection'].classList.add('active');
-        });
+        document.getElementById('btn-collection').addEventListener('click', openCollection);
         document.getElementById('btn-close-collection').addEventListener('click', () => {
             el['modal-collection'].classList.remove('active');
             refreshMenu();
