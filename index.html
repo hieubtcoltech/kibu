@@ -419,7 +419,10 @@
         .tile-label {
             position: absolute;
             bottom: 0;
-            inset-x: 0;
+            /* inset-x là tiện ích của Tailwind, không phải thuộc tính CSS — trình
+               duyệt bỏ qua nên thanh tên chỉ rộng bằng chữ thay vì kín ô. */
+            left: 0;
+            right: 0;
             padding: 8px 6px;
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(8px);
