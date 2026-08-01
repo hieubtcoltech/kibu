@@ -2966,9 +2966,12 @@
         el['worlds-open'].textContent = Store.unlockedWorlds();
 
         const slots = SLOTS[G.playerCount] || SLOTS[1];
+        // Gợi ý phím: chip ngắn thay vì một dòng chữ dài, điện thoại không vỡ dòng
         el['setup-hint'].innerHTML = slots.map((s, i) =>
-            '<b>' + PLAYER_STYLE[i].name + '</b>: ' + CONTROLS[s].label + ' · lướt <b>' + CONTROLS[s].dashLabel + '</b>'
-        ).join(' &nbsp;|&nbsp; ');
+            '<span class="hint-chip"><b>' + PLAYER_STYLE[i].name + '</b>' +
+            CONTROLS[s].label.split(/\s+/).map(k => '<span class="kbd">' + k + '</span>').join('') +
+            '<span class="kbd">' + CONTROLS[s].dashLabel + '</span></span>'
+        ).join('');
 
         el['world-section'].style.display = G.mode === 'daily' ? 'none' : '';
         const done = Store.data.daily.day === todayKey();
@@ -3014,10 +3017,15 @@
     }
 
     function buildHelp() {
-        const slots = SLOTS[4];
-        el['help-controls'].innerHTML = slots.map((s, i) =>
-            '<li>' + PLAYER_STYLE[i].name + ': <b>' + CONTROLS[s].label + '</b> · lướt <b>' + CONTROLS[s].dashLabel + '</b></li>'
-        ).join('') + '<li>Trên điện thoại: cần gạt bên trái, nút ⚡ bên phải</li>';
+        // Chip phím thay cho câu chữ: nhìn phát biết ngay, và tự xuống dòng gọn
+        // trên điện thoại thay vì thành một đoạn văn dài.
+        el('help-controls').innerHTML = SLOTS[4].map((s, i) => {
+            const c = CONTROLS[s];
+            const keys = c.label.split(/\s+/).map(k => '<span class="kbd">' + k + '</span>').join('');
+            return '<div class="key-line"><span class="who">' + PLAYER_STYLE[i].name + '</span>' + keys +
+                '<span class="kbd">' + c.dashLabel + '</span></div>';
+        }).join('') + '<div class="key-line"><span class="who">📱</span>' +
+            '<span class="kbd">cần gạt</span><span class="kbd">⚡</span></div>';
     }
 
     function pillGroup(rowId, attr, onPick) {
