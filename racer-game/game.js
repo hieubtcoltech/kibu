@@ -869,6 +869,21 @@
             gameState = 'MENU';
         });
 
+        // Nút Âm Thanh — nút này có sẵn trên thanh nav nhưng chưa bao giờ được
+        // nối vào đâu, bấm không có tác dụng gì. Cùng cách làm với các game khác.
+        const btnSound = document.getElementById('btn-sound');
+        if (btnSound) {
+            btnSound.addEventListener('click', () => {
+                soundFX.enabled = !soundFX.enabled;
+                // Lần bấm đầu tiên cũng là cử chỉ người dùng để mở khoá
+                // AudioContext trên trình duyệt di động.
+                if (soundFX.enabled) soundFX.init();
+                const icon = document.getElementById('sound-icon');
+                if (icon) icon.className = soundFX.enabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+                btnSound.classList.toggle('muted', !soundFX.enabled);
+            });
+        }
+
         // Touch Controls
         const btnLeft = document.getElementById('btn-left');
         const btnRight = document.getElementById('btn-right');
