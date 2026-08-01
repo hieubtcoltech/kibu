@@ -31,7 +31,8 @@
         { dir: 'billiards-game', slug: 'pool-masters' },
         { dir: 'soccer-game', slug: 'super-striker' },
         { dir: 'darts-game', slug: 'balloon-darts' },
-        { dir: 'ocean-game', slug: 'ocean-party' }
+        { dir: 'ocean-game', slug: 'ocean-party' },
+        { dir: 'aqua-dash', slug: 'aqua-dash' }
     ];
 
     var bySlug = {}, byDir = {};

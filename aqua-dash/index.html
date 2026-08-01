@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Aqua Dash - Free Online Kids Game | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Aqua Dash on KIBU Games! A 1-4 player underwater auto-scrolling race: swim, dash, grab treasure and don't fall off the screen. Free, in English & Vietnamese.">
+    <meta name="keywords" content="Aqua Dash, underwater race, swimming race game, auto scroll racing, 4 player party game, dua boi duoi nuoc, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/aqua-dash/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/aqua-dash/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/aqua-dash/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/aqua-dash/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/aqua-dash/">
+    <meta property="og:title" content="Aqua Dash - Free Online Game | KIBU Games">
+    <meta property="og:description" content="An underwater auto-scrolling race for 1-4 kids on one screen. Ride dolphins, dodge sharks, grab treasure!">
+    <meta property="og:image" content="https://kibugames.com/aqua-dash/og-image.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/aqua-dash/">
+    <meta name="twitter:title" content="Aqua Dash - Free Online Game">
+    <meta name="twitter:description" content="Underwater auto-scrolling race for 1-4 players, free on KIBU Games.">
+    <meta name="twitter:image" content="https://kibugames.com/aqua-dash/og-image.png">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Aqua Dash",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/aqua-dash/",
+      "genre": "Racing Party",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/aqua-dash/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body>
+    <div class="bg-deep-glow"></div>
+
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                    <img src="/logo.png" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <span class="brand-icon">🤿</span>
+                    <h1 class="brand-title">AQUA DASH</h1>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <button id="btn-sound" class="btn" title="Bật / tắt âm thanh">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                </button>
+                <button id="btn-help" class="btn" title="Cách chơi">
+                    <i class="fa-solid fa-circle-question"></i> <span>Cách Chơi</span>
+                </button>
+                <button id="btn-menu-nav" class="btn" title="Về màn hình chọn">
+                    <i class="fa-solid fa-list"></i> <span>Chọn Lại</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="game-viewport">
+            <canvas id="game-canvas"></canvas>
+
+            <div class="hud-overlay">
+                <div class="hud-top">
+                    <div class="hud-box hud-world">
+                        <div class="world-name" id="hud-world">RẠN SAN HÔ</div>
+                        <div class="world-meta"><span id="hud-distance">0m</span> · <span id="hud-speed">Tốc độ x1.0</span></div>
+                    </div>
+
+                    <div class="hud-box hud-clock" id="hud-clock">
+                        <div class="clock-value" id="hud-timer">3:00</div>
+                        <div class="clock-label">Thời Gian</div>
+                    </div>
+
+                    <div class="hud-box hud-lead">
+                        <div class="lead-label">Dẫn Đầu</div>
+                        <div class="lead-name" id="hud-lead-name">—</div>
+                    </div>
+                </div>
+
+                <div class="event-banner" id="event-banner"><span id="event-text"></span></div>
+
+                <div class="player-cards" id="player-cards"></div>
+            </div>
+
+            <div class="touch-controls" id="touch-controls">
+                <div class="touch-joystick-zone" id="joystick-zone">
+                    <div class="joystick-knob" id="joystick-knob"></div>
+                </div>
+                <button class="touch-dash-btn" id="dash-btn" aria-label="Bơi nhanh">
+                    <i class="fa-solid fa-bolt"></i>
+                </button>
+            </div>
+
+            <div class="countdown-overlay" id="countdown-overlay"><span id="countdown-text">3</span></div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ============ Màn hình chọn ============ -->
+    <div id="modal-start" class="modal-overlay active">
+        <div class="modal-card modal-wide">
+            <h2 class="modal-title">🤿 CUỘC ĐUA ĐÁY BIỂN 🐬</h2>
+            <p class="modal-subtitle">Màn hình tự trôi về phía trước. Bơi theo cho kịp, gom kho báu — ai tụt lại phía sau là bị loại!</p>
+
+            <div class="setup-section">
+                <div class="setup-label"><i class="fa-solid fa-users"></i> MẤY BÉ CÙNG ĐUA?</div>
+                <div class="pill-row" id="count-row">
+                    <button class="pill count-btn active" data-count="1">1 Bé</button>
+                    <button class="pill count-btn" data-count="2">2 Bé</button>
+                    <button class="pill count-btn" data-count="3">3 Bé</button>
+                    <button class="pill count-btn" data-count="4">4 Bé</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <div class="setup-label"><i class="fa-solid fa-shirt"></i> CHỌN BỘ ĐỒ LẶN CHO BÉ 1</div>
+                <div class="skin-row" id="skin-row"></div>
+            </div>
+
+            <div class="setup-section">
+                <div class="setup-label"><i class="fa-solid fa-map"></i> CHỌN VÙNG BIỂN</div>
+                <div class="world-grid" id="world-grid"></div>
+            </div>
+
+            <div class="setup-section">
+                <div class="setup-label"><i class="fa-solid fa-stopwatch"></i> ĐỘ DÀI CUỘC ĐUA</div>
+                <div class="pill-row" id="time-row">
+                    <button class="pill time-btn active" data-time="180">3 phút</button>
+                    <button class="pill time-btn" data-time="240">4 phút</button>
+                    <button class="pill time-btn" data-time="300">5 phút</button>
+                </div>
+            </div>
+
+            <p class="setup-hint" id="setup-hint"></p>
+
+            <button id="btn-start-race" class="btn btn-play">XUẤT PHÁT! <i class="fa-solid fa-forward"></i></button>
+
+            <div class="menu-links">
+                <button id="btn-help-2" class="pill"><i class="fa-solid fa-circle-question"></i> Cách Chơi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ Cách chơi ============ -->
+    <div id="modal-help" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <h2 class="modal-title">CÁCH CHƠI</h2>
+
+            <div class="help-grid">
+                <div class="help-card">
+                    <div class="help-icon">🕹️</div>
+                    <div class="help-title">Điều Khiển</div>
+                    <ul class="help-list" id="help-controls"></ul>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">🏁</div>
+                    <div class="help-title">Luật Đua</div>
+                    <ul class="help-list">
+                        <li>Màn hình tự trôi, bé phải bơi theo</li>
+                        <li>Tụt khỏi mép trái là <b>bị loại</b></li>
+                        <li>Hết giờ, ai nhiều điểm nhất thì thắng</li>
+                        <li>Bơi được càng xa càng nhiều điểm thưởng</li>
+                        <li>Có 3 đường: trên, giữa, dưới — đường khó nhiều kho báu hơn</li>
+                        <li>Bé có thể <b>huých</b> nhau giành đường, nhưng không đánh nhau</li>
+                    </ul>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">💎</div>
+                    <div class="help-title">Ăn Điểm</div>
+                    <ul class="help-list">
+                        <li>🪙 Đồng vàng <b>+20</b> · 🫧 Ngọc trai <b>+35</b></li>
+                        <li>⭐ Sao biển <b>+60</b> · 💎 Đá quý <b>+150</b></li>
+                        <li>🧰 Rương kho báu <b>+280</b></li>
+                        <li>🔥 Ăn liên tiếp được nhân điểm tới <b>x5</b></li>
+                        <li>🏁 Mỗi mét bơi được <b>+2</b> điểm</li>
+                    </ul>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">🦈</div>
+                    <div class="help-title">Coi Chừng</div>
+                    <ul class="help-list">
+                        <li>🪼 Sứa, 🦔 nhím biển, ☠️ san hô độc</li>
+                        <li>⚡ Lươn điện, 💣 mìn, 🦀 cua, 🐚 sò kẹp</li>
+                        <li>🦑 Mực phun che mắt, 🌀 xoáy nước</li>
+                        <li>🦈 Cá mập luôn đuổi bé đang <b>đứng chót</b></li>
+                    </ul>
+                </div>
+            </div>
+
+            <button id="btn-close-help" class="btn btn-play">Hiểu Rồi!</button>
+        </div>
+    </div>
+
+    <!-- ============ Kết quả ============ -->
+    <div id="modal-end" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <div class="podium-emoji" id="end-emoji">🏆</div>
+            <h2 class="modal-title" id="end-title">VỀ ĐÍCH!</h2>
+            <p class="modal-subtitle" id="end-sub"></p>
+
+            <div class="rank-list" id="rank-list"></div>
+            <div class="award-row" id="award-row"></div>
+
+            <div class="end-buttons">
+                <button id="btn-replay" class="btn btn-play"><i class="fa-solid fa-rotate-right"></i> Đua Lại</button>
+                <button id="btn-menu-race" class="btn"><i class="fa-solid fa-list"></i> Đổi Màn</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg"></div>
+
+    <script src="/aqua-dash/game.js"></script>
+</body>
+</html>
