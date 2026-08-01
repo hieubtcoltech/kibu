@@ -868,6 +868,26 @@ body.is-touch .player-cards { margin-bottom: auto; }
     .rank-score { font-size: 1.2rem; }
 }
 
+/* Điện thoại nằm ngang (~390px cao): bảng chọn phải gọn hết mức thì nút LẶN
+   THÔI mới nằm trong tầm nhìn mà không cần cuộn. */
+@media (max-height: 430px) {
+    .modal-card { padding: 10px 14px; }
+    .modal-title { font-size: 1rem; margin-bottom: 2px; }
+    .setup-section { margin-bottom: 5px; }
+    .setup-label { font-size: 0.65rem; margin-bottom: 2px; }
+    .pill { padding: 3px 9px; font-size: 0.72rem; border-radius: 20px; }
+    .world-grid { grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .world-card { padding: 3px 2px 2px; border-radius: 10px; }
+    .world-emoji { font-size: 1rem; }
+    .world-label { font-size: 0.55rem; }
+    .setup-hint { display: none; }
+    .btn-play { font-size: 0.9rem; padding: 6px 20px; border-radius: 12px; }
+    .menu-links { margin-top: 5px; }
+    .help-grid { gap: 6px; margin-bottom: 8px; }
+    .help-icon { font-size: 1.1rem; }
+    .collection-tabs { margin-bottom: 7px; }
+}
+
 @media (max-height: 500px) {
     .modal-overlay { padding: 10px; }
     .modal-card { padding: 12px 16px; border-radius: 18px; }

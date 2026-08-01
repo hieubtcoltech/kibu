@@ -474,15 +474,28 @@
         return c;
     }
 
+    /* Ảnh phải được dựng ở đúng số pixel vật lý mà nó sẽ chiếm trên màn hình:
+       kích thước truyền vào là đơn vị THẾ GIỚI, còn lúc vẽ nó còn bị nhân thêm
+       zoom của máy quay và devicePixelRatio. Bản đầu dựng theo cỡ CSS rồi phóng
+       to gấp 2–2.5 lần khi vẽ, nên nhân vật trông nhoè. Làm tròn hệ số theo nấc
+       0,5 để số ảnh trong kho không phình ra vô hạn khi zoom thay đổi liên tục. */
+    function spriteScale() {
+        const raw = pixelRatio * (G.camera ? G.camera.zoom : 1);
+        return clamp(Math.ceil(raw * 2) / 2, 1, 3);
+    }
+
     function drawEmoji(ctx, ch, x, y, size, alpha) {
-        const s = emojiSprite(ch, Math.max(8, Math.round(size)));
+        const q = spriteScale();
+        const px = Math.max(8, Math.ceil(size * q / 4) * 4);
+        const s = emojiSprite(ch, px);
+        const dw = s.width / q, dh = s.height / q;
         if (alpha != null && alpha < 1) {
             ctx.save();
             ctx.globalAlpha *= alpha;
-            ctx.drawImage(s, x - s.width / 2, y - s.height / 2);
+            ctx.drawImage(s, x - dw / 2, y - dh / 2, dw, dh);
             ctx.restore();
         } else {
-            ctx.drawImage(s, x - s.width / 2, y - s.height / 2);
+            ctx.drawImage(s, x - dw / 2, y - dh / 2, dw, dh);
         }
     }
 
@@ -1139,14 +1152,19 @@
         moveAndCollide(dx, dy, level) {
             const canBreak = this.dashT > 0 || (this.mount && MOUNTS[this.mount].breaks);
             this.x += dx;
-            this.resolveAxis(level, true, canBreak);
+            this.resolveAxis(level, true, canBreak, dx);
             this.y += dy;
-            this.resolveAxis(level, false, canBreak);
+            this.resolveAxis(level, false, canBreak, dy);
+            this.unstick(level);
             this.x = clamp(this.x, this.r, level.w - this.r);
             this.y = clamp(this.y, this.r, level.h - this.r);
         }
 
-        resolveAxis(level, horizontal, canBreak) {
+        /* Đẩy bé ra theo đúng chiều vừa đi tới, KHÔNG đoán theo tâm ô đá.
+           Bản trước so sánh với tâm ô: khi bé lọt vào góc lõm, cú đẩy ngang lại
+           tống bé vào khối đá bên dưới rồi cú đẩy dọc tống ngược lên — hai bên
+           đá qua đá lại nên bé kẹt cứng ở góc, đúng như trong ảnh. */
+        resolveAxis(level, horizontal, canBreak, delta) {
             const rr = this.r * 0.86;
             const c0 = Math.floor((this.x - rr) / TILE), c1 = Math.floor((this.x + rr) / TILE);
             const r0 = Math.floor((this.y - rr) / TILE), r1 = Math.floor((this.y + rr) / TILE);
@@ -1162,13 +1180,37 @@
                     }
                     const tx = c * TILE, ty = r * TILE;
                     if (horizontal) {
-                        if (this.x > tx + TILE / 2) this.x = tx + TILE + rr;
-                        else this.x = tx - rr;
-                        this.vx *= -0.16;
+                        if (delta > 0) this.x = tx - rr;
+                        else if (delta < 0) this.x = tx + TILE + rr;
+                        else this.x = this.x > tx + TILE / 2 ? tx + TILE + rr : tx - rr;
+                        this.vx = 0;
                     } else {
-                        if (this.y > ty + TILE / 2) this.y = ty + TILE + rr;
-                        else this.y = ty - rr;
-                        this.vy *= -0.16;
+                        if (delta > 0) this.y = ty - rr;
+                        else if (delta < 0) this.y = ty + TILE + rr;
+                        else this.y = this.y > ty + TILE / 2 ? ty + TILE + rr : ty - rr;
+                        this.vy = 0;
+                    }
+                }
+            }
+        }
+
+        /* Lưới sinh ngẫu nhiên vẫn có thể tạo ra ngách một ô; nếu vì lý do gì đó
+           bé lọt hẳn vào trong đá thì tìm ô nước gần nhất mà đẩy ra, để không
+           bao giờ có chuyện đứng im chịu trận tới hết giờ. */
+        unstick(level) {
+            if (!solidAt(level, this.x, this.y)) return;
+            const c = Math.floor(this.x / TILE), r = Math.floor(this.y / TILE);
+            for (let rad = 1; rad <= 5; rad++) {
+                for (let dr = -rad; dr <= rad; dr++) {
+                    for (let dc = -rad; dc <= rad; dc++) {
+                        if (Math.max(Math.abs(dr), Math.abs(dc)) !== rad) continue;
+                        const nc = c + dc, nr = r + dr;
+                        if (nc < 0 || nr < 0 || nc >= level.cols || nr >= level.rows) continue;
+                        if (level.grid[nr * level.cols + nc] !== T_WATER) continue;
+                        this.x = (nc + 0.5) * TILE;
+                        this.y = (nr + 0.5) * TILE;
+                        this.vx = this.vy = 0;
+                        return;
                     }
                 }
             }
@@ -2461,6 +2503,23 @@
     const el = {};
     let hudTimer = 0;
 
+    /* i18n dịch DOM qua MutationObserver. Nếu cứ 100ms lại ghi đè chuỗi tiếng
+       Việt vào một ô chữ thì trên bản tiếng Anh nó bị dịch đi dịch lại liên tục
+       -> chữ nhấp nháy Việt/Anh, nhìn như giật. Vì vậy: dịch sẵn tại đây rồi
+       chỉ ghi khi nội dung thật sự đổi. */
+    function tr(s) {
+        if (window.KibuI18n && window.KibuI18n.t) {
+            try { return window.KibuI18n.t(s); } catch (e) { return s; }
+        }
+        return s;
+    }
+
+    function setText(node, str) {
+        if (!node) return;
+        const out = tr(str);
+        if (node.textContent !== out) node.textContent = out;
+    }
+
     function cacheDom() {
         [
             'hud-world', 'hud-objective', 'hud-timer', 'hud-clock', 'hud-lead-name',
@@ -2505,35 +2564,39 @@
         hudTimer = 0.1;                       // 10 lần/giây là đủ mượt mắt
 
         const secs = Math.max(0, Math.ceil(G.time));
-        el['hud-timer'].textContent = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+        const clock = Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0');
+        if (el['hud-timer'].textContent !== clock) el['hud-timer'].textContent = clock;
         el['hud-clock'].classList.toggle('hurry', secs <= 20 && G.state === 'PLAYING');
 
         let lead = null;
         G.players.forEach(p => { if (!lead || p.score > lead.score) lead = p; });
         if (lead) {
-            el['hud-lead-name'].textContent = lead.style.name;
+            setText(el['hud-lead-name'], lead.style.name);
             el['hud-lead-name'].style.color = lead.style.color;
         }
 
         G.players.forEach(p => {
             if (!p.dom) return;
-            p.dom.score.textContent = Math.floor(p.score).toLocaleString('vi-VN');
+            const sc = Math.floor(p.score).toLocaleString('vi-VN');
+            if (p.dom.score.textContent !== sc) p.dom.score.textContent = sc;
+
             const m = p.mult;
             p.dom.combo.hidden = m <= 1;
-            p.dom.combo.textContent = 'x' + m;
+            const cb = 'x' + m;
+            if (p.dom.combo.textContent !== cb) p.dom.combo.textContent = cb;
             p.dom.card.classList.toggle('leader', p === lead && G.playerCount > 1);
 
             let buffs = '';
             for (const k in p.buffs) if (p.buffs[k] > 0) buffs += POWERS[k].emoji;
             if (p.mount) buffs += MOUNTS[p.mount].emoji;
-            p.dom.buffs.textContent = buffs;
+            if (p.dom.buffs.textContent !== buffs) p.dom.buffs.textContent = buffs;
 
             let state = '';
             if (p.trap > 0) state = 'Bị kẹp!';
             else if (p.stun > 0) state = 'Choáng!';
             else if (p.slow > 0) state = 'Bơi chậm';
             else if (p.blind > 0) state = 'Mù mực';
-            p.dom.state.textContent = state;
+            setText(p.dom.state, state);
         });
     }
 
@@ -3053,6 +3116,7 @@
        ===================================================== */
 
     function boot() {
+        window.__OD = () => ({p:G.players.map(x=>({x:Math.round(x.x),y:Math.round(x.y)}))});
         cacheDom();
         Store.load();
 
