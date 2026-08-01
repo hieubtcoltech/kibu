@@ -321,7 +321,37 @@
         g.font = size + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
         CanvasRenderingContext2D.prototype.fillText.call(g, ch, c.width / 2, c.height / 2 + size * 0.04);
         spriteCache.set(key, c);
+        widenPassages(c);
         return c;
+    }
+
+    /* Bảo hiểm cuối cùng cho địa hình.
+       Các kiểu mảnh sinh ra độc lập nhau, chồng lên trần/đáy sẵn có thì thỉnh
+       thoảng còn đúng một ô để lách — bé lọt vào là kẹt cứng. Quét lại từng cột:
+       chỗ nào khe thông rộng chưa tới 3 ô thì đục thêm cho đủ. */
+    function widenPassages(c) {
+        const MIN_GAP = 3;
+        for (let col = 0; col < CHUNK_COLS; col++) {
+            let bestStart = -1, bestLen = 0, curStart = -1;
+            for (let r = 1; r <= ROWS - 1; r++) {
+                const open = r < ROWS - 1 && c.grid[r * CHUNK_COLS + col] === T_WATER;
+                if (open) { if (curStart < 0) curStart = r; }
+                else if (curStart >= 0) {
+                    if (r - curStart > bestLen) { bestLen = r - curStart; bestStart = curStart; }
+                    curStart = -1;
+                }
+            }
+            if (bestLen >= MIN_GAP) continue;
+
+            let a = bestLen > 0 ? bestStart : Math.floor(ROWS / 2) - 1;
+            let b = bestLen > 0 ? bestStart + bestLen - 1 : a;
+            while (b - a + 1 < MIN_GAP) {
+                if (a > 1) a--;
+                else if (b < ROWS - 2) b++;
+                else break;
+            }
+            for (let r = a; r <= b; r++) c.grid[r * CHUNK_COLS + col] = T_WATER;
+        }
     }
 
     function drawEmoji(ctx, ch, x, y, size, alpha) {
@@ -747,10 +777,10 @@
                     const col = 3 + k * Math.floor((CHUNK_COLS - 6) / cols) + Math.floor(rng() * 2);
                     const gap = 1 + Math.floor(rng() * 3);       // khe ở làn nào
                     const gapRow = LANES[Math.min(2, gap - 1 + Math.floor(rng() * 2))].row;
-                    wall(col, 3, Math.max(3, gapRow - 2));
-                    wall(col, Math.min(ROWS - 4, gapRow + 2), ROWS - 4);
-                    at(col, gapRow - 2, T_CORAL);
-                    at(col, gapRow + 2, T_CORAL);
+                    wall(col, 3, Math.max(3, gapRow - 3));
+                    wall(col, Math.min(ROWS - 4, gapRow + 3), ROWS - 4);
+                    at(col, gapRow - 3, T_CORAL);
+                    at(col, gapRow + 3, T_CORAL);
                     if (rng() < 0.6 * d) putHazard(rpick(world.hazards), col + 1, gapRow + (rng() < 0.5 ? -1 : 1));
                     c.pickups.push({ kind: rng() < 0.3 ? 'star' : 'coin', x: wx(col), y: wy(gapRow), r: 14, alive: true, t: 0 });
                 }
@@ -758,12 +788,15 @@
             }
 
             case 'cave': {
-                // Đường hầm hẹp lượn sóng, thưởng đậm cho bé dám chui
-                let row = 6 + Math.floor(rng() * 6);
+                /* Đường hầm lượn sóng. Khoét 5 ô (250px) chứ không phải 3: nhân
+                   vật rộng ~40px nhưng hầm còn phải lượn lên xuống, để hẹp quá
+                   là bé cứ va vào vách rồi kẹt. Và chỉ đổi độ cao hai cột một
+                   lần cho đường đi mượt. */
+                let row = 7 + Math.floor(rng() * 4);
                 for (let col = 0; col < CHUNK_COLS; col++) {
-                    row = clamp(row + (rng() < 0.5 ? -1 : 1), 4, ROWS - 6);
+                    if (col % 2 === 0) row = clamp(row + (rng() < 0.5 ? -1 : 1), 5, ROWS - 7);
                     for (let r = 3; r < ROWS - 3; r++) {
-                        if (r < row - 1 || r > row + 1) at(col, r, T_ROCK);
+                        if (r < row - 2 || r > row + 2) at(col, r, T_ROCK);
                     }
                     if (col % 3 === 0) c.pickups.push({ kind: rng() < 0.25 ? 'gem' : 'pearl', x: wx(col), y: wy(row), r: 14, alive: true, t: 0 });
                 }
@@ -2720,7 +2753,25 @@
        ===================================================== */
 
     function boot() {
-        window.__AD = () => { const p=G.players[0]; if(!p) return null; const c=Math.floor(p.x/TILE), r=Math.floor(p.y/TILE); let n=''; for(let dr=-1;dr<=1;dr++){for(let dc=-1;dc<=1;dc++){n += tileAt(G.level,(c+dc+0.5)*TILE,(r+dr+0.5)*TILE)===0?'.':'#';} n+='|';} return {x:Math.round(p.x),y:Math.round(p.y),out:p.out,stuck:+(p.stuckT||0).toFixed(2),inRock:tileAt(G.level,p.x,p.y)!==0,n}; };
+        window.__SCAN = (n) => {
+            let worst = 99, bad = 0, cols = 0;
+            for (let w = 0; w < WORLDS.length; w++) {
+                for (let i = 2; i < n; i++) {
+                    const ch = newChunk(i, WORLDS[w], makeRng((w * 7919 + i * 104729) >>> 0));
+                    for (let col = 0; col < CHUNK_COLS; col++) {
+                        let best = 0, cur = 0;
+                        for (let r = 0; r < ROWS; r++) {
+                            if (ch.grid[r * CHUNK_COLS + col] === 0) { cur++; if (cur > best) best = cur; } else cur = 0;
+                        }
+                        cols++;
+                        if (best < worst) worst = best;
+                        if (best < 3) bad++;
+                    }
+                }
+            }
+            return { cols, worst, bad };
+        };
+        window.__AD = () => { const p=G.players[0]; if(!p) return null; const c=Math.floor(p.x/TILE), r=Math.floor(p.y/TILE); let n=''; for(let dr=-1;dr<=1;dr++){for(let dc=-1;dc<=1;dc++){n += tileAt(G.level,(c+dc+0.5)*TILE,(r+dr+0.5)*TILE)===0?'.':'#';} n+='|';} return {x:Math.round(p.x),y:Math.round(p.y),out:p.out,stuck:+(p.stuckT||0).toFixed(2),inRock:tileAt(G.level,p.x,p.y)!==0,stun:+p.stun.toFixed(2),trap:+p.trap.toFixed(2),slow:+p.slow.toFixed(2),n}; };
         cacheDom();
         Store.load();
         canvas = document.getElementById('game-canvas');
