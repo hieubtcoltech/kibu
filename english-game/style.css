@@ -1100,11 +1100,14 @@ body {
     box-shadow: none;
 }
 
-/* ================= MODALS ================= */
+/* ================= MODALS =================
+   Thanh nav dính trên đỉnh có z-index 99, nên modal để 60 sẽ bị nó phủ lên —
+   bảng Ghi Nhớ mở ra bị cắt mất tiêu đề và nút đóng. Modal phải nằm trên cùng,
+   chỉ nhường chỗ cho toast và hiệu ứng +XP báo lại cho bé. */
 .modal {
     position: fixed;
     inset: 0;
-    z-index: 60;
+    z-index: 200;
     display: none;
     align-items: center;
     justify-content: center;
@@ -1544,7 +1547,7 @@ body {
     font-family: var(--font-display);
     font-weight: 800;
     font-size: 1.02rem;
-    z-index: 90;
+    z-index: 260;
     opacity: 0;
     pointer-events: none;
     transition: all 0.3s ease;
@@ -1561,7 +1564,7 @@ body {
     font-size: 1.6rem;
     color: var(--green);
     pointer-events: none;
-    z-index: 95;
+    z-index: 265;
     animation: xpFly 1s ease-out forwards;
     text-shadow: 0 3px 12px rgba(0, 0, 0, 0.7);
 }
@@ -1577,7 +1580,7 @@ body {
     position: fixed;
     width: 11px;
     height: 15px;
-    z-index: 94;
+    z-index: 255;
     pointer-events: none;
     animation: confFall 1.5s linear forwards;
 }
