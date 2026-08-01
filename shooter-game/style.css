@@ -72,11 +72,10 @@ body > .app-wrapper {
     position: relative;
 }
 
-/* Header Navbar */
+/* Header Navbar — cao theo nội dung, không chốt 60px: trên điện thoại nằm ngang
+   thanh này chiếm hẳn 1/6 màn hình mà phần đệm thu nhỏ lại cũng không ăn thua. */
 .unified-nav {
-    height: 60px;
     width: 100%;
-    padding: 0 24px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -283,11 +282,23 @@ body > .app-wrapper {
 .bar-header {
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
     font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 700;
     margin-bottom: 4px;
 }
+
+/* Tên nhân vật đổi theo ngôn ngữ ("Human Special Forces" dài hơn bản tiếng
+   Việt), để tự xuống dòng thì nó đội chỉ số máu lên và hộp HUD cao vống lên. */
+#player-name-hud {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#hp-text { flex-shrink: 0; }
 
 .health-track {
     height: 12px;
@@ -366,11 +377,13 @@ body > .app-wrapper {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 14px;
-    padding: 8px 12px;
+    padding: 8px 6px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 72px;
+    /* Chiều rộng cố định để bốn ô bằng nhau: tên súng dịch ra tiếng Anh dài
+       ngắn khác nhau ("Pistol" vs "Rocket Launcher") sẽ kéo ô rộng hẹp lệch. */
+    width: 78px;
     cursor: pointer;
     position: relative;
     transition: all 0.2s ease;
@@ -415,10 +428,12 @@ body > .app-wrapper {
 
 .slot-name {
     font-family: var(--font-display);
-    font-size: 0.75rem;
+    font-size: 0.72rem;
+    line-height: 1.15;
     font-weight: 700;
     color: #e2e8f0;
     margin-top: 2px;
+    text-align: center;
 }
 
 .slot-ammo {
@@ -734,10 +749,15 @@ body > .app-wrapper {
     font-size: 1.1rem;
 }
 
-/* Floating Toast Notifications */
+/* Floating Toast Notifications
+   Nằm dưới hàng HUD trên cùng: ở vị trí 80px cũ nó phủ đúng lên chữ "ĐỢT 1" và
+   số bot còn lại, mà thông báo đợt mới lại xuất hiện đúng lúc bé cần đọc hai
+   dòng đó. Giới hạn bề ngang để câu dài không tràn ra hai mép. */
 .toast-msg {
     position: fixed;
-    top: 80px;
+    top: 200px;
+    max-width: calc(100vw - 32px);
+    text-align: center;
     left: 50%;
     transform: translateX(-50%) translateY(-20px);
     background: rgba(15, 23, 42, 0.9);
@@ -784,8 +804,9 @@ body > .app-wrapper {
     .bar-header { font-size: 0.85rem; }
     .wave-title { font-size: 1.15rem; }
     .stat-val { font-size: 1.2rem; }
-    .weapon-slot { min-width: 62px; padding: 6px 8px; }
+    .weapon-slot { width: 66px; padding: 6px 4px; }
     .slot-icon { font-size: 1.2rem; }
+    .toast-msg { top: 180px; }
 }
 
 /* ---------- Điện thoại ngang & tablet dựng ----------
@@ -817,7 +838,7 @@ body > .app-wrapper {
     .stat-item[style] { margin-left: 8px !important; }
 
     .weapon-slots-bar { gap: 5px; padding: 6px 8px; }
-    .weapon-slot { min-width: 46px; padding: 5px 6px; border-radius: 10px; }
+    .weapon-slot { width: 46px; padding: 5px 4px; border-radius: 10px; }
     .slot-num { font-size: 0.6rem; top: 2px; left: 4px; padding: 0 4px; }
     .slot-icon { font-size: 1.05rem; margin-top: 6px; }
     /* Tên súng là thứ đầu tiên bỏ được: đã có icon, số phím và số đạn. */
@@ -825,7 +846,7 @@ body > .app-wrapper {
     .slot-ammo { font-size: 0.68rem; margin-top: 2px; }
 
     .buff-badge { padding: 4px 8px; font-size: 0.72rem; }
-    .toast-msg { font-size: 0.95rem; padding: 8px 16px; top: 70px; }
+    .toast-msg { font-size: 0.9rem; padding: 7px 14px; top: 140px; }
 }
 
 /* ---------- Màn hình thấp: điện thoại nằm ngang ----------
@@ -836,10 +857,11 @@ body > .app-wrapper {
     .unified-nav { padding: 5px 10px; border-radius: 14px; }
     .nav-home { height: 30px; padding: 0 8px; }
     .nav-home img { height: 20px; }
-    .site-footer { padding: 2px 8px; }
+    .site-footer { padding: 0; }
     .lang-flag-btn { padding: 3px 7px; }
     .lang-flag-btn img { width: 20px; height: 14px; }
     .game-viewport { border-radius: 14px; }
+    .toast-msg { top: 112px; }
 }
 
 /* ---------- Điện thoại dựng ---------- */
@@ -851,7 +873,8 @@ body > .app-wrapper {
     .stat-lbl { display: none; }
     #player-name-hud { display: none; }
     .bar-header { justify-content: flex-end; }
-    .weapon-slot { min-width: 40px; }
+    .weapon-slot { width: 42px; }
+    .toast-msg { top: 128px; font-size: 0.82rem; }
 }
 
 /* ---------- Cụm điều khiển cảm ứng ----------
@@ -888,6 +911,18 @@ body.is-touch .buff-container { flex-wrap: wrap; justify-content: center; }
     body.is-touch .hud-bottom { margin-bottom: 150px; }
 }
 
+/* Màn hình laptop 600–700px chiều cao vẫn chưa đủ chỗ cho thẻ bắt đầu. */
+@media (max-height: 700px) {
+    .modal-icon { display: none; }
+    .modal-title { font-size: 1.5rem; }
+    .modal-subtitle { font-size: 0.88rem; margin-bottom: 12px; }
+    .mode-card { padding: 10px; }
+    .mode-desc { font-size: 0.78rem; }
+    .setup-box { padding: 8px 10px; margin-bottom: 10px; }
+    .setup-row { margin-bottom: 10px; }
+    .btn-play { font-size: 1.05rem; padding: 9px 28px; }
+}
+
 /* ---------- Modal ----------
    Thẻ bắt đầu cao khoảng 950px, vượt quá màn hình laptop 768px nên nút BẮT ĐẦU
    CHƠI nằm dưới mép. Thu dần theo chiều cao thật của cửa sổ. */
@@ -906,14 +941,17 @@ body.is-touch .buff-container { flex-wrap: wrap; justify-content: center; }
 }
 
 @media (max-width: 620px) {
-    .modal-card { padding: 22px 18px; border-radius: 22px; }
-    .modal-icon { font-size: 2.6rem; }
-    .modal-title { font-size: 1.5rem; }
-    .modal-subtitle { font-size: 0.9rem; margin-bottom: 18px; }
-    .mode-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 18px; }
-    .mode-card { padding: 14px; }
-    .mode-icon { font-size: 1.7rem; margin-bottom: 4px; }
-    .mode-name { font-size: 1.05rem; }
+    .modal-card { padding: 20px 16px; border-radius: 22px; }
+    .modal-icon { font-size: 2.2rem; }
+    .modal-title { font-size: 1.35rem; }
+    .modal-subtitle { font-size: 0.88rem; margin-bottom: 14px; }
+    /* Vẫn để hai cột: xếp một cột thì thẻ chế độ đẩy modal cao thêm gần 200px
+       và nút bắt đầu lại rơi khỏi màn hình. Bỏ dòng mô tả là đủ gọn. */
+    .mode-grid { gap: 8px; margin-bottom: 14px; }
+    .mode-card { padding: 12px 8px; }
+    .mode-icon { font-size: 1.5rem; margin-bottom: 2px; }
+    .mode-name { font-size: 0.92rem; }
+    .mode-desc { display: none; }
     .shop-grid { grid-template-columns: 1fr; gap: 10px; }
     .shop-item { flex-direction: row; flex-wrap: wrap; justify-content: center; }
     .shop-buy-btn { width: auto; padding: 6px 18px; }
