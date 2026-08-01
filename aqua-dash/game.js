@@ -957,6 +957,7 @@
             this.behind = 0;
             this.hurtT = 0;
             this.trailT = 0;
+            this.stuckT = 0;
         }
 
         get mult() {
@@ -1096,7 +1097,49 @@
             const cap = 780 * (m ? m.speed : 1);
             if (sp > cap) { this.vx *= cap / sp; this.vy *= cap / sp; }
 
+            const beforeX = this.x, beforeY = this.y;
             this.moveAndCollide(this.vx * dt, this.vy * dt, level);
+
+            /* Kẹt trong khe: tâm vẫn ở ô nước nên unstick() không thấy gì, nhưng
+               bé bấm phím mà chẳng nhích được milimet nào. Quá 0,6 giây như vậy
+               thì đẩy nhẹ bé ra chỗ thoáng gần nhất. */
+            const moved = Math.hypot(this.x - beforeX, this.y - beforeY);
+            const trying = (inp.dx || inp.dy) && !frozen;
+            if (trying && moved < 0.6) this.stuckT = (this.stuckT || 0) + dt;
+            else this.stuckT = 0;
+
+            /* Chỉ cứu khi bé thật sự bị vây: ép sát một bức tường mà vẫn đi được
+               hướng khác là chuyện bình thường, kéo bé ra lúc đó sẽ thành dịch
+               chuyển vô lý. Từ 3 phía trở lên là đá thì mới là kẹt. */
+            let walls = 0;
+            if (this.stuckT > 0.6) {
+                if (tileAt(level, this.x + TILE, this.y) !== T_WATER) walls++;
+                if (tileAt(level, this.x - TILE, this.y) !== T_WATER) walls++;
+                if (tileAt(level, this.x, this.y + TILE) !== T_WATER) walls++;
+                if (tileAt(level, this.x, this.y - TILE) !== T_WATER) walls++;
+            }
+            if (this.stuckT > 0.6 && walls >= 3) {
+                const col = Math.floor(this.x / TILE), row = Math.floor(this.y / TILE);
+                outer:
+                for (let rad = 1; rad <= 4; rad++) {
+                    for (let dr = -rad; dr <= rad; dr++) {
+                        for (let dc = -rad; dc <= rad; dc++) {
+                            if (Math.max(Math.abs(dr), Math.abs(dc)) !== rad) continue;
+                            const nx = (col + dc + 0.5) * TILE, ny = (row + dr + 0.5) * TILE;
+                            if (ny < TILE * 0.5 || ny > WORLD_H - TILE * 0.5) continue;
+                            if (tileAt(level, nx, ny) !== T_WATER) continue;
+                            // chỗ thoáng phải rộng hơn người chơi, không thì lại kẹt tiếp
+                            if (tileAt(level, nx, ny - this.r) !== T_WATER) continue;
+                            if (tileAt(level, nx, ny + this.r) !== T_WATER) continue;
+                            this.x = nx; this.y = ny;
+                            this.vx = 0; this.vy = 0;
+                            this.stuckT = 0;
+                            burst(nx, ny, '#bff4ff', 8);
+                            break outer;
+                        }
+                    }
+                }
+            }
 
             if (Math.abs(this.vx) > 15) this.face = this.vx > 0 ? 1 : -1;
             this.tilt = lerp(this.tilt, clamp(this.vy / 500, -0.45, 0.45), Math.min(1, dt * 8));
@@ -1123,7 +1166,35 @@
             this.resolve(level, true, canBreak, dx);
             this.y += dy;
             this.resolve(level, false, canBreak, dy);
+            this.unstick(level);
             this.y = clamp(this.y, this.r, WORLD_H - this.r);
+        }
+
+        /* Lưới an toàn: bé không bao giờ được nằm hẳn trong đá.
+           Bị bẫy hất, bị dòng nước cuốn hay lỡ lướt vào giữa một rặng san hô là
+           tâm nhân vật lọt vào ô đặc; lúc đó cú đẩy theo chiều đi tới không còn
+           chiều nào đúng nữa nên bé nằm kẹt luôn. Ở trong san hô thì phá ra,
+           trong đá thì đẩy sang ô nước gần nhất. */
+        unstick(level) {
+            const here = tileAt(level, this.x, this.y);
+            if (here === T_WATER) { this.stuckT = 0; return; }
+            if (here === T_CORAL) { breakTile(level, this.x, this.y); return; }
+
+            const col = Math.floor(this.x / TILE), row = Math.floor(this.y / TILE);
+            for (let rad = 1; rad <= 6; rad++) {
+                for (let dr = -rad; dr <= rad; dr++) {
+                    for (let dc = -rad; dc <= rad; dc++) {
+                        if (Math.max(Math.abs(dr), Math.abs(dc)) !== rad) continue;
+                        const nx = (col + dc + 0.5) * TILE, ny = (row + dr + 0.5) * TILE;
+                        if (ny < TILE * 0.5 || ny > WORLD_H - TILE * 0.5) continue;
+                        if (tileAt(level, nx, ny) !== T_WATER) continue;
+                        this.x = nx; this.y = ny;
+                        this.vx = 0; this.vy = 0;
+                        this.stuckT = 0;
+                        return;
+                    }
+                }
+            }
         }
 
         /* Đẩy ra theo đúng chiều vừa đi tới — so với tâm ô sẽ làm bé kẹt ở góc lõm */
@@ -2649,6 +2720,7 @@
        ===================================================== */
 
     function boot() {
+        window.__AD = () => { const p=G.players[0]; if(!p) return null; const c=Math.floor(p.x/TILE), r=Math.floor(p.y/TILE); let n=''; for(let dr=-1;dr<=1;dr++){for(let dc=-1;dc<=1;dc++){n += tileAt(G.level,(c+dc+0.5)*TILE,(r+dr+0.5)*TILE)===0?'.':'#';} n+='|';} return {x:Math.round(p.x),y:Math.round(p.y),out:p.out,stuck:+(p.stuckT||0).toFixed(2),inRock:tileAt(G.level,p.x,p.y)!==0,n}; };
         cacheDom();
         Store.load();
         canvas = document.getElementById('game-canvas');
