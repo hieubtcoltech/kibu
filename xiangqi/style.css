@@ -80,40 +80,60 @@ body > .app-wrapper {
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-icon { font-size: 1.5rem; }
 
-/* Quân TƯỚNG đỏ dựng bằng CSS — dùng làm biểu tượng của game.
-   Trước đây lấy tạm emoji ♟️ nhưng đó là quân tốt của CỜ VUA, không phải cờ tướng. */
+/* Quân TƯỚNG đỏ dựng bằng CSS — biểu tượng của game.
+   Khối trụ có bề dày thật: một lớp thành gỗ sẫm phía dưới, mặt trên vát sáng,
+   vành đỏ khắc chìm và chữ 帥 nổi khối. Trước đây dùng emoji ♟️ — đó là quân
+   tốt của CỜ VUA, sai hẳn loại cờ. */
 .xq-piece {
-    display: inline-flex;
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+    width: 1.72em;
+    height: 1.96em;
+    font-size: 0.6em;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+/* thành quân cờ — phần tạo cảm giác dày */
+.xq-piece::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0.24em;
+    height: 1.72em;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #c99c5f 0%, #ab7c40 46%, #7b5426 100%);
+    box-shadow: 0 0.14em 0.22em rgba(0, 0, 0, 0.55);
+}
+
+/* mặt trên */
+.xq-piece .xq-top {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1.72em;
+    border-radius: 50%;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 1.62em;
-    height: 1.62em;
-    border-radius: 50%;
-    flex-shrink: 0;
-    font-family: var(--font-han);
+    font-family: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
     font-weight: 900;
-    font-size: 0.72em;
-    line-height: 1;
+    font-size: 1.02em;
     color: #b8241a;
     background:
-        radial-gradient(circle at 34% 28%, #fdf3dc 0%, #f0d9a8 55%, #cda068 100%);
-    border: 0.12em solid #b8241a;
+        radial-gradient(circle at 36% 26%, #fff9ea 0%, #f4dfb4 44%, #dcbb85 76%, #bd9560 100%);
     box-shadow:
-        0 0.1em 0.2em rgba(0, 0, 0, 0.45),
-        inset 0 -0.08em 0.14em rgba(120, 84, 42, 0.4),
-        inset 0 0.06em 0.1em rgba(255, 255, 255, 0.55);
-    text-shadow: 0 0.04em 0 rgba(255, 235, 200, 0.6);
+        inset 0 0 0 0.09em #b8241a,
+        inset 0 0 0 0.15em rgba(255, 247, 227, 0.9),
+        inset 0 -0.14em 0.2em rgba(120, 84, 42, 0.4),
+        inset 0 0.12em 0.18em rgba(255, 255, 255, 0.8);
+    text-shadow:
+        0 0.045em 0 rgba(255, 241, 214, 0.95),
+        0 -0.03em 0.02em rgba(110, 18, 10, 0.55);
 }
-
-.brand-title {
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: 2px;
-    color: var(--gold);
-}
-
-.nav-actions { display: flex; align-items: center; gap: 10px; }
 
 /* ---------- Nút ---------- */
 .btn {
