@@ -1281,19 +1281,32 @@
             const AIM_GAP = ARM * 0.35;
             const len = 42 + this.power * 34;
 
+            /* Một mũi tên hoàn chỉnh (thân + đầu nhọn) theo góc a. Đang có phép
+               chùm 3 thì vẽ ba cái đúng ba hướng phi tiêu sắp bay ra, để bé nhìn
+               là biết ngay ba mũi sẽ đi đâu chứ không phải đoán. */
+            const drawArrow = (a, alpha) => {
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.translate(this.cx + Math.cos(a) * AIM_GAP, THROW_Y - Math.sin(a) * AIM_GAP);
+                ctx.rotate(-a);
+                ctx.strokeStyle = c.color;
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+                ctx.shadowColor = `rgba(${c.glow},0.9)`;
+                ctx.shadowBlur = 12;
+                ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(len, 0); ctx.stroke();
+                ctx.fillStyle = c.color;
+                ctx.beginPath();
+                ctx.moveTo(len + 13, 0);
+                ctx.lineTo(len - 3, -7.5);
+                ctx.lineTo(len - 3, 7.5);
+                ctx.closePath(); ctx.fill();
+                ctx.restore();
+            };
+
             if (this.tripleT > 0) {
-                for (const off of [-TRIPLE_SPREAD, TRIPLE_SPREAD]) {
-                    const a = this.angle + off;
-                    ctx.save();
-                    ctx.globalAlpha = 0.5;
-                    ctx.translate(this.cx + Math.cos(a) * AIM_GAP, THROW_Y - Math.sin(a) * AIM_GAP);
-                    ctx.rotate(-a);
-                    ctx.strokeStyle = c.color;
-                    ctx.lineWidth = 3;
-                    ctx.lineCap = 'round';
-                    ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(len * 0.82, 0); ctx.stroke();
-                    ctx.restore();
-                }
+                drawArrow(this.angle - TRIPLE_SPREAD, 0.85);
+                drawArrow(this.angle + TRIPLE_SPREAD, 0.85);
                 ctx.save();
                 ctx.fillStyle = '#7bdcff';
                 ctx.font = '800 15px "Baloo 2", sans-serif';
@@ -1302,23 +1315,7 @@
                 ctx.restore();
             }
 
-            const ax = this.cx + dx * AIM_GAP, ay = THROW_Y + dy * AIM_GAP;
-            ctx.save();
-            ctx.translate(ax, ay);
-            ctx.rotate(-this.angle);
-            ctx.strokeStyle = c.color;
-            ctx.lineWidth = 4;
-            ctx.lineCap = 'round';
-            ctx.shadowColor = `rgba(${c.glow},0.9)`;
-            ctx.shadowBlur = 12;
-            ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(len, 0); ctx.stroke();
-            ctx.fillStyle = c.color;
-            ctx.beginPath();
-            ctx.moveTo(len + 13, 0);
-            ctx.lineTo(len - 3, -7.5);
-            ctx.lineTo(len - 3, 7.5);
-            ctx.closePath(); ctx.fill();
-            ctx.restore();
+            drawArrow(this.angle, 1);
 
             // --- Thanh lực ---
             if (this.state === 'charge') {
