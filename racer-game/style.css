@@ -121,6 +121,9 @@ body {
     transform: translateY(-2px);
 }
 
+/* Trạng thái đã tắt tiếng, giống các game khác */
+.btn.muted { opacity: 0.55; }
+
 .btn-primary {
     background: linear-gradient(135deg, var(--neon-pink), #e6005c);
     border-color: var(--neon-pink);
