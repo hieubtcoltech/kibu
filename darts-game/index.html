@@ -289,74 +289,89 @@
         updateLangUI();
     })();
     </script>
-    <!-- Auto I18n UI Localizer Script -->
+    
+    <!-- Comprehensive Global I18n UI Localizer Script -->
     <script>
     (function() {
         const LANG_KEY = "kibu_global_lang";
         const currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
 
-        const dict = {
-            vi: {
-                "Trang Chủ": "Trang Chủ",
-                "Home": "Trang Chủ",
-                "Âm Thanh": "Âm Thanh",
-                "Sound": "Âm Thanh",
-                "Chơi Lại": "Chơi Lại",
-                "Restart": "Chơi Lại",
-                "Điểm Số": "Điểm Số",
-                "Score": "Điểm Số",
-                "Xu Thưởng": "Xu Thưởng",
-                "Coins": "Xu Thưởng",
-                "Cửa Hàng": "Cửa Hàng",
-                "Shop": "Cửa Hàng",
-                "Về Menu": "Về Menu",
-                "Back to Menu": "Về Menu",
-                "Tự Ngắm: BẬT": "Tự Ngắm: BẬT",
-                "Tự Ngắm: TẮT": "Tự Ngắm: TẮT",
-                "CHIẾN THẮNG!": "CHIẾN THẮNG!",
-                "VICTORY!": "CHIẾN THẮNG!",
-                "HẾT GIỜ!": "HẾT GIỜ!",
-                "TIME UP!": "HẾT GIỜ!",
-                "BẮT ĐẦU CHƠI": "BẮT ĐẦU CHƠI",
-                "START GAME": "BẮT ĐẦU CHƠI"
-            },
-            en: {
-                "Trang Chủ": "Home",
-                "Home": "Home",
-                "Âm Thanh": "Sound",
-                "Sound": "Sound",
-                "Chơi Lại": "Restart",
-                "Restart": "Restart",
-                "Điểm Số": "Score",
-                "Score": "Score",
-                "Xu Thưởng": "Coins",
-                "Coins": "Coins",
-                "Cửa Hàng": "Shop",
-                "Shop": "Shop",
-                "Về Menu": "Main Menu",
-                "Back to Menu": "Main Menu",
-                "Tự Ngắm: BẬT": "Auto Aim: ON",
-                "Tự Ngắm: TẮT": "Auto Aim: OFF",
-                "CHIẾN THẮNG!": "VICTORY!",
-                "VICTORY!": "VICTORY!",
-                "HẾT GIỜ!": "TIME UP!",
-                "TIME UP!": "TIME UP!",
-                "BẮT ĐẦU CHƠI": "START PLAYING",
-                "START GAME": "START PLAYING"
-            }
+        const dictEn = {
+            "Trang Chủ": "Home",
+            "Âm Thanh": "Sound",
+            "Nhạc Nền": "Music",
+            "Chọn Màn": "Levels",
+            "Bảng Vàng": "High Scores",
+            "Chơi Lại": "Restart",
+            "Ván Mới": "New Game",
+            "Luật Chơi": "Rules",
+            "Đã Hiểu": "Got It",
+            "Cửa Hàng": "Shop",
+            "Đóng Cửa Hàng": "Close Shop",
+            "Về Menu": "Main Menu",
+            "BẮT ĐẦU CHƠI": "START PLAYING",
+            "BẮT ĐẦU VÁN ĐẤU": "START MATCH",
+            "ĐẤU LẠI": "PLAY AGAIN",
+            "TRANG CHỦ": "HOME",
+            "Tự Ngắm: BẬT": "Aim Guide: ON",
+            "Tự Ngắm: TẮT": "Aim Guide: OFF",
+            "Đường Ngắm: BẬT": "Aim Line: ON",
+            "Đường Ngắm: TẮT": "Aim Line: OFF",
+            "Điểm Số": "Score",
+            "Xu Thưởng": "Coins",
+            "Luật chơi": "How to play",
+            "Hoa quả đặc biệt": "Special Fruits",
+            "Chướng ngại vật": "Obstacles",
+            "Màn": "Level",
+            "Mục tiêu": "Target",
+            "Lượt Đi": "Moves",
+            "Chiến Thắng!": "Victory!",
+            "Hết Lượt Đi!": "Out of Moves!",
+            "Màn Tiếp Theo": "Next Level",
+            "Về bản đồ màn chơi": "Back to Map",
+            "Bản Đồ Màn Chơi": "Level Map",
+            "Thử Lại": "Try Again",
+            "Đóng": "Close",
+            "ĐỢT 1": "WAVE 1",
+            "CỬA HÀNG NÂNG CẤP": "UPGRADE SHOP",
+            "Máu Tối Đa": "Max Health",
+            "Tốc Độ Chạy": "Movement Speed",
+            "Sát Thương Súng": "Weapon Damage",
+            "BI-A 8 BI — SONG ĐẤU": "8-BALL POOL DUEL",
+            "NGƯỜI CHƠI 1": "PLAYER 1",
+            "NGƯỜI CHƠI 2": "PLAYER 2",
+            "NGƯỜI CHƠI 1 THẮNG!": "PLAYER 1 WINS!",
+            "NGƯỜI CHƠI 2 THẮNG!": "PLAYER 2 WINS!",
+            "LUẬT CHƠI": "GAME RULES",
+            "ĐẪ HIỂU": "GOT IT",
+            "100% FREE": "100% FREE",
+            "BUILT WITH LOVE FOR KIDS": "BUILT WITH LOVE FOR KIDS"
         };
 
         if (currentLang === "en") {
-            window.addEventListener("DOMContentLoaded", function() {
-                // Translate text nodes in buttons and spans across all games
-                const elements = document.querySelectorAll("button span, a span, div.stat-lbl, div.mode-name, button.btn");
-                elements.forEach(el => {
-                    const text = el.textContent.trim();
-                    if (dict.en[text]) {
-                        el.textContent = dict.en[text];
+            function translateDOM() {
+                // Translate buttons, spans, headers, subheadings, text nodes
+                const targets = document.querySelectorAll("span, a, button, h1, h2, h3, div.stat-lbl, div.stat-label, div.mode-name, div.p-name, div.panel-title, div.rule-name, div.slot-name, button.btn");
+                targets.forEach(el => {
+                    if (el.children.length === 0 || el.querySelectorAll("i, img").length > 0) {
+                        // Avoid overwriting nested icons
+                        for (let node of el.childNodes) {
+                            if (node.nodeType === Node.TEXT_NODE) {
+                                const text = node.textContent.trim();
+                                if (dictEn[text]) {
+                                    node.textContent = node.textContent.replace(text, dictEn[text]);
+                                }
+                            }
+                        }
                     }
                 });
-            });
+            }
+
+            if (document.readyState === "loading") {
+                window.addEventListener("DOMContentLoaded", translateDOM);
+            } else {
+                translateDOM();
+            }
         }
     })();
     </script>
