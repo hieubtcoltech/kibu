@@ -214,19 +214,19 @@
         update(dt, wind, x0, x1) {
             this.t += dt;
 
-            /* Bóng quậy: cứ vài phần giây lại đổi hướng ngang một cách bất chợt,
-               kèm nhịp lên xuống thất thường — không đoán được như bóng thường,
-               nhưng vẫn bay lên đều nên không bao giờ đứng yên trêu ngươi. */
+            /* Bóng quậy: như quả bóng xì hơi bị luồng gió xoáy cuốn đi.
+               Không bẻ lái đột ngột — thay vào đó có một lực ngang đổi chiều từ
+               từ (tổng hai nhịp lệch nhau nên đường bay không lặp lại), cộng
+               quán tính và lực cản không khí. Kết quả là những vòng lượn cong
+               mềm mại: mắt vẫn thấy tự nhiên nhưng đoán trước thì rất khó. */
             if (this.kind.crazy) {
-                this.zigT = (this.zigT || 0) - dt;
-                if (this.zigT <= 0) {
-                    this.zigT = rnd(0.35, 0.85);
-                    this.zigV = rnd(-120, 120);
-                    this.swayW = rnd(2.4, 4.2);
-                    this.swayA = rnd(16, 34);
-                }
-                this.baseX += (this.zigV || 0) * dt;
-                this.y -= Math.sin(this.t * 5.5) * 26 * dt;
+                const gust = Math.sin(this.t * 1.55 + this.swayP) * 0.62
+                    + Math.sin(this.t * 0.79 + this.swayP * 2.3) * 0.38;
+                this.vx = (this.vx || 0) + gust * 250 * dt;   // gió xoáy đẩy ngang
+                this.vx -= this.vx * 1.7 * dt;                // không khí cản lại
+                this.baseX += this.vx * dt;
+                // nhịp bay lên phập phồng nhẹ, không đều tăm tắp như bóng thường
+                this.y -= this.vy * Math.sin(this.t * 0.9 + 1.3) * 0.3 * dt;
             }
 
             this.y -= this.vy * dt;
@@ -236,8 +236,14 @@
             this.tilt = lerp(this.tilt, clamp((nx - this.x) * 0.06, -0.3, 0.3), dt * 6);
             this.x = nx;
             // chạm mép gian hàng thì nảy nhẹ trở vào
-            if (this.x - this.r < x0) this.baseX += (x0 + this.r - this.x);
-            if (this.x + this.r > x1) this.baseX -= (this.x - (x1 - this.r));
+            if (this.x - this.r < x0) {
+                this.baseX += (x0 + this.r - this.x);
+                if (this.vx < 0) this.vx *= -0.55;   // bóng quậy nảy lại, khỏi ép sát vách
+            }
+            if (this.x + this.r > x1) {
+                this.baseX -= (this.x - (x1 - this.r));
+                if (this.vx > 0) this.vx *= -0.55;
+            }
             this.squash = Math.max(0, this.squash - dt * 2.4);
             if (this.kind.bomb) this.fuse += dt;
             if (this.y + this.r < BAL_TOP) this.alive = false;   // bay thoát mất
