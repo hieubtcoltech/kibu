@@ -1,0 +1,865 @@
+/* =========================================================
+   OCEAN PARTY — STYLESHEET
+   Biển sâu, kính mờ, màu tươi cho các bé
+   ========================================================= */
+
+:root {
+    --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+    --font-main: 'Nunito', system-ui, sans-serif;
+
+    --bg-dark: #041224;
+    --card-bg: rgba(8, 34, 62, 0.78);
+    --card-border: rgba(140, 226, 255, 0.22);
+
+    --aqua: #35e0ff;
+    --deep: #0a4a7a;
+    --coral: #ff6b8a;
+    --sun: #ffd76b;
+    --sea-green: #4ef2b0;
+    --violet: #a98bff;
+
+    --p1: #ff6b6b;
+    --p2: #4dc3ff;
+    --p3: #6bf178;
+    --p4: #ffd93d;
+
+    --glow-aqua: 0 0 16px rgba(53, 224, 255, 0.55);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-dark);
+    color: #eaf8ff;
+    min-height: 100vh;
+    min-height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* Nền: ánh sáng mặt trời rọi xuống mặt nước */
+.bg-ocean-glow {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(ellipse at 50% -10%, rgba(90, 220, 255, 0.30) 0%, transparent 55%),
+        radial-gradient(ellipse at 20% 110%, rgba(10, 74, 122, 0.55) 0%, transparent 60%),
+        linear-gradient(180deg, #073a63 0%, #041a30 55%, #02060f 100%);
+    animation: seaShift 14s ease-in-out infinite alternate;
+}
+
+@keyframes seaShift {
+    0% { filter: hue-rotate(0deg) brightness(1); }
+    100% { filter: hue-rotate(-12deg) brightness(1.08); }
+}
+
+body > .app-wrapper {
+    height: 100vh;
+    height: 100dvh;
+    position: relative;
+}
+
+/* ---------- Thanh điều hướng ---------- */
+.unified-nav {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(6, 28, 52, 0.82);
+    z-index: 10;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; }
+
+.brand-icon {
+    font-size: 1.7rem;
+    filter: drop-shadow(0 0 10px rgba(53, 224, 255, 0.6));
+}
+
+.brand-title {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--aqua), var(--sea-green) 45%, var(--sun));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+}
+
+.nav-actions { display: flex; align-items: center; gap: 10px; }
+
+/* ---------- Nút ---------- */
+.btn {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(140, 226, 255, 0.25);
+    background: rgba(255, 255, 255, 0.08);
+    color: #eaf8ff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+    backdrop-filter: blur(8px);
+}
+
+.btn:hover {
+    background: rgba(53, 224, 255, 0.18);
+    border-color: rgba(53, 224, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn:active { transform: translateY(0); }
+.btn.muted { opacity: 0.55; }
+
+.btn-play {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 800;
+    padding: 12px 34px;
+    border-radius: 18px;
+    color: #01202f;
+    background: linear-gradient(135deg, var(--aqua), var(--sea-green));
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 6px 22px rgba(53, 224, 255, 0.35);
+}
+
+.btn-play:hover {
+    color: #01202f;
+    background: linear-gradient(135deg, #6cebff, #7dffd0);
+}
+
+/* ---------- Khung chơi ---------- */
+.game-viewport {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 20px;
+    background: #031425;
+}
+
+#game-canvas {
+    display: block;
+    background: transparent;
+}
+
+/* ---------- HUD ---------- */
+.hud-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    padding: 12px max(16px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
+    display: flex;
+    flex-direction: column;
+    z-index: 5;
+}
+
+.hud-top {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: start;
+    gap: 10px;
+}
+
+.hud-top > .hud-world { justify-self: start; }
+.hud-top > .hud-clock { justify-self: center; }
+.hud-top > .hud-lead { justify-self: end; }
+
+.hud-box {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 8px 14px;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.4);
+    min-width: 0;
+}
+
+.world-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--aqua);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.world-goal {
+    font-size: 0.76rem;
+    color: #9fc7e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hud-clock { text-align: center; }
+
+.clock-value {
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+
+.clock-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #8fb6cf;
+}
+
+/* 20 giây cuối: đồng hồ nhấp nháy đỏ cho hồi hộp */
+.hud-clock.hurry .clock-value { color: #ff7676; animation: clockPulse 0.6s ease-in-out infinite; }
+
+@keyframes clockPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.14); }
+}
+
+.hud-lead { text-align: right; }
+.lead-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #8fb6cf; }
+
+.lead-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* Băng thông báo sự kiện */
+.event-banner {
+    align-self: center;
+    margin: 10px 0 auto;
+    max-width: 100%;
+    padding: 8px 22px;
+    border-radius: 30px;
+    background: rgba(6, 28, 52, 0.92);
+    border: 1px solid var(--sun);
+    box-shadow: 0 0 22px rgba(255, 215, 107, 0.45);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--sun);
+    text-align: center;
+    opacity: 0;
+    transform: translateY(-14px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.event-banner.show { opacity: 1; transform: translateY(0); }
+
+/* Thẻ điểm của từng bé */
+.player-cards {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pcard {
+    background: var(--card-bg);
+    border: 2px solid var(--pc, var(--aqua));
+    border-radius: 16px;
+    padding: 6px 12px;
+    min-width: 128px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s ease;
+}
+
+.pcard.leader { transform: translateY(-6px) scale(1.04); box-shadow: 0 8px 26px var(--pcGlow, rgba(53, 224, 255, 0.5)); }
+
+.pcard-head {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--pc, #fff);
+}
+
+.pcard-emoji { font-size: 1.15rem; }
+
+.pcard-score {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+
+.pcard-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.72rem;
+    color: #a9cde3;
+}
+
+.combo-tag {
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: #01202f;
+    background: linear-gradient(135deg, var(--sun), #ff9f43);
+    border-radius: 20px;
+    padding: 0 8px;
+    font-size: 0.72rem;
+}
+
+.pcard-buffs { display: flex; gap: 3px; font-size: 0.85rem; min-height: 1.1em; }
+
+.pcard-state {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #ff9a9a;
+    min-height: 1em;
+}
+
+/* Đếm ngược vào màn */
+.countdown-overlay {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 8;
+    pointer-events: none;
+    background: rgba(2, 12, 24, 0.35);
+}
+
+.countdown-overlay.show { display: flex; }
+
+.countdown-overlay span {
+    font-family: var(--font-display);
+    font-size: 7rem;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 0 30px var(--aqua), 0 6px 0 rgba(0, 0, 0, 0.25);
+    animation: countPop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+@keyframes countPop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---------- Điều khiển cảm ứng ---------- */
+.touch-controls {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 6;
+    display: none;
+}
+
+.touch-joystick-zone {
+    position: absolute;
+    left: max(24px, env(safe-area-inset-left));
+    bottom: max(24px, env(safe-area-inset-bottom));
+    width: 132px;
+    height: 132px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px dashed rgba(140, 226, 255, 0.4);
+    border-radius: 50%;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+.joystick-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 52px;
+    height: 52px;
+    margin: -26px 0 0 -26px;
+    background: radial-gradient(circle at 35% 30%, #b6f4ff, var(--aqua));
+    border-radius: 50%;
+    box-shadow: var(--glow-aqua);
+    pointer-events: none;
+}
+
+.touch-dash-btn {
+    position: absolute;
+    right: max(28px, env(safe-area-inset-right));
+    bottom: max(30px, env(safe-area-inset-bottom));
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sun), var(--coral));
+    border: 3px solid rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 22px rgba(255, 215, 107, 0.55);
+    color: #fff;
+    font-size: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+/* ---------- Modal ---------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 10, 22, 0.86);
+    backdrop-filter: blur(10px);
+    display: flex;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 20px 16px;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+}
+
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+.modal-card {
+    background: linear-gradient(160deg, rgba(10, 44, 78, 0.96), rgba(4, 20, 38, 0.98));
+    border: 1px solid var(--card-border);
+    border-radius: 26px;
+    padding: 26px 28px;
+    max-width: 620px;
+    width: 100%;
+    margin: auto;
+    flex-shrink: 0;
+    text-align: center;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.65);
+    transform: scale(0.94);
+    transition: transform 0.28s cubic-bezier(0.2, 1.3, 0.4, 1);
+}
+
+.modal-card.modal-wide { max-width: 760px; }
+.modal-overlay.active .modal-card { transform: scale(1); }
+
+.modal-title {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, #fff, var(--aqua) 60%, var(--sea-green));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.modal-subtitle {
+    color: #9fc7e0;
+    font-size: 0.95rem;
+    margin-bottom: 18px;
+}
+
+/* Khối cài đặt trong màn hình chọn */
+.setup-section { margin-bottom: 14px; }
+
+.setup-label {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--aqua);
+    letter-spacing: 0.5px;
+    margin-bottom: 7px;
+}
+
+.pill-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.pill {
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 700;
+    padding: 7px 16px;
+    border-radius: 30px;
+    border: 1px solid rgba(140, 226, 255, 0.3);
+    background: rgba(255, 255, 255, 0.06);
+    color: #d6f1ff;
+    cursor: pointer;
+    transition: all 0.18s ease;
+}
+
+.pill:hover { background: rgba(53, 224, 255, 0.16); }
+
+.pill.active {
+    background: linear-gradient(135deg, rgba(53, 224, 255, 0.35), rgba(78, 242, 176, 0.28));
+    border-color: var(--aqua);
+    color: #fff;
+    box-shadow: var(--glow-aqua);
+}
+
+/* Lưới vùng biển */
+.world-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 8px;
+}
+
+.world-card {
+    position: relative;
+    border-radius: 16px;
+    border: 1px solid rgba(140, 226, 255, 0.25);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px 6px 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
+}
+
+.world-card:hover { transform: translateY(-3px); border-color: var(--aqua); }
+
+.world-card.active {
+    border-color: var(--aqua);
+    background: linear-gradient(160deg, rgba(53, 224, 255, 0.3), rgba(78, 242, 176, 0.16));
+    box-shadow: var(--glow-aqua);
+}
+
+.world-card.locked { opacity: 0.45; cursor: not-allowed; }
+.world-card.locked:hover { transform: none; border-color: rgba(140, 226, 255, 0.25); }
+
+.world-emoji { font-size: 1.7rem; line-height: 1.1; }
+
+.world-label {
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 800;
+    margin-top: 2px;
+    line-height: 1.15;
+}
+
+.world-diff { font-size: 0.62rem; color: var(--sun); letter-spacing: 1px; }
+
+.world-lock {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    background: rgba(2, 10, 22, 0.55);
+}
+
+.setup-hint {
+    font-size: 0.82rem;
+    color: #8fb6cf;
+    margin: 4px 0 16px;
+    line-height: 1.5;
+}
+
+.setup-hint b { color: var(--sun); }
+
+/* Cách chơi */
+.help-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+    text-align: left;
+}
+
+.help-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(140, 226, 255, 0.18);
+    border-radius: 16px;
+    padding: 12px 14px;
+}
+
+.help-icon { font-size: 1.6rem; }
+
+.help-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    color: var(--aqua);
+    margin-bottom: 6px;
+}
+
+.help-list { list-style: none; font-size: 0.82rem; color: #cfe9f8; line-height: 1.75; }
+.help-list b { color: var(--sun); }
+
+/* Bộ sưu tập */
+.collection-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 14px; flex-wrap: wrap; }
+.collection-body { margin-bottom: 16px; }
+
+.unlock-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+    gap: 8px;
+}
+
+.unlock-item {
+    border-radius: 14px;
+    border: 1px solid rgba(140, 226, 255, 0.22);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 4px;
+    cursor: pointer;
+}
+
+.unlock-item.owned:hover { border-color: var(--aqua); }
+.unlock-item.equipped { border-color: var(--sun); box-shadow: 0 0 14px rgba(255, 215, 107, 0.45); }
+.unlock-item.locked { opacity: 0.45; cursor: not-allowed; }
+.unlock-emoji { font-size: 1.6rem; }
+.unlock-name { font-size: 0.68rem; font-weight: 700; margin-top: 2px; }
+.unlock-req { font-size: 0.6rem; color: #8fb6cf; }
+
+.achv-list { display: flex; flex-direction: column; gap: 7px; text-align: left; }
+
+.achv-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(140, 226, 255, 0.16);
+}
+
+.achv-item.done { border-color: var(--sea-green); background: rgba(78, 242, 176, 0.12); }
+.achv-emoji { font-size: 1.4rem; }
+.achv-name { font-family: var(--font-display); font-weight: 800; font-size: 0.9rem; }
+.achv-desc { font-size: 0.75rem; color: #9fc7e0; }
+
+/* Kết quả */
+.podium-emoji { font-size: 3rem; animation: trophyBounce 1.4s ease-in-out infinite; }
+
+@keyframes trophyBounce {
+    0%, 100% { transform: translateY(0) rotate(-4deg); }
+    50% { transform: translateY(-10px) rotate(4deg); }
+}
+
+.rank-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+
+.rank-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(140, 226, 255, 0.18);
+    text-align: left;
+    animation: rankIn 0.45s cubic-bezier(0.2, 1.3, 0.4, 1) both;
+}
+
+@keyframes rankIn {
+    0% { transform: translateX(-24px) scale(0.94); opacity: 0; }
+    100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+.rank-row.first {
+    border-color: var(--sun);
+    background: linear-gradient(120deg, rgba(255, 215, 107, 0.22), rgba(255, 255, 255, 0.05));
+}
+
+.rank-medal { font-size: 1.7rem; min-width: 1.6em; text-align: center; }
+.rank-medal.dance { animation: medalDance 0.9s ease-in-out infinite; }
+
+@keyframes medalDance {
+    0%, 100% { transform: rotate(-12deg) scale(1); }
+    50% { transform: rotate(12deg) scale(1.18); }
+}
+
+.rank-face { font-size: 1.7rem; }
+.rank-info { flex: 1; min-width: 0; }
+
+.rank-name {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--pc, #fff);
+}
+
+.rank-detail { font-size: 0.74rem; color: #9fc7e0; }
+
+.rank-score {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+}
+
+.award-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.award-chip {
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 20px;
+    background: rgba(169, 139, 255, 0.18);
+    border: 1px solid rgba(169, 139, 255, 0.5);
+    color: #d9ccff;
+}
+
+.unlock-toast {
+    margin: 0 0 14px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    background: rgba(78, 242, 176, 0.16);
+    border: 1px solid var(--sea-green);
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: #b8ffe4;
+}
+
+.end-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* Thông báo nổi */
+.toast-msg {
+    position: fixed;
+    left: 50%;
+    bottom: 92px;
+    transform: translateX(-50%) translateY(14px);
+    max-width: calc(100vw - 32px);
+    text-align: center;
+    background: rgba(6, 28, 52, 0.94);
+    border: 1px solid var(--aqua);
+    box-shadow: var(--glow-aqua);
+    padding: 9px 22px;
+    border-radius: 30px;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    z-index: 200;
+    opacity: 0;
+    transition: all 0.28s ease;
+    pointer-events: none;
+}
+
+.toast-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* =========================================================
+   RESPONSIVE
+   Sân chơi do canvas tự co giãn; phần dưới lo cho HUD và modal.
+   ========================================================= */
+
+@media (max-width: 1024px) {
+    .hud-box { padding: 6px 11px; border-radius: 13px; }
+    .clock-value { font-size: 1.4rem; }
+    .pcard { min-width: 112px; padding: 5px 10px; }
+    .pcard-score { font-size: 1.15rem; }
+}
+
+@media (max-width: 760px), (max-height: 560px) {
+    .hud-overlay { padding: 8px 10px; }
+    .hud-box { padding: 5px 9px; border-radius: 11px; }
+    .world-name { font-size: 0.82rem; }
+    .world-goal { display: none; }
+    .clock-value { font-size: 1.2rem; }
+    .clock-label, .lead-label { font-size: 0.55rem; }
+    .lead-name { font-size: 0.8rem; }
+    .event-banner { font-size: 0.85rem; padding: 6px 14px; margin-top: 6px; }
+
+    .player-cards { gap: 6px; }
+    .pcard { min-width: 0; padding: 4px 8px; border-width: 1px; border-radius: 12px; }
+    .pcard-head { font-size: 0.7rem; gap: 4px; }
+    .pcard-score { font-size: 1rem; }
+    .pcard-row { font-size: 0.62rem; gap: 5px; }
+    .pcard-state { display: none; }
+
+    .countdown-overlay span { font-size: 4.5rem; }
+    .toast-msg { font-size: 0.85rem; padding: 7px 15px; bottom: 76px; }
+}
+
+/* Màn hình thấp: trả chỗ cho canvas bằng cách thu gọn khung trang.
+   Chọn qua .app-wrapper để thắng site-chrome.css (nạp sau). */
+@media (max-height: 560px) {
+    body > .app-wrapper { padding: 6px 8px 8px; gap: 6px; }
+    .app-wrapper > .unified-nav { padding: 4px 10px; border-radius: 14px; }
+    .app-wrapper .nav-home { height: 28px; padding: 0 8px; border-radius: 9px; }
+    .app-wrapper .nav-home img { height: 19px; }
+    .app-wrapper .unified-nav .btn { padding: 5px 9px; font-size: 0.85rem; }
+    .app-wrapper .unified-nav .brand-icon { font-size: 1.2rem; }
+    .app-wrapper .unified-nav .brand-title { font-size: 1rem; }
+    .app-wrapper > .site-footer { padding: 0; }
+    .app-wrapper .lang-flag-btn { padding: 2px 6px; }
+    .app-wrapper .lang-flag-btn img { width: 20px; height: 13px; }
+    .game-viewport { border-radius: 14px; }
+}
+
+@media (max-width: 560px) {
+    .player-cards { gap: 4px; }
+    .pcard-row .combo-tag { padding: 0 5px; }
+    .touch-joystick-zone { width: 112px; height: 112px; }
+    .joystick-knob { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
+    .touch-dash-btn { width: 72px; height: 72px; font-size: 1.6rem; }
+}
+
+/* Thẻ điểm nằm đè lên cần gạt và nút lướt trên máy cảm ứng hẹp */
+@media (max-width: 620px) {
+    body.is-touch .player-cards { margin-bottom: 128px; }
+}
+
+/* Modal thu nhỏ dần theo chiều cao thật của cửa sổ */
+@media (max-height: 900px) {
+    .modal-card { padding: 20px 22px; }
+    .modal-title { font-size: 1.55rem; }
+    .modal-subtitle { font-size: 0.88rem; margin-bottom: 12px; }
+    .setup-section { margin-bottom: 10px; }
+    .pill { padding: 6px 13px; font-size: 0.85rem; }
+    .world-emoji { font-size: 1.4rem; }
+    .btn-play { font-size: 1.05rem; padding: 10px 26px; }
+}
+
+@media (max-width: 620px) {
+    .modal-card { padding: 18px 14px; border-radius: 20px; }
+    .modal-title { font-size: 1.3rem; }
+    .world-grid { grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 6px; }
+    .world-label { font-size: 0.66rem; }
+    .help-grid { grid-template-columns: 1fr; }
+    .rank-row { padding: 8px 10px; gap: 8px; }
+    .rank-score { font-size: 1.2rem; }
+}
+
+@media (max-height: 500px) {
+    .modal-overlay { padding: 10px; }
+    .modal-card { padding: 12px 16px; border-radius: 18px; }
+    .modal-title { font-size: 1.1rem; margin-bottom: 2px; }
+    .modal-subtitle { display: none; }
+    .podium-emoji { font-size: 1.8rem; }
+    .setup-section { margin-bottom: 7px; }
+    .setup-label { font-size: 0.72rem; margin-bottom: 4px; }
+    .pill { padding: 4px 10px; font-size: 0.78rem; }
+    .world-card { padding: 6px 4px 5px; border-radius: 12px; }
+    .world-emoji { font-size: 1.15rem; }
+    .world-diff { display: none; }
+    .setup-hint { font-size: 0.72rem; margin-bottom: 8px; }
+    .btn-play { font-size: 0.95rem; padding: 8px 22px; }
+    .rank-row { padding: 5px 9px; }
+    .rank-face, .rank-medal { font-size: 1.2rem; }
+    .rank-score { font-size: 1rem; }
+    .rank-detail { display: none; }
+    .help-list { font-size: 0.74rem; line-height: 1.5; }
+}

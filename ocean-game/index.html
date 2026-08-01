@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Ocean Party - Free Online Kids Game | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Ocean Party online for free on KIBU Games! A 1-4 player underwater treasure party game for kids, with English & Vietnamese support.">
+    <meta name="keywords" content="Ocean Party, underwater game, swimming game, 4 player party game, treasure hunt, tro choi duoi nuoc, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/ocean-game/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/ocean-game/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/ocean-game/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/ocean-game/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/ocean-game/">
+    <meta property="og:title" content="Ocean Party - Free Online Game | KIBU Games">
+    <meta property="og:description" content="Dive with 1-4 players, grab pearls, ride dolphins and win the treasure race. 100% free on KIBU Games!">
+    <meta property="og:image" content="https://kibugames.com/ocean-game/og-image.png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/ocean-game/">
+    <meta name="twitter:title" content="Ocean Party - Free Online Game">
+    <meta name="twitter:description" content="A 1-4 player underwater treasure party game, free on KIBU Games in English & Vietnamese.">
+    <meta name="twitter:image" content="https://kibugames.com/ocean-game/og-image.png">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Ocean Party",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/ocean-game/",
+      "genre": "Party Arcade",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/ocean-game/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Firebase App & Analytics SDKs -->
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCqxLyJzhKND5BSY0axRLzcUjCWziMHm1k",
+        authDomain: "kibu-world.firebaseapp.com",
+        projectId: "kibu-world",
+        storageBucket: "kibu-world.firebasestorage.app",
+        messagingSenderId: "466171110853",
+        appId: "1:466171110853:web:0143134de5fa4f421657ac",
+        measurementId: "G-9SP0KGJ5PW"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      window.firebaseApp = app;
+      window.firebaseAnalytics = analytics;
+    </script>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="shortcut icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+</head>
+<body>
+    <div class="bg-ocean-glow"></div>
+
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Trang Chủ" aria-label="Trang Chủ">
+                    <img src="/logo.png" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <span class="brand-icon">🐠</span>
+                    <h1 class="brand-title">OCEAN PARTY</h1>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <button id="btn-sound" class="btn" title="Bật / tắt âm thanh">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+                </button>
+                <button id="btn-help" class="btn" title="Cách chơi">
+                    <i class="fa-solid fa-circle-question"></i> <span>Cách Chơi</span>
+                </button>
+                <button id="btn-collection" class="btn" title="Bộ sưu tập &amp; thành tích">
+                    <i class="fa-solid fa-trophy"></i> <span>Bộ Sưu Tập</span>
+                </button>
+                <button id="btn-menu-nav" class="btn" title="Về màn hình chọn">
+                    <i class="fa-solid fa-list"></i> <span>Chọn Lại</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="game-viewport">
+            <canvas id="game-canvas"></canvas>
+
+            <div class="hud-overlay">
+                <div class="hud-top">
+                    <div class="hud-box hud-world">
+                        <div class="world-name" id="hud-world">RẠN SAN HÔ</div>
+                        <div class="world-goal" id="hud-objective">Nhặt thật nhiều kho báu!</div>
+                    </div>
+
+                    <div class="hud-box hud-clock" id="hud-clock">
+                        <div class="clock-value" id="hud-timer">2:00</div>
+                        <div class="clock-label">Thời Gian</div>
+                    </div>
+
+                    <div class="hud-box hud-lead" id="hud-lead">
+                        <div class="lead-label">Dẫn Đầu</div>
+                        <div class="lead-name" id="hud-lead-name">—</div>
+                    </div>
+                </div>
+
+                <div class="event-banner" id="event-banner">
+                    <span id="event-text"></span>
+                </div>
+
+                <div class="player-cards" id="player-cards"></div>
+            </div>
+
+            <div class="touch-controls" id="touch-controls">
+                <div class="touch-joystick-zone" id="joystick-zone">
+                    <div class="joystick-knob" id="joystick-knob"></div>
+                </div>
+                <button class="touch-dash-btn" id="dash-btn" aria-label="Bơi nhanh">
+                    <i class="fa-solid fa-bolt"></i>
+                </button>
+            </div>
+
+            <div class="countdown-overlay" id="countdown-overlay"><span id="countdown-text">3</span></div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ============ Màn hình chọn ============ -->
+    <div id="modal-start" class="modal-overlay active">
+        <div class="modal-card modal-wide">
+            <h2 class="modal-title">🌊 ĐẠI TIỆC ĐÁY BIỂN 🐠</h2>
+            <p class="modal-subtitle">Lặn xuống biển, gom ngọc trai và kho báu. Hết giờ, ai nhiều điểm nhất là vô địch!</p>
+
+            <div class="setup-section">
+                <div class="setup-label"><i class="fa-solid fa-users"></i> MẤY BÉ CÙNG CHƠI?</div>
+                <div class="pill-row" id="count-row">
+                    <button class="pill count-btn active" data-count="1">1 Bé</button>
+                    <button class="pill count-btn" data-count="2">2 Bé</button>
+                    <button class="pill count-btn" data-count="3">3 Bé</button>
+                    <button class="pill count-btn" data-count="4">4 Bé</button>
+                </div>
+            </div>
+
+            <div class="setup-section">
+                <div class="setup-label"><i class="fa-solid fa-gamepad"></i> KIỂU CHƠI</div>
+                <div class="pill-row" id="mode-row">
+                    <button class="pill mode-btn active" data-mode="party" title="Chơi một màn duy nhất">🎉 Tiệc Nhanh</button>
+                    <button class="pill mode-btn" data-mode="tournament" title="Ba màn liên tiếp, cộng dồn điểm">🏆 Giải Đấu</button>
+                    <button class="pill mode-btn" data-mode="daily" title="Mỗi ngày một màn giống nhau cho tất cả mọi người">📅 Thử Thách Hôm Nay</button>
+                </div>
+            </div>
+
+            <div class="setup-section" id="world-section">
+                <div class="setup-label"><i class="fa-solid fa-map"></i> CHỌN VÙNG BIỂN</div>
+                <div class="world-grid" id="world-grid"></div>
+            </div>
+
+            <div class="setup-section">
+                <div class="setup-label"><i class="fa-solid fa-stopwatch"></i> THỜI GIAN MỖI MÀN</div>
+                <div class="pill-row" id="time-row">
+                    <button class="pill time-btn" data-time="60">60 giây</button>
+                    <button class="pill time-btn active" data-time="120">120 giây</button>
+                    <button class="pill time-btn" data-time="180">180 giây</button>
+                </div>
+            </div>
+
+            <p class="setup-hint" id="setup-hint">Bé 1 bơi bằng <b>W A S D</b>, bấm <b>Q</b> để lướt nhanh.</p>
+
+            <button id="btn-start-dive" class="btn btn-play">LẶN THÔI! <i class="fa-solid fa-water"></i></button>
+        </div>
+    </div>
+
+    <!-- ============ Cách chơi ============ -->
+    <div id="modal-help" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <h2 class="modal-title">CÁCH CHƠI</h2>
+
+            <div class="help-grid">
+                <div class="help-card">
+                    <div class="help-icon">🕹️</div>
+                    <div class="help-title">Điều Khiển</div>
+                    <ul class="help-list" id="help-controls"></ul>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">💎</div>
+                    <div class="help-title">Ăn Điểm</div>
+                    <ul class="help-list">
+                        <li>🫧 Ngọc trai <b>+10</b></li>
+                        <li>🪙 Đồng vàng <b>+25</b></li>
+                        <li>💎 Đá quý hiếm <b>+120</b></li>
+                        <li>🧰 Rương kho báu <b>+250</b></li>
+                        <li>🕳️ Tìm ra hang bí mật <b>+300</b></li>
+                        <li>🔥 Ăn liên tiếp không nghỉ được nhân điểm tới <b>x5</b></li>
+                    </ul>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">🦈</div>
+                    <div class="help-title">Coi Chừng</div>
+                    <ul class="help-list">
+                        <li>🪼 Sứa làm bé tê cứng</li>
+                        <li>🦔 Nhím biển &amp; san hô độc làm mất điểm</li>
+                        <li>⚡ Lươn điện, mìn biển, cua kẹp</li>
+                        <li>🦑 Mực phun mực che mắt</li>
+                        <li>🦈 Cá mập đuổi bé nào bơi nhanh nhất</li>
+                        <li>🌀 Xoáy nước và dòng chảy cuốn bé đi</li>
+                    </ul>
+                </div>
+                <div class="help-card">
+                    <div class="help-icon">🐬</div>
+                    <div class="help-title">Cưỡi Cá &amp; Bảo Bối</div>
+                    <ul class="help-list">
+                        <li>🐬 Cá heo cực nhanh · 🐢 Rùa bất tử</li>
+                        <li>🗡️ Cá kiếm phá tường san hô</li>
+                        <li>🐡 Cá nóc hất văng đối thủ</li>
+                        <li>🫧 Bong bóng tốc độ, khiên, nam châm</li>
+                        <li>📡 Ra-đa kho báu, x2 điểm, thêm giờ</li>
+                    </ul>
+                </div>
+            </div>
+
+            <button id="btn-close-help" class="btn btn-play">Hiểu Rồi!</button>
+        </div>
+    </div>
+
+    <!-- ============ Bộ sưu tập & thành tích ============ -->
+    <div id="modal-collection" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <h2 class="modal-title">BỘ SƯU TẬP</h2>
+            <p class="modal-subtitle">Tổng điểm đã gom: <b id="total-score">0</b> · Vùng biển đã mở: <b id="worlds-open">1</b>/7</p>
+
+            <div class="collection-tabs">
+                <button class="pill tab-btn active" data-tab="skins">🐣 Nhân Vật</button>
+                <button class="pill tab-btn" data-tab="hats">🎩 Mũ &amp; Vệt Bơi</button>
+                <button class="pill tab-btn" data-tab="achv">🏅 Thành Tích</button>
+            </div>
+
+            <div class="collection-body">
+                <div class="unlock-grid" id="tab-skins"></div>
+                <div class="unlock-grid" id="tab-hats" hidden></div>
+                <div class="achv-list" id="tab-achv" hidden></div>
+            </div>
+
+            <button id="btn-close-collection" class="btn btn-play">Đóng</button>
+        </div>
+    </div>
+
+    <!-- ============ Kết quả ============ -->
+    <div id="modal-end" class="modal-overlay">
+        <div class="modal-card modal-wide">
+            <div class="podium-emoji" id="end-emoji">🏆</div>
+            <h2 class="modal-title" id="end-title">VÔ ĐỊCH ĐÁY BIỂN!</h2>
+            <p class="modal-subtitle" id="end-sub">Cùng xem ai gom được nhiều kho báu nhất nào!</p>
+
+            <div class="rank-list" id="rank-list"></div>
+            <div class="award-row" id="award-row"></div>
+            <div class="unlock-toast" id="unlock-toast" hidden></div>
+
+            <div class="end-buttons">
+                <button id="btn-next-round" class="btn btn-play" hidden>Màn Tiếp Theo <i class="fa-solid fa-forward"></i></button>
+                <button id="btn-replay" class="btn btn-play"><i class="fa-solid fa-rotate-right"></i> Chơi Lại</button>
+                <button id="btn-menu-dive" class="btn"><i class="fa-solid fa-list"></i> Đổi Màn</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-msg"></div>
+
+    <script src="/ocean-game/game.js"></script>
+</body>
+</html>
