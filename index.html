@@ -27,6 +27,7 @@
             --orange-glow: #ff8a1a;
             --felt-glow: #16955a;
             --pitch-glow: #4ec46c;
+            --darts-glow: #ff5f9e;
         }
 
         * {
@@ -189,6 +190,11 @@
             border-color: var(--pitch-glow);
         }
 
+        .card-darts:hover {
+            box-shadow: 0 15px 50px rgba(255, 95, 158, 0.5);
+            border-color: var(--darts-glow);
+        }
+
         .badge {
             font-family: var(--font-display);
             font-size: 0.85rem;
@@ -246,6 +252,12 @@
             background: rgba(78, 196, 108, 0.18);
             color: #8ff0a4;
             border: 1px solid rgba(78, 196, 108, 0.45);
+        }
+
+        .badge-darts {
+            background: rgba(255, 95, 158, 0.18);
+            color: #ffa8cd;
+            border: 1px solid rgba(255, 95, 158, 0.45);
         }
 
         .badge-pool {
@@ -388,6 +400,15 @@
         }
         .btn-soccer:hover {
             box-shadow: 0 8px 30px rgba(78, 196, 108, 0.9);
+        }
+
+        .btn-darts {
+            background: linear-gradient(135deg, #e8455f, #ffc93b);
+            color: #2a0713;
+            box-shadow: 0 6px 20px rgba(255, 95, 158, 0.5);
+        }
+        .btn-darts:hover {
+            box-shadow: 0 8px 30px rgba(255, 95, 158, 0.9);
         }
 
         .btn-pool {
@@ -579,6 +600,24 @@
                 </div>
                 <div class="play-btn btn-soccer">
                     CHƠI NGAY <i class="fa-solid fa-futbol"></i>
+                </div>
+            </a>
+
+            <!-- Game 10: Phi Tiêu Bong Bóng -->
+            <a href="./darts-game/index.html" class="game-card card-darts">
+                <div class="badge badge-darts"><i class="fa-solid fa-users"></i> 2-4 Bé Thi Tài</div>
+                <div class="card-banner">🎯🎈🎪</div>
+                <h2 class="card-title">PHI TIÊU BONG BÓNG</h2>
+                <p class="card-desc">
+                    <b>Gian hàng hội chợ cho 2 đến 4 bé!</b> Bóng bay bay lên liên tục, bé <b>ngắm rồi phi tiêu</b> cho nổ. Mũi tiêu bay theo <b>vật lý thật</b>, tự xoay mũi theo hướng bay. Săn <b>bóng vàng 5 điểm</b>, tránh <b>bóng bom</b>!
+                </p>
+                <div class="feature-tags">
+                    <span class="tag">👨‍👩‍👧‍👦 2-4 người chơi</span>
+                    <span class="tag">🎈 Bóng bay lên liên tục</span>
+                    <span class="tag">💨 Có gió thổi lệch</span>
+                </div>
+                <div class="play-btn btn-darts">
+                    CHƠI NGAY <i class="fa-solid fa-bullseye"></i>
                 </div>
             </a>
         </div>

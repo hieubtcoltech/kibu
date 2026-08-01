@@ -1566,47 +1566,101 @@
             ctx.restore();
         },
 
+        /* Mũi tên mảnh, đầu nhọn có đuôi lõm — trông sắc nét hơn hai gạch chéo.
+           (ex, ey) là mũi nhọn, (ux, uy) là hướng bay. */
+        arrowHead(ctx, ex, ey, ux, uy, len = 13, half = 5.5) {
+            const px = -uy, py = ux;
+            ctx.beginPath();
+            ctx.moveTo(ex, ey);
+            ctx.lineTo(ex - ux * len + px * half, ey - uy * len + py * half);
+            ctx.lineTo(ex - ux * len * 0.68, ey - uy * len * 0.68);
+            ctx.lineTo(ex - ux * len - px * half, ey - uy * len - py * half);
+            ctx.closePath();
+            ctx.fill();
+        },
+
+        // Đường dự đoán: một nét mảnh nằm trên một quầng sáng mờ cùng màu
+        guideLine(ctx, x1, y1, x2, y2, rgb, a0, a1, width = 2, dash = null) {
+            const g = ctx.createLinearGradient(x1, y1, x2, y2);
+            g.addColorStop(0, `rgba(${rgb},${a0})`);
+            g.addColorStop(1, `rgba(${rgb},${a1})`);
+            ctx.save();
+            if (dash) ctx.setLineDash(dash);
+            ctx.strokeStyle = `rgba(${rgb},0.16)`;
+            ctx.lineWidth = width + 4;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            ctx.strokeStyle = g;
+            ctx.lineWidth = width;
+            ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+            ctx.restore();
+        },
+
         drawAim(ctx) {
             if (this.cue.potted) return;
             const pr = this.predict();
             const cx = this.cue.x, cy = this.cue.y;
+            const d = pr.dir;
+            const WHITE = '255,255,255', AMBER = '255,206,74', CYAN = '124,214,255';
 
-            // Đường ngắm
             ctx.save();
-            ctx.setLineDash([9, 8]);
-            ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(cx, cy);
-            ctx.lineTo(pr.gx, pr.gy);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            // --- Đường ngắm: từ mép bi cái tới sát bi ma, nhạt dần về phía trước ---
+            const sx = cx + d.x * R, sy = cy + d.y * R;
+            const ex = pr.hit ? pr.gx - d.x * R : pr.gx;
+            const ey = pr.hit ? pr.gy - d.y * R : pr.gy;
+            this.guideLine(ctx, sx, sy, ex, ey, WHITE, 0.85, 0.4, 2);
 
             if (this.helpMode) {
-                // Bi ma tại điểm chạm
-                ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-                ctx.lineWidth = 1.6;
-                ctx.beginPath();
-                ctx.arc(pr.gx, pr.gy, R, 0, Math.PI * 2);
-                ctx.stroke();
-
-                // Hướng bi mục tiêu sẽ chạy
                 if (pr.hit) {
-                    const L = 92;
-                    const ex = pr.ball.x + pr.ox * L, ey = pr.ball.y + pr.oy * L;
-                    ctx.strokeStyle = 'rgba(255,215,0,0.9)';
-                    ctx.lineWidth = 3;
+                    // Bi ma tại điểm chạm: viền mảnh + ruột mờ, có tâm ngắm
+                    ctx.fillStyle = `rgba(${WHITE},0.10)`;
+                    ctx.beginPath(); ctx.arc(pr.gx, pr.gy, R, 0, Math.PI * 2); ctx.fill();
+                    ctx.strokeStyle = `rgba(${WHITE},0.9)`;
+                    ctx.lineWidth = 1.4;
+                    ctx.setLineDash([4, 3.5]);
+                    ctx.beginPath(); ctx.arc(pr.gx, pr.gy, R, 0, Math.PI * 2); ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = `rgba(${WHITE},0.75)`;
+                    ctx.beginPath(); ctx.arc(pr.gx, pr.gy, 1.8, 0, Math.PI * 2); ctx.fill();
+
+                    // Hướng bi mục tiêu sẽ chạy — bắt đầu từ mép bi cho khỏi đè lên số
+                    const L = 104;
+                    const ax = pr.ball.x + pr.ox * R, ay = pr.ball.y + pr.oy * R;
+                    const bx = pr.ball.x + pr.ox * L, by = pr.ball.y + pr.oy * L;
+                    this.guideLine(ctx, ax, ay, bx, by, AMBER, 0.95, 0.55, 2.4);
+                    ctx.fillStyle = `rgba(${AMBER},0.9)`;
+                    this.arrowHead(ctx, bx, by, pr.ox, pr.oy);
+
+                    // Đường tiếp tuyến: hướng bi CÁI trôi đi sau khi chạm.
+                    // Đây là thành phần vận tốc vuông góc với đường tâm — càng cắt mỏng
+                    // thì bi cái càng đi xa theo hướng này, nên độ dài tỉ lệ với độ cắt.
+                    const dn = d.x * pr.ox + d.y * pr.oy;
+                    let tx = d.x - dn * pr.ox, ty = d.y - dn * pr.oy;
+                    const tl = Math.hypot(tx, ty);
+                    if (tl > 0.06) {
+                        tx /= tl; ty /= tl;
+                        const TL = 26 + 74 * tl;
+                        const ex2 = pr.gx + tx * TL, ey2 = pr.gy + ty * TL;
+                        this.guideLine(ctx, pr.gx + tx * R, pr.gy + ty * R, ex2, ey2,
+                            CYAN, 0.8, 0.3, 1.8, [6, 5]);
+                        ctx.fillStyle = `rgba(${CYAN},0.75)`;
+                        this.arrowHead(ctx, ex2, ey2, tx, ty, 10, 4.2);
+                    }
+                } else {
+                    // Không chạm bi nào: đánh dấu chỗ ăn băng và hướng dội ra
+                    let rx = d.x, ry = d.y;
+                    if (pr.gx < LEFT + R + 0.5 || pr.gx > RIGHT - R - 0.5) rx = -rx;
+                    if (pr.gy < TOP + R + 0.5 || pr.gy > BOTTOM - R - 0.5) ry = -ry;
+                    ctx.strokeStyle = `rgba(${WHITE},0.55)`;
+                    ctx.lineWidth = 1.4;
                     ctx.beginPath();
-                    ctx.moveTo(pr.ball.x, pr.ball.y);
-                    ctx.lineTo(ex, ey);
+                    ctx.arc(pr.gx, pr.gy, R * 0.62, 0, Math.PI * 2);
                     ctx.stroke();
-                    const a = Math.atan2(pr.oy, pr.ox);
-                    ctx.beginPath();
-                    ctx.moveTo(ex, ey);
-                    ctx.lineTo(ex - Math.cos(a - 0.42) * 14, ey - Math.sin(a - 0.42) * 14);
-                    ctx.moveTo(ex, ey);
-                    ctx.lineTo(ex - Math.cos(a + 0.42) * 14, ey - Math.sin(a + 0.42) * 14);
-                    ctx.stroke();
+                    const RL = 78;
+                    this.guideLine(ctx, pr.gx + rx * R * 0.62, pr.gy + ry * R * 0.62,
+                        pr.gx + rx * RL, pr.gy + ry * RL, CYAN, 0.6, 0.16, 1.8, [6, 5]);
                 }
             }
             ctx.restore();
