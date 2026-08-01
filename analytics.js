@@ -59,11 +59,21 @@ function gameName(slug) {
     return t || slug;
 }
 
+/* Bắn sự kiện SAU khi trang tải xong, không phải ngay lúc module chạy: lúc đó
+   Firebase còn đang nạp gtag.js, sự kiện gửi sớm bị rơi mất (đã thử: gọi ngay
+   thì chỉ thấy page_view, gọi sau khi tải xong thì game_open lên đủ). */
 const game = currentGame();
-if (game) {
+
+function trackGameOpen() {
+    if (!game) return;
     logEvent(analytics, 'game_open', {
         game_slug: game.slug,
         game_name: gameName(game.slug),
         language: game.lang
     });
+}
+
+if (game) {
+    if (document.readyState === 'complete') trackGameOpen();
+    else window.addEventListener('load', trackGameOpen, { once: true });
 }
