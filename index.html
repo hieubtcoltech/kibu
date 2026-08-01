@@ -1,13 +1,35 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sân Chơi Game Cho Bé - Kid's Game Arcade</title>
+    <title>KIBU Games - Free Online Games for Kids (Kid Built Games)</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Welcome to KIBU Games (Kid Built Games)! 100% free online games built with love for kids and families. Play fun arcade, puzzle, racing, and educational games.">
+    <meta name="keywords" content="KIBU Games, Kid Built Games, 100% free games, games built with love, free kids games, free online games, arcade games, educational games for kids, puzzle games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/">
+    <meta property="og:title" content="KIBU Games - 100% Free Games Built with Love for Kids">
+    <meta property="og:description" content="Play 100% free online games built with pure love for kids and families at KIBU Games (Kid Built Games)!">
+    <meta property="og:image" content="https://kibugames.com/og-image.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/">
+    <meta name="twitter:title" content="KIBU Games - 100% Free Games Built with Love for Kids">
+    <meta name="twitter:description" content="100% free, safe, and engaging online games built with love for kids and families at KIBU Games.">
+    <meta name="twitter:image" content="https://kibugames.com/og-image.png">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
@@ -15,19 +37,8 @@
             --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
             --font-main: 'Nunito', system-ui, sans-serif;
 
-            --bg-primary: #070914;
-            --card-bg: rgba(255, 255, 255, 0.06);
-            --card-border: rgba(255, 255, 255, 0.12);
-
-            --pink-glow: #ff007f;
-            --blue-glow: #00f0ff;
-            --yellow-glow: #ffd700;
-            --green-glow: #39ff14;
-            --purple-glow: #9d4edd;
-            --orange-glow: #ff8a1a;
-            --felt-glow: #16955a;
-            --pitch-glow: #4ec46c;
-            --darts-glow: #ff5f9e;
+            --bg-poki: #0f172a;
+            --card-radius: 20px;
         }
 
         * {
@@ -40,591 +51,528 @@
 
         body {
             font-family: var(--font-main);
-            background-color: var(--bg-primary);
+            background-color: var(--bg-poki);
             color: #ffffff;
             min-height: 100vh;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            overflow-x: hidden;
-            padding: 40px 20px;
-        }
-
-        /* Dynamic shimmer background */
-        .bg-shimmer {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            background: 
-                radial-gradient(circle at 20% 20%, rgba(255, 0, 127, 0.2), transparent 40%),
-                radial-gradient(circle at 80% 80%, rgba(0, 240, 255, 0.2), transparent 40%),
-                linear-gradient(135deg, #050714 0%, #101428 100%);
-            background-size: 200% 200%;
-            animation: bgAnim 15s ease infinite alternate;
-        }
-
-        @keyframes bgAnim {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
-        }
-
-        .hub-container {
-            width: 100%;
-            max-width: 1360px;
-            display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 30px;
+            padding: 24px 16px 40px 16px;
         }
 
-        /* Header */
-        .hub-header {
-            text-align: center;
-            margin-bottom: 10px;
+        /* Header Navbar Poki Style */
+        .poki-navbar {
+            width: 100%;
+            max-width: 1240px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
         }
 
-        .hub-title {
+        .poki-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .poki-logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #ff007f, #00f0ff);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.4);
+        }
+
+        .poki-logo-brand {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .poki-logo-text {
             font-family: var(--font-display);
-            font-size: 3.5rem;
+            font-size: 1.9rem;
             font-weight: 800;
-            background: linear-gradient(135deg, #ff007f, #ffd700, #00f0ff);
+            background: linear-gradient(135deg, #ffffff, #cbd5e1);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            letter-spacing: 2px;
-            text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-
-        .hub-subtitle {
-            font-size: 1.25rem;
-            color: #94a3b8;
-            margin-top: 6px;
-            font-weight: 600;
-        }
-
-        /* Game Cards Grid */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-            width: 100%;
-        }
-
-        @media (max-width: 640px) {
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
-            .hub-title {
-                font-size: 2.3rem;
-            }
-        }
-
-        .game-card {
-            container-type: inline-size;
-            background: rgba(15, 23, 42, 0.75);
-            border: 1px solid var(--card-border);
-            border-radius: 28px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            padding: 32px 28px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.25);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-            text-decoration: none;
-            color: white;
-        }
-
-        .game-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            border-color: rgba(255, 255, 255, 0.3);
-        }
-
-        .card-fruit:hover {
-            box-shadow: 0 15px 50px rgba(255, 0, 127, 0.4);
-            border-color: var(--pink-glow);
-        }
-
-        .card-shooter:hover {
-            box-shadow: 0 15px 50px rgba(0, 240, 255, 0.4);
-            border-color: var(--blue-glow);
-        }
-
-        .card-racer:hover {
-            box-shadow: 0 15px 50px rgba(255, 215, 0, 0.4);
-            border-color: var(--yellow-glow);
-        }
-
-        .card-english:hover {
-            box-shadow: 0 15px 50px rgba(157, 78, 221, 0.45);
-            border-color: var(--purple-glow);
-        }
-
-        .card-space:hover {
-            box-shadow: 0 15px 50px rgba(0, 240, 255, 0.45);
-            border-color: var(--blue-glow);
-        }
-
-        .card-snake:hover {
-            box-shadow: 0 15px 50px rgba(57, 255, 20, 0.45);
-            border-color: var(--green-glow);
-        }
-
-        .card-basket:hover {
-            box-shadow: 0 15px 50px rgba(255, 138, 26, 0.45);
-            border-color: var(--orange-glow);
-        }
-
-        .card-pool:hover {
-            box-shadow: 0 15px 50px rgba(22, 149, 90, 0.5);
-            border-color: var(--felt-glow);
-        }
-
-        .card-soccer:hover {
-            box-shadow: 0 15px 50px rgba(78, 196, 108, 0.5);
-            border-color: var(--pitch-glow);
-        }
-
-        .card-darts:hover {
-            box-shadow: 0 15px 50px rgba(255, 95, 158, 0.5);
-            border-color: var(--darts-glow);
-        }
-
-        .badge {
-            font-family: var(--font-display);
-            font-size: 0.85rem;
-            font-weight: 800;
-            padding: 6px 16px;
-            border-radius: 20px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 16px;
-        }
-
-        .badge-fruit {
-            background: rgba(255, 0, 127, 0.15);
-            color: #ff3399;
-            border: 1px solid rgba(255, 0, 127, 0.4);
-        }
-
-        .badge-shooter {
-            background: rgba(0, 240, 255, 0.15);
-            color: #00f0ff;
-            border: 1px solid rgba(0, 240, 255, 0.4);
-        }
-
-        .badge-racer {
-            background: rgba(255, 215, 0, 0.15);
-            color: #ffd700;
-            border: 1px solid rgba(255, 215, 0, 0.4);
-        }
-
-        .badge-english {
-            background: rgba(157, 78, 221, 0.15);
-            color: #c77dff;
-            border: 1px solid rgba(157, 78, 221, 0.4);
-        }
-
-        .badge-space {
-            background: rgba(0, 240, 255, 0.15);
-            color: #00f0ff;
-            border: 1px solid rgba(0, 240, 255, 0.4);
-        }
-
-        .badge-snake {
-            background: rgba(57, 255, 20, 0.15);
-            color: #39ff14;
-            border: 1px solid rgba(57, 255, 20, 0.4);
-        }
-
-        .badge-basket {
-            background: rgba(255, 138, 26, 0.15);
-            color: #ffa64d;
-            border: 1px solid rgba(255, 138, 26, 0.4);
-        }
-
-        .badge-soccer {
-            background: rgba(78, 196, 108, 0.18);
-            color: #8ff0a4;
-            border: 1px solid rgba(78, 196, 108, 0.45);
-        }
-
-        .badge-darts {
-            background: rgba(255, 95, 158, 0.18);
-            color: #ffa8cd;
-            border: 1px solid rgba(255, 95, 158, 0.45);
-        }
-
-        .badge-pool {
-            background: rgba(22, 149, 90, 0.18);
-            color: #5fd99b;
-            border: 1px solid rgba(22, 149, 90, 0.45);
-        }
-
-        .card-banner {
-            font-size: 4rem;
-            margin-bottom: 16px;
-            transition: transform 0.3s ease;
-        }
-
-        .game-card:hover .card-banner {
-            transform: scale(1.15) rotate(4deg);
-        }
-
-        .card-title {
-            font-family: var(--font-display);
-            /* Tiêu đề luôn gọn trên 1 dòng: cỡ chữ co theo bề rộng thẻ.
-               Dòng đầu là phương án dự phòng cho trình duyệt cũ chưa hỗ trợ cqi. */
-            font-size: 1.65rem;
-            font-size: clamp(1.05rem, 8.3cqi, 2rem);
-            font-weight: 800;
-            white-space: nowrap;
-            margin-bottom: 10px;
-        }
-
-        .card-desc {
-            font-size: 1rem;
-            color: #cbd5e1;
-            line-height: 1.5;
-            margin-bottom: 20px;
-            flex: 1;
-        }
-
-        .feature-tags {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 24px;
-        }
-
-        .tag {
-            font-size: 0.85rem;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.08);
-            color: #e2e8f0;
-        }
-
-        .play-btn {
-            font-family: var(--font-display);
-            font-size: 1.2rem;
-            font-weight: 800;
-            padding: 14px 36px;
-            border-radius: 20px;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            justify-content: center;
-            transition: all 0.25s ease;
-            text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        .btn-fruit {
-            background: linear-gradient(135deg, #ff007f, #ff6b00);
+        .poki-logo-sub {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #38bdf8;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* Header Badges */
+        .header-badges {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .badge-pill {
+            font-family: var(--font-display);
+            font-size: 0.78rem;
+            font-weight: 800;
+            padding: 6px 14px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        .badge-free {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.4);
+        }
+
+        .badge-love {
+            background: rgba(244, 63, 94, 0.15);
+            color: #fb7185;
+            border: 1px solid rgba(251, 113, 133, 0.4);
+        }
+
+        /* Poki Search Bar */
+        .poki-search {
+            position: relative;
+            flex: 1;
+            max-width: 460px;
+            min-width: 260px;
+        }
+
+        .poki-search-input {
+            width: 100%;
+            padding: 12px 18px 12px 48px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 50px;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .poki-search-input::placeholder {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .poki-search-input:focus {
+            border-color: #38bdf8;
+            background: #0f172a;
+            box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+        }
+
+        .poki-search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #38bdf8;
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+
+        .poki-clear-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #334155;
+            border: none;
+            color: #94a3b8;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .poki-clear-btn.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .poki-clear-btn:hover {
+            background: #ef4444;
             color: white;
-            box-shadow: 0 6px 20px rgba(255, 0, 127, 0.5);
-        }
-        .btn-fruit:hover {
-            box-shadow: 0 8px 30px rgba(255, 0, 127, 0.8);
         }
 
-        .btn-shooter {
-            background: linear-gradient(135deg, #00f0ff, #7bed9f);
-            color: #050714;
-            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
-        }
-        .btn-shooter:hover {
-            box-shadow: 0 8px 30px rgba(0, 240, 255, 0.8);
+        /* Poki Grid Container */
+        .poki-grid-container {
+            width: 100%;
+            max-width: 1240px;
         }
 
-        .btn-racer {
-            background: linear-gradient(135deg, #ffd700, #ff9900);
-            color: #050714;
-            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
-        }
-        .btn-racer:hover {
-            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.8);
+        .poki-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            width: 100%;
         }
 
-        .btn-english {
-            background: linear-gradient(135deg, #9d4edd, #00f0ff);
-            color: #050714;
-            box-shadow: 0 6px 20px rgba(157, 78, 221, 0.5);
-        }
-        .btn-english:hover {
-            box-shadow: 0 8px 30px rgba(157, 78, 221, 0.85);
+        @media (min-width: 768px) {
+            .poki-grid {
+                grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+                gap: 20px;
+            }
         }
 
-        .btn-space {
-            background: linear-gradient(135deg, #00f0ff, #9d4edd);
-            color: #050714;
-            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
-        }
-        .btn-space:hover {
-            box-shadow: 0 8px 30px rgba(0, 240, 255, 0.8);
-        }
-
-        .btn-snake {
-            background: linear-gradient(135deg, #39ff14, #00f0ff);
-            color: #050714;
-            box-shadow: 0 6px 20px rgba(57, 255, 20, 0.5);
-        }
-        .btn-snake:hover {
-            box-shadow: 0 8px 30px rgba(57, 255, 20, 0.8);
+        /* Poki Square Game Tile */
+        .poki-tile {
+            aspect-ratio: 1 / 1;
+            border-radius: var(--card-radius);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+            cursor: pointer;
         }
 
-        .btn-basket {
-            background: linear-gradient(135deg, #ff8a1a, #ffd700);
-            color: #16100a;
-            box-shadow: 0 6px 20px rgba(255, 138, 26, 0.5);
-        }
-        .btn-basket:hover {
-            box-shadow: 0 8px 30px rgba(255, 138, 26, 0.85);
+        .poki-tile:hover {
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.6);
+            z-index: 2;
         }
 
-        .btn-soccer {
-            background: linear-gradient(135deg, #2e8f43, #7bed9f);
-            color: #06210f;
-            box-shadow: 0 6px 20px rgba(78, 196, 108, 0.5);
-        }
-        .btn-soccer:hover {
-            box-shadow: 0 8px 30px rgba(78, 196, 108, 0.9);
+        /* Background Colors per game tile */
+        .tile-fruit { background: linear-gradient(135deg, #ff0844 0%, #ffb199 100%); }
+        .tile-shooter { background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%); }
+        .tile-racer { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
+        .tile-english { background: linear-gradient(135deg, #7c3aed 0%, #c084fc 100%); }
+        .tile-space { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); }
+        .tile-snake { background: linear-gradient(135deg, #059669 0%, #34d399 100%); }
+        .tile-basket { background: linear-gradient(135deg, #ea580c 0%, #fb923c 100%); }
+        .tile-pool { background: linear-gradient(135deg, #0f766e 0%, #2dd4bf 100%); }
+        .tile-soccer { background: linear-gradient(135deg, #16a34a 0%, #4ade80 100%); }
+        .tile-darts { background: linear-gradient(135deg, #e11d48 0%, #fb7185 100%); }
+
+        .tile-emoji {
+            font-size: 4rem;
+            line-height: 1;
+            transition: transform 0.3s ease;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.3));
         }
 
-        .btn-darts {
-            background: linear-gradient(135deg, #e8455f, #ffc93b);
-            color: #2a0713;
-            box-shadow: 0 6px 20px rgba(255, 95, 158, 0.5);
-        }
-        .btn-darts:hover {
-            box-shadow: 0 8px 30px rgba(255, 95, 158, 0.9);
+        @media (max-width: 640px) {
+            .tile-emoji {
+                font-size: 3.2rem;
+            }
         }
 
-        .btn-pool {
-            background: linear-gradient(135deg, #16955a, #ffd700);
-            color: #061a10;
-            box-shadow: 0 6px 20px rgba(22, 149, 90, 0.55);
+        .poki-tile:hover .tile-emoji {
+            transform: scale(1.18) rotate(4deg);
         }
-        .btn-pool:hover {
-            box-shadow: 0 8px 30px rgba(22, 149, 90, 0.9);
+
+        /* Poki Title Bar on Tile */
+        .tile-label {
+            position: absolute;
+            bottom: 0;
+            inset-x: 0;
+            padding: 8px 6px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            text-align: center;
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: background 0.25s ease;
+        }
+
+        .poki-tile:hover .tile-label {
+            background: rgba(15, 23, 42, 0.95);
+            color: #38bdf8;
+        }
+
+        /* Play Hover Icon Overlay */
+        .tile-play-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+
+        .tile-play-icon {
+            width: 50px;
+            height: 50px;
+            background: #ffffff;
+            color: #0f172a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            transform: scale(0.7);
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding-left: 3px;
+        }
+
+        .poki-tile:hover .tile-play-overlay {
+            opacity: 1;
+        }
+
+        .poki-tile:hover .tile-play-icon {
+            transform: scale(1);
+        }
+
+        /* No Results Container */
+        .no-results {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 60px 20px;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            font-weight: 700;
+            width: 100%;
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+
+        .no-results i {
+            font-size: 3rem;
+            color: #475569;
         }
 
         /* Footer */
-        .hub-footer {
-            margin-top: 10px;
+        .poki-footer {
+            margin-top: 35px;
             text-align: center;
             color: #64748b;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .poki-footer i {
+            color: #ff007f;
         }
     </style>
 </head>
 <body>
-    <div class="bg-shimmer"></div>
 
-    <div class="hub-container">
-        <!-- Main Header -->
-        <header class="hub-header">
-            <h1 class="hub-title"><i class="fa-solid fa-gamepad"></i> GAME CENTER FOR KIDS</h1>
-            <p class="hub-subtitle">Chọn trò chơi yêu thích của bé và bắt đầu trải nghiệm nhé!</p>
-        </header>
+    <!-- Header Navbar -->
+    <header class="poki-navbar">
+        <a href="./index.html" class="poki-logo">
+            <div class="poki-logo-icon">
+                <i class="fa-solid fa-gamepad"></i>
+            </div>
+            <div class="poki-logo-brand">
+                <span class="poki-logo-text">KIBU GAMES</span>
+                <span class="poki-logo-sub">Kid Built Games</span>
+            </div>
+        </a>
 
-        <!-- Game Cards Selection -->
-        <div class="cards-grid">
+        <!-- Feature Badges: Free & Love for Kids -->
+        <div class="header-badges">
+            <span class="badge-pill badge-free"><i class="fa-solid fa-gift"></i> 100% FREE</span>
+            <a href="./about.html" class="badge-pill badge-love" style="text-decoration: none;" title="Read our story!"><i class="fa-solid fa-heart"></i> BUILT WITH LOVE FOR KIDS <i class="fa-solid fa-circle-info"></i></a>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="poki-search">
+            <i class="fa-solid fa-magnifying-glass poki-search-icon"></i>
+            <input type="text" id="searchInput" class="poki-search-input" placeholder="Search games..." autocomplete="off">
+            <button type="button" id="clearBtn" class="poki-clear-btn" aria-label="Clear search">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Poki Main Grid -->
+    <main class="poki-grid-container">
+        <div class="poki-grid" id="cardsGrid">
+            
             <!-- Game 1: Fruit Crush -->
-            <a href="./fruit-crush/index.html" class="game-card card-fruit">
-                <div class="badge badge-fruit"><i class="fa-solid fa-apple-whole"></i> Thư Giãn & Trí Tuệ</div>
-                <div class="card-banner">🍓🍊🍇</div>
-                <h2 class="card-title">FRUIT CRUSH DELUXE</h2>
-                <p class="card-desc">
-                    Trải nghiệm ghép hoa quả ngọt ngào cực kỳ thư giãn với 10+ màn chơi, hoa quả nổ tia, cầu vồng rực rỡ và hiệu ứng đảo trọng lực!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">🌟 10+ Màn chơi</span>
-                    <span class="tag">💥 Hoa quả đặc biệt</span>
-                    <span class="tag">🔄 Đảo trọng lực</span>
-                </div>
-                <div class="play-btn btn-fruit">
-                    CHƠI NGAY <i class="fa-solid fa-play"></i>
+            <a href="./fruit-crush/index.html" class="poki-tile tile-fruit" data-keywords="fruit crush match 3 candy sweets berries">
+                <div class="tile-emoji">🍓</div>
+                <div class="tile-label">Fruit Crush</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
-            <!-- Game 2: Bot Arena Blaster -->
-            <a href="./shooter-game/index.html" class="game-card card-shooter">
-                <div class="badge badge-shooter"><i class="fa-solid fa-person-rifle"></i> Con Người Bắn Súng</div>
-                <div class="card-banner">🧑‍✈️🔫🤖</div>
-                <h2 class="card-title">BOT ARENA</h2>
-                <p class="card-desc">
-                    Bé nhập vai <b>CON NGƯỜI CẦM SÚNG 🧑‍✈️🔫</b> trực tiếp ngắm bắn và tiêu diệt các <b>ROBOT 🤖</b> độc ác cùng Trùm Robot Khổng Lồ! Có hỗ trợ tự động ngắm cực dễ cho bé!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">🧑‍✈️🔫 Con Người</span>
-                    <span class="tag">🤖 Đấu Với Robot</span>
-                    <span class="tag">🎯 Tự Ngắm cho bé</span>
-                </div>
-                <div class="play-btn btn-shooter">
-                    CHƠI NGAY <i class="fa-solid fa-rocket"></i>
+            <!-- Game 2: Bot Arena -->
+            <a href="./shooter-game/index.html" class="poki-tile tile-shooter" data-keywords="bot arena robot shooter action gun aiming">
+                <div class="tile-emoji">🤖</div>
+                <div class="tile-label">Bot Arena</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
-            <!-- Game 3: Neon Racer Arcade -->
-            <a href="./racer-game/index.html" class="game-card card-racer">
-                <div class="badge badge-racer"><i class="fa-solid fa-flag-checkered"></i> Đua Xe Siêu Tốc</div>
-                <div class="card-banner">🏎️🚀💥</div>
-                <h2 class="card-title">NEON RACER</h2>
-                <p class="card-desc">
-                    Lái các siêu xe thể thao neon 🏎️ né tránh vật cản, nhặt bình Nitro 🚀 phóng bứt tốc độ rùng mình và nổ thùng dầu cực vui!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">🏎️ Chọn 3 Siêu xe</span>
-                    <span class="tag">🚀 Bật Turbo Nitro</span>
-                    <span class="tag">🛢️ Né vệt dầu trơn</span>
-                </div>
-                <div class="play-btn btn-racer">
-                    CHƠI NGAY <i class="fa-solid fa-flag-checkered"></i>
+            <!-- Game 3: Neon Racer -->
+            <a href="./racer-game/index.html" class="poki-tile tile-racer" data-keywords="neon racer racing car speed nitro sports">
+                <div class="tile-emoji">🏎️</div>
+                <div class="tile-label">Neon Racer</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
             <!-- Game 4: English Quest -->
-            <a href="./english-game/index.html" class="game-card card-english">
-                <div class="badge badge-english"><i class="fa-solid fa-graduation-cap"></i> Vừa Học Vừa Chơi</div>
-                <div class="card-banner">🎓📚✨</div>
-                <h2 class="card-title">ENGLISH QUEST</h2>
-                <p class="card-desc">
-                    Chinh phục thì <b>Hiện Tại Hoàn Thành</b> qua 7 chặng: học từ mới có tranh &amp; giọng đọc, nối từ, ghép câu, luyện ngữ pháp, nghe điền từ và bài đọc hiểu!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">🎴 Thẻ từ có phát âm</span>
-                    <span class="tag">🎧 Nghe điền từ</span>
-                    <span class="tag">⭐ Ăn sao &amp; tích điểm</span>
-                </div>
-                <div class="play-btn btn-english">
-                    CHƠI NGAY <i class="fa-solid fa-graduation-cap"></i>
+            <a href="./english-game/index.html" class="poki-tile tile-english" data-keywords="english quest learn words grammar vocabulary study">
+                <div class="tile-emoji">🎓</div>
+                <div class="tile-label">English Quest</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
-            <!-- Game 5: Neon Nebula (Space Shooter) -->
-            <a href="./space-shooter/index.html" class="game-card card-space">
-                <div class="badge badge-space"><i class="fa-solid fa-shuttle-space"></i> Chiến Đấu Vũ Trụ</div>
-                <div class="card-banner">🚀👾🛸</div>
-                <h2 class="card-title">NEON NEBULA</h2>
-                <p class="card-desc">
-                    Bắn phi thuyền không gian cực đỉnh với hiệu ứng nổ mảnh hạt chân thực, điều khiển mượt mà, nhiều vật phẩm bổ trợ và trận đấu Boss kịch tính!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">🚀 Parallax Starfield</span>
-                    <span class="tag">💥 Nổ mảnh hạt</span>
-                    <span class="tag">👾 Boss khổng lồ</span>
-                </div>
-                <div class="play-btn btn-space">
-                    CHƠI NGAY <i class="fa-solid fa-shuttle-space"></i>
+            <!-- Game 5: Neon Nebula -->
+            <a href="./space-shooter/index.html" class="poki-tile tile-space" data-keywords="neon nebula space shooter spaceship galaxy alien boss">
+                <div class="tile-emoji">🚀</div>
+                <div class="tile-label">Neon Nebula</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
             <!-- Game 6: Cyber Snake -->
-            <a href="./cyber-snake/index.html" class="game-card card-snake">
-                <div class="badge badge-snake"><i class="fa-solid fa-dragon"></i> Rắn Cyberpunk</div>
-                <div class="card-banner">🐍⚡🔋</div>
-                <h2 class="card-title">CYBER SNAKE</h2>
-                <p class="card-desc">
-                    Rắn săn mồi uốn lượn như thật với da vằn kim cương, săn tìm lõi năng lượng đa dạng (Glitch, Cryo, Overdrive) trên lưới ma trận neon.
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">🐍 Trườn bò mượt mà</span>
-                    <span class="tag">⚡ 5 Lõi năng lượng</span>
-                    <span class="tag">🔋 Đồ họa ma trận</span>
-                </div>
-                <div class="play-btn btn-snake">
-                    CHƠI NGAY <i class="fa-solid fa-play"></i>
+            <a href="./cyber-snake/index.html" class="poki-tile tile-snake" data-keywords="cyber snake retro matrix arcade classic grow">
+                <div class="tile-emoji">🐍</div>
+                <div class="tile-label">Cyber Snake</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
             <!-- Game 7: Basketball Duel -->
-            <a href="./basketball-game/index.html" class="game-card card-basket">
-                <div class="badge badge-basket"><i class="fa-solid fa-users"></i> 2 Bé Thi Đấu</div>
-                <div class="card-banner">🏀🐯🐼</div>
-                <h2 class="card-title">BASKETBALL DUEL</h2>
-                <p class="card-desc">
-                    <b>Từ 2 đến 4 bé cùng chơi trên một máy!</b> Mỗi bé một rổ riêng, bóng xoáy ngược khi bay theo đúng vật lý thật. Ai thắng thì nhảy ăn mừng, ai thua thì khóc hu hu!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">👨‍👩‍👧‍👦 2-4 người chơi</span>
-                    <span class="tag">🎮 3 chế độ chơi</span>
-                    <span class="tag">🏀 Vật lý thật</span>
-                </div>
-                <div class="play-btn btn-basket">
-                    CHƠI NGAY <i class="fa-solid fa-basketball"></i>
+            <a href="./basketball-game/index.html" class="poki-tile tile-basket" data-keywords="basketball duel 2 player sports dunk hoop arcade">
+                <div class="tile-emoji">🏀</div>
+                <div class="tile-label">Basketball Duel</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
             <!-- Game 8: Pool Masters -->
-            <a href="./billiards-game/index.html" class="game-card card-pool">
-                <div class="badge badge-pool"><i class="fa-solid fa-users"></i> 2 Bé Thi Đấu</div>
-                <div class="card-banner">🎱🦊🐧</div>
-                <h2 class="card-title">POOL MASTERS</h2>
-                <p class="card-desc">
-                    <b>Bi-a 8 bi luân phiên hai bé!</b> Kéo lùi cơ như bắn ná rồi thả để đánh, có đường ngắm và bi ma trợ giúp. Ăn hết nhóm bi của mình rồi hạ bi số 8 là thắng!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">👫 2 người chơi</span>
-                    <span class="tag">🎱 9 điểm chạm bi cái</span>
-                    <span class="tag">🎯 Đủ luật 8 bi</span>
-                </div>
-                <div class="play-btn btn-pool">
-                    CHƠI NGAY <i class="fa-solid fa-play"></i>
+            <a href="./billiards-game/index.html" class="poki-tile tile-pool" data-keywords="pool masters billiards 8 ball 2 player cue snooker">
+                <div class="tile-emoji">🎱</div>
+                <div class="tile-label">Pool Masters</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
             <!-- Game 9: Super Striker -->
-            <a href="./soccer-game/index.html" class="game-card card-soccer">
-                <div class="badge badge-soccer"><i class="fa-solid fa-users"></i> 2-4 Bé Thi Đấu</div>
-                <div class="card-banner">⚽🥅🏆</div>
-                <h2 class="card-title">SUPER STRIKER</h2>
-                <p class="card-desc">
-                    <b>Bóng đá mini từ 2 đến 4 bé!</b> Sân <b>góc nhìn 2.5D</b> như xem bóng đá trên tivi, có <b>thủ môn</b> bắt bóng. Rê bóng, chuyền cho đồng đội, sút thẳng hoặc <b>đá xoáy</b> vòng qua thủ môn. Hoà thì <b>đá luân lưu</b> phân thắng bại!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">👨‍👩‍👧‍👦 2-4 người chơi</span>
-                    <span class="tag">🤝 Chuyền &amp; rê bóng</span>
-                    <span class="tag">🧤 Có thủ môn</span>
-                </div>
-                <div class="play-btn btn-soccer">
-                    CHƠI NGAY <i class="fa-solid fa-futbol"></i>
+            <a href="./soccer-game/index.html" class="poki-tile tile-soccer" data-keywords="super striker soccer football penalty goalkeeper sports">
+                <div class="tile-emoji">⚽</div>
+                <div class="tile-label">Super Striker</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
-            <!-- Game 10: Phi Tiêu Bong Bóng -->
-            <a href="./darts-game/index.html" class="game-card card-darts">
-                <div class="badge badge-darts"><i class="fa-solid fa-users"></i> 2-4 Bé Thi Tài</div>
-                <div class="card-banner">🎯🎈🎪</div>
-                <h2 class="card-title">PHI TIÊU BONG BÓNG</h2>
-                <p class="card-desc">
-                    <b>Gian hàng hội chợ cho 2 đến 4 bé!</b> Bóng bay bay lên liên tục, bé <b>ngắm rồi phi tiêu</b> cho nổ. Mũi tiêu bay theo <b>vật lý thật</b>, tự xoay mũi theo hướng bay. Săn <b>bóng vàng 5 điểm</b>, tránh <b>bóng bom</b>!
-                </p>
-                <div class="feature-tags">
-                    <span class="tag">👨‍👩‍👧‍👦 2-4 người chơi</span>
-                    <span class="tag">🎈 Bóng bay lên liên tục</span>
-                    <span class="tag">💨 Có gió thổi lệch</span>
-                </div>
-                <div class="play-btn btn-darts">
-                    CHƠI NGAY <i class="fa-solid fa-bullseye"></i>
+            <!-- Game 10: Balloon Darts -->
+            <a href="./darts-game/index.html" class="poki-tile tile-darts" data-keywords="balloon darts pop carnival target aim throwing">
+                <div class="tile-emoji">🎯</div>
+                <div class="tile-label">Balloon Darts</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
+
+            <!-- No Results Container -->
+            <div id="noResults" class="no-results">
+                <i class="fa-solid fa-face-frown"></i>
+                <span>No matching games found!</span>
+            </div>
         </div>
+    </main>
 
-        <footer class="hub-footer">
-            <p><i class="fa-solid fa-heart text-pink"></i> Thiết kế dành riêng cho bé yêu và gia đình cùng trải nghiệm.</p>
-        </footer>
-    </div>
+    <footer class="poki-footer">
+        <p><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="./about.html" style="color: #38bdf8; text-decoration: underline; margin-left: 6px;">About Us</a></p>
+    </footer>
+
+    <!-- Search Filtering Script -->
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const cardsGrid = document.getElementById('cardsGrid');
+        const gameTiles = document.querySelectorAll('.poki-tile');
+        const noResults = document.getElementById('noResults');
+
+        function filterGames() {
+            const query = searchInput.value.toLowerCase().trim();
+
+            if (query.length > 0) {
+                clearBtn.classList.add('visible');
+            } else {
+                clearBtn.classList.remove('visible');
+            }
+
+            let visibleCount = 0;
+
+            gameTiles.forEach(tile => {
+                const title = tile.querySelector('.tile-label').textContent.toLowerCase();
+                const keywords = tile.getAttribute('data-keywords') || '';
+
+                if (title.includes(query) || keywords.includes(query)) {
+                    tile.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    tile.style.display = 'none';
+                }
+            });
+
+            if (visibleCount === 0) {
+                noResults.style.display = 'flex';
+            } else {
+                noResults.style.display = 'none';
+            }
+        }
+
+        searchInput.addEventListener('input', filterGames);
+
+        clearBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            filterGames();
+            searchInput.focus();
+        });
+    </script>
 </body>
 </html>
+
