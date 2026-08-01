@@ -77,7 +77,9 @@
         /* Thuộc tính hidden của HTML chỉ ẩn nhờ style mặc định của trình duyệt,
            mà style đó thua mọi khai báo display của mình — thiếu dòng này thì
            phần tử đặt hidden vẫn hiện. */
-        [hidden] { display: none !important; }
+        [hidden] {
+            display: none !important;
+        }
 
         body {
             font-family: var(--font-main);
@@ -286,8 +288,14 @@
             grid-row: span 2;
         }
 
-        .poki-tile.featured .tile-emoji { font-size: 6.5rem; }
-        .poki-tile.featured .tile-label { padding: 12px 10px; font-size: 1.2rem; }
+        .poki-tile.featured .tile-emoji {
+            font-size: 6.5rem;
+        }
+
+        .poki-tile.featured .tile-label {
+            padding: 12px 10px;
+            font-size: 1.2rem;
+        }
 
         /* Dòng mô tả ngắn chỉ có ở ô lớn — ô nhỏ không đủ chỗ */
         .tile-sub {
@@ -303,7 +311,9 @@
             text-overflow: ellipsis;
         }
 
-        .poki-tile:not(.featured) .tile-sub { display: none; }
+        .poki-tile:not(.featured) .tile-sub {
+            display: none;
+        }
 
         /* Nhãn góc: HOT cho game đông bé chơi, MỚI cho game vừa ra */
         .tile-badge {
@@ -329,10 +339,25 @@
         }
 
         @media (max-width: 640px) {
-            .poki-tile.featured .tile-emoji { font-size: 4.6rem; }
-            .poki-tile.featured .tile-label { font-size: 1rem; padding: 9px 8px; }
-            .tile-sub { font-size: 0.7rem; }
-            .tile-badge { font-size: 0.62rem; padding: 3px 9px; top: 8px; left: 8px; }
+            .poki-tile.featured .tile-emoji {
+                font-size: 4.6rem;
+            }
+
+            .poki-tile.featured .tile-label {
+                font-size: 1rem;
+                padding: 9px 8px;
+            }
+
+            .tile-sub {
+                font-size: 0.7rem;
+            }
+
+            .tile-badge {
+                font-size: 0.62rem;
+                padding: 3px 9px;
+                top: 8px;
+                left: 8px;
+            }
         }
 
         /* Poki Square Game Tile */
@@ -418,7 +443,6 @@
             height: 1.72em;
             border-radius: 22%;
             display: block;
-            box-shadow: 0 0.06em 0.16em rgba(0, 0, 0, 0.5);
         }
 
         /* Quân TƯỚNG đỏ dựng bằng CSS — biểu tượng của game.
@@ -624,8 +648,8 @@
                 data-keywords="co tuong xiangqi chinese chess online 2 player room code board game">
                 <span class="tile-badge badge-new">NEW</span>
                 <div class="tile-emoji"><img src="/xiangqi/icon.png" alt="" class="tile-img"
-                        onload="this.nextElementSibling.hidden=true" onerror="this.remove()"><span
-                        class="xq-piece" aria-hidden="true"><span class="xq-top">帥</span></span></div>
+                        onload="this.nextElementSibling.hidden=true" onerror="this.remove()"><span class="xq-piece"
+                        aria-hidden="true"><span class="xq-top">帥</span></span></div>
                 <div class="tile-label">Cờ Tướng</div>
             </a>
 
@@ -687,9 +711,11 @@
     </main>
 
     <footer class="poki-footer">
-        <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids
+            and families. <a href="/about">About Us</a></p>
         <div class="footer-tools">
-            <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+            <span class="online-badge" data-online hidden><span class="online-dot"></span><span
+                    data-online-text></span></span>
             <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
                 <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
             </button>
