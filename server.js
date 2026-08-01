@@ -16,7 +16,10 @@ const path = require('path');
 const os = require('os');
 const url = require('url');
 
+const ROUTES = require('./routes.js');
+
 const ROOT = __dirname;
+const SITE = process.env.SITE_ORIGIN || 'https://kibugames.com';
 const START_PORT = Number(process.argv[2] || process.env.PORT || 8080);
 const HOST = process.env.HOST || '0.0.0.0';
 const MAX_PORT_TRIES = 20;
@@ -118,6 +121,41 @@ const NOT_FOUND_PAGE = (p) => `<!doctype html>
 <a href="/">🏠 Về trang chọn game</a>
 </div></body></html>`;
 
+/* ---------- Ngôn ngữ & SEO cho URL sạch ---------- */
+
+/* Chỉ dùng cho URL chưa có tiền tố ngôn ngữ. Ưu tiên đầu tiên của trình duyệt
+   quyết định; không rõ thì về tiếng Việt vì đó là đối tượng chính của trang. */
+function pickLang(req) {
+    const header = String(req.headers['accept-language'] || '').toLowerCase();
+    const first = (header.split(',')[0] || '').trim();
+    if (first.startsWith('en')) return 'en';
+    if (first.startsWith('vi')) return 'vi';
+    return header.includes('vi') ? 'vi' : (header.includes('en') ? 'en' : ROUTES.DEFAULT_LANG);
+}
+
+/* Cùng một file HTML được phục vụ ở hai địa chỉ, nên canonical / hreflang /
+   og:url phải viết lại theo ngôn ngữ đang xem — nếu để nguyên thì Google thấy
+   hai URL cùng khai báo một canonical và sẽ bỏ qua một bản. */
+function injectSeo(html, route) {
+    const bare = ROUTES.bare(route);
+    const urlFor = (l) => SITE + ROUTES.build(l, bare);
+    const canonical = urlFor(route.lang);
+
+    html = html.replace(/(<html[^>]*\slang=")[^"]*(")/i, `$1${route.lang}$2`);
+    html = html.replace(/(<link rel="canonical" href=")[^"]*(")/i, `$1${canonical}$2`);
+    html = html.replace(/[ \t]*<link rel="alternate" hreflang="[^"]*"[^>]*>\n?/gi, '');
+    html = html.replace(/(<link rel="canonical"[^>]*>\n?)/i, (m) =>
+        m +
+        `    <link rel="alternate" hreflang="vi" href="${urlFor('vi')}">\n` +
+        `    <link rel="alternate" hreflang="en" href="${urlFor('en')}">\n` +
+        `    <link rel="alternate" hreflang="x-default" href="${urlFor('en')}">\n`);
+    html = html.replace(/(<meta property="og:url" content=")[^"]*(")/i, `$1${canonical}$2`);
+    html = html.replace(/(<meta property="og:locale" content=")[^"]*(")/i,
+        `$1${route.lang === 'vi' ? 'vi_VN' : 'en_US'}$2`);
+    html = html.replace(/(<meta name="twitter:url" content=")[^"]*(")/i, `$1${canonical}$2`);
+    return html;
+}
+
 /* ---------- Xử lý request ---------- */
 async function handle(req, res) {
     const started = Date.now();
@@ -160,6 +198,44 @@ async function handle(req, res) {
     if (req.method !== 'GET' && req.method !== 'HEAD') {
         send(res, 405, 'Method Not Allowed', { 'Allow': 'GET, HEAD' });
         return log(405);
+    }
+
+    /* ---------- URL sạch có tiền tố ngôn ngữ ----------
+       /vi/g/balloon-darts  ->  darts-game/index.html
+       Game vẫn nằm nguyên thư mục cũ nên mọi asset (/darts-game/style.css…)
+       không phải đổi gì. */
+    const route = ROUTES.parse(pathname);
+    if (route) {
+        const pagePath = route.kind === 'game'
+            ? path.join(ROOT, route.dir, 'index.html')
+            : path.join(ROOT, route.kind === 'about' ? 'about.html' : 'index.html');
+        try {
+            const html = injectSeo(await fsp.readFile(pagePath, 'utf8'), route);
+            const body = Buffer.from(html, 'utf8');
+            res.writeHead(200, {
+                'Content-Type': 'text/html; charset=utf-8',
+                'Content-Length': body.length,
+                'Cache-Control': 'no-cache',
+                'X-Content-Type-Options': 'nosniff'
+            });
+            res.end(req.method === 'HEAD' ? undefined : body);
+        } catch (e) {
+            send(res, 404, NOT_FOUND_PAGE(pathname));
+            return log(404);
+        }
+        return log(200);
+    }
+
+    /* ---------- Đường dẫn cũ / chưa có ngôn ngữ -> chuyển hướng ---------- */
+    const bare = ROUTES.legacyBare(pathname);
+    if (bare) {
+        const target = ROUTES.build(pickLang(req), bare) + (parsed.search || '');
+        // "/" chỉ là cửa vào, kết quả phụ thuộc trình duyệt nên dùng 302;
+        // các URL cũ đã được Google lập chỉ mục thì 301 để dồn về địa chỉ mới.
+        const status = pathname === '/' ? 302 : 301;
+        res.writeHead(status, { 'Location': target, 'Vary': 'Accept-Language' });
+        res.end();
+        return log(status);
     }
 
     let filePath = safeResolve(pathname);

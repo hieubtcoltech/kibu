@@ -444,8 +444,9 @@
             color: #ff007f;
         }
     </style>
-    <link rel="stylesheet" href="site-chrome.css">
-    <script src="i18n.js"></script>
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
     <!-- Firebase App & Analytics SDKs -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -467,17 +468,17 @@
       window.firebaseAnalytics = analytics;
     </script>
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="./favicon.png">
-    <link rel="shortcut icon" type="image/png" href="./favicon.png">
-    <link rel="apple-touch-icon" href="./favicon.png">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="shortcut icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
 </head>
 
 <body>
 
     <!-- Header Navbar -->
     <header class="poki-navbar">
-        <a href="./index.html" class="poki-logo">
-            <img src="./logo.png" alt="KIBU Games" style="height: 72px; object-fit: contain;">
+        <a href="/" class="poki-logo">
+            <img src="/logo.png" alt="KIBU Games" style="height: 72px; object-fit: contain;">
         </a>
         <!-- Search Bar -->
         <div class="poki-search">
@@ -497,7 +498,7 @@
         <div class="poki-grid" id="cardsGrid">
 
             <!-- Game 1: Fruit Crush -->
-            <a href="./fruit-crush/index.html" class="poki-tile tile-fruit"
+            <a href="/g/fruit-crush" class="poki-tile tile-fruit"
                 data-keywords="fruit crush match 3 candy sweets berries">
                 <div class="tile-emoji">🍓</div>
                 <div class="tile-label">Fruit Crush</div>
@@ -507,7 +508,7 @@
             </a>
 
             <!-- Game 2: Bot Arena -->
-            <a href="./shooter-game/index.html" class="poki-tile tile-shooter"
+            <a href="/g/bot-arena" class="poki-tile tile-shooter"
                 data-keywords="bot arena robot shooter action gun aiming">
                 <div class="tile-emoji">🤖</div>
                 <div class="tile-label">Bot Arena</div>
@@ -517,7 +518,7 @@
             </a>
 
             <!-- Game 3: Neon Racer -->
-            <a href="./racer-game/index.html" class="poki-tile tile-racer"
+            <a href="/g/neon-racer" class="poki-tile tile-racer"
                 data-keywords="neon racer racing car speed nitro sports">
                 <div class="tile-emoji">🏎️</div>
                 <div class="tile-label">Neon Racer</div>
@@ -527,7 +528,7 @@
             </a>
 
             <!-- Game 4: English Quest -->
-            <a href="./english-game/index.html" class="poki-tile tile-english"
+            <a href="/g/english-quest" class="poki-tile tile-english"
                 data-keywords="english quest learn words grammar vocabulary study">
                 <div class="tile-emoji">🎓</div>
                 <div class="tile-label">English Quest</div>
@@ -537,7 +538,7 @@
             </a>
 
             <!-- Game 5: Neon Nebula -->
-            <a href="./space-shooter/index.html" class="poki-tile tile-space"
+            <a href="/g/neon-nebula" class="poki-tile tile-space"
                 data-keywords="neon nebula space shooter spaceship galaxy alien boss">
                 <div class="tile-emoji">🚀</div>
                 <div class="tile-label">Neon Nebula</div>
@@ -547,7 +548,7 @@
             </a>
 
             <!-- Game 6: Cyber Snake -->
-            <a href="./cyber-snake/index.html" class="poki-tile tile-snake"
+            <a href="/g/cyber-snake" class="poki-tile tile-snake"
                 data-keywords="cyber snake retro matrix arcade classic grow">
                 <div class="tile-emoji">🐍</div>
                 <div class="tile-label">Cyber Snake</div>
@@ -557,7 +558,7 @@
             </a>
 
             <!-- Game 7: Basketball Duel -->
-            <a href="./basketball-game/index.html" class="poki-tile tile-basket"
+            <a href="/g/basketball-duel" class="poki-tile tile-basket"
                 data-keywords="basketball duel 2 player sports dunk hoop arcade">
                 <div class="tile-emoji">🏀</div>
                 <div class="tile-label">Basketball Duel</div>
@@ -567,7 +568,7 @@
             </a>
 
             <!-- Game 8: Pool Masters -->
-            <a href="./billiards-game/index.html" class="poki-tile tile-pool"
+            <a href="/g/pool-masters" class="poki-tile tile-pool"
                 data-keywords="pool masters billiards 8 ball 2 player cue snooker">
                 <div class="tile-emoji">🎱</div>
                 <div class="tile-label">Pool Masters</div>
@@ -577,7 +578,7 @@
             </a>
 
             <!-- Game 9: Super Striker -->
-            <a href="./soccer-game/index.html" class="poki-tile tile-soccer"
+            <a href="/g/super-striker" class="poki-tile tile-soccer"
                 data-keywords="super striker soccer football penalty goalkeeper sports">
                 <div class="tile-emoji">⚽</div>
                 <div class="tile-label">Super Striker</div>
@@ -587,7 +588,7 @@
             </a>
 
             <!-- Game 10: Balloon Darts -->
-            <a href="./darts-game/index.html" class="poki-tile tile-darts"
+            <a href="/g/balloon-darts" class="poki-tile tile-darts"
                 data-keywords="balloon darts pop carnival target aim throwing">
                 <div class="tile-emoji">🎯</div>
                 <div class="tile-label">Balloon Darts</div>
@@ -606,7 +607,7 @@
 
     <footer class="poki-footer">
         <p><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a
-                href="./about.html" style="color: #38bdf8; text-decoration: underline; margin-left: 6px;">About Us</a>
+                href="/about" style="color: #38bdf8; text-decoration: underline; margin-left: 6px;">About Us</a>
         </p>
         <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
             <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">

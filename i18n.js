@@ -716,7 +716,13 @@
     /* ------------------------------------------------------------------ *
      * 2. ENGINE
      * ------------------------------------------------------------------ */
+    var R = window.KibuRoutes || null;
+
+    /* The URL is the source of truth: /vi/g/… and /en/g/… are two separate
+     * pages, so the address bar must win over whatever was stored last. */
     function detectLang() {
+        var route = R && R.parse(location.pathname);
+        if (route) return route.lang;
         try {
             var saved = localStorage.getItem(LANG_KEY);
             if (saved === 'vi' || saved === 'en') return saved;
@@ -1030,6 +1036,7 @@
             translateMarkup(document);
             translateTree(document.body);
             translateAttrs(document);
+            localizeLinks(document);
             var title = tWholeOnly(document.title);
             if (title !== document.title) document.title = title;
         });
@@ -1057,6 +1064,7 @@
                     translateMarkup(n.parentElement || n);
                     translateTree(n);
                     translateAttrs(n);
+                    localizeLinks(n);
                 }
             }
         });
@@ -1080,6 +1088,23 @@
         window.setTimeout(flushQueue, 50);
     }
 
+    /* ---- internal links ----
+     * Links are authored language-free ("/", "/about", "/g/balloon-darts") so
+     * the same markup serves both languages; the active language is stitched
+     * on here. The server redirects the language-free forms too, so a click
+     * that lands before this runs still ends up in the right place. */
+    function localizeLinks(root) {
+        if (!R) return;
+        within(root, 'a[href]').forEach(function (a) {
+            var href = a.getAttribute('href');
+            if (!href || href.charAt(0) !== '/') return;
+            if (R.parse(href)) return;                       // already prefixed
+            var bare = R.legacyBare(href.split(/[?#]/)[0]);
+            if (!bare) return;                               // an asset, leave it
+            a.setAttribute('href', R.build(lang, bare));
+        });
+    }
+
     /* ---- language switcher ---- */
     function wireSwitcher() {
         var btn = document.getElementById('btn-global-lang');
@@ -1096,7 +1121,13 @@
                     localStorage.setItem(LANG_KEY, next);
                     localStorage.setItem('fruitCrushLang', next); // fruit-crush reads its own key
                 } catch (e) { /* private mode */ }
-                window.location.reload();
+                var route = R && R.parse(location.pathname);
+                if (route) {
+                    // same page, other language — a reload would keep the old one
+                    window.location.href = R.build(next, R.bare(route)) + location.search + location.hash;
+                } else {
+                    window.location.reload();
+                }
             });
         }
     }
@@ -1104,6 +1135,7 @@
     function start() {
         document.documentElement.lang = lang;
         wireSwitcher();
+        localizeLinks(document);   // needed even where DOM translation is off
         if (!domEnabled) return;
         translateAll();
         observer = new MutationObserver(onMutations);
