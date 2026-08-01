@@ -1681,11 +1681,24 @@
         },
 
         syncHints() {
+            this.buildKeysList();
             const how = this.control === 'sweep'
                 ? 'Giữ phím để lấy lực — Thả đúng lúc để ném'
                 : 'Kéo lùi rồi thả như bắn ná (chạm phần sân của mình)';
             const keys = this.courts.map((c, i) => `${c.cfg.emoji} ${this.keyLabel(i)}`).join('   ·   ');
             if (this.el.hint) this.el.hint.textContent = `${keys}   —   ${how}`;
+        },
+
+        /* Bảng phím ở màn hình cấu hình: mỗi bé một dòng, dựng lại mỗi khi đổi
+           số bé nên bé chỉ thấy đúng phím của trận sắp chơi. */
+        buildKeysList() {
+            const box = document.getElementById('keys-list');
+            if (!box) return;
+            box.innerHTML = this.courts.map((c, i) =>
+                `<div class="keyrow" style="--pc:${c.cfg.jersey}">` +
+                `<span class="keyrow-emoji">${c.cfg.emoji}</span>` +
+                `<span class="keyrow-name">${c.cfg.name}</span>` +
+                `<span class="key-cap">${this.keyLabel(i)}</span></div>`).join('');
         },
 
         bindInput() {

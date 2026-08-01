@@ -1492,10 +1492,23 @@
         },
 
         updateHint() {
+            this.buildKeysList();
             const keys = this.booths.map((b, i) => `${b.cfg.emoji} ${this.keyLabel(i)}`).join(' · ');
             this.el.hint.textContent = this.control === 'sweep'
                 ? `${keys} — Mũi tên tự lắc, giữ phím lấy lực rồi thả để phi`
                 : `${keys} — Kéo lùi trong gian hàng của mình rồi thả, như bắn ná`;
+        },
+
+        /* Bảng phím ở màn hình cấu hình: mỗi bé một dòng, dựng lại mỗi khi đổi
+           số bé nên bé chỉ thấy đúng phím của ván sắp chơi. */
+        buildKeysList() {
+            const box = document.getElementById('keys-list');
+            if (!box) return;
+            box.innerHTML = this.booths.map((b, i) =>
+                `<div class="keyrow" style="--pc:${b.cfg.color}">` +
+                `<span class="keyrow-emoji">${b.cfg.emoji}</span>` +
+                `<span class="keyrow-name">${b.cfg.name}</span>` +
+                `<span class="key-cap">${this.keyLabel(i)}</span></div>`).join('');
         },
 
         bindUI() {

@@ -881,8 +881,70 @@ body {
 @media (max-height: 560px) { .app-wrapper .brand-img { height: 26px; } }
 @media (max-width: 560px) { .brand-img { height: 30px; } }
 
+
+}
+
+/* ---------- Bảng phím của từng bé ----------
+   Trước đây là một câu liệt kê cả ba trường hợp 2/3/4 bé nối đuôi nhau — đọc
+   xong vẫn phải tự dò xem mình bấm phím nào. Nay mỗi bé một dòng, đúng màu và
+   đúng con vật của gian hàng mình, và chỉ hiện đúng số bé đang chọn. */
+.keys-head {
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-bottom: 9px;
+}
+
+.keys-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+    gap: 8px;
+}
+
+.keyrow {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 3px solid var(--pc);
+    border-radius: 11px;
+    padding: 7px 11px;
+}
+
+.keyrow-emoji { font-size: 1.25rem; line-height: 1; }
+
+.keyrow-name {
+    flex: 1;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: var(--pc);
+    letter-spacing: 0.4px;
+}
+
+.keys-touch {
+    font-size: 0.84rem;
+    color: #94a3b8;
+    margin-top: 10px;
+}
+
+/* Để block chứ không phải flex: flex biến mỗi mảnh chữ thành một ô riêng nên
+   khe hở chen cả vào trước dấu chấm cuối câu. */
+.keys-touch i { margin-right: 6px; }
+
+.keys-touch b { color: #cbd5e1; }
+
 /* Máy cảm ứng không có bàn phím: giấu bảng phím đi cho màn hình đỡ chật, chỉ
    để lại câu hướng dẫn chạm. */
 @media (hover: none) and (pointer: coarse) {
-    .keys-kbd { display: none; }
+    .keys-head, .keys-list { display: none; }
+    .keys-touch { margin-top: 0; }
 }

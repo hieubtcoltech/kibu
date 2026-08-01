@@ -108,6 +108,7 @@
         ['Giữ & Thả', 'Hold & Release'],
         ['Kéo & Thả', 'Drag & Release'],
         ['Phím của từng bé:', 'Keys for each kid:'],
+        ['PHÍM CỦA TỪNG BÉ', 'KEYS FOR EACH KID'],
         ['2 bé →', '2 kids →'],
         ['3 bé →', '3 kids →'],
         ['4 bé →', '4 kids →'],
