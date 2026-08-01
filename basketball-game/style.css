@@ -802,6 +802,10 @@ body {
     .final-grid { grid-template-columns: 1fr; }
     .setup-grid { grid-template-columns: 1fr; }
     .opt-row { grid-template-columns: 1fr; }
+    /* Hàng cấu hình nhỏ có luật riêng ở trên (auto-fit 90px) và luật đó "nặng ký"
+       hơn dòng ngay trên đây, nên trên điện thoại nó vẫn cố nhét nhiều cột rộng
+       90px — chữ bị ép thành từng cột dọc. Phải đè lại đúng bằng mức cụ thể đó. */
+    .setup-grid .opt-row.small { grid-template-columns: 1fr; }
     .opt { flex-direction: row; justify-content: flex-start; gap: 9px; text-align: left; }
     .opt-desc { flex: 1; }
 }
@@ -873,3 +877,9 @@ body {
 
 @media (max-height: 560px) { .app-wrapper .brand-img { height: 26px; } }
 @media (max-width: 560px) { .brand-img { height: 30px; } }
+
+/* Máy cảm ứng không có bàn phím: giấu bảng phím đi cho màn hình đỡ chật, chỉ
+   để lại câu hướng dẫn chạm. */
+@media (hover: none) and (pointer: coarse) {
+    .keys-kbd { display: none; }
+}
