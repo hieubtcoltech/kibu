@@ -388,36 +388,29 @@
         ctx.restore();
     }
 
-    function drawLeg(ctx, suit, hipX, hipY, ang, shade) {
+    /* Chân: đùi + cẳng + chân vịt, xoay quanh hông theo nhịp đạp nước */
+    function drawLegFin(ctx, suit, hipX, hipY, ang, shade) {
         ctx.save();
         ctx.translate(hipX, hipY);
         ctx.rotate(ang);
         ctx.fillStyle = shade ? suit.dark : suit.body;
-        rr(ctx, -26, -6.5, 28, 13, 6);
+        rr(ctx, -24, -7, 26, 14, 7);
         ctx.fill();
-        ctx.fillStyle = shade ? 'rgba(0,0,0,0.12)' : suit.trim;
-        rr(ctx, -13, -6.5, 4, 13, 2);
+        ctx.fillStyle = shade ? 'rgba(0,0,0,0.15)' : suit.trim;
+        rr(ctx, -14, -7, 4, 14, 2);
         ctx.fill();
-        ctx.translate(-26, 0);
-        drawFin(ctx, suit, 0, 22, 17, shade);
+        ctx.translate(-24, 0);
+        ctx.rotate(-ang * 0.35);
+        drawFin(ctx, suit, 0, 26, 19, shade);
         ctx.restore();
     }
 
-    function drawArm(ctx, suit, sx, sy, ang, shade) {
-        ctx.save();
-        ctx.translate(sx, sy);
-        ctx.rotate(ang);
-        ctx.fillStyle = shade ? suit.dark : suit.body;
-        rr(ctx, 0, -5, 20, 10, 5);
-        ctx.fill();
-        // bàn tay
-        ctx.fillStyle = shade ? SKIN_DARK : SKIN;
-        ellipse(ctx, 22, 0, 6, 5.5);
-        ctx.fill();
-        ctx.restore();
-    }
+    /* Vẽ nhân vật.
+       p: { suit, kick, tilt, face, state, alpha }
 
-    /* p: { suit, kick, tilt, face, state, hurtT, alpha, mount } */
+       Sơ đồ (mặt quay sang phải, gốc ở giữa thân):
+         chân vịt  -70 ── hông -26 ── thân ── vai +14 ── đầu +30 ── tay với tới +48
+       Thứ tự vẽ đi từ lớp sau ra lớp trước để tay trước và tóc luôn nổi lên trên. */
     function drawDiver(ctx, x, y, scale, p) {
         const suit = p.suit;
         const st = p.state || 'swim';
@@ -429,192 +422,236 @@
         ctx.translate(x, y);
         ctx.scale(scale * (p.face < 0 ? -1 : 1), scale);
         if (p.alpha != null) ctx.globalAlpha *= p.alpha;
-
-        // Bị loại thì lật ngửa trôi lều bều
-        ctx.rotate(out ? Math.PI * 0.92 + Math.sin(kick * 0.5) * 0.12 : (p.tilt || 0));
+        ctx.rotate(out ? Math.PI * 0.93 + Math.sin(kick * 0.5) * 0.1 : (p.tilt || 0));
 
         if (dashing) {
-            // Vệt nước phía sau lúc lướt
             ctx.save();
-            ctx.strokeStyle = 'rgba(210,245,255,0.75)';
+            ctx.strokeStyle = 'rgba(215,248,255,0.8)';
             ctx.lineCap = 'round';
             for (let i = 0; i < 4; i++) {
-                ctx.lineWidth = 3 - i * 0.5;
-                const off = -34 - i * 13;
+                ctx.lineWidth = 3.4 - i * 0.6;
+                const ox = -74 - i * 15;
                 ctx.beginPath();
-                ctx.moveTo(off, -14 + i * 9);
-                ctx.lineTo(off - 22 - i * 6, -14 + i * 9);
+                ctx.moveTo(ox, -18 + i * 11);
+                ctx.lineTo(ox - 26 - i * 8, -18 + i * 11);
                 ctx.stroke();
             }
             ctx.restore();
         }
 
-        // ---- Bình dưỡng khí (sau lưng) ----
-        ctx.fillStyle = '#e0a52a';
-        rr(ctx, -22, -14, 15, 26, 7);
+        const kickA = Math.sin(kick) * (dashing ? 0.18 : 0.46);
+        const armSwing = dashing ? 0.02 : Math.sin(kick * 0.9) * 0.16 + 0.06;
+
+        // ---- Tay sau (ép sát thân) ----
+        ctx.save();
+        ctx.translate(2, 7);
+        ctx.rotate(2.95 + Math.sin(kick * 0.9) * 0.08);
+        ctx.fillStyle = suit.dark;
+        rr(ctx, 0, -4.5, 17, 9, 4.5);
+        ctx.fill();
+        ctx.fillStyle = SKIN_DARK;
+        ctx.beginPath(); ctx.arc(18, 0, 4.5, 0, 6.2832); ctx.fill();
+        ctx.restore();
+
+        // ---- Bình dưỡng khí ----
+        ctx.save();
+        ctx.translate(-12, -16);
+        ctx.rotate(-0.12);
+        ctx.fillStyle = '#e8ad2e';
+        rr(ctx, -14, -8, 30, 16, 8);
         ctx.fill();
         ctx.fillStyle = '#b7811a';
-        rr(ctx, -22, -14, 5, 26, 5);
+        rr(ctx, -14, -8, 30, 6, 5);
         ctx.fill();
         ctx.fillStyle = '#8d949e';
-        rr(ctx, -13, -18, 5, 6, 2);
+        rr(ctx, 12, -5, 7, 10, 3);
         ctx.fill();
+        ctx.strokeStyle = '#c9d2dc';
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ctx.moveTo(17, -2);
+        ctx.quadraticCurveTo(30, -10, 34, -2);
+        ctx.stroke();
+        ctx.restore();
 
-        // ---- Chân sau + chân trước ----
-        const kickA = Math.sin(kick) * (dashing ? 0.22 : 0.5);
-        drawLeg(ctx, suit, -12, 4, -kickA * 1.05 + 0.12, true);
+        // ---- Chân sau ----
+        drawLegFin(ctx, suit, -22, 8, -kickA * 1.1 + 0.18, true);
 
-        // ---- Thân ----
+        // ---- Thân người ----
         ctx.fillStyle = suit.body;
         ctx.beginPath();
-        ctx.moveTo(-18, -13);
-        ctx.quadraticCurveTo(4, -18, 17, -11);
-        ctx.quadraticCurveTo(23, 0, 17, 11);
-        ctx.quadraticCurveTo(4, 18, -18, 13);
-        ctx.quadraticCurveTo(-23, 0, -18, -13);
+        ctx.moveTo(-28, -8);
+        ctx.quadraticCurveTo(-12, -17, 6, -14);
+        ctx.quadraticCurveTo(17, -12, 18, -3);
+        ctx.quadraticCurveTo(19, 6, 8, 12);
+        ctx.quadraticCurveTo(-10, 18, -28, 9);
+        ctx.quadraticCurveTo(-32, 0, -28, -8);
         ctx.closePath();
         ctx.fill();
 
-        // bụng sáng màu
+        // ngực sáng màu
+        ctx.save();
+        ctx.globalAlpha *= 0.5;
         ctx.fillStyle = suit.light;
-        ctx.globalAlpha *= 0.55;
         ctx.beginPath();
-        ctx.moveTo(-10, 4);
-        ctx.quadraticCurveTo(4, 14, 15, 8);
-        ctx.quadraticCurveTo(6, 17, -12, 12);
+        ctx.moveTo(-14, 4);
+        ctx.quadraticCurveTo(0, 14, 14, 6);
+        ctx.quadraticCurveTo(2, 17, -16, 11);
         ctx.closePath();
         ctx.fill();
-        ctx.globalAlpha /= 0.55;
+        ctx.restore();
 
-        // đai lưng + huy hiệu
+        // dây đai + huy hiệu ngực
         ctx.fillStyle = suit.trim;
-        rr(ctx, -6, -13, 6, 26, 3);
+        rr(ctx, -8, -14, 7, 29, 3.5);
         ctx.fill();
-        ctx.beginPath();
-        ctx.arc(6, -2, 4.6, 0, 6.2832);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(8, -3, 5, 0, 6.2832); ctx.fill();
         ctx.fillStyle = suit.dark;
-        ctx.beginPath();
-        ctx.arc(6, -2, 2.2, 0, 6.2832);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(8, -3, 2.4, 0, 6.2832); ctx.fill();
 
-        drawLeg(ctx, suit, -12, -2, kickA + 0.06, false);
+        // ---- Chân trước ----
+        drawLegFin(ctx, suit, -22, -1, kickA + 0.05, false);
 
         // ---- Tay trước ----
-        const armA = dashing ? -0.35 : Math.sin(kick * 0.9) * 0.22 - 0.15;
-        drawArm(ctx, suit, 8, 2, dashing ? armA : armA, false);
+        // Vẽ TRƯỚC cái đầu và vươn ngang tầm vai: bản trước để tay quét qua đỉnh
+        // đầu nên ống tay xanh phủ kín mái tóc.
+        ctx.save();
+        ctx.translate(10, 3);
+        ctx.rotate(armSwing);
+        ctx.fillStyle = suit.body;
+        rr(ctx, 0, -5, 26, 10, 5);
+        ctx.fill();
+        ctx.fillStyle = suit.trim;
+        rr(ctx, 20, -5, 4, 10, 2);
+        ctx.fill();
+        ctx.fillStyle = SKIN;
+        ctx.beginPath(); ctx.arc(28, 0, 5.6, 0, 6.2832); ctx.fill();
+        ctx.restore();
 
         // ---- Đầu ----
         ctx.save();
-        ctx.translate(22, -7);
-        const nod = out ? 0 : Math.sin(kick * 0.5) * 0.06;
-        ctx.rotate(nod);
+        ctx.translate(31, -10);
+        ctx.rotate(out ? 0 : Math.sin(kick * 0.5) * 0.07 - 0.1);
 
-        // tóc phía sau
+        // tóc sau gáy
         ctx.fillStyle = HAIR;
         ctx.beginPath();
-        ctx.moveTo(-6, -14);
-        ctx.quadraticCurveTo(-18, -10, -15, 4);
-        ctx.quadraticCurveTo(-10, 0, -6, 2);
+        ctx.moveTo(-4, -10);
+        ctx.quadraticCurveTo(-17, -6, -13, 8);
+        ctx.quadraticCurveTo(-8, 2, -3, 3);
         ctx.closePath();
         ctx.fill();
 
         // mặt
         ctx.fillStyle = SKIN;
-        ellipse(ctx, 0, 0, 14.5, 13.5);
+        ellipse(ctx, 0, 0, 12.5, 12);
         ctx.fill();
 
-        // tóc chỏm — vài mũi nhọn cho ra dáng tóc bù xù trong bản thiết kế
+        // tai
+        ctx.fillStyle = SKIN_DARK;
+        ellipse(ctx, -7, 2, 3, 3.6);
+        ctx.fill();
+
+        // tóc chỏm bù xù — vẽ SAU khuôn mặt để luôn nổi lên
         ctx.fillStyle = HAIR;
         ctx.beginPath();
-        ctx.moveTo(-13, -4);
-        ctx.quadraticCurveTo(-14, -15, -3, -15);
-        ctx.lineTo(-6, -20); ctx.lineTo(1, -15.5);
-        ctx.lineTo(2, -21); ctx.lineTo(8, -14);
-        ctx.lineTo(12, -17); ctx.lineTo(12.5, -9);
-        ctx.quadraticCurveTo(6, -14, -13, -4);
+        ctx.moveTo(-12, -3);
+        ctx.quadraticCurveTo(-13.5, -13, -4, -13.5);
+        ctx.lineTo(-7, -19);
+        ctx.lineTo(0, -14.5);
+        ctx.lineTo(1.5, -20);
+        ctx.lineTo(7, -13);
+        ctx.lineTo(11, -16.5);
+        ctx.lineTo(11.5, -7.5);
+        ctx.quadraticCurveTo(2, -12, -12, -3);
         ctx.closePath();
         ctx.fill();
+        ctx.save();
+        ctx.globalAlpha *= 0.45;
         ctx.fillStyle = HAIR_LIGHT;
-        ctx.globalAlpha *= 0.5;
         ctx.beginPath();
-        ctx.moveTo(-8, -12); ctx.quadraticCurveTo(0, -16, 8, -12.5);
-        ctx.quadraticCurveTo(0, -12, -8, -12);
+        ctx.moveTo(-7, -10.5);
+        ctx.quadraticCurveTo(1, -14.5, 8, -11);
+        ctx.quadraticCurveTo(0, -10.5, -7, -10.5);
         ctx.closePath();
         ctx.fill();
-        ctx.globalAlpha /= 0.5;
+        ctx.restore();
 
-        // dây kính quanh đầu
+        // dây kính vòng qua tóc — mảnh thôi, đừng nuốt mất tóc như bản trước
         ctx.strokeStyle = suit.trim;
-        ctx.lineWidth = 3.4;
+        ctx.lineWidth = 2.6;
         ctx.beginPath();
-        ctx.arc(0, -2.5, 13, Math.PI * 0.72, Math.PI * 1.72);
+        ctx.arc(0, -1, 12, Math.PI * 0.82, Math.PI * 1.42);
         ctx.stroke();
 
-        // kính lặn
+        // kính lặn nằm trên mặt
         ctx.fillStyle = suit.trim;
-        rr(ctx, -2, -9.5, 15, 12, 5);
+        rr(ctx, -1, -9, 14.5, 11.5, 5);
         ctx.fill();
-        ctx.fillStyle = 'rgba(150, 230, 255, 0.92)';
-        rr(ctx, -0.5, -8, 12, 9, 4);
+        ctx.fillStyle = 'rgba(160, 232, 255, 0.95)';
+        rr(ctx, 0.4, -7.6, 11.6, 8.7, 4);
         ctx.fill();
+        ctx.save();
+        ctx.globalAlpha *= 0.65;
+        ctx.fillStyle = '#ffffff';
+        rr(ctx, 1.6, -6.8, 4.5, 3, 1.6);
+        ctx.fill();
+        ctx.restore();
 
-        // mắt trong kính
+        // mắt
         if (out) {
             ctx.strokeStyle = '#3a2a1a';
-            ctx.lineWidth = 1.8;
+            ctx.lineWidth = 1.9;
+            ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.moveTo(4, -6); ctx.lineTo(9, -1);
-            ctx.moveTo(9, -6); ctx.lineTo(4, -1);
+            ctx.moveTo(5, -6.5); ctx.lineTo(9.5, -2);
+            ctx.moveTo(9.5, -6.5); ctx.lineTo(5, -2);
             ctx.stroke();
         } else if (st === 'hurt') {
             ctx.strokeStyle = '#2b1c10';
-            ctx.lineWidth = 1.8;
+            ctx.lineWidth = 1.9;
             ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.moveTo(3.5, -4); ctx.quadraticCurveTo(6.5, -6.5, 9.5, -4);
+            ctx.moveTo(4.5, -4.5); ctx.quadraticCurveTo(7.5, -7, 10.5, -4.5);
             ctx.stroke();
         } else {
             ctx.fillStyle = '#ffffff';
-            ellipse(ctx, 6.5, -3.5, 4.2, 4.4);
+            ellipse(ctx, 7.4, -3.6, 4, 4.3);
             ctx.fill();
-            ctx.fillStyle = '#2a6fb5';
-            ellipse(ctx, 7.6, -3.4, 2.7, 2.9);
+            ctx.fillStyle = '#2a7fd0';
+            ellipse(ctx, 8.4, -3.5, 2.6, 2.9);
             ctx.fill();
-            ctx.fillStyle = '#12243a';
-            ellipse(ctx, 8.1, -3.3, 1.3, 1.5);
+            ctx.fillStyle = '#10243c';
+            ellipse(ctx, 8.9, -3.4, 1.3, 1.5);
             ctx.fill();
             ctx.fillStyle = '#ffffff';
-            ellipse(ctx, 6.8, -4.8, 1.1, 1.1);
+            ellipse(ctx, 7.6, -4.9, 1.1, 1.1);
             ctx.fill();
         }
 
-        // miệng
+        // miệng + má
         ctx.strokeStyle = '#a8543c';
-        ctx.lineWidth = 1.7;
+        ctx.lineWidth = 1.8;
         ctx.lineCap = 'round';
         ctx.beginPath();
-        if (out) { ctx.arc(7, 7, 3, Math.PI, 0); }
-        else if (st === 'hurt') { ellipse(ctx, 7, 6.5, 3, 3.4); }
-        else { ctx.arc(7, 4, 4, 0.15, Math.PI - 0.15); }
+        if (out) ctx.arc(7, 7, 3, Math.PI, 0);
+        else if (st === 'hurt') ellipse(ctx, 7, 6.5, 3, 3.2);
+        else ctx.arc(6.5, 4, 4, 0.2, Math.PI - 0.25);
         ctx.stroke();
 
-        // má hồng
-        ctx.fillStyle = 'rgba(255,130,130,0.35)';
-        ellipse(ctx, 3, 5, 3.4, 2.2);
+        ctx.fillStyle = 'rgba(255,130,130,0.32)';
+        ellipse(ctx, 2, 5.5, 3.4, 2.2);
         ctx.fill();
 
         ctx.restore();
 
         // Sao bay quanh đầu khi trúng bẫy
         if (st === 'hurt') {
-            ctx.save();
             ctx.fillStyle = '#ffd76b';
             for (let i = 0; i < 3; i++) {
                 const a = kick * 2 + i * 2.1;
-                const sx = 22 + Math.cos(a) * 20, sy = -26 + Math.sin(a * 1.3) * 6;
                 ctx.save();
-                ctx.translate(sx, sy);
+                ctx.translate(30 + Math.cos(a) * 20, -28 + Math.sin(a * 1.3) * 6);
                 ctx.rotate(a);
                 ctx.beginPath();
                 for (let k = 0; k < 5; k++) {
@@ -625,7 +662,6 @@
                 ctx.fill();
                 ctx.restore();
             }
-            ctx.restore();
         }
 
         ctx.restore();
@@ -1992,7 +2028,7 @@
             else if (p.dashT > 0) state = 'dash';
 
             const blink = p.invuln > 0 && p.hurtT <= 0 && Math.floor(p.invuln * 12) % 2 === 0;
-            drawDiver(ctx, p.x, p.y, 1.18, {
+            drawDiver(ctx, p.x, p.y, 0.82, {
                 suit: p.suit, kick: p.kick, tilt: p.tilt, face: p.face,
                 state, alpha: p.out ? 0.75 : (blink ? 0.5 : 1)
             });
@@ -2509,7 +2545,7 @@
             const by = 130 - ((previewKick * 22 + i * 40) % 150);
             g.beginPath(); g.arc(bx, by, 2 + (i % 3), 0, 6.28); g.fill();
         }
-        drawDiver(g, cv.width / 2, cv.height / 2, 1.35, {
+        drawDiver(g, cv.width / 2 - 6, cv.height / 2, 1.05, {
             suit, kick: previewKick, tilt: Math.sin(previewKick * 0.4) * 0.12, face: 1, state: 'swim'
         });
     }
