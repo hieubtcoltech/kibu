@@ -533,3 +533,17 @@ kbd {
         padding: 8px;
     }
 }
+
+/* Icon riêng của game trên thanh nav. Thiếu tệp thì thẻ img tự gỡ mình và
+   biểu tượng emoji cũ hiện lên thay. */
+.brand-img {
+    height: 34px;
+    width: auto;
+    border-radius: 22%;
+    display: block;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-height: 560px) { .app-wrapper .brand-img { height: 26px; } }
+@media (max-width: 560px) { .brand-img { height: 30px; } }

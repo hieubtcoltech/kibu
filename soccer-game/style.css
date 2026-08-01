@@ -658,3 +658,17 @@ body {
     .btn-toggle, .setup-grid .btn { padding: 4px 9px !important; font-size: 0.74rem !important; }
     .big-btn { font-size: 0.9rem !important; padding: 7px 20px !important; }
 }
+
+/* Icon riêng của game trên thanh nav. Thiếu tệp thì thẻ img tự gỡ mình và
+   biểu tượng emoji cũ hiện lên thay. */
+.brand-img {
+    height: 34px;
+    width: auto;
+    border-radius: 22%;
+    display: block;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-height: 560px) { .app-wrapper .brand-img { height: 26px; } }
+@media (max-width: 560px) { .brand-img { height: 30px; } }
