@@ -78,7 +78,32 @@ body > .app-wrapper {
 }
 
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-icon { font-size: 1.6rem; }
+.brand-icon { font-size: 1.5rem; }
+
+/* Quân TƯỚNG đỏ dựng bằng CSS — dùng làm biểu tượng của game.
+   Trước đây lấy tạm emoji ♟️ nhưng đó là quân tốt của CỜ VUA, không phải cờ tướng. */
+.xq-piece {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.62em;
+    height: 1.62em;
+    border-radius: 50%;
+    flex-shrink: 0;
+    font-family: var(--font-han);
+    font-weight: 900;
+    font-size: 0.72em;
+    line-height: 1;
+    color: #b8241a;
+    background:
+        radial-gradient(circle at 34% 28%, #fdf3dc 0%, #f0d9a8 55%, #cda068 100%);
+    border: 0.12em solid #b8241a;
+    box-shadow:
+        0 0.1em 0.2em rgba(0, 0, 0, 0.45),
+        inset 0 -0.08em 0.14em rgba(120, 84, 42, 0.4),
+        inset 0 0.06em 0.1em rgba(255, 255, 255, 0.55);
+    text-shadow: 0 0.04em 0 rgba(255, 235, 200, 0.6);
+}
 
 .brand-title {
     font-family: var(--font-display);

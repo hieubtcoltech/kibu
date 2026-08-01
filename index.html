@@ -406,6 +406,30 @@
             background: linear-gradient(135deg, #7c2d12 0%, #b45309 55%, #e8c88f 100%);
         }
 
+        /* Quân TƯỚNG đỏ dựng bằng CSS. Emoji ♟️ dùng trước đó là quân tốt của
+           cờ vua — sai hẳn loại cờ. */
+        .xq-piece {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            /* width/height tính theo font-size của CHÍNH nó, nên phải để chữ nhỏ
+               hơn đĩa hẳn một nấc, không thì chữ 帥 tràn ra ngoài vành. */
+            width: 1.62em;
+            height: 1.62em;
+            border-radius: 50%;
+            font-family: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+            font-weight: 900;
+            font-size: 0.62em;
+            line-height: 1;
+            color: #b8241a;
+            background: radial-gradient(circle at 34% 28%, #fdf3dc 0%, #f0d9a8 55%, #cda068 100%);
+            border: 0.07em solid #b8241a;
+            box-shadow:
+                0 0.05em 0.12em rgba(0, 0, 0, 0.45),
+                inset 0 -0.05em 0.09em rgba(120, 84, 42, 0.4),
+                inset 0 0.04em 0.07em rgba(255, 255, 255, 0.55);
+        }
+
         .tile-emoji {
             font-size: 4rem;
             line-height: 1;
@@ -601,7 +625,7 @@
             <a href="/g/co-tuong" class="poki-tile tile-xiangqi"
                 data-keywords="co tuong xiangqi chinese chess online 2 player room code board game">
                 <span class="tile-badge badge-new">NEW</span>
-                <div class="tile-emoji">♟️</div>
+                <div class="tile-emoji"><span class="xq-piece">帥</span></div>
                 <div class="tile-label">Cờ Tướng</div>
                 <div class="tile-play-overlay">
                     <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
