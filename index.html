@@ -471,6 +471,31 @@
 
         .tile-label { z-index: 2; }
 
+        /* Mặc định chỉ thấy icon; tên và mô tả trượt lên khi rê chuột vào ô.
+           Máy cảm ứng không có trạng thái hover nên luôn hiện — nếu không thì
+           trên điện thoại sẽ chẳng bao giờ biết ô nào là game gì. */
+        @media (hover: hover) {
+            .poki-tile .tile-label {
+                transform: translateY(100%);
+                opacity: 0;
+                transition: transform 0.28s cubic-bezier(0.2, 1, 0.3, 1), opacity 0.22s ease;
+            }
+
+            .poki-tile:hover .tile-label,
+            .poki-tile:focus-visible .tile-label {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            .poki-tile:has(.tile-img)::after {
+                opacity: 0;
+                transition: opacity 0.25s ease;
+            }
+
+            .poki-tile:hover:has(.tile-img)::after,
+            .poki-tile:focus-visible:has(.tile-img)::after { opacity: 1; }
+        }
+
         /* Quân TƯỚNG đỏ dựng bằng CSS — biểu tượng của game.
            Khối trụ có bề dày thật: một lớp thành gỗ sẫm phía dưới, mặt trên vát sáng,
            vành đỏ khắc chìm và chữ 帥 nổi khối. Trước đây dùng emoji ♟️ — đó là quân
