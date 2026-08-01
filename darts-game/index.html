@@ -66,6 +66,9 @@
             </div>
 
             <div class="nav-actions">
+            <button id="btn-global-lang" class="badge-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); cursor: pointer; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 30px;">
+                <i class="fa-solid fa-globe"></i> <span id="global-lang-text">EN</span>
+            </button>
                 <a href="../index.html" class="btn btn-home">
                     <i class="fa-solid fa-house"></i> <span>Trang Chủ</span>
                 </a>
@@ -248,5 +251,35 @@
     </div>
 
     <script src="game.js"></script>
+
+    <!-- Global Language Switcher Script -->
+    <script>
+    (function() {
+        const LANG_KEY = "kibu_global_lang";
+        const btn = document.getElementById("btn-global-lang");
+        const langText = document.getElementById("global-lang-text");
+        
+        let currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
+
+        function updateLangUI() {
+            if (langText) {
+                langText.textContent = currentLang === "vi" ? "🇻🇳 VI" : "🇬🇧 EN";
+            }
+            document.documentElement.lang = currentLang;
+        }
+
+        if (btn) {
+            btn.addEventListener("click", function() {
+                currentLang = currentLang === "vi" ? "en" : "vi";
+                localStorage.setItem(LANG_KEY, currentLang);
+                localStorage.setItem("fruitCrushLang", currentLang);
+                updateLangUI();
+                window.location.reload();
+            });
+        }
+        updateLangUI();
+    })();
+    </script>
+
 </body>
 </html>

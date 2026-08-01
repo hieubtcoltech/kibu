@@ -440,6 +440,36 @@
         <p><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built by Bon & Tin with love for kids.</p>
     </footer>
 
+
+    <!-- Global Language Switcher Script -->
+    <script>
+    (function() {
+        const LANG_KEY = "kibu_global_lang";
+        const btn = document.getElementById("btn-global-lang");
+        const langText = document.getElementById("global-lang-text");
+        
+        let currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
+
+        function updateLangUI() {
+            if (langText) {
+                langText.textContent = currentLang === "vi" ? "🇻🇳 VI" : "🇬🇧 EN";
+            }
+            document.documentElement.lang = currentLang;
+        }
+
+        if (btn) {
+            btn.addEventListener("click", function() {
+                currentLang = currentLang === "vi" ? "en" : "vi";
+                localStorage.setItem(LANG_KEY, currentLang);
+                localStorage.setItem("fruitCrushLang", currentLang);
+                updateLangUI();
+                window.location.reload();
+            });
+        }
+        updateLangUI();
+    })();
+    </script>
+
 </body>
 </html>
 
