@@ -74,6 +74,11 @@
             -webkit-user-select: none;
         }
 
+        /* Thuộc tính hidden của HTML chỉ ẩn nhờ style mặc định của trình duyệt,
+           mà style đó thua mọi khai báo display của mình — thiếu dòng này thì
+           phần tử đặt hidden vẫn hiện. */
+        [hidden] { display: none !important; }
+
         body {
             font-family: var(--font-main);
             background-color: var(--bg-poki);
@@ -406,6 +411,15 @@
             background: linear-gradient(135deg, #7c2d12 0%, #b45309 55%, #e8c88f 100%);
         }
 
+        /* Ảnh logo thật nếu có; thiếu tệp thì thẻ img tự gỡ và quân cờ CSS thế chỗ */
+        .tile-img {
+            width: 1.35em;
+            height: 1.35em;
+            border-radius: 22%;
+            display: block;
+            box-shadow: 0 0.06em 0.16em rgba(0, 0, 0, 0.5);
+        }
+
         /* Quân TƯỚNG đỏ dựng bằng CSS — biểu tượng của game.
            Khối trụ có bề dày thật: một lớp thành gỗ sẫm phía dưới, mặt trên vát sáng,
            vành đỏ khắc chìm và chữ 帥 nổi khối. Trước đây dùng emoji ♟️ — đó là quân
@@ -656,7 +670,9 @@
             <a href="/g/co-tuong" class="poki-tile tile-xiangqi"
                 data-keywords="co tuong xiangqi chinese chess online 2 player room code board game">
                 <span class="tile-badge badge-new">NEW</span>
-                <div class="tile-emoji"><span class="xq-piece" aria-hidden="true"><span class="xq-top">帥</span></span></div>
+                <div class="tile-emoji"><img src="/xiangqi/icon.png" alt="" class="tile-img"
+                        onload="this.nextElementSibling.hidden=true" onerror="this.remove()"><span
+                        class="xq-piece" aria-hidden="true"><span class="xq-top">帥</span></span></div>
                 <div class="tile-label">Cờ Tướng</div>
                 <div class="tile-play-overlay">
                     <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>

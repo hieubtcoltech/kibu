@@ -80,6 +80,17 @@ body > .app-wrapper {
 .brand { display: flex; align-items: center; gap: 10px; }
 .brand-icon { font-size: 1.5rem; }
 
+/* Ảnh logo thật nếu có ở /xiangqi/icon.png; thiếu tệp thì thẻ img tự gỡ mình
+   và quân cờ dựng bằng CSS bên dưới thế chỗ, nên không bao giờ hiện ảnh vỡ. */
+.brand-img {
+    height: 2.1em;
+    width: auto;
+    border-radius: 22%;
+    display: block;
+    flex-shrink: 0;
+    box-shadow: 0 0.1em 0.3em rgba(0, 0, 0, 0.45);
+}
+
 /* Quân TƯỚNG đỏ dựng bằng CSS — biểu tượng của game.
    Khối trụ có bề dày thật: một lớp thành gỗ sẫm phía dưới, mặt trên vát sáng,
    vành đỏ khắc chìm và chữ 帥 nổi khối. Trước đây dùng emoji ♟️ — đó là quân
