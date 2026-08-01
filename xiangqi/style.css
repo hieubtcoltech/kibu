@@ -620,12 +620,20 @@ body > .app-wrapper {
     .table {
         max-width: none;
         display: grid;
-        grid-template-columns: 1fr auto 1fr;
+        /* Cột giữa để 'auto' thì bề rộng của nó lấy theo bề rộng canvas, mà
+           canvas lại đo theo cột — hai bên chờ nhau nên bàn cờ co lại còn 164px.
+           Chia phần cứng: hai thanh người chơi mỗi bên 1 phần, bàn cờ 2 phần. */
+        grid-template-columns: minmax(100px, 1fr) 2fr minmax(100px, 1fr);
+        /* Hàng phải chiếm trọn chiều cao: để auto thì nó co theo nội dung, mà
+           board-wrap lại xin height:100% của chính hàng đó -> vòng luẩn quẩn,
+           bàn cờ teo lại còn nửa màn hình. */
+        grid-template-rows: minmax(0, 1fr);
         grid-template-areas: 'top board bottom';
-        align-items: center;
+        align-items: stretch;
+        height: 100%;
     }
-    #strip-top { grid-area: top; flex-direction: column; gap: 6px; }
-    #strip-bottom { grid-area: bottom; flex-direction: column; gap: 6px; }
-    .board-wrap { grid-area: board; height: 100%; }
+    #strip-top { grid-area: top; flex-direction: column; justify-content: center; gap: 6px; align-self: center; }
+    #strip-bottom { grid-area: bottom; flex-direction: column; justify-content: center; gap: 6px; align-self: center; }
+    .board-wrap { grid-area: board; min-height: 0; }
     .game-bar { display: none; }
 }
