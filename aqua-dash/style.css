@@ -584,6 +584,9 @@ body > .app-wrapper {
     display: block;
     width: 100%;
     max-width: 320px;
+    /* Chốt tỉ lệ ở CSS: nếu để height:auto ăn theo thuộc tính width/height của
+       canvas thì vòng "đo rồi ghi" tự nuôi nhau, ô cứ cao dần lên. */
+    aspect-ratio: 320 / 150;
     height: auto;
     margin: 0 auto 8px;
     border-radius: 16px;

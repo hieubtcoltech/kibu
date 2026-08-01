@@ -2549,24 +2549,38 @@
         });
     }
 
-    /* Nhân vật nhỏ bơi tại chỗ trong màn hình chọn */
+    /* Nhân vật nhỏ bơi tại chỗ trong màn hình chọn.
+       Bộ đệm vẽ phải khớp pixel vật lý: canvas 320x150 mà CSS kéo giãn theo
+       devicePixelRatio thì hình bị mờ nhoè. Kích thước CSS còn đổi theo media
+       query nên đo lại mỗi lần thay vì chốt cứng. */
     let previewKick = 0;
     function drawPreview(dt) {
         const cv = el['suit-preview'];
-        if (!cv) return;
+        if (!cv || !cv.getBoundingClientRect().width) return;
+        const rect = cv.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 3);
+        const w = Math.max(80, Math.round(rect.width));
+        const h = Math.round(w * 150 / 320);      // theo đúng tỉ lệ khai báo ở CSS
+        if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+            cv.width = Math.round(w * dpr);
+            cv.height = Math.round(h * dpr);
+        }
+
         const g = cv.getContext('2d');
         previewKick += dt * 7;
-        g.setTransform(1, 0, 0, 1, 0, 0);
-        g.clearRect(0, 0, cv.width, cv.height);
-        const suit = SUITS.find(s => s.id === Store.data.suit) || SUITS[0];
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        g.clearRect(0, 0, w, h);
+
         // vài bọt nước cho đỡ trống
         g.fillStyle = 'rgba(200,240,255,0.25)';
         for (let i = 0; i < 7; i++) {
-            const bx = (i * 47 + (previewKick * 9) % 320) % 320;
-            const by = 130 - ((previewKick * 22 + i * 40) % 150);
+            const bx = (i * 47 + (previewKick * 9) % w) % w;
+            const by = h - 20 - ((previewKick * 22 + i * 40) % h);
             g.beginPath(); g.arc(bx, by, 2 + (i % 3), 0, 6.28); g.fill();
         }
-        drawDiver(g, cv.width / 2 - 6, cv.height / 2, 1.05, {
+
+        const suit = SUITS.find(s => s.id === Store.data.suit) || SUITS[0];
+        drawDiver(g, w / 2 - w * 0.02, h / 2, (w / 320) * 1.05, {
             suit, kick: previewKick, tilt: Math.sin(previewKick * 0.4) * 0.12, face: 1, state: 'swim'
         });
     }
