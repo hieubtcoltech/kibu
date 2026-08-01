@@ -125,6 +125,36 @@
         ['Trợ Giúp Bé: Tắt', 'Aim Helper: Off'],
         ['Hiện đường bay dự đoán giúp bé ngắm dễ hơn', 'Show the predicted flight path to make aiming easier'],
 
+        /* ---------- Nhãn ngắn ở màn hình chọn (Ocean Party & Aqua Dash) ----------
+           Rút gọn nhãn mà quên bổ sung ở đây thì bản tiếng Anh lòi ra tiếng Việt.
+           "THỜI LƯỢNG" tách riêng khỏi "Thời Gian" của đồng hồ trong HUD, vì mỗi
+           chỗ cần một nghĩa khác nhau. */
+        ['SỐ BÉ', 'PLAYERS'],
+        ['VÙNG BIỂN', 'PICK YOUR SEA'],
+        ['THỜI LƯỢNG', 'ROUND TIME'],
+        ['Nhanh', 'Quick'],
+        ['Hôm Nay', 'Daily'],
+        ['1 phút', '1 minute'],
+        ['Gom kho báu — hết giờ ai nhiều điểm nhất thắng!',
+            'Grab treasure — the highest score when time runs out wins!'],
+        ['Bơi theo màn hình, gom kho báu — tụt lại là bị loại!',
+            'Keep up with the screen, grab treasure — fall behind and you are out!'],
+        ['BỘ ĐỒ CỦA BÉ 1', 'KID 1\'S WETSUIT'],
+        ['Điều khiển', 'Controls'],
+        ['Ăn điểm', 'Scoring'],
+        ['Tránh xa', 'Avoid'],
+        ['Cưỡi cá & bảo bối', 'Rides & power-ups'],
+        ['Luật đua', 'Race rules'],
+        ['Ăn liên tiếp không nghỉ để nhân điểm', 'Collect without stopping to multiply your score'],
+        ['Mỗi mét bơi được thêm 2 điểm', 'Every metre swum adds 2 points'],
+        ['Cá mập đuổi bé bơi nhanh nhất', 'Sharks chase the fastest swimmer'],
+        ['Cá mập đuổi bé đang đứng chót', 'Sharks chase whoever is last'],
+        ['Màn hình tự trôi', 'The screen scrolls'],
+        ['Tụt lại là bị loại', 'Fall behind, you are out'],
+        ['Hết giờ, nhiều điểm nhất thắng', 'Highest score at the buzzer wins'],
+        ['3 đường: khó thì nhiều kho báu', '3 routes: riskier means richer'],
+        ['cần gạt', 'joystick'],
+
         /* ---------- Cờ Tướng (xiangqi) ---------- */
         ['CỜ TƯỚNG', 'XIANGQI'],
         ['CỜ TƯỚNG ONLINE', 'XIANGQI ONLINE'],

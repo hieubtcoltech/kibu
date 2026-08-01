@@ -1179,6 +1179,12 @@
                         continue;
                     }
                     const tx = c * TILE, ty = r * TILE;
+                    /* Vị trí đã đổi sau cú đẩy của ô trước đó — phải đo lại xem
+                       còn chạm ô này không. Bản cũ lấy khung bao một lần rồi đẩy
+                       cho mọi ô trong khung, nên đứng sát tường mà có tảng đá
+                       chéo phía trên là bé bị hất lên/xuống một ô. */
+                    if (this.x + rr <= tx || this.x - rr >= tx + TILE ||
+                        this.y + rr <= ty || this.y - rr >= ty + TILE) continue;
                     if (horizontal) {
                         if (delta > 0) this.x = tx - rr;
                         else if (delta < 0) this.x = tx + TILE + rr;
@@ -2948,7 +2954,7 @@
                 '<div class="world-emoji">' + w.emoji + '</div>' +
                 '<div class="world-label">' + w.name + '</div>' +
                 '<div class="world-diff">' + '★'.repeat(Math.min(5, Math.ceil(w.diff * 5 / 7))) + '</div>' +
-                (locked ? '<div class="world-lock">🔒<span style="font-size:.55rem;margin-left:4px">' + w.unlock + '</span></div>' : '');
+                (locked ? '<div class="world-lock">🔒<span>' + w.unlock.toLocaleString('vi-VN') + '</span></div>' : '');
             if (!locked) {
                 card.addEventListener('click', () => {
                     G.worldIdx = i;

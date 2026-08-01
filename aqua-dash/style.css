@@ -563,10 +563,24 @@ body > .app-wrapper {
     position: absolute;
     inset: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
-    background: rgba(2, 10, 22, 0.55);
+    gap: 2px;
+    font-size: 1.3rem;
+    /* Đủ đục để tên vùng biển bên dưới không lẫn vào ổ khoá và số điểm */
+    background: rgba(2, 10, 22, 0.82);
+    backdrop-filter: blur(1px);
+    border-radius: inherit;
+}
+
+.world-lock span {
+    font-family: var(--font-display);
+    font-size: 0.62rem !important;
+    font-weight: 800;
+    color: var(--sun);
+    margin-left: 0 !important;
+    letter-spacing: 0.5px;
 }
 
 .setup-hint {
