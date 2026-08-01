@@ -258,6 +258,9 @@
         .poki-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            /* dense: các ô nhỏ tự lấp vào khoảng trống mà ô lớn để lại, nên lưới
+               không bị thủng lỗ dù ô nổi bật chiếm 2x2 */
+            grid-auto-flow: row dense;
             gap: 16px;
             width: 100%;
         }
@@ -267,6 +270,65 @@
                 grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
                 gap: 20px;
             }
+        }
+
+        /* ---------- Ô game nổi bật ----------
+           Các game đông bé chơi nhất chiếm một ô vuông 2x2 ngay trong cùng lưới,
+           kiểu Poki: mắt bắt vào chúng trước, còn các game khác vẫn xếp đều
+           xung quanh chứ không phải cuộn xuống một khu riêng. */
+        .poki-tile.featured {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .poki-tile.featured .tile-emoji { font-size: 6.5rem; }
+        .poki-tile.featured .tile-label { padding: 12px 10px; font-size: 1.2rem; }
+        .poki-tile.featured .tile-play-icon { width: 66px; height: 66px; font-size: 1.6rem; }
+
+        /* Dòng mô tả ngắn chỉ có ở ô lớn — ô nhỏ không đủ chỗ */
+        .tile-sub {
+            display: block;
+            margin-top: 2px;
+            font-family: var(--font-main);
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #a5c9e0;
+            letter-spacing: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .poki-tile:not(.featured) .tile-sub { display: none; }
+
+        /* Nhãn góc: HOT cho game đông bé chơi, MỚI cho game vừa ra */
+        .tile-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 3;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-family: var(--font-display);
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #ffffff;
+            background: linear-gradient(135deg, #f43f5e, #f97316);
+            box-shadow: 0 4px 14px rgba(244, 63, 94, 0.5);
+            text-transform: uppercase;
+        }
+
+        .tile-badge.badge-new {
+            background: linear-gradient(135deg, #06b6d4, #22c55e);
+            box-shadow: 0 4px 14px rgba(6, 182, 212, 0.5);
+        }
+
+        @media (max-width: 640px) {
+            .poki-tile.featured .tile-emoji { font-size: 4.6rem; }
+            .poki-tile.featured .tile-label { font-size: 1rem; padding: 9px 8px; }
+            .tile-sub { font-size: 0.7rem; }
+            .tile-badge { font-size: 0.62rem; padding: 3px 9px; top: 8px; left: 8px; }
         }
 
         /* Poki Square Game Tile */
@@ -502,17 +564,56 @@
     <main class="poki-grid-container">
         <div class="poki-grid" id="cardsGrid">
 
-            <!-- Game 1: Fruit Crush -->
-            <a href="/g/fruit-crush" class="poki-tile tile-fruit"
+            <a href="/g/fruit-crush" class="poki-tile tile-fruit featured"
                 data-keywords="fruit crush match 3 candy sweets berries">
+                <span class="tile-badge">HOT</span>
                 <div class="tile-emoji">🍓</div>
-                <div class="tile-label">Fruit Crush</div>
+                <div class="tile-label">Fruit Crush<span class="tile-sub">Match-3 sweetness</span></div>
                 <div class="tile-play-overlay">
                     <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
             </a>
 
-            <!-- Game 2: Bot Arena -->
+            <a href="/g/basketball-duel" class="poki-tile tile-basket featured"
+                data-keywords="basketball duel sports hoops 2 player shooting">
+                <span class="tile-badge">HOT</span>
+                <div class="tile-emoji">🏀</div>
+                <div class="tile-label">Basketball Duel<span class="tile-sub">2-4 kids, one screen</span></div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
+                </div>
+            </a>
+
+            <a href="/g/pool-masters" class="poki-tile tile-pool featured"
+                data-keywords="pool masters billiards 8 ball snooker cue 2 player">
+                <span class="tile-badge">HOT</span>
+                <div class="tile-emoji">🎱</div>
+                <div class="tile-label">Pool Masters<span class="tile-sub">8-ball for two</span></div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
+                </div>
+            </a>
+
+            <a href="/g/super-striker" class="poki-tile tile-soccer featured"
+                data-keywords="super striker soccer football penalty 2 4 player">
+                <span class="tile-badge">HOT</span>
+                <div class="tile-emoji">⚽</div>
+                <div class="tile-label">Super Striker<span class="tile-sub">Mini football party</span></div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
+                </div>
+            </a>
+
+            <a href="/g/ocean-party" class="poki-tile tile-ocean"
+                data-keywords="ocean party underwater swim treasure pearls 4 player multiplayer sea">
+                <span class="tile-badge badge-new">NEW</span>
+                <div class="tile-emoji">🐠</div>
+                <div class="tile-label">Ocean Party</div>
+                <div class="tile-play-overlay">
+                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
+                </div>
+            </a>
+
             <a href="/g/bot-arena" class="poki-tile tile-shooter"
                 data-keywords="bot arena robot shooter action gun aiming">
                 <div class="tile-emoji">🤖</div>
@@ -522,7 +623,6 @@
                 </div>
             </a>
 
-            <!-- Game 3: Neon Racer -->
             <a href="/g/neon-racer" class="poki-tile tile-racer"
                 data-keywords="neon racer racing car speed nitro sports">
                 <div class="tile-emoji">🏎️</div>
@@ -532,9 +632,8 @@
                 </div>
             </a>
 
-            <!-- Game 4: English Quest -->
             <a href="/g/english-quest" class="poki-tile tile-english"
-                data-keywords="english quest learn words grammar vocabulary study">
+                data-keywords="english quest learning education grammar present perfect study">
                 <div class="tile-emoji">🎓</div>
                 <div class="tile-label">English Quest</div>
                 <div class="tile-play-overlay">
@@ -542,9 +641,8 @@
                 </div>
             </a>
 
-            <!-- Game 5: Neon Nebula -->
             <a href="/g/neon-nebula" class="poki-tile tile-space"
-                data-keywords="neon nebula space shooter spaceship galaxy alien boss">
+                data-keywords="neon nebula space shooter galaxy asteroid alien">
                 <div class="tile-emoji">🚀</div>
                 <div class="tile-label">Neon Nebula</div>
                 <div class="tile-play-overlay">
@@ -552,9 +650,8 @@
                 </div>
             </a>
 
-            <!-- Game 6: Cyber Snake -->
             <a href="/g/cyber-snake" class="poki-tile tile-snake"
-                data-keywords="cyber snake retro matrix arcade classic grow">
+                data-keywords="cyber snake retro classic arcade eat grow">
                 <div class="tile-emoji">🐍</div>
                 <div class="tile-label">Cyber Snake</div>
                 <div class="tile-play-overlay">
@@ -562,51 +659,10 @@
                 </div>
             </a>
 
-            <!-- Game 7: Basketball Duel -->
-            <a href="/g/basketball-duel" class="poki-tile tile-basket"
-                data-keywords="basketball duel 2 player sports dunk hoop arcade">
-                <div class="tile-emoji">🏀</div>
-                <div class="tile-label">Basketball Duel</div>
-                <div class="tile-play-overlay">
-                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
-                </div>
-            </a>
-
-            <!-- Game 8: Pool Masters -->
-            <a href="/g/pool-masters" class="poki-tile tile-pool"
-                data-keywords="pool masters billiards 8 ball 2 player cue snooker">
-                <div class="tile-emoji">🎱</div>
-                <div class="tile-label">Pool Masters</div>
-                <div class="tile-play-overlay">
-                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
-                </div>
-            </a>
-
-            <!-- Game 9: Super Striker -->
-            <a href="/g/super-striker" class="poki-tile tile-soccer"
-                data-keywords="super striker soccer football penalty goalkeeper sports">
-                <div class="tile-emoji">⚽</div>
-                <div class="tile-label">Super Striker</div>
-                <div class="tile-play-overlay">
-                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
-                </div>
-            </a>
-
-            <!-- Game 10: Balloon Darts -->
             <a href="/g/balloon-darts" class="poki-tile tile-darts"
                 data-keywords="balloon darts pop carnival target aim throwing">
                 <div class="tile-emoji">🎯</div>
                 <div class="tile-label">Balloon Darts</div>
-                <div class="tile-play-overlay">
-                    <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
-                </div>
-            </a>
-
-            <!-- Game 11: Ocean Party -->
-            <a href="/g/ocean-party" class="poki-tile tile-ocean"
-                data-keywords="ocean party underwater swim treasure pearls 4 player multiplayer sea">
-                <div class="tile-emoji">🐠</div>
-                <div class="tile-label">Ocean Party</div>
                 <div class="tile-play-overlay">
                     <div class="tile-play-icon"><i class="fa-solid fa-play"></i></div>
                 </div>
