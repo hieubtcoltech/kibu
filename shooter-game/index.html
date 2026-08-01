@@ -232,11 +232,11 @@
             </div>
 
             <!-- Loadout & Equipment Selector -->
-            <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 18px; padding: 14px; margin-bottom: 20px;">
-                <div style="font-size: 0.95rem; font-weight: 800; color: #00f0ff; margin-bottom: 8px;">
+            <div class="setup-box">
+                <div class="setup-label">
                     <i class="fa-solid fa-vest-patches"></i> CHỌN TRANG BỊ & VŨ KHÍ CHO NHÂN VẬT:
                 </div>
-                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <div class="setup-btns">
                     <button class="btn btn-toggle active loadout-btn" data-type="armor" data-val="tactical">🛡️ Giáp Đặc Nhiệm (+Tốc)</button>
                     <button class="btn btn-toggle loadout-btn" data-type="armor" data-val="heavy">🛡️ Giáp Thép Kevlar (+Máu)</button>
                     <button class="btn btn-toggle active loadout-btn" data-type="helmet" data-val="bandana">🪖 Băng Rôn (+Sát Thương)</button>
@@ -244,14 +244,16 @@
                 </div>
             </div>
 
-            <div style="margin-bottom: 20px;">
-                <label style="color: #94a3b8; font-weight: 700; margin-right: 10px;">Độ Khó Đấu Trường:</label>
-                <button class="btn btn-toggle active difficulty-btn" data-diff="easy">Dễ (Vui Vẻ)</button>
-                <button class="btn btn-toggle difficulty-btn" data-diff="normal">Vừa (Thử Thách)</button>
-                <button class="btn btn-toggle difficulty-btn" data-diff="hard">Khó (Dũng Sĩ)</button>
+            <div class="setup-row">
+                <label class="setup-label-inline">Độ Khó Đấu Trường:</label>
+                <div class="setup-btns">
+                    <button class="btn btn-toggle active difficulty-btn" data-diff="easy">Dễ (Vui Vẻ)</button>
+                    <button class="btn btn-toggle difficulty-btn" data-diff="normal">Vừa (Thử Thách)</button>
+                    <button class="btn btn-toggle difficulty-btn" data-diff="hard">Khó (Dũng Sĩ)</button>
+                </div>
             </div>
 
-            <button id="btn-play-game" class="btn btn-cyber btn-primary" style="font-size: 1.3rem; padding: 14px 40px; border-radius: 20px;">
+            <button id="btn-play-game" class="btn btn-cyber btn-primary btn-play">
                 BẮT ĐẦU CHƠI <i class="fa-solid fa-play"></i>
             </button>
         </div>

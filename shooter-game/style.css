@@ -225,12 +225,19 @@ body > .app-wrapper {
     z-index: 5;
 }
 
+/* Lưới 1fr–auto–1fr thay cho space-between: cột giữa mới thực sự nằm giữa màn
+   hình dù hộp trái và hộp phải rộng khác nhau, và hai cột ngoài co lại theo
+   nhau nên không có hộp nào lấn sang hộp kia khi màn hình hẹp. */
 .hud-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: start;
+    gap: 12px;
 }
+
+.hud-top > .player-status { justify-self: start; }
+.hud-top > .hud-center { justify-self: center; }
+.hud-top > .hud-right { justify-self: end; }
 
 /* HUD Glass Box */
 .hud-box {
@@ -252,7 +259,9 @@ body > .app-wrapper {
     display: flex;
     align-items: center;
     gap: 16px;
-    min-width: 260px;
+    min-width: 0;
+    max-width: 100%;
+    width: 260px;
 }
 
 .avatar-badge {
@@ -613,6 +622,51 @@ body > .app-wrapper {
     margin-top: 4px;
 }
 
+/* Khối chọn trang bị & độ khó trong màn hình bắt đầu. Trước đây viết bằng style
+   nội dòng nên media query không thu gọn được, mà đây lại là hai khối chiếm chỗ
+   nhiều nhất trong modal. */
+.setup-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 14px;
+    margin-bottom: 20px;
+}
+
+.setup-label {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--neon-blue);
+    margin-bottom: 8px;
+}
+
+.setup-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.setup-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.setup-label-inline {
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.btn-play {
+    font-size: 1.3rem;
+    padding: 14px 40px;
+    border-radius: 20px;
+}
+
 /* Shop Items Grid */
 .shop-grid {
     display: grid;
@@ -725,7 +779,7 @@ body > .app-wrapper {
 @media (max-width: 1024px) {
     .hud-overlay { padding-top: 12px; }
     .hud-box { padding: 10px 14px; border-radius: 14px; }
-    .player-status { min-width: 210px; gap: 12px; }
+    .player-status { width: 220px; gap: 12px; }
     .avatar-badge { width: 38px; height: 38px; font-size: 1.15rem; }
     .bar-header { font-size: 0.85rem; }
     .wave-title { font-size: 1.15rem; }
@@ -742,7 +796,7 @@ body > .app-wrapper {
     .hud-top { gap: 8px; }
     .hud-box { padding: 7px 10px; border-radius: 12px; }
 
-    .player-status { min-width: 0; max-width: 44vw; gap: 8px; }
+    .player-status { width: 190px; gap: 8px; }
     .avatar-badge { width: 30px; height: 30px; font-size: 0.95rem; }
     .avatar-badge span { font-size: 1rem !important; }
     .bar-header { font-size: 0.72rem; gap: 8px; margin-bottom: 3px; }
@@ -772,6 +826,20 @@ body > .app-wrapper {
 
     .buff-badge { padding: 4px 8px; font-size: 0.72rem; }
     .toast-msg { font-size: 0.95rem; padding: 8px 16px; top: 70px; }
+}
+
+/* ---------- Màn hình thấp: điện thoại nằm ngang ----------
+   Ở chiều cao 390px, header + footer + khoảng đệm ăn mất gần 40% màn hình và
+   sân đấu chỉ còn một dải hẹp. Thu gọn khung trang lại để trả chỗ cho canvas. */
+@media (max-height: 560px) {
+    body > .app-wrapper { padding: 6px 8px 8px; gap: 6px; }
+    .unified-nav { padding: 5px 10px; border-radius: 14px; }
+    .nav-home { height: 30px; padding: 0 8px; }
+    .nav-home img { height: 20px; }
+    .site-footer { padding: 2px 8px; }
+    .lang-flag-btn { padding: 3px 7px; }
+    .lang-flag-btn img { width: 20px; height: 14px; }
+    .game-viewport { border-radius: 14px; }
 }
 
 /* ---------- Điện thoại dựng ---------- */
@@ -815,12 +883,28 @@ body.is-touch .buff-container { flex-wrap: wrap; justify-content: center; }
 }
 
 /* Hẹp tới mức hàng vũ khí căn giữa vẫn chạm vào cần gạt thì cho nó nổi hẳn lên
-   phía trên hai nút điều khiển. */
+   phía trên hai nút điều khiển (cần gạt cao 116px + khoảng hở). */
 @media (max-width: 620px) {
-    body.is-touch .hud-bottom { margin-bottom: 104px; }
+    body.is-touch .hud-bottom { margin-bottom: 150px; }
 }
 
-/* ---------- Modal ---------- */
+/* ---------- Modal ----------
+   Thẻ bắt đầu cao khoảng 950px, vượt quá màn hình laptop 768px nên nút BẮT ĐẦU
+   CHƠI nằm dưới mép. Thu dần theo chiều cao thật của cửa sổ. */
+@media (max-height: 1000px) {
+    .modal-card { padding: 22px 26px; }
+    .modal-icon { font-size: 2.4rem; margin-bottom: 6px; }
+    .modal-title { font-size: 1.7rem; }
+    .modal-subtitle { font-size: 0.95rem; margin-bottom: 16px; }
+    .mode-grid { gap: 12px; margin-bottom: 16px; }
+    .mode-card { padding: 14px 12px; }
+    .mode-icon { font-size: 1.8rem; margin-bottom: 4px; }
+    .setup-box { padding: 10px 12px; margin-bottom: 14px; }
+    .setup-row { margin-bottom: 14px; }
+    .modal-card .btn { font-size: 0.9rem; padding: 7px 12px; }
+    .btn-play { font-size: 1.15rem; padding: 11px 32px; }
+}
+
 @media (max-width: 620px) {
     .modal-card { padding: 22px 18px; border-radius: 22px; }
     .modal-icon { font-size: 2.6rem; }
@@ -835,21 +919,31 @@ body.is-touch .buff-container { flex-wrap: wrap; justify-content: center; }
     .shop-buy-btn { width: auto; padding: 6px 18px; }
     /* Hàng nút trang bị/độ khó tự xuống dòng thay vì tràn ngang. */
     .modal-card .btn { font-size: 0.88rem; padding: 7px 12px; }
+    .setup-btns { gap: 6px; }
+    .setup-label { font-size: 0.85rem; }
 }
 
 /* Điện thoại nằm ngang: chiều cao chỉ còn ~390px, modal phải gọn hết mức thì
    nút BẮT ĐẦU CHƠI mới nằm trong tầm nhìn. */
 @media (max-height: 500px) {
-    .modal-overlay { padding: 12px; }
-    .modal-card { padding: 16px 20px; border-radius: 20px; }
-    .modal-icon { font-size: 1.8rem; margin-bottom: 4px; }
-    .modal-title { font-size: 1.25rem; }
-    .modal-subtitle { font-size: 0.82rem; margin-bottom: 12px; }
-    .mode-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .mode-card { padding: 10px; }
-    .mode-icon { font-size: 1.4rem; margin-bottom: 2px; }
-    .mode-name { font-size: 0.95rem; }
+    .modal-overlay { padding: 10px; }
+    .modal-card { padding: 12px 16px; border-radius: 18px; }
+    /* Biểu tượng và câu mô tả là phần trang trí — bỏ trước, giữ lại phần bé
+       thật sự phải bấm. */
+    .modal-icon { display: none; }
+    .modal-title { font-size: 1.1rem; margin-bottom: 4px; }
+    .modal-subtitle { display: none; }
+    .mode-grid { grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+    .mode-card { padding: 8px 10px; border-radius: 14px; }
+    .mode-icon { font-size: 1.2rem; margin-bottom: 2px; }
+    .mode-name { font-size: 0.9rem; }
     .mode-desc { display: none; }
-    .modal-card .btn { font-size: 0.85rem; padding: 6px 12px; }
-    #btn-play-game { font-size: 1.05rem !important; padding: 10px 26px !important; }
+    .setup-box { padding: 8px 10px; margin-bottom: 8px; border-radius: 14px; }
+    .setup-label { font-size: 0.75rem; margin-bottom: 6px; }
+    .setup-btns { gap: 6px; }
+    .setup-row { margin-bottom: 8px; gap: 6px; }
+    .setup-label-inline { font-size: 0.8rem; }
+    .modal-card .btn { font-size: 0.78rem; padding: 5px 9px; border-radius: 10px; }
+    .btn-play { font-size: 1rem; padding: 9px 24px; border-radius: 14px; }
+    .shop-grid { margin: 10px 0; }
 }
