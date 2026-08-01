@@ -321,3 +321,10 @@ body.chrome-fit > .game-wrapper {
     .footer-credit { flex-basis: 100%; }
     .online-badge { font-size: 0.74rem; padding: 3px 10px; }
 }
+
+/* Icon game trên thanh điều hướng: emoji chỉ là phương án dự phòng.
+   Trước đây dùng onload="nextElementSibling.hidden=true" — thỉnh thoảng sự kiện
+   load chạy trước khi trình duyệt kịp đọc tới thẻ emoji, lúc đó nextElementSibling
+   còn là null và sinh lỗi JS. Để CSS lo: còn thẻ ảnh đứng trước thì giấu emoji,
+   ảnh hỏng bị onerror gỡ đi thì emoji tự hiện ra. Không còn phụ thuộc thời điểm. */
+.brand-img + .brand-icon { display: none; }
