@@ -271,80 +271,138 @@
     </script>
     
     
-    <!-- Deep Tree Global I18n UI Localizer Script -->
+    
+    <!-- Ultimate Deep I18n Localizer Engine -->
     <script>
     (function() {
         const LANG_KEY = "kibu_global_lang";
         const currentLang = localStorage.getItem(LANG_KEY) || (navigator.language.startsWith("vi") ? "vi" : "en");
 
         const dictEn = {
-            "Trang Chủ": "Home",
-            "Đổi Đội Hình": "Lineup",
-            "Đá Lại": "Restart Match",
-            "Âm Thanh": "Sound",
-            "Nhạc Nền": "Music",
-            "Chọn Màn": "Levels",
-            "Bảng Vàng": "High Scores",
-            "Chơi Lại": "Restart",
-            "Ván Mới": "New Game",
-            "Luật Chơi": "Rules",
-            "Đã Hiểu": "Got It",
-            "Cửa Hàng": "Shop",
-            "Đóng Cửa Hàng": "Close Shop",
-            "Về Menu": "Main Menu",
-            "BẮT ĐẦU CHƠI": "START PLAYING",
-            "BẮT ĐẦU VÁN ĐẤU": "START MATCH",
-            "VÀO SÂN THI ĐẤU": "KICK OFF MATCH",
-            "ĐẤU LẠI": "PLAY AGAIN",
-            "TRANG CHỦ": "HOME",
-            "Tự Ngắm: BẬT": "Aim Guide: ON",
-            "Tự Ngắm: TẮT": "Aim Guide: OFF",
-            "Đường Ngắm: BẬT": "Aim Line: ON",
-            "Đường Ngắm: TẮT": "Aim Line: OFF",
-            "Điểm Số": "Score",
-            "Xu Thưởng": "Coins",
-            "THỜI GIAN": "TIME",
-            "ĐỘI ĐỎ": "RED TEAM",
-            "ĐỘI XANH": "BLUE TEAM",
-            "BÓNG ĐÁ MINI": "MINI SOCCER",
-            "SỐ NGƯỜI CHƠI": "NUMBER OF PLAYERS",
-            "THỜI GIAN TRẬN ĐẤU": "MATCH DURATION",
-            "ĐỘI HÌNH & PHÍM BẤM": "LINEUP & CONTROLS",
-            "ĐÁ TIẾP": "RESUME MATCH",
-            "TẠM DỪNG": "PAUSED",
-            "ĐỘI ĐỎ VÔ ĐỊCH!": "RED TEAM CHAMPION!",
-            "ĐỘI XANH VÔ ĐỊCH!": "BLUE TEAM CHAMPION!",
-            "RÊ BÓNG": "DRIBBLING",
-            "CHUYỀN BÓNG": "PASSING",
-            "SÚT NHẸ": "SOFT SHOT",
-            "SÚT MẠNH": "POWER SHOT",
-            "ĐÁ XOÁY": "CURVE SHOT",
-            "QUA MẶT THỦ MÔN": "BYPASS GOALIE",
-            "ĐÁ LUÂN LƯU": "PENALTY SHOOTOUT",
-            "1 PHÚT 30": "1M 30S",
-            "2 PHÚT 30": "2M 30S",
-            "4 PHÚT": "4 MINS",
-            "Đá nhanh": "Quick Match",
-            "Vừa đủ": "Standard",
-            "Trận dài": "Long Match",
-            "2 BÉ · 1-1": "2 PLAYERS (1-1)",
-            "3 BÉ · 2-1": "3 PLAYERS (2-1)",
-            "4 BÉ · 2-2": "4 PLAYERS (2-2)",
-            "Đối đầu tay đôi": "Head to Head",
-            "Hai đội, tha hồ chuyền bóng": "Two teams, passing play",
-            "Màn": "Level",
-            "Mục tiêu": "Target",
-            "Lượt Đi": "Moves",
-            "Chiến Thắng!": "Victory!",
-            "Hết Lượt Đi!": "Out of Moves!",
-            "Màn Tiếp Theo": "Next Level",
-            "Về bản đồ màn chơi": "Back to Map",
-            "Bản Đồ Màn Chơi": "Level Map",
-            "Thử Lại": "Try Again",
-            "Đóng": "Close",
-            "100% FREE": "100% FREE",
-            "BUILT WITH LOVE FOR KIDS": "BUILT WITH LOVE FOR KIDS"
-        };
+        "Trang Chủ": "Home",
+        "TRANG CHỦ": "HOME",
+        "Âm Thanh": "Sound",
+        "Nhạc Nền": "Music",
+        "Chọn Màn": "Levels",
+        "Bảng Vàng": "High Scores",
+        "Chơi Lại": "Restart",
+        "Ván Mới": "New Game",
+        "Luật Chơi": "Rules",
+        "Đã Hiểu": "Got It",
+        "Cửa Hàng": "Shop",
+        "Đóng Cửa Hàng": "Close Shop",
+        "Về Menu": "Main Menu",
+        "ĐỔI ĐỘI HÌNH": "LINEUP",
+        "ĐÁ LẠI": "RESTART MATCH",
+        "ĐẤU LẠI": "REPLAY MATCH",
+        "BẮT ĐẦU CHƠI": "START PLAYING",
+        "BẮT ĐẦU VÁN ĐẤU": "START MATCH",
+        "VÀO SÂN THI ĐẤU": "KICK OFF MATCH",
+        "Tự Ngắm: BẬT": "Aim Guide: ON",
+        "Tự Ngắm: TẮT": "Aim Guide: OFF",
+        "Đường Ngắm: BẬT": "Aim Line: ON",
+        "Đường Ngắm: TẮT": "Aim Line: OFF",
+        "Điểm Số": "Score",
+        "Xu Thưởng": "Coins",
+        "100% FREE": "100% FREE",
+        "BUILT WITH LOVE FOR KIDS": "BUILT WITH LOVE FOR KIDS",
+        "Search games...": "Search games...",
+        "No matching games found!": "No matching games found!",
+        "BÓNG ĐÁ MINI": "MINI SOCCER",
+        "SỐ NGƯỜI CHƠI": "NUMBER OF PLAYERS",
+        "THỜI GIAN TRẬN ĐẤU": "MATCH DURATION",
+        "ĐỘI HÌNH & PHÍM BẤM": "LINEUP & CONTROLS",
+        "ĐÁ TIẾP": "RESUME MATCH",
+        "TẠM DỪNG": "PAUSED",
+        "THỜI GIAN": "TIME",
+        "ĐỘI ĐỎ": "RED TEAM",
+        "ĐỘI XANH": "BLUE TEAM",
+        "ĐỘI ĐỎ VÔ ĐỊCH!": "RED TEAM CHAMPION!",
+        "ĐỘI XANH VÔ ĐỊCH!": "BLUE TEAM CHAMPION!",
+        "Một trận cầu quá hay!": "What a magnificent match!",
+        "Nghỉ giải lao một chút rồi đá tiếp nhé!": "Take a short break then continue playing!",
+        "Từ 2 đến 4 bé cùng đá trên một máy. Rê bóng qua người, chuyền cho đồng đội rồi tung cú sút qua thủ môn vào lưới đối phương! Sân vẽ theo luật futsal: vòng cấm hình vòng cung, hai chấm phạt đền, khu thay người.": "Play with 2 to 4 kids on one device. Dribble past defenders, pass to teammates, and shoot past the goalie! Futsal pitch layout with penalty spots and sub benches.",
+        "2 BÉ · 1-1": "2 PLAYERS (1-1)",
+        "3 BÉ · 2-1": "3 PLAYERS (2-1)",
+        "4 BÉ · 2-2": "4 PLAYERS (2-2)",
+        "Đối đầu tay đôi": "Head-to-head duel",
+        "Bé chơi một mình chạy nhanh và sút mạnh hơn ⭐": "Solo player gets extra speed and shot power ⭐",
+        "Hai đội, tha hồ chuyền bóng": "2v2 team play with passing",
+        "1 PHÚT 30": "1M 30S",
+        "2 PHÚT 30": "2M 30S",
+        "4 PHÚT": "4 MINS",
+        "Đá nhanh": "Quick Match",
+        "Vừa đủ": "Standard Match",
+        "Trận dài": "Long Match",
+        "RÊ BÓNG": "DRIBBLING",
+        "CHUYỀN BÓNG": "PASSING",
+        "SÚT NHẸ": "SOFT SHOT",
+        "SÚT MẠNH": "POWER SHOT",
+        "ĐÁ XOÁY": "CURVE SHOT",
+        "QUA MẶT THỦ MÔN": "BYPASS GOALIE",
+        "ĐÁ LUÂN LƯU": "PENALTY SHOOTOUT",
+        "Có bóng rồi cứ chạy, bóng dính theo chân bé": "Once you have the ball, just run — it stays close to your feet",
+        "Bấm nhanh phím hành động để chuyền cho đồng đội": "Tap action key quickly to pass to your teammate",
+        "Giữ một chút rồi thả — bóng đi vừa phải, dễ đặt lòng": "Hold briefly then release — smooth controlled placement shot",
+        "Giữ lâu cho thanh lực qua vạch trắng rồi thả — bóng bay như tên lửa": "Hold power bar past white mark then release — rocket power shot",
+        "Dùng phím thứ hai — bóng bay cong vòng qua thủ môn, đổi lại đi nhẹ hơn chút": "Use second key — curves the ball around the keeper with precision",
+        "Sút thẳng thì bị bắt — hãy chạy dạt sang một bên rồi sút vào góc trống!": "Don’t shoot straight — side-step first then fire into the open corner!",
+        "Hết giờ mà hoà thì hai đội đá luân lưu 3 quả, vẫn hoà thì đấu súng tới khi phân thắng bại": "If tied at full time, 3-round penalty shootout begins until a winner emerges",
+        "SONG ĐẤU BÓNG RỔ": "BASKETBALL DUEL",
+        "NÉM BÓNG RỔ 2 BÉ": "2-PLAYER BASKETBALL DUEL",
+        "CHỌN CHẾ ĐỘ CHƠI": "CHOOSE GAME MODE",
+        "2 BÉ THI ĐẤU": "2 PLAYERS DUEL",
+        "2 BÉ CÙNG NÉM": "2 PLAYERS CO-OP",
+        "60 giây · ai nổ được nhiều điểm hơn thì thắng": "60 seconds · score more points to win",
+        "2 ĐIỂM · đứng gần": "2 PTS · Close range",
+        "3 ĐIỂM · ngoài vạch": "3 PTS · Long range",
+        "NGƯỜI CHƠI 1 THẮNG!": "PLAYER 1 WINS!",
+        "NGƯỜI CHƠI 2 THẮNG!": "PLAYER 2 WINS!",
+        "BI-A 8 BI — SONG ĐẤU": "8-BALL POOL DUEL",
+        "Chưa chọn nhóm bi": "Group undecided",
+        "LƯỢT CỦA BÉ 1": "PLAYER 1 TURN",
+        "LƯỢT CỦA BÉ 2": "PLAYER 2 TURN",
+        "Kéo lùi từ bi trắng rồi thả": "Drag back from cue ball and release",
+        "Hai bé thay phiên nhau đánh trên cùng một máy. Ai ăn hết nhóm bi của mình rồi đưa bi số 8 vào lỗ trước sẽ thắng!": "Take turns on one device. Clear your ball group then sink the 8-ball to win!",
+        "Đánh trước — phá bi": "Shoots first — breaks",
+        "Đánh sau": "Shoots second",
+        "ĐẤU TRƯỜNG BOT ULTRA": "BOT ARENA ULTRA",
+        "CON NGƯỜI CẦM SÚNG 🧑‍✈️🔫 VS ROBOT 🤖": "HUMAN SOLDIER 🧑‍✈️🔫 VS ROBOTS 🤖",
+        "Bé nhập vai CON NGƯỜI CẦM SÚNG 🧑‍✈️🔫 dũng cảm tiêu diệt các binh đoàn ROBOT 🤖 độc ác!": "Play as a brave human soldier 🧑‍✈️🔫 defending against evil robot armies 🤖!",
+        "Con Người Sinh Tồn": "Human Survival",
+        "Con Người Đấu Đội": "Human Team Mode",
+        "Bé cầm súng tiêu diệt từng đợt Robot địch & Trùm Robot Khổng Lồ!": "Battle waves of enemy robots & defeat Giant Robot Bosses!",
+        "Bé (Con Người) cùng đội Robot bảo vệ tiêu diệt Binh Đoàn Robot Đỏ!": "Fight alongside ally defense bots to eliminate Red Robot Army!",
+        "CHỌN TRANG BỊ & VŨ KHÍ CHO NHÂN VẬT:": "CHOOSE CHARACTER EQUIPMENT & WEAPONS:",
+        "Độ Khó Đấu Trường:": "Arena Difficulty:",
+        "Dễ (Vui Vẻ)": "Easy (Casual)",
+        "Vừa (Thử Thách)": "Normal (Challenging)",
+        "Khó (Dũng Sĩ)": "Hard (Expert)",
+        "ĐỢT 1": "WAVE 1",
+        "Bot Còn Lại: 5": "Bots Left: 5",
+        "CỬA HÀNG NÂNG CẤP": "UPGRADE SHOP",
+        "Máu Tối Đa": "Max Health",
+        "Tốc Độ Chạy": "Movement Speed",
+        "Sát Thương Súng": "Weapon Damage",
+        "NEON RACER ARCADE": "NEON RACER ARCADE",
+        "ĐƯỜNG ĐUA NEON ARCADE": "NEON RACER ARCADE",
+        "TỐC ĐỘ": "SPEED",
+        "KỶ LỤC": "HIGH SCORE",
+        "ĐUỔI THEO TỐC ĐỘ NEON!": "CHASE THE NEON SPEED!",
+        "Dùng phím mũi tên MŨI TÊN TRAI / PHẢI hoặc A / D để lạng lách né các xe khác trên đường đua Neon!": "Use LEFT / RIGHT arrow keys or A / D to dodge vehicles on the Neon track!",
+        "PHI TIÊU BONG BÓNG": "BALLOON DARTS",
+        "PHI TIÊU BONG BÓNG 2-4 BÉ": "2-4 PLAYER BALLOON DARTS",
+        "Phi phi tiêu trúng bong bóng để ghi điểm!": "Pop balloons with darts to score high points!",
+        "CYBER SNAKE MATRIX": "CYBER SNAKE MATRIX",
+        "RẮN SĂN MỒI CYBER": "CYBER SNAKE ARCADE",
+        "Điều khiển rắn ăn các hạt năng lượng Neon để dài ra!": "Control your cyber snake to collect Neon energy pellets and grow!",
+        "NEON NEBULA SHOOTER": "NEON NEBULA SHOOTER",
+        "CHIẾN HẠM VŨ TRỤ": "NEON NEBULA SPACESHIP",
+        "Bắn hạ quái vật vũ trụ và Trùm Alien ngoài không gian!": "Shoot down space monsters and alien bosses in deep space!",
+        "ENGLISH QUEST": "ENGLISH QUEST",
+        "HỌC TIẾNG ANH VUI VẺ": "FUN ENGLISH LEARNING",
+        "Học từ vựng và ngữ pháp tiếng Anh qua các câu đố thú vị!": "Master English vocabulary and grammar through fun interactive quizzes!"
+};
 
         if (currentLang === "en") {
             function walkAndTranslate(root) {
@@ -354,9 +412,19 @@
                     const parentTag = node.parentElement ? node.parentElement.tagName.toLowerCase() : "";
                     if (["script", "style", "title"].includes(parentTag)) continue;
                     
-                    const text = node.nodeValue.trim();
+                    let text = node.nodeValue.trim();
+                    if (!text) continue;
+
+                    // Direct match or partial string replacements
                     if (dictEn[text]) {
                         node.nodeValue = node.nodeValue.replace(text, dictEn[text]);
+                    } else {
+                        // Check inside longer text sentences
+                        for (const [key, val] of Object.entries(dictEn)) {
+                            if (text.includes(key)) {
+                                node.nodeValue = node.nodeValue.replace(key, val);
+                            }
+                        }
                     }
                 }
             }
@@ -371,12 +439,13 @@
                 translateAll();
             }
 
-            // Observe dynamic UI popups or screens appearing later
             const observer = new MutationObserver(mutations => {
                 mutations.forEach(m => {
                     m.addedNodes.forEach(node => {
                         if (node.nodeType === Node.ELEMENT_NODE) {
                             walkAndTranslate(node);
+                        } else if (node.nodeType === Node.TEXT_NODE) {
+                            walkAndTranslate(node.parentElement || document.body);
                         }
                     });
                 });
