@@ -864,7 +864,7 @@
     let keys = {};
     const touch = { active: false, dx: 0, dy: 0, dash: false };
 
-    const BASE_SCROLL = 165;
+    const BASE_SCROLL = 138;
     const BASE_ACCEL = 1250;
     const BASE_DRAG = 3.2;
     const SINK = 26;
@@ -954,6 +954,7 @@
             this.out = false;
             this.outAt = 0;
             this.warn = 0;
+            this.behind = 0;
             this.hurtT = 0;
             this.trailT = 0;
         }
@@ -1069,6 +1070,14 @@
                 }
             }
             if (G.event === 'bubbleBoost') this.vy -= 200 * dt;
+
+            /* Dây chun: bé nào rơi vào 30% bên trái màn hình được nước đẩy nhẹ
+               về phía trước. Không có nó thì chỉ cần lỡ nhịp một chút là bị bỏ
+               lại luôn — thử 48 giây với 4 bé thì cả bốn rớt sau 5 giây. */
+            const behindBy = (G.camera.x + worldViewW() * 0.3) - this.x;
+            if (behindBy > 0) {
+                this.vx += Math.min(1, behindBy / (worldViewW() * 0.3)) * G.scroll * 1.1 * dt;
+            }
 
             let drag = BASE_DRAG;
             if (cold) drag *= 2.2;
@@ -2266,7 +2275,7 @@
         const chosen = SUITS.findIndex(s => s.id === Store.data.suit);
         /* Đứng ở khoảng 1/3 khung nhìn: sát mép trái quá thì màn hình vừa trôi
            là bé đã bị bỏ lại, còn ra giữa quá thì không thấy đường phía trước. */
-        const startX = Math.max(360, worldViewW() * 0.3);
+        const startX = Math.max(420, worldViewW() * 0.45);
         G.players = slots.map((slot, i) => {
             const suit = SUITS[(Math.max(0, chosen) + i) % SUITS.length];
             const y = WORLD_H / 2 + (i - (slots.length - 1) / 2) * 90;
@@ -2378,7 +2387,7 @@
 
                 // Màn hình trôi nhanh dần theo thời gian
                 const prog = 1 - G.time / G.raceTime;
-                G.scroll = BASE_SCROLL * G.world.speed * (1 + prog * 0.55);
+                G.scroll = BASE_SCROLL * G.world.speed * (1 + prog * 0.35);
 
                 updateCamera(dt);
                 ensureChunks(G.level, G.camera.x, worldViewW() + CHUNK_W);
@@ -2395,9 +2404,16 @@
                 G.players.forEach(p => {
                     if (p.out) return;
                     const edge = G.camera.x;
-                    if (p.x < edge + 170) p.warn = 1;
-                    if (p.x < edge + 10 && G.grace <= 0) p.eliminate();
-                    else alive++;
+                    if (p.x < edge + 200) p.warn = 1;
+                    // Phải nằm ngoài mép liên tục 1,5 giây mới bị loại — chạm hụt
+                    // một nhịp rồi bơi lại kịp thì vẫn được đua tiếp
+                    if (p.x < edge + 10 && G.grace <= 0) {
+                        p.behind += dt;
+                        if (p.behind > 1.5) p.eliminate(); else alive++;
+                    } else {
+                        p.behind = Math.max(0, p.behind - dt * 1.5);
+                        alive++;
+                    }
                 });
 
                 if (G.time <= 0 || alive === 0) { G.time = Math.max(0, G.time); endRace(); }

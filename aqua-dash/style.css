@@ -958,9 +958,16 @@ body.is-touch .player-cards { margin-bottom: auto; }
     .skin-swatch { width: 24px; height: 24px; border-radius: 7px; }
     .skin-row { gap: 5px; }
     .setup-section { margin-bottom: 4px; }
-    .world-card { padding: 2px 2px 1px; }
-    .world-label { font-size: 0.5rem; }
+    .setup-label { font-size: 0.6rem; margin-bottom: 1px; }
+    /* Điện thoại nằm ngang: thẻ vùng biển chỉ còn biểu tượng, tên hiện ở HUD
+       ngay khi vào đua nên không mất thông tin gì. */
+    .world-card { padding: 3px 2px; }
+    .world-label, .world-best { display: none; }
+    .world-emoji { font-size: 1.25rem; }
     .modal-title { font-size: 0.92rem; }
+    .pill { padding: 2px 8px; font-size: 0.68rem; }
+    .modal-card { padding: 8px 12px; }
+    .btn-play { font-size: 0.85rem; padding: 5px 18px; }
     .modal-card { padding: 10px 14px; }
     .modal-title { font-size: 1rem; margin-bottom: 2px; }
     .setup-section { margin-bottom: 5px; }
