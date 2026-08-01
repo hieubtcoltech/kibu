@@ -500,7 +500,11 @@ const GLOBAL_LANG_KEY = 'kibu_global_lang'; // khoá dùng chung cho cả site
 
 function detectLanguage() {
     try {
-        // Ưu tiên lựa chọn ngôn ngữ chung của cả site, rồi mới tới khoá riêng
+        // Ngôn ngữ nằm ngay trong đường dẫn (/vi/g/fruit-crush) nên nó quyết
+        // định, không phải lựa chọn đã lưu từ lần trước
+        const route = window.KibuRoutes && window.KibuRoutes.parse(location.pathname);
+        if (route && I18N[route.lang]) return route.lang;
+        // Rồi mới tới lựa chọn ngôn ngữ chung của cả site, cuối cùng là khoá riêng
         const global = localStorage.getItem(GLOBAL_LANG_KEY);
         if (global && I18N[global]) return global;
         const saved = localStorage.getItem(LANG_KEY);
