@@ -88,6 +88,7 @@
         ['Thắng!', 'Wins!'],
         ['Hoà Rồi!', "It's A Draw!"],
         ['Hoà Nhau!', "It's A Draw!"],
+        ['Hoà', 'Draw', 'x'],          // ô đếm ván hoà trên bảng điểm cờ caro
         ['Chiến Thắng!', 'Victory!'],
         ['Thất Bại!', 'Defeat!'],
         ['Bắt Đầu!', 'Go!'],

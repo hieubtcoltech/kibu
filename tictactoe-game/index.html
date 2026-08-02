@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tic Tac Toe - Free Online Kids Game | KIBU Games</title>
-    
+
     <!-- SEO Meta Tags -->
     <meta name="description" content="Play Tic Tac Toe online for free on KIBU Games! A fun, family-friendly cờ caro game designed for kids with English & Vietnamese support.">
     <meta name="keywords" content="Tic Tac Toe, tic tac toe, cờ caro, co caro, free online kids games, KIBU Games">
@@ -57,7 +57,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <link rel="stylesheet" href="/tictactoe-game/style.css">
     <link rel="stylesheet" href="/site-chrome.css">
     <script src="/routes.js"></script>
@@ -72,68 +72,107 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 </head>
 <body class="chrome-fit">
+    <!-- Gradient cho quân X và quân O, dùng chung cho mọi hình vẽ trong trang -->
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <defs>
+            <linearGradient id="gradX" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ff9a5c"/>
+                <stop offset="100%" stop-color="#ff4f81"/>
+            </linearGradient>
+            <linearGradient id="gradO" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#3fd0ff"/>
+                <stop offset="100%" stop-color="#6a7bff"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
+    <div class="sky-decor" aria-hidden="true">
+        <span class="blob blob-1"></span>
+        <span class="blob blob-2"></span>
+        <span class="blob blob-3"></span>
+        <span class="blob blob-4"></span>
+    </div>
+
     <header class="unified-nav">
         <div class="nav-left">
             <a href="/" class="nav-home" title="Home" aria-label="Home">
                 <img src="/logo.png" alt="KIBU Games">
             </a>
             <div class="brand">
-                <img src="/tictactoe-game/icon.png" alt="" class="brand-img"><i class="fa-solid fa-gamepad brand-icon"></i>
+                <!-- Icon neon của trang chủ quá tối cho tông pastel này, nên
+                     đầu trang dùng dấu hiệu vẽ thẳng bằng SVG -->
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 64 64">
+                        <rect x="2" y="2" width="60" height="60" rx="18" fill="#eef4ff" stroke="#dbe4ff" stroke-width="2"/>
+                        <g stroke="#c7d6ff" stroke-width="3" stroke-linecap="round">
+                            <path d="M23 12 V52"/><path d="M41 12 V52"/>
+                            <path d="M12 23 H52"/><path d="M12 41 H52"/>
+                        </g>
+                        <path d="M14 14 L21 21 M21 14 L14 21" stroke="#ff5f7e" stroke-width="4.5" stroke-linecap="round"/>
+                        <circle cx="32" cy="32" r="5" fill="none" stroke="#4aa8ff" stroke-width="4"/>
+                        <path d="M43 43 L50 50 M50 43 L43 50" stroke="#ffb444" stroke-width="4.5" stroke-linecap="round"/>
+                    </svg>
+                </span>
                 <h1 class="brand-title">TIC TAC TOE</h1>
             </div>
         </div>
         <div class="nav-actions">
+            <button id="btn-sound" class="btn" title="Turn sound on / off">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Âm Thanh</span>
+            </button>
         </div>
     </header>
 
-    <div class="game-wrapper">
-        <div class="tictactoe-container">
-            <!-- Game Setup (Mode & Difficulty) -->
-            <div class="setup-section">
-                <div class="selector-group">
-                    <button id="modePvp" class="selector-btn active">2 BÉ</button>
-                    <button id="modePve" class="selector-btn">ĐÁNH VỚI MÁY</button>
+    <main class="game-wrapper">
+        <section class="play-card">
+            <div class="setup">
+                <div class="mode-switch" role="group" aria-label="Game mode">
+                    <button id="modePvp" class="mode-btn is-active" type="button">2 BÉ</button>
+                    <button id="modePve" class="mode-btn" type="button">ĐÁNH VỚI MÁY</button>
                 </div>
-                <div id="difficultyContainer" class="difficulty-group" style="display: none;">
-                    <button id="diffEasy" class="difficulty-btn">Dễ</button>
-                    <button id="diffMedium" class="difficulty-btn active">Vừa</button>
-                    <button id="diffHard" class="difficulty-btn">Khó</button>
+                <div id="difficultyRow" class="diff-row" role="group" aria-label="Difficulty" hidden>
+                    <button class="diff-btn" type="button" data-diff="easy">Dễ</button>
+                    <button class="diff-btn is-active" type="button" data-diff="medium">Vừa</button>
+                    <button class="diff-btn" type="button" data-diff="hard">Khó</button>
                 </div>
             </div>
 
-            <!-- Turn text indicator — game.js đã tự chọn ngôn ngữ, engine khỏi dịch lại -->
-            <div id="turnText" class="turn-indicator" data-i18n-skip></div>
-
-            <!-- Game board -->
-            <div id="board" class="tictactoe-board">
-                <div class="cell" data-cell="0"></div>
-                <div class="cell" data-cell="1"></div>
-                <div class="cell" data-cell="2"></div>
-                <div class="cell" data-cell="3"></div>
-                <div class="cell" data-cell="4"></div>
-                <div class="cell" data-cell="5"></div>
-                <div class="cell" data-cell="6"></div>
-                <div class="cell" data-cell="7"></div>
-                <div class="cell" data-cell="8"></div>
+            <div class="scoreboard">
+                <div class="score-chip chip-x">
+                    <span class="chip-mark"><svg viewBox="0 0 100 100"><path d="M24 24 L76 76"/><path d="M76 24 L24 76"/></svg></span>
+                    <span id="scoreX">0</span>
+                </div>
+                <div class="score-chip chip-draw">
+                    <span class="chip-label">Hoà</span>
+                    <span id="scoreDraw">0</span>
+                </div>
+                <div class="score-chip chip-o">
+                    <span class="chip-mark"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="28"/></svg></span>
+                    <span id="scoreO">0</span>
+                </div>
             </div>
 
-            <!-- Restart button -->
-            <div class="controls-bottom">
-                <button id="btnRestart" class="btn-game btn-restart">
-                    <i class="fa-solid fa-rotate-right"></i> <span>Chơi Lại</span>
-                </button>
-            </div>
+            <!-- game.js tự lo hai ngôn ngữ cho hai ô này, engine khỏi dịch lại -->
+            <div id="turnBanner" class="turn-banner" role="status" aria-live="polite" data-i18n-skip></div>
 
-            <!-- Game Over Overlay -->
-            <div id="gameOverOverlay" class="game-over-overlay">
-                <div id="winnerText" class="winner-text" data-i18n-skip></div>
-                <button id="btnRematch" class="btn-game btn-rematch">
-                    <i class="fa-solid fa-play"></i> <span>Đấu Lại</span>
-                </button>
-                <canvas id="confetti-canvas"></canvas>
+            <div id="board" class="board"></div>
+
+            <button id="btnRestart" class="big-btn btn-restart" type="button">
+                <i class="fa-solid fa-rotate-right"></i> <span>Chơi Lại</span>
+            </button>
+
+            <div id="overlay" class="result-overlay">
+                <canvas id="confetti"></canvas>
+                <div class="result-card">
+                    <div id="resultMark" class="result-mark"></div>
+                    <div id="resultText" class="result-text" data-i18n-skip></div>
+                    <button id="btnRematch" class="big-btn btn-play" type="button">
+                        <i class="fa-solid fa-play"></i> <span>Đấu Lại</span>
+                    </button>
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 
     <footer class="site-footer">
         <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>

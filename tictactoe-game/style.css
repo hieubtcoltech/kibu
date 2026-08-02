@@ -1,368 +1,568 @@
+/* =========================================================
+   CỜ CARO (TIC TAC TOE) — STYLESHEET
+   Sân chơi ban ngày: nền sáng, khối bo tròn to, màu kẹo ngọt.
+   Cả trang cố ý đi ngược tông neon tối của các game khác —
+   đây là game cho các bé nhỏ nhất, nên mọi thứ to, mềm và rõ.
+   ========================================================= */
+
 :root {
-    --bg-dark: #0f172a;
-    --card-bg: rgba(30, 41, 59, 0.7);
-    --border-color: #334155;
-    --neon-blue: #00f0ff;
-    --neon-pink: #ff007f;
-    --neon-green: #39ff14;
-    --text-white: #ffffff;
-    --text-gray: #94a3b8;
     --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
     --font-main: 'Nunito', system-ui, sans-serif;
+
+    /* Nền trời ban ngày */
+    --sky-top: #e8f4ff;
+    --sky-mid: #fff1f7;
+    --sky-bot: #fffaee;
+
+    --ink: #3f3d64;
+    --ink-soft: #8087aa;
+    --paper: #ffffff;
+    --paper-soft: #f5f8ff;
+    --line: #e3eaff;
+
+    /* Hai bé hai màu, tách nhau rõ kể cả khi in đen trắng */
+    --x-1: #ff7a5c;
+    --x-2: #ff4f81;
+    --x-soft: rgba(255, 122, 92, 0.14);
+    --o-1: #3fb8ff;
+    --o-2: #6a7bff;
+    --o-soft: rgba(63, 184, 255, 0.14);
+
+    --mint: #37d69a;
+    --sun: #ffc247;
+    --grape: #a98bff;
+
+    --shadow-card: 0 18px 40px rgba(97, 118, 190, 0.18);
+    --shadow-pop: 0 6px 0 rgba(97, 118, 190, 0.22);
+
+    /* site-chrome.css đọc hai biến này cho thanh đầu trang */
+    --card-bg: #ffffff;
+    --card-border: #e3eaff;
+
+    /* Trang không cuộn được (body.chrome-fit), nên bàn cờ phải tự co theo chỗ
+     * còn thừa. Con số dưới đây chỉ để lần vẽ đầu tiên không nhảy; game.js đo
+     * chỗ trống thật rồi chốt lại bề rộng bàn cờ. */
+    --board-max: clamp(160px, calc(100vh - 430px), 400px);
+    --side-col: 280px;             /* cột phải khi xếp hai cột — JS đọc lại */
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+[hidden] { display: none !important; }
+
+body {
+    font-family: var(--font-main);
+    color: var(--ink);
+    background:
+        linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 58%, var(--sky-bot) 100%);
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
     user-select: none;
     -webkit-user-select: none;
 }
 
-body {
-    font-family: var(--font-main);
-    background-color: var(--bg-dark);
-    color: var(--text-white);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
+/* ---------- Mấy đám mây màu trôi phía sau ---------- */
+.sky-decor {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
 }
 
-/* Page alignment and fit */
+.blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(6px);
+    opacity: 0.5;
+    animation: floaty 12s ease-in-out infinite;
+}
+
+.blob-1 { width: 190px; height: 190px; left: -50px; top: 12%; background: rgba(255, 194, 71, 0.5); }
+.blob-2 { width: 150px; height: 150px; right: -40px; top: 26%; background: rgba(169, 139, 255, 0.45); animation-delay: -3s; }
+.blob-3 { width: 210px; height: 210px; right: 8%; bottom: -70px; background: rgba(55, 214, 154, 0.4); animation-delay: -6s; }
+.blob-4 { width: 130px; height: 130px; left: 12%; bottom: -30px; background: rgba(255, 122, 92, 0.35); animation-delay: -9s; }
+
+@keyframes floaty {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-24px) scale(1.06); }
+}
+
+/* ---------- Thanh đầu trang & chân trang trên nền sáng ----------
+   site-chrome.css nạp sau tệp này và viết cho nền tối, nên phải
+   thắng bằng độ ưu tiên (thêm `body`), không phải bằng thứ tự. */
+body .unified-nav {
+    background: var(--paper);
+    border: 2px solid var(--line);
+    box-shadow: 0 10px 26px rgba(97, 118, 190, 0.16);
+}
+
+body .unified-nav .brand-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    background: linear-gradient(120deg, var(--x-2), var(--grape) 55%, var(--o-1));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+body .unified-nav .brand-icon { display: none; }
+
+.brand-mark {
+    width: 38px;
+    height: 38px;
+    display: block;
+    flex-shrink: 0;
+}
+
+.brand-mark svg { width: 100%; height: 100%; display: block; }
+
+@media (max-width: 560px) { .brand-mark { width: 32px; height: 32px; } }
+
+body .site-footer { color: var(--ink-soft); }
+body .footer-credit i { color: var(--x-2); }
+body .footer-credit a { color: #4f6dff; }
+
+body .lang-flag-btn {
+    background: var(--paper);
+    border: 2px solid var(--line);
+    color: var(--ink);
+}
+
+body .lang-flag-btn:hover,
+body .lang-flag-btn:focus-visible {
+    background: var(--paper-soft);
+    border-color: #cfdcff;
+}
+
+body .online-badge {
+    background: rgba(55, 214, 154, 0.14);
+    border: 1px solid rgba(55, 214, 154, 0.45);
+    color: #17a173;
+}
+
+/* Nút trong thanh đầu trang (site-chrome chỉ lo bố cục, màu là của game) */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    background: var(--paper-soft);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn:hover { background: #eaf1ff; border-color: #cfdcff; transform: translateY(-1px); }
+.btn:active { transform: translateY(1px); }
+.btn.is-off { color: var(--ink-soft); background: #f1f2f7; }
+
+/* ---------- Khung chơi ---------- */
 .game-wrapper {
+    position: relative;
+    z-index: 1;
     flex: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px;
-    position: relative;
-    overflow: hidden;
+    padding: 14px;
+    min-height: 0;
 }
 
-/* Glass Card Container */
-.tictactoe-container {
-    /* mốc định vị cho lớp phủ kết thúc ván và pháo giấy */
-    position: relative;
-    background: var(--card-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 2px solid var(--border-color);
-    border-radius: 24px;
-    padding: 24px;
+/* Bố cục bằng grid theo tên vùng: màn dọc thì xếp một cột, màn ngang / màn
+ * rộng thì bàn cờ sang trái, mọi thứ khác dồn sang phải — cùng một HTML. */
+.play-card {
+    position: relative;              /* mốc cho lớp phủ kết quả */
     width: 100%;
-    max-width: 480px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-    z-index: 5;
-    transition: all 0.3s ease;
+    max-width: 460px;
+    max-height: 100%;
+    background: var(--paper);
+    border: 3px solid #fff;
+    border-radius: 30px;
+    box-shadow: var(--shadow-card);
+    padding: 18px;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-areas: "setup" "score" "turn" "board" "action";
+    justify-items: center;
+    align-content: center;
+    gap: 13px;
 }
 
-/* Mode & Difficulty Selectors */
-.setup-section {
-    width: 100%;
+/* ---------- Chọn chế độ ---------- */
+.setup { grid-area: setup; width: 100%; display: flex; flex-direction: column; gap: 10px; }
+
+.mode-switch {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    gap: 6px;
+    padding: 6px;
+    background: var(--paper-soft);
+    border: 2px solid var(--line);
+    border-radius: 18px;
 }
 
-.selector-group {
-    display: flex;
-    background: rgba(15, 23, 42, 0.8);
-    border: 1px solid var(--border-color);
-    border-radius: 12px;
-    padding: 4px;
-}
-
-.selector-btn {
+.mode-btn {
     flex: 1;
-    background: transparent;
+    padding: 10px 6px;
     border: none;
-    color: var(--text-gray);
+    border-radius: 13px;
+    background: transparent;
+    color: var(--ink-soft);
     font-family: var(--font-display);
     font-size: 0.95rem;
     font-weight: 800;
-    padding: 10px;
-    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.25s ease;
-}
-
-.selector-btn.active {
-    background: linear-gradient(135deg, var(--neon-pink), var(--neon-blue));
-    color: white;
-    box-shadow: 0 4px 12px rgba(0, 240, 255, 0.2);
-}
-
-.difficulty-group {
-    display: flex;
-    gap: 8px;
-}
-
-.difficulty-btn {
-    flex: 1;
-    background: rgba(15, 23, 42, 0.6);
-    border: 1px solid var(--border-color);
-    color: var(--text-gray);
-    font-family: var(--font-display);
-    font-weight: 700;
-    padding: 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
     transition: all 0.2s ease;
 }
 
-.difficulty-btn.active {
-    border-color: var(--neon-blue);
-    color: var(--neon-blue);
-    background: rgba(0, 240, 255, 0.1);
-    box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+.mode-btn.is-active {
+    background: linear-gradient(135deg, var(--grape), var(--o-2));
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(106, 123, 255, 0.35);
 }
 
-/* Turn Indicator */
-.turn-indicator {
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    font-weight: 800;
-    text-align: center;
-    height: 30px;
-    transition: all 0.3s ease;
-}
+.diff-row { display: flex; gap: 8px; }
 
-.turn-indicator .x-turn {
-    color: var(--neon-blue);
-    text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
-}
-
-.turn-indicator .o-turn {
-    color: var(--neon-pink);
-    text-shadow: 0 0 10px rgba(255, 0, 127, 0.5);
-}
-
-/* Tic Tac Toe Grid Board */
-.tictactoe-board {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 12px;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    background: rgba(15, 23, 42, 0.4);
-    border-radius: 16px;
-    padding: 8px;
-}
-
-.cell {
-    background: rgba(15, 23, 42, 0.8);
-    border: 2px solid var(--border-color);
-    border-radius: 12px;
-    cursor: pointer;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.cell:hover:not(.taken) {
-    border-color: var(--neon-blue);
-    background: rgba(0, 240, 255, 0.05);
-    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
-}
-
-.cell.taken {
-    cursor: default;
-}
-
-/* Animated X and O */
-.cell svg {
-    width: 70%;
-    height: 70%;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    fill: none;
-}
-
-.cell.x-cell svg {
-    stroke: var(--neon-blue);
-    filter: drop-shadow(0 0 8px rgba(0, 240, 255, 0.8));
-}
-
-.cell.o-cell svg {
-    stroke: var(--neon-pink);
-    filter: drop-shadow(0 0 8px rgba(255, 0, 127, 0.8));
-}
-
-.cell svg path {
-    stroke-width: 12;
-    animation: drawPath 0.4s ease-out forwards;
-}
-
-@keyframes drawPath {
-    to {
-        stroke-dashoffset: 0;
-    }
-}
-
-/* Winning Strike line overlay */
-.winning-line {
-    position: absolute;
-    background: var(--neon-green);
-    border-radius: 4px;
-    box-shadow: 0 0 15px var(--neon-green), 0 0 30px var(--neon-green);
-    z-index: 10;
-    pointer-events: none;
-    transform-origin: left center;
-    transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-/* Ba ô thắng sáng lên */
-.cell.win {
-    border-color: var(--neon-green);
-    background: rgba(57, 255, 20, 0.08);
-    animation: winPulse 1s ease-in-out infinite;
-}
-
-@keyframes winPulse {
-    0%, 100% { box-shadow: 0 0 10px rgba(57, 255, 20, 0.25); }
-    50% { box-shadow: 0 0 22px rgba(57, 255, 20, 0.6); }
-}
-
-/* Reset / Rematch Buttons */
-.controls-bottom {
-    display: flex;
-    gap: 12px;
-    width: 100%;
-}
-
-.btn-game {
+.diff-btn {
     flex: 1;
+    padding: 8px 4px;
+    border: 2px solid var(--line);
+    border-radius: 14px;
+    background: var(--paper);
+    color: var(--ink-soft);
     font-family: var(--font-display);
-    font-size: 1.05rem;
+    font-size: 0.9rem;
     font-weight: 800;
-    padding: 12px;
-    border: none;
-    border-radius: 12px;
     cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.diff-btn:hover { border-color: #cfdcff; }
+
+.diff-btn.is-active {
+    background: var(--sun);
+    border-color: var(--sun);
+    color: #7a4b00;
+    box-shadow: 0 4px 10px rgba(255, 194, 71, 0.45);
+}
+
+/* ---------- Bảng điểm ---------- */
+.scoreboard {
+    grid-area: score;
+    width: 100%;
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.score-chip {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: all 0.25s ease;
+    padding: 8px 6px;
+    border-radius: 16px;
+    background: var(--paper-soft);
+    border: 2px solid var(--line);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    line-height: 1;
 }
 
-.btn-restart {
-    background: var(--border-color);
-    color: white;
-}
+.chip-x { background: var(--x-soft); border-color: rgba(255, 122, 92, 0.35); color: var(--x-2); }
+.chip-o { background: var(--o-soft); border-color: rgba(63, 184, 255, 0.35); color: var(--o-2); }
+.chip-draw { color: var(--ink-soft); font-size: 0.95rem; }
+.chip-draw .chip-label { font-size: 0.85rem; }
 
-.btn-restart:hover {
-    background: #475569;
-}
+.chip-mark { width: 18px; height: 18px; display: block; }
+.chip-mark svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 16; stroke-linecap: round; }
 
-.btn-rematch {
-    background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
-    color: white;
-    box-shadow: 0 4px 15px rgba(255, 0, 127, 0.3);
-}
-
-.btn-rematch:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 240, 255, 0.5);
-}
-
-/* Overlay Screen on Game End */
-.game-over-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(15, 23, 42, 0.9);
-    backdrop-filter: blur(8px);
-    border-radius: 22px;
+/* ---------- Băng báo lượt ---------- */
+.turn-banner {
+    grid-area: turn;
     display: flex;
-    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 18px;
+    border-radius: 999px;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 800;
+    background: var(--paper-soft);
+    border: 2px solid var(--line);
+    transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+.turn-banner.for-x { background: var(--x-soft); border-color: rgba(255, 122, 92, 0.4); color: var(--x-2); }
+.turn-banner.for-o { background: var(--o-soft); border-color: rgba(63, 184, 255, 0.4); color: var(--o-2); }
+
+.turn-banner .turn-mark { width: 22px; height: 22px; flex-shrink: 0; }
+.turn-banner .turn-mark svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 16; stroke-linecap: round; }
+
+/* Máy đang nghĩ: ba chấm nhún nhảy cho bé biết phải chờ */
+.thinking { display: inline-flex; gap: 4px; align-items: flex-end; height: 12px; }
+.thinking i {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor;
+    animation: bounceDot 0.9s ease-in-out infinite;
+}
+.thinking i:nth-child(2) { animation-delay: 0.15s; }
+.thinking i:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes bounceDot {
+    0%, 100% { transform: translateY(0); opacity: 0.5; }
+    50% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ---------- Bàn cờ ---------- */
+.board {
+    grid-area: board;
+    position: relative;              /* mốc cho vạch nối thắng */
+    width: min(100%, var(--board-max));
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.cell {
+    position: relative;
+    padding: 0;
+    border: 3px solid #d8e2ff;
+    border-radius: 20px;
+    background: var(--paper-soft);
+    box-shadow: 0 4px 0 #d8e2ff;
+    cursor: pointer;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    transition: transform 0.12s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.12s ease;
+}
+
+.cell:hover:not(.is-taken):not(:disabled) {
+    background: #fff;
+    border-color: #c9d9ff;
+    transform: translateY(-3px);
+    box-shadow: 0 7px 0 #dde5fa;
+}
+
+.cell:active:not(.is-taken):not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #dde5fa; }
+
+.cell:focus-visible { outline: 4px solid var(--grape); outline-offset: 3px; }
+
+.cell.is-taken { cursor: default; }
+.cell:disabled { cursor: default; }
+
+.cell svg {
+    width: 62%;
+    height: 62%;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 15;
+    animation: popIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.cell.mark-x { background: var(--x-soft); border-color: rgba(255, 122, 92, 0.35); }
+.cell.mark-o { background: var(--o-soft); border-color: rgba(63, 184, 255, 0.35); }
+.cell.mark-x svg { stroke: url(#gradX); }
+.cell.mark-o svg { stroke: url(#gradO); }
+
+@keyframes popIn {
+    0% { transform: scale(0.2) rotate(-14deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* Ba ô thắng nhún nhảy ăn mừng */
+.cell.is-win {
+    background: #fff6d9;
+    border-color: var(--sun);
+    animation: wiggle 0.9s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: rotate(-2.5deg) scale(1.03); }
+    50% { transform: rotate(2.5deg) scale(1.03); }
+}
+
+.win-line {
+    position: absolute;
+    height: 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--sun), var(--mint));
+    box-shadow: 0 3px 10px rgba(55, 214, 154, 0.5);
+    transform-origin: left center;
+    pointer-events: none;
+    z-index: 3;
+    width: 0;
+    transition: width 0.45s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+
+/* ---------- Nút to ---------- */
+.big-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 18px;
+    border: none;
+    border-radius: 18px;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: var(--shadow-pop);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.2s ease;
+}
+
+.big-btn:hover { filter: brightness(1.05); }
+.big-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(97, 118, 190, 0.22); }
+.big-btn:focus-visible { outline: 4px solid var(--grape); outline-offset: 3px; }
+
+.btn-restart { grid-area: action; background: linear-gradient(135deg, #8ea2ff, var(--grape)); }
+.btn-play { background: linear-gradient(135deg, var(--mint), #21b6d8); max-width: 240px; }
+
+/* ---------- Lớp phủ kết quả ---------- */
+.result-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     opacity: 0;
     visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
     z-index: 20;
-    transition: all 0.35s ease;
 }
 
-.game-over-overlay.visible {
-    opacity: 1;
-    visibility: visible;
-}
+.result-overlay.is-open { opacity: 1; visibility: visible; }
 
-.winner-text {
-    font-family: var(--font-display);
-    font-size: 2.2rem;
-    font-weight: 800;
-    text-align: center;
-    text-transform: uppercase;
-    animation: pulseText 1.5s infinite;
-}
-
-.winner-text.x-win {
-    color: var(--neon-blue);
-    text-shadow: 0 0 20px rgba(0, 240, 255, 0.8);
-}
-
-.winner-text.o-win {
-    color: var(--neon-pink);
-    text-shadow: 0 0 20px rgba(255, 0, 127, 0.8);
-}
-
-.winner-text.draw {
-    color: var(--text-white);
-    text-shadow: 0 0 15px rgba(255, 255, 255, 0.6);
-}
-
-@keyframes pulseText {
-    0%, 100% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-}
-
-/* Confetti Canvas */
-#confetti-canvas {
+#confetti {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-    z-index: 15;
 }
 
-/* Shake Effect on Grid */
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-    20%, 40%, 60%, 80% { transform: translateX(4px); }
+.result-card {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 22px;
+    text-align: center;
 }
 
-.shake {
-    animation: shake 0.5s ease-in-out;
+.result-mark { width: 78px; height: 78px; }
+.result-mark svg { width: 100%; height: 100%; fill: none; stroke-width: 14; stroke-linecap: round; }
+.result-mark .emoji { font-size: 4rem; line-height: 1; }
+.result-mark.mark-x svg { stroke: url(#gradX); }
+.result-mark.mark-o svg { stroke: url(#gradO); }
+.result-overlay.is-open .result-mark { animation: popIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+.result-text {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.2;
 }
 
-/* Brand Image Header Fitting */
-.brand-img {
-    height: 34px;
-    width: auto;
-    border-radius: 22%;
-    display: block;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+.result-text.win-x { color: var(--x-2); }
+.result-text.win-o { color: var(--o-2); }
+.result-text.is-draw { color: var(--ink-soft); }
+
+/* ---------- Màn thấp: bóp gọn mọi thứ quanh bàn cờ ---------- */
+@media (max-height: 760px) {
+    :root { --board-max: clamp(150px, calc(100vh - 380px), 340px); }
+    .play-card { gap: 10px; padding: 14px; border-radius: 24px; }
+    .turn-banner { font-size: 1rem; padding: 7px 14px; }
+    .mode-btn { padding: 8px 6px; }
+    .diff-btn { padding: 6px 4px; }
+    .big-btn { padding: 11px 14px; font-size: 1.02rem; }
+    .result-text { font-size: 1.5rem; }
+    .result-mark { width: 60px; height: 60px; }
+    .result-mark .emoji { font-size: 3rem; }
 }
 
-@media (max-height: 560px) { .brand-img { height: 26px; } }
-@media (max-width: 560px) { .brand-img { height: 30px; } }
+/* ---------- Điện thoại nằm ngang & màn hình rộng: hai cột ----------
+   Xếp một cột trên màn ngang thì bàn cờ bị bóp còn bằng con tem; cho bàn cờ
+   một cột riêng thì nó lấy được gần hết chiều cao. */
+@media (min-width: 820px), (orientation: landscape) and (max-height: 640px) {
+    .play-card {
+        max-width: 780px;
+        grid-template-columns: auto minmax(200px, var(--side-col));
+        grid-template-areas:
+            "board setup"
+            "board score"
+            "board turn"
+            "board action";
+        align-content: center;
+        column-gap: 22px;
+        row-gap: 12px;
+    }
+    .board { align-self: center; }
+    .setup { align-self: end; }
+    .btn-restart { align-self: start; }
+}
 
+/* Điện thoại nằm ngang chỉ cao chừng 390px: cột phải phải gọn hơn cả bàn cờ,
+ * không thì nó lòi ra khỏi nền trắng của thẻ chơi. */
+@media (orientation: landscape) and (max-height: 640px) {
+    :root { --board-max: clamp(140px, calc(100vh - 210px), 300px); }
+    .play-card { padding: 12px 16px; row-gap: 8px; column-gap: 16px; }
+    .setup { gap: 6px; }
+    .mode-btn { padding: 6px 4px; font-size: 0.82rem; }
+    .diff-btn { padding: 5px 4px; font-size: 0.8rem; }
+    .score-chip { padding: 5px 4px; font-size: 0.95rem; }
+    .turn-banner { padding: 5px 12px; font-size: 0.92rem; }
+    .turn-banner .turn-mark { width: 18px; height: 18px; }
+    .big-btn { padding: 9px 12px; font-size: 0.95rem; }
+}
+
+/* Máy nằm ngang mà chỉ cao chừng 360px thì bảng điểm là thứ nhường chỗ đầu
+ * tiên — bàn cờ và nút bấm quan trọng hơn. */
+@media (orientation: landscape) and (max-height: 430px) {
+    .scoreboard { display: none; }
+    .play-card { grid-template-areas: "board setup" "board turn" "board action"; }
+}
+
+@media (min-width: 820px) and (min-height: 640px) {
+    :root { --board-max: clamp(200px, calc(100vh - 250px), 400px); }
+}
+
+@media (max-width: 420px) {
+    .mode-btn { font-size: 0.85rem; }
+    .score-chip { font-size: 1rem; }
+    .big-btn { font-size: 1rem; padding: 11px 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .blob, .cell.is-win, .thinking i { animation: none; }
+    .cell svg, .result-overlay.is-open .result-mark { animation-duration: 0.01ms; }
+    .win-line { transition: none; }
+}
