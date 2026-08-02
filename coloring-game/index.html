@@ -193,6 +193,22 @@
         </div>
     </div>
 
+    <!-- Hỏi lại trước khi xoá sạch bức tranh. Dùng panel riêng chứ không dùng
+         window.confirm: hộp thoại hệ thống hiện ra với phông chữ và nút của
+         trình duyệt, lạc hẳn khỏi phần còn lại của game — mà đây lại đúng là
+         lúc bé cần đọc kỹ nhất. -->
+    <div id="confirmClear" class="overlay hidden">
+        <div class="sheet sheet-narrow">
+            <div class="win-emoji">🧽</div>
+            <h2 class="sheet-title">Start this picture again?</h2>
+            <p class="help-note">All the colours and stickers on this picture will come off, and it goes back to being an empty outline.</p>
+            <div class="win-actions">
+                <button class="big-btn ghost" id="clearNo"><i class="fa-solid fa-heart"></i> No, Keep It</button>
+                <button class="big-btn danger" id="clearYes"><i class="fa-solid fa-broom"></i> Yes, Clear It</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Hướng dẫn — viết cho bố mẹ đọc cùng con -->
     <div id="help" class="overlay hidden">
         <div class="sheet">

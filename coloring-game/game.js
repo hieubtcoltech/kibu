@@ -744,15 +744,24 @@
         }, 110);
     });
 
+    /* Bước xác nhận duy nhất của cả game: đây là thao tác chỉ có nó mới xoá
+       được công sức của bé, nên phải hỏi lại. Tranh chưa có gì thì hỏi cũng vô
+       nghĩa — bấm là không có chuyện gì xảy ra. */
     $('btnClear').addEventListener('click', function () {
         if (busy) return;
         var d = DRAWINGS[curIdx];
         if (!filledCount() && !slotFor(d.id).s.length) return;
-        /* Bước xác nhận duy nhất của cả game: đây là thao tác chỉ có nó mới xoá
-           được công sức của bé, nên phải hỏi lại. */
-        if (!window.confirm(T('Xoá hết màu của tranh này và tô lại từ đầu nhé?',
-                              'Clear all the colours on this picture and start again?'))) return;
-        store[d.id] = { f: {}, s: [] };
+        $('confirmClear').classList.remove('hidden');
+        tone(420, 0.1, 'sine', 0.11);
+    });
+
+    $('clearNo').addEventListener('click', function () {
+        $('confirmClear').classList.add('hidden');
+    });
+
+    $('clearYes').addEventListener('click', function () {
+        $('confirmClear').classList.add('hidden');
+        store[DRAWINGS[curIdx].id] = { f: {}, s: [] };
         undoStack = [];
         drag = null;
         selectSticker(-1);
@@ -782,7 +791,7 @@
 
     /* Chạm ra ngoài tấm thẻ thì đóng lớp phủ — trừ thư viện tranh lúc mới vào,
        vì đó là bước chọn tranh đầu tiên. */
-    [gallery, winBox, helpBox].forEach(function (ov) {
+    [gallery, winBox, helpBox, $('confirmClear')].forEach(function (ov) {
         ov.addEventListener('click', function (evt) {
             if (evt.target === ov) ov.classList.add('hidden');
         });

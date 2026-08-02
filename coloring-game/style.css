@@ -578,6 +578,16 @@ body {
     box-shadow: 0 5px 0 rgba(120, 90, 160, 0.2);
 }
 
+/* Nút xoá sạch tranh. Đỏ để khác hẳn nút hồng-tím quen thuộc ở khắp game, và
+   nó đứng dưới nút giữ tranh chứ không đứng trên — chạm hụt thì trúng nút an
+   toàn trước. */
+.big-btn.danger {
+    background: linear-gradient(92deg, #ff6b6b, #e03131);
+    box-shadow: 0 5px 0 rgba(160, 40, 40, 0.35);
+}
+
+.sheet-narrow { width: min(440px, 100%); }
+
 .win-emoji { font-size: 3.4rem; line-height: 1; }
 
 .win-art {
