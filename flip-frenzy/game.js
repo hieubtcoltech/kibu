@@ -135,6 +135,17 @@
             this.makeCardTextures(100, 132);
             this.cardW = 100; this.cardH = 132;
 
+            /* Bắt sự kiện ở cấp bàn chứ không gắn vùng bấm vào từng lá.
+               Vùng bấm của Phaser tính theo hệ toạ độ riêng của từng đối tượng
+               (gốc nằm ở tâm lá) nên rất dễ đặt lệch nửa lá — và nó còn co lại
+               theo hiệu ứng lật, khiến bé bấm đúng lá vẫn không ăn. Ở đây dùng
+               thẳng hình chữ nhật đang vẽ: bấm đâu trúng đó, kể cả lúc lá đang
+               quay. */
+            this.input.on('pointerdown', function (p) {
+                var c = self.cardAt(p.worldX, p.worldY);
+                if (c) self.tap(c);
+            });
+
             this.scale.on('resize', function () { self.layout(); });
             UI.sceneReady(this);
         }
@@ -190,7 +201,6 @@
         }
 
         makeCard(face, pair, index) {
-            var self = this;
             var bg = this.add.image(0, 0, BACK_KEY);
             var txt = this.add.text(0, 0, face, {
                 fontFamily: '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif',
@@ -199,9 +209,6 @@
             var cont = this.add.container(0, 0, [bg, txt]).setDepth(2);
             var card = { face: face, pair: pair, index: index, up: false, done: false, obj: cont, bg: bg, txt: txt };
 
-            cont.setSize(10, 10);
-            cont.setInteractive(new Phaser.Geom.Rectangle(-5, -5, 10, 10), Phaser.Geom.Rectangle.Contains);
-            cont.on('pointerdown', function () { self.tap(card); });
             return card;
         }
 
@@ -258,8 +265,6 @@
                 else c.bg.clearTint();
                 c.txt.setFontSize(Math.floor(h * 0.46));
                 c.txt.setVisible(c.up || c.done);
-                c.obj.setSize(w, h);
-                c.obj.setInteractive(new Phaser.Geom.Rectangle(0, 0, w, h), Phaser.Geom.Rectangle.Contains);
             }
         }
 
@@ -323,6 +328,16 @@
                     self.tweens.add({ targets: card.obj, scaleX: 1, duration: 130, ease: 'Quad.Out' });
                 }
             });
+        }
+
+        /* Lá nằm dưới điểm (x, y), theo đúng ô mà layout đã xếp */
+        cardAt(x, y) {
+            var i, c, hw = this.cardW / 2, hh = this.cardH / 2;
+            for (i = 0; i < this.cards.length; i++) {
+                c = this.cards[i];
+                if (Math.abs(x - c.obj.x) <= hw && Math.abs(y - c.obj.y) <= hh) return c;
+            }
+            return null;
         }
 
         tap(card) {
