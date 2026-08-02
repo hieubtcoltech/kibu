@@ -55,7 +55,7 @@
 
     /* Bi: 'power' là phép chạm giữa không trung mới kích hoạt */
     var AMMO = {
-        rock:    { r: 20, density: 0.0078, fill: 0xc3cfd9, dark: 0x5b6b78, power: null,      label: 'Rock' },
+        rock:    { r: 20, density: 0.0078, fill: 0xffb3d1, dark: 0xd4557f, power: null,      label: 'Piggy' },
         split:   { r: 18, density: 0.0062, fill: 0x8fe07a, dark: 0x2c7c33, power: 'split',   label: 'Splitter' },
         bomb:    { r: 20, density: 0.0068, fill: 0xff8a70, dark: 0xa8280f, power: 'bomb',    label: 'Bomb' },
         thunder: { r: 18, density: 0.0062, fill: 0xffd34d, dark: 0xb07400, power: 'thunder', label: 'Thunder' }
@@ -114,7 +114,9 @@
     function PAD(x, y, w, h) { return { x: x, y: y, w: w, h: h, kind: 'pad' }; }
 
     /* Bập bênh: tấm ván ghim tâm vào một điểm cố định, quay quanh điểm đó */
-    function PIVOT(x, y, w, h, m) { return { x: x, y: y, w: w, h: h, m: m || 'wood' }; }
+    /* spin: tốc độ quay ban đầu. Vật ghim đúng trọng tâm thì trọng lực không
+       sinh mô-men nào cả, nên không có tham số này nó đứng im chứ không quay. */
+    function PIVOT(x, y, w, h, m, spin) { return { x: x, y: y, w: w, h: h, m: m || 'wood', spin: spin || 0 }; }
 
     /* Bóng bay buộc vào khối thứ `block` trong mảng blocks của màn */
     function BALLOON(x, y, block) { return { x: x, y: y, block: block }; }
@@ -379,15 +381,18 @@
             name: 'See-Saw',
             tip: 'The see-saw turns on its middle pin. Hit one end, the other flies up.',
             ammo: ['rock', 'rock', 'rock'],
+            /* Hai hòn đá bằng nhau ở hai đầu cho ván nằm cân, còn Cục Cáu ngồi
+               đúng trên chốt. Bản trước chỉ có một hòn đá nên ván đổ ngay lúc
+               mở màn và hất Cục Cáu xuống trước khi bé kịp bắn. */
             pivots: [PIVOT(980, 500, 320, 22, 'wood')],
-            blocks: [B(1120, 466, 46, 46, 'stone')],
-            targets: [T(840, 489), T(980, GROUND_Y)]
+            blocks: [B(870, 466, 44, 44, 'stone'), B(1090, 466, 44, 44, 'stone')],
+            targets: [T(980, 489), T(980, GROUND_Y)]
         },
         {
             name: 'Spinning Gate',
             tip: 'The gate spins - slip past while it lies flat.',
             ammo: ['rock', 'rock', 'rock', 'rock'],
-            pivots: [PIVOT(820, 470, 26, 300, 'wood')],
+            pivots: [PIVOT(820, 470, 26, 300, 'wood', 0.055)],
             blocks: gate(1080, GROUND_Y, 'wood', 1),
             targets: [T(1080, GROUND_Y)]
         },
@@ -436,7 +441,7 @@
             name: 'Windmill',
             tip: 'Two blades spinning apart - find the gap.',
             ammo: ['rock', 'rock', 'rock', 'rock'],
-            pivots: [PIVOT(760, 450, 24, 240, 'wood'), PIVOT(1000, 450, 24, 240, 'wood')],
+            pivots: [PIVOT(760, 450, 24, 240, 'wood', 0.05), PIVOT(1000, 450, 24, 240, 'wood', -0.05)],
             blocks: gate(1180, GROUND_Y, 'wood', 1),
             targets: [T(1180, GROUND_Y)]
         },
@@ -873,6 +878,7 @@
                 body.kibu = { kind: 'block', m: b.m, w: b.w, h: b.h, hp: mat.hp * 3,
                               maxHp: mat.hp * 3, body: body, dead: false, pinned: true };
                 this.blocks.push(body.kibu);
+                if (b.spin) M.Body.setAngularVelocity(body, b.spin);
                 this.pins.push({ x: b.x, y: b.y, body: body });
                 this.matter.world.add(M.Constraint.create({
                     pointA: { x: b.x, y: b.y }, bodyB: body, pointB: { x: 0, y: 0 },
@@ -1457,9 +1463,40 @@
             g.fillCircle(0, 0, r);
             g.lineStyle(3, spec.dark, 1);
             g.strokeCircle(0, 0, r);
-            g.fillStyle(0xffffff, 0.55);
-            g.fillCircle(-r * 0.32, -r * 0.34, r * 0.26);
-            if (type === 'bomb') {
+            if (type !== 'rock') {
+                g.fillStyle(0xffffff, 0.55);
+                g.fillCircle(-r * 0.32, -r * 0.34, r * 0.26);
+            }
+            if (type === 'rock') {
+                /* Chú lợn hồng: hai tai, mõm tròn, má ửng. Vẽ sau vòng tròn nền
+                   nên nằm đè lên, và quay theo viên bi cho vui mắt. */
+                g.fillStyle(spec.dark, 1);
+                g.fillTriangle(-r * 0.78, -r * 0.5, -r * 0.3, -r * 1.02, -r * 0.16, -r * 0.42);
+                g.fillTriangle(r * 0.78, -r * 0.5, r * 0.3, -r * 1.02, r * 0.16, -r * 0.42);
+                g.fillStyle(0xffd0e4, 1);
+                g.fillTriangle(-r * 0.62, -r * 0.52, -r * 0.34, -r * 0.86, -r * 0.26, -r * 0.46);
+                g.fillTriangle(r * 0.62, -r * 0.52, r * 0.34, -r * 0.86, r * 0.26, -r * 0.46);
+                g.fillStyle(spec.fill, 1);
+                g.fillCircle(0, 0, r);
+                g.lineStyle(3, spec.dark, 1);
+                g.strokeCircle(0, 0, r);
+                g.fillStyle(0xff85b6, 0.5);
+                g.fillCircle(-r * 0.58, r * 0.22, r * 0.19);
+                g.fillCircle(r * 0.58, r * 0.22, r * 0.19);
+                g.fillStyle(0xffffff, 1);
+                g.fillCircle(-r * 0.34, -r * 0.28, r * 0.21);
+                g.fillCircle(r * 0.34, -r * 0.28, r * 0.21);
+                g.fillStyle(0x3b1420, 1);
+                g.fillCircle(-r * 0.3, -r * 0.27, r * 0.11);
+                g.fillCircle(r * 0.38, -r * 0.27, r * 0.11);
+                g.fillStyle(0xff9bc4, 1);
+                g.fillEllipse(0, r * 0.3, r * 0.66, r * 0.46);
+                g.lineStyle(2, spec.dark, 1);
+                g.strokeEllipse(0, r * 0.3, r * 0.66, r * 0.46);
+                g.fillStyle(0x8c3358, 1);
+                g.fillCircle(-r * 0.14, r * 0.3, r * 0.08);
+                g.fillCircle(r * 0.14, r * 0.3, r * 0.08);
+            } else if (type === 'bomb') {
                 g.lineStyle(3, 0x3a1206, 1);
                 g.beginPath(); g.moveTo(0, -r); g.lineTo(4, -r - 9); g.strokePath();
                 g.fillStyle(0xffd34d, 1); g.fillCircle(5, -r - 11, 3.5);

@@ -205,7 +205,7 @@ body.chrome-fit > .site-footer {
     box-shadow: none;
 }
 
-.dot-rock, .ball-dot.rock { background: linear-gradient(160deg, #b9c6d1, #6c7d8c); }
+.dot-rock, .ball-dot.rock { background: linear-gradient(160deg, #ffd0e4, #e0679a); }
 .dot-split, .ball-dot.split { background: linear-gradient(160deg, #b5f5a0, #3aa53f); }
 .dot-bomb, .ball-dot.bomb { background: linear-gradient(160deg, #ff9d8a, #d4321c); }
 .dot-thunder, .ball-dot.thunder { background: linear-gradient(160deg, #ffe680, #ffab00); }
