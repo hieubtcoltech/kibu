@@ -160,6 +160,12 @@
         ['cần gạt', 'joystick'],
 
         /* ---------- Strike Party (bowling-game) ---------- */
+        ['THỬ TÀI STRIKE', 'STRIKE CHALLENGE'],
+        ['8 quả trên giàn ki đầy — ai được nhiều strike hơn?', '8 balls at a full rack - who lands the most strikes?'],
+        ['DỌN KI SÓT', 'SPARE MASTER'],
+        ['Những thế ki sót có thật, từ dễ tới thế 7-10 khét tiếng', 'Real leaves to clear, from buckets up to the 7-10'],
+        ['🦃 TURKEY - ba cú strike liên tiếp, chuỗi nổi tiếng nhất của bowling',
+            '🦃 TURKEY - three strikes in a row, the most famous streak in bowling'],
         ['🔥 SIÊU KHÓ', '🔥 INSANE'],
         ['STRIKE PARTY', 'STRIKE PARTY'],
         ['Ném Bóng Bowling', 'Strike Party'],

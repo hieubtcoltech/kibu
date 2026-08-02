@@ -170,6 +170,25 @@ body {
 
 .fboxes { display: flex; gap: 3px; }
 
+.fbox.wide { min-width: 76px; font-size: 0.66rem; letter-spacing: 0.4px; }
+
+/* Chuỗi strike hiện ngay trên chip điểm — bé nào đang "nóng" là thấy liền */
+.pc-fire {
+    font-style: normal;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(255, 140, 40, 0.22);
+    color: #ffb703;
+}
+
+.fc-extra {
+    font-size: 0.74rem;
+    color: var(--dim);
+    margin-top: 2px;
+}
+
 .fbox {
     min-width: 26px;
     height: 22px;
@@ -421,6 +440,7 @@ kbd {
 .pt-x { color: var(--gold); border-color: rgba(255, 209, 102, 0.4); }
 .pt-s { color: var(--neon); border-color: rgba(77, 210, 255, 0.4); }
 .pt-g { color: var(--dim); }
+.pt-t { color: #ff9e5c; border-color: rgba(255, 158, 92, 0.4); }
 
 /* ---------- Nút lớn ---------- */
 .big-btn {
