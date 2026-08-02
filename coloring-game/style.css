@@ -214,11 +214,18 @@ body {
 
 @keyframes ringspin { to { stroke-dashoffset: -64; } }
 
+/* Canh giữa bằng margin auto chứ không bằng translateX(-50%): thanh này chạy
+   animation `pop`, mà keyframes của `pop` kết thúc ở `transform: none` nên nó
+   sẽ đè mất phần dịch chuyển canh giữa — thanh hiện lệch sang phải đúng nửa bề
+   rộng suốt lúc chạy rồi mới nhảy về giữa. Tách bố cục khỏi transform thì
+   animation muốn làm gì với transform cũng không phá được vị trí. */
 .st-bar {
     position: absolute;
-    left: 50%;
+    left: 0;
+    right: 0;
     bottom: 10px;
-    transform: translateX(-50%);
+    margin: 0 auto;
+    width: fit-content;
     display: flex;
     gap: 8px;
     padding: 7px;
