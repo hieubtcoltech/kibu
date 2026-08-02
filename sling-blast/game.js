@@ -311,12 +311,17 @@
             name: 'Rock Bridge',
             tip: 'One Grumpy on the bridge, one under it.',
             ammo: ['rock', 'rock', 'rock', 'rock'],
-            /* Chỉ một trụ bên phải. Có trụ cả hai bên thì mặt cầu (452-480)
-               nối liền với trụ (480-640) thành bức tường kín từ trên xuống
-               đất — Cục Cáu dưới gầm cầu không còn đường nào chạm tới được. */
-            terrain: [WALL(1200, 560, 44, 160), WALL(985, 466, 430, 28)],
-            blocks: gate(985, 452, 'wood', 1),
-            targets: [T(985, 452), T(880, GROUND_Y)]
+            /* Cầu tựa trên hai trụ, mặt cầu đua ra khỏi trụ trái một quãng và
+               Cục Cáu thứ hai đứng dưới phần đua đó.
+               Đây là chỗ tôi sai hai lần: hễ trụ ngoài cùng chạm tới mặt cầu
+               thì cả mảng từ y=452 xuống đất bị bịt, bi không có đường nào vào
+               gầm — muốn vượt trụ phải bay cao hơn 480, mà 452-480 lại đúng là
+               mặt cầu. Chừa vòm giữa hai trụ cũng vô ích vì muốn tới được vòm
+               thì đã phải ở trong gầm rồi. */
+            terrain: [WALL(970, 466, 560, 28),
+                      WALL(880, 560, 34, 160), WALL(1215, 560, 34, 160)],
+            blocks: gate(1000, 452, 'wood', 1),
+            targets: [T(1000, 452), T(770, GROUND_Y)]
         },
         {
             name: 'Stair Steps',
@@ -780,9 +785,7 @@
                 g.fillStyle(c, 1);
                 g.fillRect(0, i * (GROUND_Y / 44), W, GROUND_Y / 44 + 1);
             }
-            /* mặt trời */
-            g.fillStyle(0xfff3b0, 0.55); g.fillCircle(1120, 120, 78);
-            g.fillStyle(0xfff8d8, 1); g.fillCircle(1120, 120, 52);
+            this.drawSun(g, 1120, 122, 50);
             /* mây */
             this.cloud(g, 260, 120, 1.1); this.cloud(g, 700, 86, 0.8);
             this.cloud(g, 1000, 190, 0.65); this.cloud(g, 470, 210, 0.5);
@@ -805,6 +808,31 @@
                 g.fillTriangle(x, GROUND_Y, x + 5, GROUND_Y - 9 - (i % 5) * 2, x + 10, GROUND_Y);
             }
         }
+        /* Mặt trời: quầng sáng ba lớp, mười hai tia nắng toả ra, rồi tới đĩa
+           mặt trời ba tông vàng. Bản trước chỉ có hai vòng tròn trắng ngà nên
+           nhìn ra mặt trăng chứ không ra mặt trời. */
+        drawSun(g, cx, cy, r) {
+            var i, a, w = 0.075;
+            g.fillStyle(0xffe680, 0.09); g.fillCircle(cx, cy, r * 2.2);
+            g.fillStyle(0xffe680, 0.14); g.fillCircle(cx, cy, r * 1.72);
+            g.fillStyle(0xffeea0, 0.24); g.fillCircle(cx, cy, r * 1.3);
+
+            g.fillStyle(0xffdb4d, 0.75);
+            for (i = 0; i < 12; i++) {
+                a = i * Math.PI / 6 + 0.13;
+                g.fillTriangle(
+                    cx + Math.cos(a - w) * r * 1.12, cy + Math.sin(a - w) * r * 1.12,
+                    cx + Math.cos(a + w) * r * 1.12, cy + Math.sin(a + w) * r * 1.12,
+                    cx + Math.cos(a) * r * (i % 2 ? 1.62 : 1.95),
+                    cy + Math.sin(a) * r * (i % 2 ? 1.62 : 1.95));
+            }
+
+            g.fillStyle(0xffb020, 1); g.fillCircle(cx, cy, r);
+            g.fillStyle(0xffd23f, 1); g.fillCircle(cx, cy, r * 0.88);
+            g.fillStyle(0xffe98a, 1); g.fillCircle(cx - r * 0.12, cy - r * 0.14, r * 0.62);
+            g.fillStyle(0xfff6cd, 1); g.fillCircle(cx - r * 0.26, cy - r * 0.3, r * 0.3);
+        }
+
         cloud(g, x, y, s) {
             g.fillStyle(0xffffff, 0.9);
             g.fillCircle(x, y, 26 * s);
@@ -1472,8 +1500,6 @@
             if (type === 'rock') {
                 /* Chú lợn hồng: hai tai, mõm tròn, má ửng. Vẽ sau vòng tròn nền
                    nên nằm đè lên, và quay theo viên bi cho vui mắt. */
-                this.pigEar(g, -1, r, spec);
-                this.pigEar(g, 1, r, spec);
                 g.fillStyle(spec.fill, 1);
                 g.fillCircle(0, 0, r);
                 g.lineStyle(3, spec.dark, 1);
@@ -1506,20 +1532,6 @@
                 g.fillStyle(0x1d5c24, 1);
                 g.fillCircle(-5, 2, 3); g.fillCircle(5, 2, 3); g.fillCircle(0, -5, 3);
             }
-            g.restore();
-        }
-
-        /* Tai lợn: một hình bầu dục nghiêng ra ngoài, lòng tai màu nhạt hơn.
-           Vẽ trước vòng mặt nên phần chân tai bị mặt che, trông như mọc ra từ
-           đầu chứ không dán lên. */
-        pigEar(g, side, r, spec) {
-            g.save();
-            g.translateCanvas(side * r * 0.66, -r * 0.82);
-            g.rotateCanvas(side * 0.42);
-            g.fillStyle(spec.dark, 1);
-            g.fillEllipse(0, 0, r * 0.66, r * 1.06);
-            g.fillStyle(0xffd6e8, 1);
-            g.fillEllipse(0, r * 0.08, r * 0.36, r * 0.64);
             g.restore();
         }
 
