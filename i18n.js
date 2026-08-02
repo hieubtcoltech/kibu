@@ -232,6 +232,7 @@
         ['Màn {0}', 'Level {0}'],
         ['Cục Cáu còn lại', 'Grumpies left'],
         ['Bi còn lại', 'Balls left'],
+        ['Xoay ngang điện thoại để sân chơi rộng gấp đôi', 'Turn your phone sideways for a much bigger playfield'],
         /* tên và mách nước của 12 màn */
         ['Cú Bắn Đầu Tiên', 'First Throw'],
         ['Kéo viên bi về sau rồi thả tay ra.', 'Drag back from the ball, then let go.'],
