@@ -48,6 +48,10 @@ const MIME = {
     '.woff2': 'font/woff2',
     '.ttf': 'font/ttf',
     '.txt': 'text/plain; charset=utf-8',
+    /* Thiếu dòng này thì sitemap.xml rơi vào nhánh octet-stream ở dưới: trình
+       duyệt tải file về thay vì hiện ra, và Search Console có thể từ chối đọc
+       vì Google đòi sitemap phải là text/xml hoặc application/xml. */
+    '.xml': 'text/xml; charset=utf-8',
     '.map': 'application/json; charset=utf-8'
 };
 
