@@ -693,3 +693,27 @@ body > .app-wrapper {
     .board-wrap { grid-area: board; min-height: 0; }
     .game-bar { display: none; }
 }
+
+
+/* ---------- Chế độ hai người trên một máy ---------- */
+.flip-opt {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    cursor: pointer;
+    font-size: 0.92rem;
+}
+
+.flip-opt input {
+    width: 18px;
+    height: 18px;
+    accent-color: #e0a45a;
+    cursor: pointer;
+}
+
+.local-hint {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    opacity: 0.66;
+}

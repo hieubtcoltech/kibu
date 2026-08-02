@@ -254,6 +254,10 @@
             'Play classic Tic Tac Toe and challenge our super-smart AI.'],
 
         /* ---------- Cờ Tướng (xiangqi) ---------- */
+        ['Hai Bé Một Máy', 'Two Players, One Screen'],
+        ['Xoay bàn cờ sau mỗi nước đi', 'Turn the board around after every move'],
+        ['Để tắt khi hai bé cùng ngồi trước một màn hình. Bật lên khi hai bé chuyền tay nhau chiếc điện thoại, để bên đến lượt luôn nhìn thấy phe mình ở phía dưới.',
+            'Leave it off when you both sit in front of one screen. Turn it on when you pass a phone back and forth, so the player to move always looks at their own side.'],
         ['CỜ TƯỚNG', 'XIANGQI'],
         ['CỜ TƯỚNG ONLINE', 'XIANGQI ONLINE'],
         ['Cờ Tướng', 'Xiangqi'],

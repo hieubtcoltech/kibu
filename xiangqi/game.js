@@ -32,6 +32,7 @@
         mode: null,                 // 'online' | 'ai'
         minutes: 10,
         aiLevel: 1,
+        autoFlip: false,            // chế độ hai người: có xoay bàn theo lượt không
 
         // ván đang chơi
         board: X.initial(),
@@ -156,7 +157,16 @@
     let canvas, ctx, geo = { cell: 40, ox: 0, oy: 0, w: 0, h: 0, dpr: 1 };
 
     // Bên mình luôn ở phía dưới bàn cờ cho dễ nhìn
-    function flipped() { return S.mySide === 'black'; }
+    /* Hai khái niệm khác nhau, trước đây gộp làm một vì lúc nào cũng chỉ có
+       một người ngồi trước máy:
+         activeSide() — phe mà NGƯỜI TRƯỚC MÁY đang cầm quân. Ở chế độ hai
+                        người chung máy thì nó chính là phe đến lượt.
+         viewSide()   — phe nào nằm ở phía dưới màn hình.
+       Tách ra mới làm được chế độ hai người: quyền đi quân đổi theo lượt, còn
+       hướng bàn cờ thì tuỳ bé chọn có xoay hay không. */
+    function activeSide() { return S.mode === 'local' ? S.turn : S.mySide; }
+    function viewSide() { return (S.mode === 'local' && S.autoFlip) ? S.turn : S.mySide; }
+    function flipped() { return viewSide() === 'black'; }
 
     function cellOf(i) {
         let r = X.rowOf(i), c = X.colOf(i);
@@ -429,13 +439,12 @@
        ===================================================== */
 
     function myTurn() {
-        return S.phase === 'playing' && S.turn === S.mySide &&
-            (S.mode === 'ai' ? S.turn === S.mySide : true);
+        return S.phase === 'playing' && S.turn === activeSide();
     }
 
     function selectAt(i) {
         const p = S.board[i];
-        if (p === '.' || X.sideOf(p) !== S.mySide) return false;
+        if (p === '.' || X.sideOf(p) !== activeSide()) return false;
         S.sel = i;
         S.legal = X.movesFrom(S.board, i);
         audio.select();
@@ -452,6 +461,7 @@
             return false;
         }
         if (S.mode === 'ai') { applyLocalMove(from, to); setTimeout(aiThink, 260); }
+        else if (S.mode === 'local') applyLocalMove(from, to);
         else send({ t: 'move', from, to });
         clearSel();
         return true;
@@ -736,7 +746,7 @@
 
         S.localHistory.push({ key: X.positionKey(S.board, S.turn), mover: S.turn === 'red' ? 'black' : 'red', check: X.inCheck(S.board, S.turn) });
         S.check = X.inCheck(S.board, S.turn);
-        if (S.check && S.turn === S.mySide) { boardMsg('Check!'); audio.check(); }
+        if (S.check && (S.mode === 'local' || S.turn === S.mySide)) { boardMsg('Check!'); audio.check(); }
 
         const st = X.status(S.board, S.turn, S.localHistory);
         clearSel();
@@ -774,13 +784,37 @@
         startLocalClock();
     }
 
+    /* Ván hai người cùng ngồi trước một máy. Không có phòng, không có mạng,
+       không có máy đi quân — hai bé thay nhau chạm vào bàn cờ. */
+    function startLocalGame() {
+        S.mode = 'local';
+        S.mySide = 'red';           // dùng cho hướng nhìn khi KHÔNG bật xoay bàn
+        S.board = X.initial();
+        S.turn = 'red';
+        S.phase = 'playing';
+        S.lastMove = null;
+        S.check = false;
+        S.captured = [];
+        S.localHistory = [];
+        S.result = null;
+        el('captured').innerHTML = '';
+        S.clock = { red: S.minutes * 60000, black: S.minutes * 60000 };
+        S.players = { red: { name: tr('Đỏ'), online: true }, black: { name: tr('Đen'), online: true } };
+        prevMoveCount = -1; prevBoard = '';
+        showScreen('game');
+        el('countdown').hidden = true;
+        renderGame();
+        resize();
+        startLocalClock();
+    }
+
     let localClock = null;
     function startLocalClock() {
         clearInterval(localClock);
         let last = Date.now();
         localClock = setInterval(() => {
             const now = Date.now();
-            if (S.mode === 'ai' && S.phase === 'playing') {
+            if ((S.mode === 'ai' || S.mode === 'local') && S.phase === 'playing') {
                 S.clock[S.turn] -= now - last;
                 if (S.clock[S.turn] <= 0) {
                     S.clock[S.turn] = 0;
@@ -835,7 +869,7 @@
             const p = S.players[side];
             strip.querySelector('.ps-dot').className = 'ps-dot ' + side;
             strip.querySelector('.ps-name').textContent =
-                (p ? p.name : '—') + (side === S.mySide && S.mode !== 'ai' ? ' (' + tr('you') + ')' : '');
+                (p ? p.name : '—') + (side === S.mySide && S.mode !== 'ai' && S.mode !== 'local' ? ' (' + tr('you') + ')' : '');
             const clockEl = strip.querySelector('.ps-clock');
             clockEl.textContent = fmtClock(S.clock[side]);
             clockEl.classList.toggle('low', S.clock[side] < 30000);
@@ -877,7 +911,7 @@
        chữ "đang chờ đối thủ" biến mất. */
     function renderRematch() {
         const note = el('rematch-note'), btn = el('btn-rematch');
-        if (S.mode === 'ai') { note.textContent = ''; btn.disabled = false; return; }
+        if (S.mode === 'ai' || S.mode === 'local') { note.textContent = ''; btn.disabled = false; return; }
         const other = S.mySide === 'red' ? 'black' : 'red';
         const mine = !!(S.rematch && S.rematch[S.mySide]);
         const theirs = !!(S.rematch && S.rematch[other]);
@@ -939,9 +973,21 @@
             const box = el('ai-box');
             box.hidden = !box.hidden;
             el('join-box').hidden = true;
+            el('local-box').hidden = true;
         });
 
         el('btn-ai-start').addEventListener('click', () => { audio.init(); startAiGame(); });
+
+        el('btn-local').addEventListener('click', () => {
+            const box = el('local-box');
+            box.hidden = !box.hidden;
+            if (!box.hidden) { el('join-box').hidden = true; el('ai-box').hidden = true; }
+        });
+        el('btn-local-start').addEventListener('click', () => {
+            audio.init();
+            S.autoFlip = el('chk-autoflip').checked;
+            startLocalGame();
+        });
 
         const doJoin = () => {
             const code = (el('input-code').value || '').trim().toUpperCase();
@@ -989,11 +1035,14 @@
             if (S.phase !== 'playing') return;
             if (!confirm(tr('Are you sure you want to resign?'))) return;
             if (S.mode === 'ai') finishLocal(S.mySide === 'red' ? 'black' : 'red', 'resign');
+            /* Hai người chung máy: bên đang tới lượt là bên xin thua */
+            else if (S.mode === 'local') finishLocal(S.turn === 'red' ? 'black' : 'red', 'resign');
             else send({ t: 'resign' });
         });
 
         el('btn-rematch').addEventListener('click', () => {
             if (S.mode === 'ai') { hideEnd(); startAiGame(); return; }
+            if (S.mode === 'local') { hideEnd(); startLocalGame(); return; }
             send({ t: 'rematch' });
             S.rematch[S.mySide] = true;
             renderRematch();
