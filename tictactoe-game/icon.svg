@@ -43,7 +43,7 @@
 
     <!-- Bàn cờ trắng, nghiêng nhẹ cho vui mắt.
          Ô cờ rộng 113: tâm ba cột nằm ở 142, 256 và 370. -->
-    <g transform="rotate(-6 256 256)" filter="url(#soft)">
+    <g transform="rotate(-6 256 256) translate(256 256) scale(1.14) translate(-256 -256)" filter="url(#soft)">
         <rect x="80" y="80" width="352" height="352" rx="58" fill="#ffffff" stroke="#ffffff" stroke-width="14"/>
         <g stroke="#d3e0ff" stroke-width="12" stroke-linecap="round">
             <path d="M206 116 V396"/>
