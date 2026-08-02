@@ -824,7 +824,9 @@
                 renderGame();
             }
             last = now;
-            if (S.mode !== 'ai' || S.phase === 'over') clearInterval(localClock);
+            /* Đồng hồ này phục vụ cả đấu máy lẫn hai bé chung máy; ván online do
+             * máy chủ giữ giờ nên mới cần tự dừng ở đây. */
+            if ((S.mode !== 'ai' && S.mode !== 'local') || S.phase === 'over') clearInterval(localClock);
         }, 250);
     }
 
