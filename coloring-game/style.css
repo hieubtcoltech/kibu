@@ -667,6 +667,14 @@ body {
     .art-caption { display: none; }
 }
 
+/* Khung tranh nhỏ thì thanh sửa hình dán phải nhỏ theo, không thì nó che mất
+   chính cái hình bé đang sửa. */
+@media (max-width: 400px), (max-height: 620px) {
+    .st-bar { bottom: 6px; gap: 6px; padding: 5px; }
+    .st-act { width: 40px; height: 40px; font-size: 18px; }
+    .st-ok { font-size: 20px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     #art .region.nudge { animation: none; }
     .spark, .confetti { animation-duration: 0.01s; }

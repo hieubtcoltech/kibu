@@ -281,6 +281,15 @@
 
     function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
+    /* Giữ trọn hình dán trong khung. Hình bị cắt mất một nửa ở mép trông như
+     * lỗi chứ không như dụng ý, và bé thì không hiểu vì sao hình mình vừa dán
+     * lại bị mất một góc. Gọi cả lúc kéo lẫn lúc phóng to. */
+    function clampSticker(s) {
+        var half = s.r * 0.56;
+        s.x = Math.round(clamp(s.x, half, VIEW - half));
+        s.y = Math.round(clamp(s.y, half, VIEW - half));
+    }
+
     /* Chọn hình dán nào thì hiện thanh sửa của hình đó; bỏ chọn thì thanh biến
      * mất. Thanh nằm im một chỗ dưới đáy khung tranh nên bé luôn tìm thấy nó ở
      * cùng chỗ, không phải rê theo hình dán. */
@@ -297,7 +306,9 @@
 
     function placeSticker(x, y) {
         var list = stickers();
-        list.push({ e: sticker, x: Math.round(x), y: Math.round(y), r: 46 });
+        var s = { e: sticker, x: Math.round(x), y: Math.round(y), r: 46 };
+        clampSticker(s);
+        list.push(s);
         undoStack.push({ t: 'st-add' });
         save();
         selectSticker(list.length - 1);
@@ -311,8 +322,9 @@
         var s = stickers()[selSticker];
         var next = clamp(Math.round(s.r * mul), ST_MIN, ST_MAX);
         if (next === s.r) return;
-        undoStack.push({ t: 'st-size', i: selSticker, r: s.r });
+        undoStack.push({ t: 'st-size', i: selSticker, r: s.r, x: s.x, y: s.y });
         s.r = next;
+        clampSticker(s);   /* phóng to sát mép thì đẩy hình vào trong cho vừa */
         save();
         selectSticker(selSticker);
         updateProgress();
@@ -377,8 +389,9 @@
         var p = svgPoint(evt);
         var s = stickers()[drag.i];
         if (!s) { drag = null; return; }
-        s.x = Math.round(clamp(p.x + drag.dx, 14, VIEW - 14));
-        s.y = Math.round(clamp(p.y + drag.dy, 14, VIEW - 14));
+        s.x = p.x + drag.dx;
+        s.y = p.y + drag.dy;
+        clampSticker(s);
         if (Math.abs(s.x - drag.x0) + Math.abs(s.y - drag.y0) > 2) drag.moved = true;
         var g = svg.querySelector('.st[data-i="' + drag.i + '"]');
         if (g) g.setAttribute('transform', 'translate(' + s.x + ',' + s.y + ')');
@@ -586,7 +599,11 @@
             if (act.t === 'st-add') slot.s.pop();
             else if (act.t === 'st-del') slot.s.splice(act.i, 0, act.s);
             else if (act.t === 'st-move' && slot.s[act.i]) { slot.s[act.i].x = act.x; slot.s[act.i].y = act.y; }
-            else if (act.t === 'st-size' && slot.s[act.i]) slot.s[act.i].r = act.r;
+            else if (act.t === 'st-size' && slot.s[act.i]) {
+                slot.s[act.i].r = act.r;
+                slot.s[act.i].x = act.x;   /* phóng to có thể đã đẩy hình vào trong */
+                slot.s[act.i].y = act.y;
+            }
             selectSticker(-1);
         }
 
