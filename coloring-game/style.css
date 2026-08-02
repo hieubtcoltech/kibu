@@ -328,11 +328,19 @@ body {
     gap: 8px;
 }
 
+/* Ghim bề ngang để mỗi hàng đúng 6 ô: màn rộng mà thả tự do thì 12 hình dán
+   xuống dòng thành 11+1, lẻ ra một hình trông như bị sót. Con số bám theo cỡ
+   nút ở từng breakpoint — vừa đủ 6 nút, thiếu một chút so với 7.
+   Vẫn để flex-wrap chứ không dùng lưới 6 cột cứng, để máy hẹp hơn nữa thì nó
+   tự rút xuống 5 ô một hàng thay vì tràn ngang. */
 .st-tabs, .st-grid {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
+    width: 100%;
+    max-width: 366px;      /* nút 54px: 6×54 + 5×8 = 364 */
+    margin: 0 auto;
 }
 
 /* Hàng chọn rổ dính ở đầu vùng cuộn: cuộn xuống xem hết hình trong rổ mà vẫn
@@ -345,8 +353,10 @@ body {
     background: linear-gradient(#fff 72%, rgba(255, 255, 255, 0));
 }
 
+/* Thẻ nhóm rộng đúng bằng ô hình dán ở mọi breakpoint, để một con số
+   max-width phía trên phục vụ được cả hai hàng và chúng thẳng cột với nhau. */
 .st-tab {
-    width: 50px;
+    width: 54px;
     height: 44px;
     border-radius: 14px;
     border: 2px solid rgba(138, 106, 176, 0.2);
@@ -659,8 +669,9 @@ body {
 @media (min-width: 900px) {
     .stage { flex-direction: row; align-items: stretch; }
 
+    /* Đủ rộng để lọt 6 ô hình dán 54px một hàng (6×54 + 5×8 + đệm/viền). */
     .controls {
-        width: 340px;
+        width: 392px;
         flex-shrink: 0;
         justify-content: center;
     }
@@ -681,6 +692,8 @@ body {
 @media (max-width: 560px) {
     .swatch, .sticker-btn { width: 46px; height: 46px; }
     .sticker-btn { font-size: 23px; }
+    .st-tabs, .st-grid { max-width: 320px; }   /* nút 46px: 6×46 + 5×8 = 316 */
+    .st-tab { width: 46px; height: 42px; font-size: 21px; }
     .swatch-wrap { padding: 8px; border-radius: 16px; max-height: 26vh; }
 
     /* Sáu nút phải nằm gọn một hàng. Xuống hai hàng là mất thêm 62px chiều cao,
@@ -720,6 +733,7 @@ body {
     .swatch-wrap { max-height: 21vh; }
     .swatch, .sticker-btn { width: 44px; height: 44px; }
     .st-tab { width: 44px; height: 40px; font-size: 20px; }
+    .st-tabs, .st-grid { max-width: 308px; }   /* nút 44px: 6×44 + 5×8 = 304 */
     .art-caption { font-size: 0.84rem; }
 }
 
