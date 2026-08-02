@@ -255,7 +255,7 @@
                 c.txt.setFontSize(Math.floor(h * 0.46));
                 c.txt.setVisible(c.up || c.done);
                 c.obj.setSize(w, h);
-                c.obj.input.hitArea.setTo(-w / 2, -h / 2, w, h);
+                c.obj.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
             }
         }
 
