@@ -915,9 +915,6 @@
             G.floats.push({ text: label, x: list[0].x, y: list[0].y - V.d, born: G.time, big: true });
         }
 
-        if (G.level.obj.type === OBJ.COLLECT) {
-            list.forEach(b => { if (b.color === G.level.obj.color) G.collected++; });
-        }
         removeBubbles(list, true);
     }
 
@@ -929,6 +926,15 @@
             G.popping.push({ b, x: b.x, y: b.y, born: G.time });
             burst(b.x, b.y, colorOf(b));
             if (crackAround) touched.push(...neighbors(b.r, b.c));
+
+            if (b.kind === KIND.STAR) {
+                G.rescued++;
+                sfx.star();
+                G.floats.push({ text: '+100', x: b.x, y: b.y, born: G.time });
+            }
+            if (G.level.obj.type === OBJ.COLLECT && b.kind === KIND.NORMAL && b.color === G.level.obj.color) {
+                G.collected++;
+            }
         });
 
         /* Băng chỉ nứt nhờ một quả nổ ngay cạnh; nứt rồi thì thành quả thường
@@ -960,6 +966,9 @@
                     G.rescued++;
                     sfx.star();
                     G.floats.push({ text: '+100', x: b.x, y: b.y, born: G.time });
+                }
+                if (G.level.obj.type === OBJ.COLLECT && b.kind === KIND.NORMAL && b.color === G.level.obj.color) {
+                    G.collected++;
                 }
             });
             addScore(loose.length * 20 + G.rescued * 0, loose[0].x, loose[0].y);
@@ -1060,6 +1069,7 @@
 
         if (objectiveDone()) return win();
         if (reachedBottom()) return lose('bottom');
+        if (poppableLeft() === 0) return lose('shots');
         if (G.shotsLeft <= 0) return lose('shots');
     }
 
