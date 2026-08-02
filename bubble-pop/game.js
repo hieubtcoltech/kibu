@@ -26,7 +26,7 @@
      * không nhận ra màu (khoảng 1/12 bé trai bị rối loạn sắc giác đỏ–lục). */
     const COLORS = [
         { key: '1', light: '#ff8fa3', main: '#ff4d6d', dark: '#c9184a', sym: 'circle' },
-        { key: '2', light: '#ffe98a', main: '#ffd43b', dark: '#e8a800', sym: 'star' },
+        { key: '2', light: '#ffe98a', main: '#ffd43b', dark: '#e8a800', sym: 'ring' },
         { key: '3', light: '#8ed0ff', main: '#4dabf7', dark: '#1971c2', sym: 'triangle' },
         { key: '4', light: '#a9f0b5', main: '#51cf66', dark: '#2b8a3e', sym: 'square' },
         { key: '5', light: '#d3b0ff', main: '#b06cff', dark: '#7048b6', sym: 'diamond' },
@@ -1021,7 +1021,7 @@
 
     function colorOf(b) {
         if (b.kind === KIND.STONE) return { light: '#c7cdd6', main: '#8a94a6', dark: '#5b6472' };
-        if (b.kind === KIND.STAR) return { light: '#fff3b0', main: '#ffd43b', dark: '#e0a800' };
+        if (b.kind === KIND.STAR) return { light: '#ffffff', main: '#e8f1ff', dark: '#9fb4d0' };
         return COLORS[b.color] || COLORS[0];
     }
 
@@ -1432,7 +1432,7 @@
         } else if (b.kind === KIND.STONE) {
             drawStone(x, y, r);
         } else if (b.kind === KIND.STAR) {
-            drawStar(x, y, r * 0.62, '#fff8d6');
+            drawStar(x, y, r * 0.66, '#ffb703');
         } else if (b.kind === 'bombAmmo') {
             drawFuse(x, y, r);
         }
@@ -1447,6 +1447,10 @@
         ctx.beginPath();
         if (sym === 'circle') {
             ctx.arc(x, y, s * 0.72, 0, 6.283);
+        } else if (sym === 'ring') {
+            /* Vành khuyên: vẽ hai cung ngược chiều, phần giữa thành lỗ. */
+            ctx.arc(x, y, s * 0.8, 0, 6.283);
+            ctx.arc(x, y, s * 0.42, 0, 6.283, true);
         } else if (sym === 'star') {
             starPath(x, y, s, s * 0.45, 5);
         } else if (sym === 'triangle') {
@@ -1487,11 +1491,15 @@
     function drawStar(x, y, r, fill) {
         ctx.save();
         ctx.fillStyle = fill;
-        ctx.shadowColor = 'rgba(255,220,120,0.9)';
-        ctx.shadowBlur = r * 0.9;
+        ctx.shadowColor = 'rgba(255,183,3,0.95)';
+        ctx.shadowBlur = r * 0.8;
         ctx.beginPath();
         starPath(x, y, r, r * 0.44, 5);
         ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#a86400';
+        ctx.lineWidth = Math.max(1, r * 0.12);
+        ctx.stroke();
         ctx.restore();
     }
 

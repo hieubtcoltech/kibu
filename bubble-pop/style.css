@@ -221,7 +221,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     transform: translateX(-50%);
     /* Nằm ở khoảng trống nửa dưới sân: đặt trên đầu như các game khác thì nó
        che mất hai hàng bóng đầu tiên, đúng chỗ bé đang cần nhìn. */
-    bottom: 14%;
+    bottom: 20%;
     z-index: 6;
     max-width: 88%;
     text-align: center;
@@ -559,7 +559,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     .hud-chip { font-size: 0.75rem; padding: 2px 8px; }
     .hud-num { font-size: 0.98rem; }
     .hud-chapter { display: none; }
-    .tip { bottom: 16%; font-size: 0.84rem; padding: 7px 14px; }
+    .tip { bottom: 22%; font-size: 0.84rem; padding: 7px 14px; }
 
     .power-box { left: 8px; bottom: 10px; gap: 6px; }
     .power-btn { width: 40px; height: 40px; font-size: 1rem; }
