@@ -43,8 +43,21 @@
     var COLORS = [0xff6b6b, 0x4dabf7, 0x51cf66, 0xffd43b];
     var COLORS_CSS = ['#ff6b6b', '#4dabf7', '#51cf66', '#ffd43b'];
 
-    /* Máy nhớ được bao nhiêu phần lá đã lật qua */
-    var AI_MEMORY = { easy: 0.35, normal: 0.7, hard: 1 };
+    /* Cặp đã ăn được nhuộm màu của bé giành được nó, nhưng nhuộm nhạt thôi —
+       tint của Phaser là phép nhân, tô đậm quá thì hình trên lá tối sầm. */
+    function pastel(c, k) {
+        var r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+        r = Math.round(r + (255 - r) * k);
+        g = Math.round(g + (255 - g) * k);
+        b = Math.round(b + (255 - b) * k);
+        return (r << 16) | (g << 8) | b;
+    }
+    var OWNER_TINT = COLORS.map(function (c) { return pastel(c, 0.58); });
+
+    /* Máy nhớ được bao nhiêu phần lá đã lật qua. Mức dễ để rất thấp: máy nhớ
+       được cái gì thì nhớ chính xác tuyệt đối, nên chỉ cần nhớ một phần ba là
+       nó đã chơi hơn hẳn bé bốn tuổi rồi. */
+    var AI_MEMORY = { easy: 0.18, normal: 0.55, hard: 0.95 };
 
     var BACK_KEY = 'ff-back', FACE_KEY = 'ff-face';
 
@@ -218,6 +231,8 @@
             var gridH = best.rows * h + pad * (best.rows - 1);
             var x0 = (W - gridW) / 2 + w / 2, y0 = (H - gridH) / 2 + h / 2;
 
+            this.gridCols = best.cols; this.gridRows = best.rows;
+
             if (w !== this.cardW || h !== this.cardH) {
                 this.makeCardTextures(w, h);
                 this.cardW = w; this.cardH = h;
@@ -235,6 +250,8 @@
                 c.obj.y = y0 + r * (h + pad);
                 c.bg.setTexture(c.up || c.done ? FACE_KEY : BACK_KEY);
                 c.bg.setDisplaySize(w, h);
+                if (c.owner !== undefined) c.bg.setTint(OWNER_TINT[c.owner]);
+                else c.bg.clearTint();
                 c.txt.setFontSize(Math.floor(h * 0.46));
                 c.txt.setVisible(c.up || c.done);
                 c.obj.setSize(w, h);
@@ -296,6 +313,8 @@
                 onComplete: function () {
                     card.bg.setTexture(up ? FACE_KEY : BACK_KEY);
                     card.bg.setDisplaySize(self.cardW, self.cardH);
+                    if (card.owner !== undefined) card.bg.setTint(OWNER_TINT[card.owner]);
+                    else card.bg.clearTint();
                     card.txt.setVisible(up);
                     self.tweens.add({ targets: card.obj, scaleX: 1, duration: 130, ease: 'Quad.Out' });
                 }
@@ -334,6 +353,9 @@
 
             if (a.pair === b.pair) {
                 a.done = b.done = true;
+                a.owner = b.owner = UI.turn;
+                a.bg.setTint(OWNER_TINT[a.owner]);
+                b.bg.setTint(OWNER_TINT[b.owner]);
                 this.celebrate(a); this.celebrate(b);
                 UI.scored(a.face);
                 this.time.delayedCall(520, function () {
@@ -760,12 +782,11 @@
                 s.pick(k); return true;
             },
             cfg: function () { return UI.cfg; },
+            /* Lấy thẳng số cột/hàng mà layout đã chọn. Đếm số toạ độ x khác
+               nhau là sai: hàng cuối thiếu lá được căn giữa nên nó sinh ra một
+               bộ x riêng, làm số cột đếm được phồng lên. */
             grid: function () {
-                var xs = {}, ys = {};
-                UI.scene.cards.forEach(function (k) {
-                    xs[Math.round(k.obj.x)] = 1; ys[Math.round(k.obj.y)] = 1;
-                });
-                return { cot: Object.keys(xs).length, hang: Object.keys(ys).length,
+                return { cot: UI.scene.gridCols, hang: UI.scene.gridRows,
                          rongLa: UI.scene.cardW, caoLa: UI.scene.cardH,
                          khung: Math.round(UI.scene.scale.width) + 'x' + Math.round(UI.scene.scale.height) };
             }
