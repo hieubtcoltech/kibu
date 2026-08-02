@@ -73,11 +73,11 @@ body {
     }
 }
 
-#game-canvas {
-    width: 100%;
-    height: 100%;
-    display: block;
-}
+/* Quy tắc cũ hồi #game-canvas còn là thẻ <canvas> chiếm trọn khung. Giờ nó là
+   khung chứa do Phaser chèn canvas vào, và kích thước do .board-host quyết
+   định. Giữ lại height:100% ở đây là hỏng: selector theo id thắng selector
+   theo class, nên nó vô hiệu hoá bottom của .board-host và đẩy khung thò
+   xuống dưới đáy panel — cạnh phải và cạnh dưới của sân bị cắt mất. */
 
 /* Glassmorphism Cyberpunk Cards */
 .glass-card {
