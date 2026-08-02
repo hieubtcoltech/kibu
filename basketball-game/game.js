@@ -116,7 +116,7 @@
     //  Vì nhìn ngang nên bóng chỉ xoáy quanh trục vuông góc màn hình → dựng
     //  sẵn 48 bước quay lúc khởi động, khi vẽ chỉ việc chọn đúng bước.
     // =========================================================
-    const BB_TEX = 44;                    // độ phân giải ảnh bề mặt
+    const BB_TEX = 128;                   // độ phân giải ảnh bề mặt
     const BB_STEPS = 48;                  // số bước quay dựng sẵn
     const BB_SEAM = 0.042;                // nửa bề rộng đường may (bóng thật ~2% đường kính)
     const LEATHER = [216, 106, 46];       // màu da cam của quả bóng
