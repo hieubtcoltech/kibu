@@ -63,6 +63,14 @@
     const AIM_MIN = -Math.PI + AIM_EDGE;
     const SHOT_TTL = 3.5;       // bay quá lâu thì cho dính luôn tại chỗ
 
+    /* Cụm bóng không nổ cùng lúc mà nổ lần lượt từ chỗ quả đạn chạm ra ngoài,
+     * mỗi quả kèm một nốt nhạc cao dần — đúng kiểu game bắn trứng khủng long.
+     * Cả tràng dài nhất chỉ CASCADE_MAX giây, không thì cụm mười quả bắt bé
+     * ngồi xem hết một giây rưỡi mới được bắn tiếp. */
+    const POP_TIME = 0.3;       // một quả nổ mất bao lâu từ lúc phồng tới lúc tan
+    const POP_STEP = 0.055;     // khoảng cách giữa hai quả trong tràng
+    const CASCADE_MAX = 0.45;
+
     const STORE_KEY = 'kibu_bubble_pop_progress';
     const SOUND_KEY = 'kibu_bubble_pop_sound';
 
@@ -416,6 +424,10 @@
      *  Vài tiếng "bụp" tổng hợp bằng Web Audio, không tải file nào cả.
      * ======================================================================*/
 
+    /* Thang ngũ cung: nốt nào ghép với nốt nào cũng thuận tai, nên tràng nổ dài
+     * mấy cũng không thành tiếng chói. */
+    const POP_SCALE = [523, 587, 659, 784, 880, 1046, 1174, 1318, 1568, 1760, 2093, 2349];
+
     const sfx = {
         on: true,
         ctx: null,
@@ -437,26 +449,50 @@
             try { localStorage.setItem(SOUND_KEY, this.on ? '1' : '0'); } catch (e) { }
             return this.on;
         },
-        blip(freq, dur, type, vol) {
+        blip(freq, dur, type, vol, slideTo) {
             if (!this.on || !this.ctx) return;
             const t = this.ctx.currentTime;
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
             osc.type = type || 'sine';
             osc.frequency.setValueAtTime(freq, t);
+            if (slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(40, slideTo), t + dur);
             gain.gain.setValueAtTime(vol || 0.14, t);
             gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
             osc.connect(gain).connect(this.ctx.destination);
             osc.start(t);
             osc.stop(t + dur + 0.02);
         },
-        shoot() { this.blip(320, 0.09, 'triangle', 0.09); },
-        stick() { this.blip(200, 0.07, 'sine', 0.08); },
-        pop(n) { this.blip(420 + Math.min(n, 8) * 55, 0.12, 'sine', 0.13); },
-        crack() { this.blip(900, 0.08, 'square', 0.05); },
-        drop() { this.blip(160, 0.18, 'sine', 0.1); },
-        star() { this.blip(1050, 0.16, 'triangle', 0.12); },
-        boom() { this.blip(90, 0.3, 'sawtooth', 0.16); },
+        /* Tiếng "xì" bằng nhiễu trắng tắt dần. Cú nổ nào cũng cần một lớp nhiễu:
+         * chỉ có sóng sin thì nghe như tiếng chuông chứ không ra tiếng bóng vỡ. */
+        noise(dur, vol, hp) {
+            if (!this.on || !this.ctx) return;
+            const ac = this.ctx;
+            const len = Math.max(1, Math.floor(ac.sampleRate * (dur || 0.1)));
+            const buf = ac.createBuffer(1, len, ac.sampleRate);
+            const d = buf.getChannelData(0);
+            for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
+            const src = ac.createBufferSource(); src.buffer = buf;
+            const f = ac.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp || 900;
+            const g = ac.createGain(); g.gain.value = vol == null ? 0.12 : vol;
+            src.connect(f); f.connect(g); g.connect(ac.destination);
+            src.start();
+        },
+        shoot() { this.noise(0.06, 0.05, 2200); this.blip(700, 0.1, 'triangle', 0.075, 260); },
+        stick() { this.blip(230, 0.09, 'sine', 0.09, 150); this.noise(0.04, 0.045, 700); },
+        wall() { this.blip(720, 0.05, 'square', 0.05, 480); },
+        /* Nốt cao dần theo thứ tự quả nổ trong tràng — cụm càng to càng leo cao,
+         * tai nghe ra ngay là mình vừa nổ được một cụm lớn. */
+        pop(i) {
+            const f = POP_SCALE[Math.min(i || 0, POP_SCALE.length - 1)];
+            this.blip(f, 0.13, 'sine', 0.12);
+            this.noise(0.05, 0.07, 1700);
+        },
+        crack() { this.noise(0.09, 0.09, 2600); this.blip(980, 0.09, 'square', 0.05, 700); },
+        drop() { this.blip(180, 0.18, 'sine', 0.09, 110); },
+        splash() { this.blip(320, 0.1, 'sine', 0.06, 130); this.noise(0.05, 0.04, 500); },
+        star() { [1046, 1568].forEach((f, i) => setTimeout(() => this.blip(f, 0.16, 'triangle', 0.11), i * 70)); },
+        boom() { this.noise(0.38, 0.24, 130); this.blip(110, 0.4, 'sawtooth', 0.16, 44); },
         win() {
             [523, 659, 784, 1046].forEach((f, i) =>
                 setTimeout(() => this.blip(f, 0.22, 'triangle', 0.13), i * 110));
@@ -499,10 +535,20 @@
 
         falling: [],
         particles: [],
+        shards: [],          // mảnh vỏ bóng vỡ, bay xoay tít
+        rings: [],           // vòng sóng lan ra từ chỗ nổ
         popping: [],
         floats: [],          // chữ điểm bay lên
         settleAt: 0,         // mốc thời gian chờ bàn lắng xuống rồi mới kết luận
         shakeUntil: 0,
+        shakeMag: 0,         // biên độ rung, tính theo bề ngang quả bóng
+        flashAt: -9,         // loé sáng quanh chỗ nổ
+        flashCol: '#ffffff',
+        flashAmt: 0.3,
+        flashX: 0, flashY: 0, flashR: 0,
+        firedAt: -9,         // mốc bắn gần nhất, dùng cho cú giật nòng
+        loadedAt: -9,        // mốc quả đạn mới nhảy lên bệ
+        combo: 0,            // số phát liên tiếp có nổ
         time: 0
     };
 
@@ -673,11 +719,18 @@
         G.rescued = 0;
         G.falling = [];
         G.particles = [];
+        G.shards = [];
+        G.rings = [];
         G.popping = [];
         G.floats = [];
         G.shot = null;
         G.settleAt = 0;
         G.aim = -Math.PI / 2;
+        G.combo = 0;
+        G.shakeUntil = 0;
+        G.flashAt = -9;
+        G.firedAt = -9;
+        G.loadedAt = G.time;
 
         G.current = rollAmmo();
         G.next = rollAmmo();
@@ -738,6 +791,24 @@
         return out;
     }
 
+    /* Cụm cùng màu sẽ hình thành NẾU đặt một quả màu `color` vào ô (r,c) — dùng
+     * để tô sáng trước những quả sắp nổ, chưa đụng gì tới lưới thật. */
+    function clusterAtCell(r, c, color) {
+        const seen = new Set(), out = [], stack = [];
+        for (const n of neighbors(r, c)) {
+            if (n.kind !== KIND.NORMAL || n.color !== color || seen.has(n)) continue;
+            seen.add(n); out.push(n); stack.push(n);
+        }
+        while (stack.length) {
+            const b = stack.pop();
+            for (const n of neighbors(b.r, b.c)) {
+                if (seen.has(n) || n.kind !== KIND.NORMAL || n.color !== color) continue;
+                seen.add(n); out.push(n); stack.push(n);
+            }
+        }
+        return out;
+    }
+
     /* ---- những quả mất chỗ bám vào trần ---- */
     function floatingBubbles() {
         const safe = new Set();
@@ -771,17 +842,38 @@
         sfx.wake();
         sfx.shoot();
         const speed = V.d * SPEED;
+        const ca = Math.cos(G.aim), sa = Math.sin(G.aim);
+        /* Quả đạn ra khỏi miệng nòng chứ không ra từ tâm bệ — nhìn mới ăn khớp
+         * với cú giật của nòng súng. */
+        const tipX = gunX() + ca * V.d * 0.62;
+        const tipY = V.gunY + sa * V.d * 0.62;
         G.shot = {
             type: G.current.type,
             color: G.current.color,
-            x: gunX(), y: V.gunY,
-            vx: Math.cos(G.aim) * speed,
-            vy: Math.sin(G.aim) * speed,
+            x: tipX, y: tipY,
+            vx: ca * speed,
+            vy: sa * speed,
             born: G.time,
+            spin: 0,
             trail: []
         };
+        G.firedAt = G.time;
+
+        /* Vòng khói và mấy tia lửa hắt ngược ra hai bên miệng nòng. */
+        G.rings.push({ x: tipX, y: tipY, r0: V.r * 0.5, grow: 2.6, life: 0.22, age: 0, col: '#ffffff', w: 0.3 });
+        for (let i = 0; i < 7; i++) {
+            const a = G.aim + Math.PI + (Math.random() - 0.5) * 1.5;
+            const sp = V.d * (1.4 + Math.random() * 2.6);
+            G.particles.push({
+                x: tipX, y: tipY, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+                r: V.r * (0.06 + Math.random() * 0.12),
+                life: 0.16 + Math.random() * 0.16, age: 0, col: '#dff3ff', drag: 0.04
+            });
+        }
+
         G.current = G.next;
         G.next = rollAmmo();
+        G.loadedAt = G.time;
         G.shotsLeft--;
         G.shotsUsed++;
         updateHud();
@@ -790,7 +882,8 @@
     function swapAmmo() {
         if (G.mode !== 'play' || G.shot) return;
         const t = G.current; G.current = G.next; G.next = t;
-        sfx.blip(560, 0.06, 'sine', 0.07);
+        G.loadedAt = G.time;
+        sfx.blip(560, 0.08, 'sine', 0.07, 760);
     }
 
     function usePower() {
@@ -800,7 +893,22 @@
         G.current = (Math.random() < 0.5)
             ? { type: AMMO.BOMB, color: -1 }
             : { type: AMMO.RAINBOW, color: -1 };
-        sfx.blip(880, 0.18, 'triangle', 0.14);
+        G.loadedAt = G.time;
+        sfx.blip(880, 0.18, 'triangle', 0.14, 1320);
+        /* Đạn phép hiện ra kèm vòng sáng bung khỏi bệ súng. */
+        G.rings.push({
+            x: gunX(), y: V.gunY, r0: V.r, grow: 2.8, life: 0.4, age: 0,
+            col: '#ffffff', w: 0.24
+        });
+        for (let i = 0; i < 14; i++) {
+            const a = Math.random() * 6.283;
+            const sp = V.d * (1.5 + Math.random() * 2.5);
+            G.particles.push({
+                x: gunX(), y: V.gunY, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+                r: V.r * (0.06 + Math.random() * 0.12),
+                life: 0.35 + Math.random() * 0.3, age: 0, col: '#ffe9a8', drag: 0.1
+            });
+        }
         updateHud();
     }
 
@@ -819,8 +927,8 @@
             s.y += s.vy * h;
 
             const left = V.playX + V.r, right = V.playX + V.playW - V.r;
-            if (s.x < left) { s.x = left; s.vx = -s.vx; sfx.blip(500, 0.04, 'sine', 0.05); }
-            if (s.x > right) { s.x = right; s.vx = -s.vx; sfx.blip(500, 0.04, 'sine', 0.05); }
+            if (s.x < left) { s.x = left; s.vx = -s.vx; bounceFx(s, left); }
+            if (s.x > right) { s.x = right; s.vx = -s.vx; bounceFx(s, right); }
 
             if (s.y - V.r <= V.topY) { land(s, true); return; }
 
@@ -828,8 +936,31 @@
             if (hit) { land(s, false, hit); return; }
         }
 
+        s.spin += dt * 9;
         s.trail.push({ x: s.x, y: s.y, t: G.time });
-        if (s.trail.length > 12) s.trail.shift();
+        if (s.trail.length > 14) s.trail.shift();
+    }
+
+    /* Nảy tường: một vòng sóng bẹp dí vào vách kèm mấy hạt bắn ngược lại, để cú
+     * nảy có "va chạm" chứ không phải quả bóng tự nhiên đổi hướng. */
+    function bounceFx(s, wallX) {
+        sfx.wall();
+        s.bounceAt = G.time;
+        /* Vòng sóng bẹp dí theo chiều ngang vì nó đập vào vách dựng đứng. */
+        G.rings.push({
+            x: wallX, y: s.y, r0: V.r * 0.55, grow: 2.2, life: 0.24, age: 0,
+            col: '#ffffff', w: 0.28, sx: 0.35
+        });
+        const dir = s.vx > 0 ? 1 : -1;
+        for (let i = 0; i < 5; i++) {
+            const a = (dir > 0 ? 0 : Math.PI) + (Math.random() - 0.5) * 1.9;
+            const sp = V.d * (1 + Math.random() * 2);
+            G.particles.push({
+                x: wallX, y: s.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+                r: V.r * (0.05 + Math.random() * 0.1),
+                life: 0.2 + Math.random() * 0.16, age: 0, col: '#ffffff', drag: 0.05
+            });
+        }
     }
 
     function hitTest(x, y) {
@@ -881,56 +1012,115 @@
         put(cell.r, cell.c, b);
         sfx.stick();
 
+        /* Quả đạn nhảy vào ô: phồng lên rồi nhún về cỡ thật, còn mấy quả xung
+         * quanh bị hích một cái nên rung theo — cả mảng lưới thành ra mềm. */
+        b.landAt = G.time;
+        neighbors(cell.r, cell.c).forEach(n => jiggle(n, b.x, b.y, V.r * 0.18));
+        G.rings.push({
+            x: b.x, y: b.y, r0: V.r * 0.7, grow: 1.5, life: 0.25, age: 0,
+            col: colorOf(b).light, w: 0.22
+        });
+
         const cluster = sameColorCluster(b);
         if (cluster.length >= 3) {
-            popCluster(cluster);
+            popCluster(cluster, b);
         } else {
             /* Bắn trượt vẫn nạp chút phép, không thì bé kẹt màn khó mãi. */
             addPower(2);
+            G.combo = 0;
         }
         afterMove();
     }
 
+    /* Hích một quả bóng ra xa điểm va chạm; phần nhún do drawGrid tính lại từ
+     * mốc thời gian, ở đây chỉ cần ghi hướng và biên độ. */
+    function jiggle(b, fromX, fromY, amp) {
+        if (!b) return;
+        const dx = b.x - fromX, dy = b.y - fromY;
+        b.jigDir = (dx || dy) ? Math.atan2(dy, dx) : Math.random() * 6.283;
+        b.jigA = Math.max(b.jigA && G.time - b.jigT < 0.1 ? b.jigA : 0, amp);
+        b.jigT = G.time;
+    }
+
     function explode(x, y) {
         sfx.boom();
-        G.shakeUntil = G.time + 0.35;
+        shake(0.5, 0.45);
+        flash('#ffd8a0', 0.75, x, y, V.d * 3.2);
         const rad = V.d * 1.75;
         const hitList = [];
         eachBubble(b => {
             if (Math.hypot(b.x - x, b.y - y) <= rad) hitList.push(b);
         });
         boom(x, y);
-        removeBubbles(hitList, true);
+        /* Hai vòng lửa lồng nhau: một vòng nở nhanh mỏng dính, một vòng dày và
+         * chậm hơn — cú nổ nhờ thế có bề dày chứ không phẳng lì. */
+        G.rings.push({ x, y, r0: V.r * 0.9, grow: 4.2, life: 0.4, age: 0, col: '#fff3bf', w: 0.5 });
+        G.rings.push({ x, y, r0: V.r * 0.6, grow: 6.5, life: 0.55, age: 0, col: '#ff922b', w: 0.22 });
+        /* Sóng xung kích đẩy bung cả những quả nằm ngoài tầm nổ. */
+        eachBubble(b => {
+            const d = Math.hypot(b.x - x, b.y - y);
+            if (d < rad * 2.4) jiggle(b, x, y, V.r * 0.5 * (1 - d / (rad * 2.4)));
+        });
+        removeBubbles(hitList, true, { x, y });
         addScore(hitList.length * 15, x, y);
     }
 
-    function popCluster(list) {
-        sfx.pop(list.length);
-        const bonus = list.length > 3 ? (list.length - 3) * 5 : 0;
-        addScore(list.length * 10 + bonus, list[0].x, list[0].y);
-        addPower(list.length * POWER_PER_POP);
+    function popCluster(list, from) {
+        const n = list.length;
+        const bonus = n > 3 ? (n - 3) * 5 : 0;
+        const origin = from || list[0];
+        addScore(n * 10 + bonus, origin.x, origin.y);
+        addPower(n * POWER_PER_POP);
 
-        if (list.length >= 5) {
-            const label = list.length >= 8 ? 'AMAZING!' : 'GREAT!';
-            G.floats.push({ text: label, x: list[0].x, y: list[0].y - V.d, born: G.time, big: true });
+        G.combo++;
+        shake(Math.min(0.45, 0.1 + n * 0.035), 0.18 + n * 0.012);
+        if (n >= 5) {
+            flash(colorOf(list[0]).light, Math.min(0.5, 0.14 + n * 0.035),
+                origin.x, origin.y, V.d * (1.4 + n * 0.22));
         }
 
-        removeBubbles(list, true);
+        /* Lời khen bật ra sau khi tràng nổ chạy xong, không thì chữ hiện lên
+         * lúc quả đầu tiên còn chưa vỡ. */
+        const delay = Math.min(CASCADE_MAX, (n - 1) * POP_STEP);
+        if (n >= 5) {
+            const label = n >= 8 ? 'AMAZING!' : 'GREAT!';
+            /* Đặt cao hẳn lên: chữ điểm cũng bay lên từ chỗ này, để sát nhau thì
+             * hai dòng chồng lên nhau đọc không ra. */
+            G.floats.push({ text: label, x: origin.x, y: origin.y - V.d * 1.9, born: G.time + delay, big: true });
+        }
+        if (G.combo >= 3) {
+            G.floats.push({
+                text: 'COMBO x' + G.combo, x: origin.x, y: origin.y - V.d * (n >= 5 ? 3.2 : 1.9),
+                born: G.time + delay + 0.12, big: true, col: '#ff9de2'
+            });
+        }
+
+        removeBubbles(list, true, origin);
     }
 
-    function removeBubbles(list, crackAround) {
+    /* Xoá bóng khỏi lưới ngay lập tức (phần luật chơi), nhưng phần nhìn thì hẹn
+     * giờ: quả gần chỗ chạm vỡ trước, các quả xa vỡ sau, thành một tràng lan ra
+     * ngoài. Quả nào chưa tới lượt vẫn được vẽ nguyên vẹn tại chỗ. */
+    function removeBubbles(list, crackAround, origin) {
         const touched = [];
-        list.forEach(b => {
+        const src = origin || list[0] || { x: 0, y: 0 };
+        const order = list.slice().sort((a, b) =>
+            Math.hypot(a.x - src.x, a.y - src.y) - Math.hypot(b.x - src.x, b.y - src.y));
+        const step = order.length > 1
+            ? Math.min(POP_STEP, CASCADE_MAX / (order.length - 1))
+            : 0;
+
+        order.forEach((b, i) => {
             if (at(b.r, b.c) !== b) return;
             put(b.r, b.c, null);
-            G.popping.push({ b, x: b.x, y: b.y, born: G.time });
-            burst(b.x, b.y, colorOf(b));
-            if (crackAround) touched.push(...neighbors(b.r, b.c));
+            const around = neighbors(b.r, b.c);
+            G.popping.push({ b, x: b.x, y: b.y, born: G.time + i * step, idx: i, fired: false, around });
+            if (crackAround) touched.push(...around);
 
             if (b.kind === KIND.STAR) {
                 G.rescued++;
-                sfx.star();
-                G.floats.push({ text: '+100', x: b.x, y: b.y, born: G.time });
+                setTimeout(() => sfx.star(), i * step * 1000);
+                G.floats.push({ text: '+100', x: b.x, y: b.y, born: G.time + i * step });
             }
             if (G.level.obj.type === OBJ.COLLECT && b.kind === KIND.NORMAL && b.color === G.level.obj.color) {
                 G.collected++;
@@ -944,6 +1134,9 @@
             if (n.kind === KIND.ICE && at(n.r, n.c) === n) {
                 n.kind = KIND.NORMAL;
                 n.crackedAt = G.time;
+                n.landAt = G.time;              // nứt xong thì nảy lên một cái
+                jiggle(n, src.x, src.y, V.r * 0.22);
+                iceShatter(n.x, n.y);
                 cracked++;
             }
         });
@@ -953,14 +1146,19 @@
     function afterMove() {
         const loose = floatingBubbles();
         if (loose.length) {
-            sfx.drop();
-            loose.forEach((b, i) => {
+            /* Cụm mất chỗ bám còn treo lơ lửng một nhịp rồi mới bung ra, quả trên
+             * cao rơi trước quả dưới thấp — nhìn như cả mảng bị rứt khỏi trần. */
+            const startAt = G.time + 0.16;
+            const order = loose.slice().sort((a, b) => a.y - b.y);
+            setTimeout(() => sfx.drop(), 160);
+            order.forEach((b, i) => {
                 put(b.r, b.c, null);
                 G.falling.push({
                     b, x: b.x, y: b.y,
                     vx: (Math.random() - 0.5) * V.d * 1.6,
                     vy: -V.d * (0.6 + Math.random() * 0.5),
-                    rot: 0, spin: (Math.random() - 0.5) * 6, born: G.time + i * 0.01
+                    rot: 0, spin: (Math.random() - 0.5) * 6,
+                    born: startAt + i * 0.035
                 });
                 if (b.kind === KIND.STAR) {
                     G.rescued++;
@@ -1014,8 +1212,11 @@
         /* Ô mới chỉ đúng chỗ sau khi cả lưới đã dịch — gán lại toạ độ một lượt. */
         for (let c = 0; c < row.length; c++) put(0, c, row[c]);
         syncPositions();
-        sfx.blip(140, 0.22, 'sawtooth', 0.1);
-        G.shakeUntil = G.time + 0.3;
+        sfx.blip(140, 0.24, 'sawtooth', 0.1, 90);
+        sfx.noise(0.18, 0.07, 400);
+        shake(0.4, 0.34);
+        /* Cả lưới nảy xuống một nhịp: bé thấy ngay là bàn vừa bị dồn thêm hàng. */
+        eachBubble(b => jiggle(b, b.x, b.y - V.d, V.r * 0.3));
     }
 
     function addScore(n, x, y) {
@@ -1121,26 +1322,86 @@
      *  9. HIỆU ỨNG
      * ======================================================================*/
 
+    function shake(mag, dur) {
+        G.shakeMag = Math.max(G.time < G.shakeUntil ? G.shakeMag : 0, mag);
+        G.shakeUntil = Math.max(G.shakeUntil, G.time + dur);
+    }
+
+    /* Loé sáng gói gọn quanh chỗ nổ. Phủ sáng cả màn thì mọi quả bóng trên bàn
+     * đều bạc phếch đi trong một phần tư giây, nhìn như màn hình bị lỗi. */
+    function flash(col, amount, x, y, rad) {
+        G.flashAt = G.time;
+        G.flashCol = col;
+        G.flashAmt = amount;
+        G.flashX = x;
+        G.flashY = y;
+        G.flashR = rad;
+    }
+
+    /* Giọt màu li ti bắn tung toé. */
     function burst(x, y, col) {
-        for (let i = 0; i < 9; i++) {
+        for (let i = 0; i < 12; i++) {
             const a = Math.random() * Math.PI * 2;
-            const sp = V.d * (0.8 + Math.random() * 2.2);
+            const sp = V.d * (1 + Math.random() * 3.2);
             G.particles.push({
                 x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-                r: V.r * (0.12 + Math.random() * 0.22),
-                life: 0.5 + Math.random() * 0.35, age: 0, col: col.main
+                r: V.r * (0.07 + Math.random() * 0.16),
+                life: 0.35 + Math.random() * 0.35, age: 0,
+                col: Math.random() < 0.3 ? col.light : col.main, drag: 0.12
             });
         }
     }
 
-    function boom(x, y) {
-        for (let i = 0; i < 34; i++) {
+    /* Vỏ quả bóng vỡ thành mấy mảnh cong, vừa bay vừa lộn — chi tiết này mới là
+     * thứ làm cú nổ "đã", giọt tròn thôi thì nhìn vẫn như hạt bụi. */
+    function shards(x, y, col, r) {
+        const n = 5 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < n; i++) {
+            const a = (i / n) * 6.283 + Math.random() * 0.6;
+            const sp = V.d * (1.6 + Math.random() * 2.4);
+            G.shards.push({
+                x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - V.d * 0.5,
+                rot: Math.random() * 6.283, spin: (Math.random() - 0.5) * 14,
+                arc: 0.7 + Math.random() * 0.9,       // độ mở của mảnh vỏ
+                r: r * (0.45 + Math.random() * 0.4),
+                life: 0.45 + Math.random() * 0.4, age: 0, col
+            });
+        }
+    }
+
+    /* Một quả tới lượt vỡ: vòng sóng + vỏ văng + giọt màu + nốt nhạc. */
+    function popFx(p) {
+        const col = colorOf(p.b);
+        G.rings.push({ x: p.x, y: p.y, r0: V.r * 0.8, grow: 2.4, life: 0.32, age: 0, col: col.light, w: 0.3 });
+        shards(p.x, p.y, col, V.r);
+        burst(p.x, p.y, col);
+        sfx.pop(p.idx);
+        (p.around || []).forEach(n => {
+            if (at(n.r, n.c) === n) jiggle(n, p.x, p.y, V.r * 0.16);
+        });
+    }
+
+    function iceShatter(x, y) {
+        for (let i = 0; i < 10; i++) {
             const a = Math.random() * Math.PI * 2;
-            const sp = V.d * (1.5 + Math.random() * 4);
+            const sp = V.d * (1 + Math.random() * 2.4);
             G.particles.push({
                 x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
-                r: V.r * (0.15 + Math.random() * 0.35),
-                life: 0.6 + Math.random() * 0.5, age: 0,
+                r: V.r * (0.05 + Math.random() * 0.12),
+                life: 0.3 + Math.random() * 0.3, age: 0, col: '#e8f8ff', drag: 0.1
+            });
+        }
+        G.rings.push({ x, y, r0: V.r * 0.8, grow: 1.9, life: 0.28, age: 0, col: '#cdefff', w: 0.24 });
+    }
+
+    function boom(x, y) {
+        for (let i = 0; i < 40; i++) {
+            const a = Math.random() * Math.PI * 2;
+            const sp = V.d * (1.5 + Math.random() * 5);
+            G.particles.push({
+                x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+                r: V.r * (0.1 + Math.random() * 0.32),
+                life: 0.5 + Math.random() * 0.55, age: 0, drag: 0.08,
                 col: pick(['#ffd43b', '#ff922b', '#ff6b35', '#fff3bf'])
             });
         }
@@ -1154,25 +1415,59 @@
             p.age += dt;
             if (p.age >= p.life) { G.particles.splice(i, 1); continue; }
             p.vy += g * 0.4 * dt;
+            /* Hạt nhẹ nên cản gió mạnh: bắn vọt ra rồi khựng lại gần như ngay,
+             * đúng kiểu bọt nước chứ không phải mảnh đạn bay thẳng. */
+            if (p.drag) { const k = Math.pow(p.drag, dt); p.vx *= k; p.vy *= k; }
             p.x += p.vx * dt;
             p.y += p.vy * dt;
         }
 
+        for (let i = G.shards.length - 1; i >= 0; i--) {
+            const s = G.shards[i];
+            s.age += dt;
+            if (s.age >= s.life) { G.shards.splice(i, 1); continue; }
+            s.vy += g * 0.55 * dt;
+            const k = Math.pow(0.2, dt);
+            s.vx *= k; s.vy *= Math.pow(0.6, dt);
+            s.x += s.vx * dt; s.y += s.vy * dt;
+            s.rot += s.spin * dt;
+            s.spin *= Math.pow(0.6, dt);
+        }
+
+        for (let i = G.rings.length - 1; i >= 0; i--) {
+            const r = G.rings[i];
+            r.age += dt;
+            if (r.age >= r.life) G.rings.splice(i, 1);
+        }
+
         for (let i = G.falling.length - 1; i >= 0; i--) {
             const f = G.falling[i];
+            if (G.time < f.born) continue;          // còn chờ tới lượt bung ra
             f.vy += g * dt;
             f.x += f.vx * dt;
             f.y += f.vy * dt;
             f.rot += f.spin * dt;
-            if (f.y - V.r > V.h) G.falling.splice(i, 1);
+            /* Chạm đáy sân thì vỡ tan chứ không lặng lẽ trôi khỏi màn hình. */
+            if (f.y > V.h - V.r * 0.6) {
+                const col = colorOf(f.b);
+                burst(f.x, V.h - V.r * 0.6, col);
+                G.rings.push({
+                    x: f.x, y: V.h - V.r * 0.4, r0: V.r * 0.7, grow: 2, life: 0.26, age: 0,
+                    col: col.light, w: 0.2, sy: 0.3
+                });
+                if (i < 4) sfx.splash();          // cả chục quả cùng rơi thì đừng kêu chục lần
+                G.falling.splice(i, 1);
+            }
         }
 
         for (let i = G.popping.length - 1; i >= 0; i--) {
-            if (G.time - G.popping[i].born > 0.22) G.popping.splice(i, 1);
+            const p = G.popping[i];
+            if (!p.fired && G.time >= p.born) { p.fired = true; popFx(p); }
+            if (G.time - p.born > POP_TIME) G.popping.splice(i, 1);
         }
 
         for (let i = G.floats.length - 1; i >= 0; i--) {
-            if (G.time - G.floats[i].born > 1.0) G.floats.splice(i, 1);
+            if (G.time - G.floats[i].born > 1.1) G.floats.splice(i, 1);
         }
     }
 
@@ -1211,7 +1506,10 @@
 
         ctx.save();
         if (G.time < G.shakeUntil) {
-            const k = (G.shakeUntil - G.time) * 12;
+            /* Rung tắt dần theo hàm mũ chứ không tuyến tính: cú giật mạnh ngay
+             * đầu rồi lịm hẳn, giống va chạm thật. */
+            const left = (G.shakeUntil - G.time);
+            const k = V.d * G.shakeMag * 0.7 * Math.min(1, left * 3.2);
             ctx.translate((Math.random() - 0.5) * k, (Math.random() - 0.5) * k);
         }
 
@@ -1236,12 +1534,33 @@
         drawColumn();
         drawGrid();
         drawFalling();
-        drawShot();
         if (G.mode === 'play' && !G.shot) drawAim();
+        drawShot();
         drawGun();
+        drawShards();
         drawParticles();
+        drawRings();
+        drawFlash();
         drawFloats();
 
+        ctx.restore();
+    }
+
+    function drawFlash() {
+        const fk = (G.time - G.flashAt) / 0.2;
+        if (fk < 0 || fk >= 1) return;
+        const r = (G.flashR || V.d * 3.2) * (0.7 + fk * 0.7);
+        const g = ctx.createRadialGradient(G.flashX, G.flashY, 0, G.flashX, G.flashY, r);
+        g.addColorStop(0, G.flashCol);
+        g.addColorStop(0.45, G.flashCol);
+        g.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = (1 - fk) * (1 - fk) * (G.flashAmt || 0.3);
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(G.flashX, G.flashY, r, 0, 6.283);
+        ctx.fill();
         ctx.restore();
     }
 
@@ -1269,12 +1588,56 @@
     }
 
     function drawGrid() {
-        eachBubble(b => drawBubble(b.x, b.y, V.r, b, 1));
+        eachBubble(b => {
+            let ox = 0, oy = 0, sc = 1;
+
+            /* Rung sau khi bị hích: dao động tắt dần quanh vị trí ô. */
+            if (b.jigT != null) {
+                const age = G.time - b.jigT;
+                if (age >= 0 && age < 0.55) {
+                    const k = Math.exp(-age * 9) * Math.sin(age * 34);
+                    ox = Math.cos(b.jigDir) * b.jigA * k;
+                    oy = Math.sin(b.jigDir) * b.jigA * k;
+                }
+            }
+            /* Quả vừa dính vào lưới: phồng to rồi nhún về cỡ thật. */
+            if (b.landAt != null) {
+                const age = G.time - b.landAt;
+                if (age >= 0 && age < 0.45) sc = 1 + 0.3 * Math.exp(-age * 11) * Math.cos(age * 26);
+            }
+            /* Nhịp thở rất nhẹ cho cả bàn khỏi chết cứng. */
+            sc *= 1 + 0.018 * Math.sin(G.time * 1.8 + b.wob);
+
+            drawBubble(b.x + ox, b.y + oy, V.r * sc, b, 1);
+        });
+
         G.popping.forEach(p => {
-            const k = (G.time - p.born) / 0.22;
+            const age = G.time - p.born;
+            if (age < 0) {
+                /* Chưa tới lượt: quả bóng căng dần lên và sáng lên như sắp bục,
+                 * để mắt bé kịp thấy tràng nổ đang lan tới đâu. */
+                const w = Math.max(0, 1 + age * 5);
+                ctx.save();
+                drawBubble(p.x, p.y, V.r * (1 + 0.1 * w), p.b, 1);
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.22 * w;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, V.r * 0.94, 0, 6.283);
+                ctx.fill();
+                ctx.restore();
+                return;
+            }
+            /* Vỡ: màng bóng nở bung ra và mỏng dần đi cho tới lúc tan hẳn. */
+            const k = Math.min(1, age / POP_TIME);
+            const r = V.r * (1 + k * 1.1);
             ctx.save();
-            ctx.globalAlpha = 1 - k;
-            drawBubble(p.x, p.y, V.r * (1 + k * 0.6), p.b, 1);
+            ctx.globalAlpha = (1 - k) * 0.55;
+            ctx.strokeStyle = colorOf(p.b).light;
+            ctx.lineWidth = Math.max(1, V.r * 0.26 * (1 - k));
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, r, 0, 6.283);
+            ctx.stroke();
             ctx.restore();
         });
     }
@@ -1283,8 +1646,53 @@
         G.falling.forEach(f => {
             ctx.save();
             ctx.translate(f.x, f.y);
-            ctx.rotate(f.rot);
+            /* Còn chờ tới lượt bung: rung nhẹ tại chỗ như sắp rứt ra. */
+            if (G.time < f.born) {
+                const j = V.r * 0.08 * Math.sin(G.time * 40);
+                ctx.translate(j, 0);
+            } else {
+                ctx.rotate(f.rot);
+            }
             drawBubble(0, 0, V.r, f.b, 1);
+            ctx.restore();
+        });
+    }
+
+    function drawRings() {
+        G.rings.forEach(g => {
+            const k = g.age / g.life;
+            const r = g.r0 * (1 + k * g.grow);
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = (1 - k) * 0.7;
+            ctx.strokeStyle = g.col;
+            ctx.lineWidth = Math.max(1, g.r0 * (g.w || 0.3) * 2 * (1 - k));
+            ctx.beginPath();
+            ctx.ellipse(g.x, g.y, r * (g.sx || 1), r * (g.sy || 1), 0, 0, 6.283);
+            ctx.stroke();
+            ctx.restore();
+        });
+    }
+
+    /* Mảnh vỏ: một cung mỏng cong theo chiều bay, hai đầu vuốt nhọn. */
+    function drawShards() {
+        G.shards.forEach(s => {
+            const k = s.age / s.life;
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, 1 - k);
+            ctx.translate(s.x, s.y);
+            ctx.rotate(s.rot);
+            ctx.strokeStyle = s.col.main;
+            ctx.lineWidth = Math.max(1, s.r * 0.42 * (1 - k * 0.5));
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(0, 0, s.r, -s.arc / 2, s.arc / 2);
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+            ctx.lineWidth = Math.max(0.6, s.r * 0.14);
+            ctx.beginPath();
+            ctx.arc(0, 0, s.r * 1.08, -s.arc / 3, s.arc / 3);
+            ctx.stroke();
             ctx.restore();
         });
     }
@@ -1292,45 +1700,133 @@
     function drawShot() {
         const s = G.shot;
         if (!s) return;
+
+        /* Vệt đuôi mang màu quả đạn, to dần về phía quả bóng — mắt bắt được
+         * hướng bay ngay cả khi quả đạn vọt rất nhanh. */
+        const col = s.type === AMMO.NORMAL && s.color >= 0 ? COLORS[s.color] : null;
         ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
         s.trail.forEach((t, i) => {
-            ctx.globalAlpha = (i / s.trail.length) * 0.28;
-            ctx.fillStyle = '#ffffff';
+            const k = (i + 1) / s.trail.length;
+            ctx.globalAlpha = k * k * 0.4;
+            ctx.fillStyle = col ? col.light : '#ffffff';
             ctx.beginPath();
-            ctx.arc(t.x, t.y, V.r * 0.5, 0, 6.283);
+            ctx.arc(t.x, t.y, V.r * (0.2 + k * 0.6), 0, 6.283);
             ctx.fill();
         });
         ctx.restore();
-        drawAmmo(s.x, s.y, V.r, s);
+
+        /* Quả đạn kéo dài theo chiều bay; vừa nảy tường thì bị nén bẹp một nhịp. */
+        const a = Math.atan2(s.vy, s.vx);
+        let sx = 1.14, sy = 0.9;
+        const bAge = s.bounceAt != null ? G.time - s.bounceAt : 9;
+        if (bAge < 0.14) {
+            const k = 1 - bAge / 0.14;
+            sx = 1.14 - 0.5 * k;
+            sy = 0.9 + 0.45 * k;
+        }
+        ctx.save();
+        ctx.translate(s.x, s.y);
+        ctx.rotate(a);
+        ctx.scale(sx, sy);
+        ctx.rotate(-a);
+        drawAmmo(0, 0, V.r, s);
+        ctx.restore();
     }
 
     function drawAim() {
         const pts = aimPath();
+        const end = pts[pts.length - 1];
+        const ammo = G.current;
+
+        /* Vạch đứt chạy dọc theo đường ngắm về phía đích, nhìn là biết ngay quả
+         * bóng sẽ đi đường nào. */
         ctx.save();
-        ctx.setLineDash([7, 9]);
+        ctx.setLineDash([7, 11]);
+        ctx.lineDashOffset = -G.time * 70;
         ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
         ctx.strokeStyle = 'rgba(255,255,255,0.55)';
         ctx.beginPath();
         ctx.moveTo(pts[0].x, pts[0].y);
         for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.restore();
 
-        const end = pts[pts.length - 1];
-        ctx.globalAlpha = 0.5;
-        ctx.lineWidth = 2.5;
+        /* Bom thì vẽ luôn vòng sát thương thay cho ô đích. */
+        if (ammo && ammo.type === AMMO.BOMB) {
+            ctx.save();
+            ctx.globalAlpha = 0.35 + 0.15 * Math.sin(G.time * 6);
+            ctx.setLineDash([6, 6]);
+            ctx.lineDashOffset = G.time * 30;
+            ctx.strokeStyle = '#ff922b';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(end.x, end.y, V.d * 1.75, 0, 6.283);
+            ctx.stroke();
+            ctx.restore();
+            return;
+        }
+
+        const cell = snapCell(end.x, end.y);
+        if (!cell) return;
+        const gx = cellX(cell.r, cell.c), gy = cellY(cell.r);
+        const pulse = 0.5 + 0.5 * Math.sin(G.time * 7);
+
+        /* Cụm sắp nổ được khoanh sáng nhấp nháy: bé nhắm được cụm to hẳn hoi
+         * chứ không bắn hú hoạ, mà nổ trúng cụm to mới là chỗ sướng của game. */
+        if (ammo && ammo.type === AMMO.NORMAL) {
+            const grp = clusterAtCell(cell.r, cell.c, ammo.color);
+            if (grp.length >= 2) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.3 + 0.35 * pulse;
+                ctx.strokeStyle = COLORS[ammo.color].light;
+                ctx.lineWidth = Math.max(2, V.r * 0.16);
+                grp.forEach(b => {
+                    ctx.beginPath();
+                    ctx.arc(b.x, b.y, V.r * (0.98 + 0.06 * pulse), 0, 6.283);
+                    ctx.stroke();
+                });
+                ctx.restore();
+            }
+        }
+
+        /* Quả bóng mờ nằm sẵn ở ô sẽ dính vào. Lót một lớp sẫm bên dưới, không
+         * thì màu quả bóng pha với nền xanh ra một màu bùn chẳng giống màu nào. */
+        ctx.save();
+        ctx.globalAlpha = 0.55;
+        ctx.fillStyle = 'rgba(6,20,38,0.9)';
+        ctx.beginPath();
+        ctx.arc(gx, gy, V.r * 0.92, 0, 6.283);
+        ctx.fill();
+        ctx.globalAlpha = 0.62 + 0.14 * pulse;
+        drawAmmo(gx, gy, V.r * 0.92, ammo || { type: AMMO.NORMAL, color: 0 });
+        ctx.restore();
+
+        ctx.save();
+        ctx.globalAlpha = 0.45 + 0.25 * pulse;
+        ctx.setLineDash([5, 5]);
+        ctx.lineDashOffset = -G.time * 26;
+        ctx.lineWidth = 2;
         ctx.strokeStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(end.x, end.y, V.r * 0.9, 0, 6.283);
+        ctx.arc(gx, gy, V.r * 1.02, 0, 6.283);
         ctx.stroke();
         ctx.restore();
     }
 
     function drawGun() {
         const x = gunX(), y = V.gunY;
+        /* Nòng giật lùi rồi bật về theo lò xo tắt dần. */
+        const rAge = G.time - G.firedAt;
+        const kick = rAge >= 0 && rAge < 0.4
+            ? Math.exp(-rAge * 10) * Math.cos(rAge * 22) * V.d * 0.3
+            : 0;
 
         ctx.save();
-        ctx.translate(x, y);
+        ctx.translate(x - Math.cos(G.aim) * kick, y - Math.sin(G.aim) * kick);
         ctx.rotate(G.aim + Math.PI / 2);
         const bl = V.d * 0.95;
         const grad = ctx.createLinearGradient(0, 0, 0, -bl);
@@ -1339,6 +1835,20 @@
         ctx.fillStyle = grad;
         roundRect(-V.r * 0.42, -bl, V.r * 0.84, bl, V.r * 0.3);
         ctx.fill();
+
+        /* Chớp lửa loe ra ở miệng nòng ngay lúc bắn. */
+        if (rAge >= 0 && rAge < 0.12) {
+            const k = 1 - rAge / 0.12;
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = k * 0.85;
+            const fg = ctx.createRadialGradient(0, -bl, 0, 0, -bl, V.d * 0.7 * k);
+            fg.addColorStop(0, '#ffffff');
+            fg.addColorStop(1, 'rgba(140,220,255,0)');
+            ctx.fillStyle = fg;
+            ctx.beginPath();
+            ctx.arc(0, -bl, V.d * 0.7 * k, 0, 6.283);
+            ctx.fill();
+        }
         ctx.restore();
 
         ctx.save();
@@ -1354,7 +1864,28 @@
         ctx.stroke();
         ctx.restore();
 
-        if (G.current) drawAmmo(x, y, V.r * 0.95, G.current);
+        /* Quả đạn mới nảy lên bệ: phồng ra rồi nhún về, kèm nhịp thở nhẹ khi
+         * đứng chờ để bé thấy nó "sống". */
+        if (G.current) {
+            const lAge = G.time - G.loadedAt;
+            let sc = 1 + 0.03 * Math.sin(G.time * 3.4);
+            if (lAge >= 0 && lAge < 0.4) sc *= 1 - Math.exp(-lAge * 12) * Math.cos(lAge * 24) * 0.45;
+            if (G.current.type !== AMMO.NORMAL) {
+                /* Đạn phép có quầng sáng xoay quanh cho nổi bật hẳn. */
+                ctx.save();
+                ctx.globalCompositeOperation = 'lighter';
+                ctx.globalAlpha = 0.35 + 0.2 * Math.sin(G.time * 5);
+                const hg = ctx.createRadialGradient(x, y, V.r * 0.5, x, y, V.d * 0.85);
+                hg.addColorStop(0, G.current.type === AMMO.BOMB ? '#ff9a6b' : '#9fe8ff');
+                hg.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = hg;
+                ctx.beginPath();
+                ctx.arc(x, y, V.d * 0.85, 0, 6.283);
+                ctx.fill();
+                ctx.restore();
+            }
+            drawAmmo(x, y, V.r * 0.95 * sc, G.current);
+        }
 
         /* Quả chờ nằm chếch bên phải bệ, chạm vào là đổi chỗ cho quả đang nạp. */
         if (G.next) {
@@ -1387,7 +1918,10 @@
 
     function drawBubble(x, y, r, b, alpha) {
         ctx.save();
-        ctx.globalAlpha = alpha == null ? 1 : alpha;
+        /* Nhân vào độ mờ đang có chứ không ghi đè: chỗ nào bọc quả bóng trong
+         * một lớp mờ sẵn (bóng ma chỗ ngắm, quả đang tan) mới ăn thua. */
+        const base = ctx.globalAlpha * (alpha == null ? 1 : alpha);
+        ctx.globalAlpha = base;
 
         let col;
         if (b.kind === 'bombAmmo') col = { light: '#ffb3a7', main: '#ff5b3b', dark: '#a3200c' };
@@ -1427,12 +1961,12 @@
         ctx.stroke();
 
         /* Đốm sáng nhỏ phía trên trái cho quả bóng trông tròn và bóng. */
-        ctx.globalAlpha = (alpha == null ? 1 : alpha) * 0.55;
+        ctx.globalAlpha = base * 0.55;
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
         ctx.ellipse(x - r * 0.32, y - r * 0.36, r * 0.26, r * 0.18, -0.6, 0, 6.283);
         ctx.fill();
-        ctx.globalAlpha = alpha == null ? 1 : alpha;
+        ctx.globalAlpha = base;
 
         if (b.kind === KIND.NORMAL && b.color >= 0) {
             drawSymbol(COLORS[b.color].sym, x, y, r * 0.42);
@@ -1580,18 +2114,29 @@
 
     function drawFloats() {
         G.floats.forEach(f => {
-            const k = (G.time - f.born) / 1.0;
+            const age = G.time - f.born;
+            if (age < 0) return;                       // chữ hẹn giờ, chưa tới lượt
+            const k = age / 1.0;
+            /* Bung to quá cỡ trong chớp mắt rồi co về — lời khen phải "nảy" ra
+             * thì mới ăn nhịp với cú nổ. */
+            const pop = age < 0.18
+                ? 0.4 + 1.1 * (age / 0.18)
+                : 1.15 - 0.15 * Math.min(1, (age - 0.18) / 0.14);
             ctx.save();
-            ctx.globalAlpha = Math.max(0, 1 - k);
+            ctx.globalAlpha = Math.max(0, 1 - k * k);
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.translate(f.x, f.y - k * V.d * 1.5);
+            ctx.scale(pop, pop);
+            if (f.big) ctx.rotate(Math.sin(age * 18) * 0.05 * Math.max(0, 1 - age * 3));
             ctx.font = (f.big ? 800 : 700) + ' ' + Math.round(V.d * (f.big ? 0.62 : 0.46)) +
                 'px "Baloo 2", Fredoka, system-ui, sans-serif';
-            ctx.fillStyle = f.big ? '#ffe066' : '#ffffff';
-            ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
             ctx.lineWidth = Math.max(2, V.d * 0.07);
-            const y = f.y - k * V.d * 1.6;
-            ctx.strokeText(f.text, f.x, y);
-            ctx.fillText(f.text, f.x, y);
+            ctx.lineJoin = 'round';
+            ctx.strokeText(f.text, 0, 0);
+            ctx.fillStyle = f.col || (f.big ? '#ffe066' : '#ffffff');
+            ctx.fillText(f.text, 0, 0);
             ctx.restore();
         });
     }
