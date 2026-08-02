@@ -311,10 +311,12 @@
             name: 'Rock Bridge',
             tip: 'One Grumpy on the bridge, one under it.',
             ammo: ['rock', 'rock', 'rock', 'rock'],
-            terrain: [WALL(700, 560, 44, 160), WALL(1200, 560, 44, 160),
-                      WALL(950, 466, 500, 28)],
-            blocks: gate(950, 452, 'wood', 1),
-            targets: [T(950, 452), T(950, GROUND_Y)]
+            /* Chỉ một trụ bên phải. Có trụ cả hai bên thì mặt cầu (452-480)
+               nối liền với trụ (480-640) thành bức tường kín từ trên xuống
+               đất — Cục Cáu dưới gầm cầu không còn đường nào chạm tới được. */
+            terrain: [WALL(1200, 560, 44, 160), WALL(985, 466, 430, 28)],
+            blocks: gate(985, 452, 'wood', 1),
+            targets: [T(985, 452), T(880, GROUND_Y)]
         },
         {
             name: 'Stair Steps',
@@ -1470,12 +1472,8 @@
             if (type === 'rock') {
                 /* Chú lợn hồng: hai tai, mõm tròn, má ửng. Vẽ sau vòng tròn nền
                    nên nằm đè lên, và quay theo viên bi cho vui mắt. */
-                g.fillStyle(spec.dark, 1);
-                g.fillTriangle(-r * 0.78, -r * 0.5, -r * 0.3, -r * 1.02, -r * 0.16, -r * 0.42);
-                g.fillTriangle(r * 0.78, -r * 0.5, r * 0.3, -r * 1.02, r * 0.16, -r * 0.42);
-                g.fillStyle(0xffd0e4, 1);
-                g.fillTriangle(-r * 0.62, -r * 0.52, -r * 0.34, -r * 0.86, -r * 0.26, -r * 0.46);
-                g.fillTriangle(r * 0.62, -r * 0.52, r * 0.34, -r * 0.86, r * 0.26, -r * 0.46);
+                this.pigEar(g, -1, r, spec);
+                this.pigEar(g, 1, r, spec);
                 g.fillStyle(spec.fill, 1);
                 g.fillCircle(0, 0, r);
                 g.lineStyle(3, spec.dark, 1);
@@ -1508,6 +1506,20 @@
                 g.fillStyle(0x1d5c24, 1);
                 g.fillCircle(-5, 2, 3); g.fillCircle(5, 2, 3); g.fillCircle(0, -5, 3);
             }
+            g.restore();
+        }
+
+        /* Tai lợn: một hình bầu dục nghiêng ra ngoài, lòng tai màu nhạt hơn.
+           Vẽ trước vòng mặt nên phần chân tai bị mặt che, trông như mọc ra từ
+           đầu chứ không dán lên. */
+        pigEar(g, side, r, spec) {
+            g.save();
+            g.translateCanvas(side * r * 0.66, -r * 0.82);
+            g.rotateCanvas(side * 0.42);
+            g.fillStyle(spec.dark, 1);
+            g.fillEllipse(0, 0, r * 0.66, r * 1.06);
+            g.fillStyle(0xffd6e8, 1);
+            g.fillEllipse(0, r * 0.08, r * 0.36, r * 0.64);
             g.restore();
         }
 
