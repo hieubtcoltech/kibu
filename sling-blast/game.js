@@ -1089,6 +1089,9 @@
             });
 
             this.buildLevelGrid();
+            /* Bảng chào đang mở sẵn lúc vào trang, mà syncHint chỉ chạy khi có
+               người bấm — không gọi ở đây thì lời nhắc hiện xuyên qua nó. */
+            this.syncHint();
         },
 
         OVERLAYS: ['menu-overlay', 'levels-overlay', 'win-overlay', 'lose-overlay', 'all-overlay'],
