@@ -443,6 +443,10 @@
             background: linear-gradient(135deg, #2c1207 0%, #5b2410 55%, #8a3d15 100%);
         }
 
+        .tile-tictactoe {
+            background: linear-gradient(135deg, #090d16 0%, #1e1b4b 55%, #2e1065 100%);
+        }
+
         /* Mỗi game có icon.png riêng trong thư mục của nó. Game nào chưa có ảnh
            thì thẻ img tự gỡ mình và emoji dự phòng hiện lên — không bao giờ để
            lại biểu tượng ảnh vỡ. */
@@ -732,6 +736,14 @@
                 <img src="/darts-game/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Balloon Darts<span class="tile-sub">Pop the balloons!</span></div>
+            </a>
+
+            <a href="/g/tic-tac-toe" class="poki-tile tile-tictactoe"
+                data-keywords="tic tac toe co caro caro board game multiplayer 2 player X O">
+                <span class="tile-badge badge-new">NEW</span>
+                <img src="/tictactoe-game/icon.png" alt="" class="tile-img" loading="lazy" decoding="async"
+                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <div class="tile-label">Tic Tac Toe</div>
             </a>
 
             <a href="/g/english-quest" class="poki-tile tile-english"

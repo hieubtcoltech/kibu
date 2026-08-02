@@ -158,6 +158,12 @@
         ['3 đường: khó thì nhiều kho báu', '3 routes: riskier means richer'],
         ['cần gạt', 'joystick'],
 
+        /* ---------- Tic Tac Toe (tictactoe) ---------- */
+        ['CỜ CA-RÔ', 'TIC TAC TOE'],
+        ['Cờ Ca-rô', 'Tic Tac Toe'],
+        ['Chơi cờ ca-rô cổ điển và đấu với máy tính siêu thông minh.',
+            'Play classic Tic Tac Toe and challenge our super-smart AI.'],
+
         /* ---------- Cờ Tướng (xiangqi) ---------- */
         ['CỜ TƯỚNG', 'XIANGQI'],
         ['CỜ TƯỚNG ONLINE', 'XIANGQI ONLINE'],
