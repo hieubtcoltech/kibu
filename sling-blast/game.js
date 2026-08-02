@@ -785,7 +785,7 @@
                 g.fillStyle(c, 1);
                 g.fillRect(0, i * (GROUND_Y / 44), W, GROUND_Y / 44 + 1);
             }
-            this.drawSun(g, 1120, 122, 50);
+            this.drawSun(g, 1128, 205, 32);
             /* mây */
             this.cloud(g, 260, 120, 1.1); this.cloud(g, 700, 86, 0.8);
             this.cloud(g, 1000, 190, 0.65); this.cloud(g, 470, 210, 0.5);
@@ -808,29 +808,21 @@
                 g.fillTriangle(x, GROUND_Y, x + 5, GROUND_Y - 9 - (i % 5) * 2, x + 10, GROUND_Y);
             }
         }
-        /* Mặt trời: quầng sáng ba lớp, mười hai tia nắng toả ra, rồi tới đĩa
-           mặt trời ba tông vàng. Bản trước chỉ có hai vòng tròn trắng ngà nên
-           nhìn ra mặt trăng chứ không ra mặt trời. */
+        /* Mặt trời: một đĩa vàng, tám tia ngắn, và một quầng mờ cùng màu.
+           Chỉ dùng đúng một màu vàng để hợp với lối vẽ phẳng của cả sân. */
         drawSun(g, cx, cy, r) {
-            var i, a, w = 0.075;
-            g.fillStyle(0xffe680, 0.09); g.fillCircle(cx, cy, r * 2.2);
-            g.fillStyle(0xffe680, 0.14); g.fillCircle(cx, cy, r * 1.72);
-            g.fillStyle(0xffeea0, 0.24); g.fillCircle(cx, cy, r * 1.3);
-
-            g.fillStyle(0xffdb4d, 0.75);
-            for (i = 0; i < 12; i++) {
-                a = i * Math.PI / 6 + 0.13;
+            var i, a, w = 0.09;
+            g.fillStyle(0xffd94f, 0.16);
+            g.fillCircle(cx, cy, r * 1.75);
+            g.fillStyle(0xffd94f, 1);
+            for (i = 0; i < 8; i++) {
+                a = i * Math.PI / 4 + 0.2;
                 g.fillTriangle(
-                    cx + Math.cos(a - w) * r * 1.12, cy + Math.sin(a - w) * r * 1.12,
-                    cx + Math.cos(a + w) * r * 1.12, cy + Math.sin(a + w) * r * 1.12,
-                    cx + Math.cos(a) * r * (i % 2 ? 1.62 : 1.95),
-                    cy + Math.sin(a) * r * (i % 2 ? 1.62 : 1.95));
+                    cx + Math.cos(a - w) * r * 1.05, cy + Math.sin(a - w) * r * 1.05,
+                    cx + Math.cos(a + w) * r * 1.05, cy + Math.sin(a + w) * r * 1.05,
+                    cx + Math.cos(a) * r * 1.5, cy + Math.sin(a) * r * 1.5);
             }
-
-            g.fillStyle(0xffb020, 1); g.fillCircle(cx, cy, r);
-            g.fillStyle(0xffd23f, 1); g.fillCircle(cx, cy, r * 0.88);
-            g.fillStyle(0xffe98a, 1); g.fillCircle(cx - r * 0.12, cy - r * 0.14, r * 0.62);
-            g.fillStyle(0xfff6cd, 1); g.fillCircle(cx - r * 0.26, cy - r * 0.3, r * 0.3);
+            g.fillCircle(cx, cy, r);
         }
 
         cloud(g, x, y, s) {
@@ -1719,7 +1711,15 @@
                 for (k = CHAPTERS[c].from; k < CHAPTERS[c].from + 12; k++) got += Save.data.stars[String(k)] || 0;
                 tab = document.createElement('button');
                 tab.className = 'ch-tab' + (c === this.chapter ? ' is-on' : '') + (locked ? ' locked' : '');
-                tab.appendChild(document.createTextNode(locked ? '🔒 ' + CHAPTERS[c].name : CHAPTERS[c].name));
+                /* Ổ khoá để riêng một thẻ: gộp '🔒 ' vào cùng nút văn bản với
+                   tên chương thì chuỗi không còn khớp đúng mục từ điển nữa. */
+                if (locked) {
+                    var lk = document.createElement('i');
+                    lk.className = 'ch-lock';
+                    lk.textContent = '🔒';
+                    tab.appendChild(lk);
+                }
+                tab.appendChild(document.createTextNode(CHAPTERS[c].name));
                 s = document.createElement('span');
                 s.className = 'ch-stars';
                 s.textContent = locked ? '' : '★' + got + '/36';
@@ -1743,9 +1743,16 @@
                 s.className = 'lv-num';
                 s.textContent = locked ? '🔒' : String(i - from + 1);
                 btn.appendChild(s);
+                /* Luôn vẽ đủ ba sao: sao chưa ăn để xám. Bé nhìn là biết màn
+                   nào còn thiếu sao, chứ ô trống thì không nói lên điều gì. */
                 s = document.createElement('span');
                 s.className = 'lv-stars';
-                s.textContent = stars ? '★'.repeat(stars) : '';
+                for (var st = 0; st < 3; st++) {
+                    var one = document.createElement('i');
+                    one.className = 'lv-star' + (st < stars ? ' lit' : '');
+                    one.textContent = '★';
+                    s.appendChild(one);
+                }
                 btn.appendChild(s);
                 if (!locked) {
                     btn.addEventListener('click', (function (idx) {

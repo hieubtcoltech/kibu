@@ -469,6 +469,8 @@ body.chrome-fit > .site-footer {
 
 .ch-tab.locked { opacity: 0.45; cursor: not-allowed; }
 
+.ch-tab .ch-lock { font-style: normal; margin-right: 5px; }
+
 .ch-tab .ch-stars { font-size: 0.72rem; opacity: 0.9; margin-left: 5px; }
 
 /* ---------- Chọn màn ---------- */
@@ -499,7 +501,10 @@ body.chrome-fit > .site-footer {
 .lv:hover:not(.locked) { transform: translateY(-3px); border-color: var(--sb-gold); }
 
 .lv .lv-num { font-size: 1.5rem; font-weight: 800; }
-.lv .lv-stars { font-size: 0.8rem; letter-spacing: 1px; color: var(--sb-gold); min-height: 1em; }
+.lv .lv-stars { font-size: 0.8rem; letter-spacing: 1px; min-height: 1em; display: flex; gap: 1px; }
+
+.lv-star { font-style: normal; color: rgba(255, 255, 255, 0.2); line-height: 1; }
+.lv-star.lit { color: var(--sb-gold); text-shadow: 0 0 6px rgba(255, 197, 61, 0.55); }
 
 .lv.locked {
     cursor: not-allowed;
