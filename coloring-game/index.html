@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Magic Coloring - Free Coloring Game for Kids | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Magic Coloring free on KIBU Games! 16 cute pictures - kitty, unicorn, snow princess, mermaid - that little kids aged 3-6 can colour with one tap. No reading needed.">
+    <meta name="keywords" content="Magic Coloring, coloring game for kids, colouring book online, tro choi to mau, to mau cho be, princess coloring, unicorn coloring, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/coloring-game/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/coloring-game/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/coloring-game/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/coloring-game/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/coloring-game/">
+    <meta property="og:title" content="Magic Coloring - Free Coloring Game for Kids | KIBU Games">
+    <meta property="og:description" content="16 cute pictures to colour with one tap. Made for little kids aged 3-6 - no reading, nothing to lose, nothing to break.">
+    <meta property="og:image" content="https://kibugames.com/coloring-game/og-image.jpg">
+    <!-- Kích thước khai sẵn để Facebook dựng thẻ xem trước ngay lần đầu, khỏi
+         phải đợi nó quay lại đọc ảnh -->
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/coloring-game/">
+    <meta name="twitter:title" content="Magic Coloring - Free Coloring Game for Kids">
+    <meta name="twitter:description" content="16 cute pictures to colour with one tap, made for little kids.">
+    <meta name="twitter:image" content="https://kibugames.com/coloring-game/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Magic Coloring",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/coloring-game/",
+      "genre": "Creative",
+      "audience": {
+        "@type": "PeopleAudience",
+        "suggestedMinAge": 3,
+        "suggestedMaxAge": 7
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/coloring-game/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body>
+    <div class="bg-blobs" aria-hidden="true"></div>
+
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
+                    <img src="/logo.svg" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <img src="/coloring-game/icon.jpg" alt="" class="brand-img"
+                        onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><span class="brand-icon">🎨</span>
+                    <h1 class="brand-title">MAGIC COLORING</h1>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button id="btn-sound" class="btn" title="Sound on or off">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+                </button>
+                <button id="btn-help" class="btn" title="How to play">
+                    <i class="fa-solid fa-circle-question"></i> <span>Help</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="stage">
+            <!-- Khung tranh. Chiếm hết chỗ còn lại vì đây là thứ bé nhìn vào. -->
+            <div class="art-wrap">
+                <div class="art-box">
+                    <div class="art-frame" id="artFrame">
+                        <svg id="art" viewBox="0 0 400 400" role="img" aria-label="Colouring picture"></svg>
+                        <div class="fx-layer" id="fx" aria-hidden="true"></div>
+                    </div>
+                </div>
+                <div class="art-caption"><span id="artName">Sweet Kitty</span> <b id="artProgress">0/15</b></div>
+            </div>
+
+            <!-- Bảng màu + thanh công cụ. Nút to, chữ nhỏ, biểu tượng lớn vì
+                 người chơi 4-5 tuổi chưa đọc được. -->
+            <div class="controls">
+                <div class="swatch-wrap">
+                    <div class="swatches" id="swatches" role="group" aria-label="Colours"></div>
+                    <div class="stickers" id="stickers" role="group" aria-label="Stickers" hidden></div>
+                </div>
+
+                <div class="tools">
+                    <button class="tool" id="btnGallery" title="Choose another picture">
+                        <span class="tool-ico">🖼️</span><span class="tool-txt">Pictures</span>
+                    </button>
+                    <button class="tool" id="btnUndo" title="Undo the last colour">
+                        <span class="tool-ico">↩️</span><span class="tool-txt">Undo</span>
+                    </button>
+                    <button class="tool" id="btnSticker" title="Stick shiny stickers on the picture">
+                        <span class="tool-ico">✨</span><span class="tool-txt">Stickers</span>
+                    </button>
+                    <button class="tool" id="btnSurprise" title="Let the fairy colour it for you">
+                        <span class="tool-ico">🪄</span><span class="tool-txt">Surprise</span>
+                    </button>
+                    <button class="tool" id="btnSave" title="Save the picture to your device">
+                        <span class="tool-ico">💾</span><span class="tool-txt">Save</span>
+                    </button>
+                    <button class="tool" id="btnClear" title="Start this picture again">
+                        <span class="tool-ico">🧽</span><span class="tool-txt">Start Again</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Thư viện tranh -->
+    <div id="gallery" class="overlay">
+        <div class="sheet sheet-wide">
+            <h2 class="sheet-title">🖼️ Pick a picture</h2>
+            <div class="gallery-grid" id="galleryGrid"></div>
+            <button class="big-btn ghost" id="btnCloseGallery"><i class="fa-solid fa-xmark"></i> Close</button>
+        </div>
+    </div>
+
+    <!-- Khen thưởng khi tô kín tranh -->
+    <div id="win" class="overlay hidden">
+        <div class="sheet">
+            <div class="win-emoji">🎉</div>
+            <h2 class="sheet-title">All done! Beautiful!</h2>
+            <div class="win-art" id="winArt"></div>
+            <div class="win-stars">⭐⭐⭐</div>
+            <div class="win-actions">
+                <button class="big-btn" id="btnWinNext"><i class="fa-solid fa-forward"></i> Next Picture</button>
+                <button class="big-btn ghost" id="btnWinSave"><i class="fa-solid fa-download"></i> Save</button>
+                <button class="big-btn ghost" id="btnWinStay"><i class="fa-solid fa-palette"></i> Keep Colouring</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hướng dẫn — viết cho bố mẹ đọc cùng con -->
+    <div id="help" class="overlay hidden">
+        <div class="sheet">
+            <div class="win-emoji">🎨</div>
+            <h2 class="sheet-title">How to colour</h2>
+            <ul class="help-list">
+                <li><b>1.</b> Tap a colour at the bottom.</li>
+                <li><b>2.</b> Tap any part of the picture to fill it.</li>
+                <li><b>3.</b> Tap it again with another colour to change it.</li>
+            </ul>
+            <p class="help-note">Nothing can go wrong here - there is no timer, no score and no way to lose. Every picture is saved by itself, so your little one can come back to it later.</p>
+            <button class="big-btn" id="btnCloseHelp"><i class="fa-solid fa-thumbs-up"></i> Got It</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/coloring-game/art.js"></script>
+    <script src="/coloring-game/game.js"></script>
+</body>
+</html>

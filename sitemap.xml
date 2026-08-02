@@ -288,4 +288,22 @@
       <changefreq>weekly</changefreq>
       <priority>0.8</priority>
    </url>
+   <url>
+      <loc>https://kibugames.com/vi/g/magic-coloring</loc>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/g/magic-coloring"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/g/magic-coloring"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/g/magic-coloring"/>
+      <lastmod>2026-08-02</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   <url>
+      <loc>https://kibugames.com/en/g/magic-coloring</loc>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/g/magic-coloring"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/g/magic-coloring"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/g/magic-coloring"/>
+      <lastmod>2026-08-02</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
 </urlset>

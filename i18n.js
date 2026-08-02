@@ -159,6 +159,41 @@
         ['3 đường: khó thì nhiều kho báu', '3 routes: riskier means richer'],
         ['cần gạt', 'joystick'],
 
+        /* ---------- Magic Coloring (coloring-game) ----------
+         * Tên tranh nằm trong art.js và được game tự đặt theo đúng ngôn ngữ, nên
+         * ở đây chỉ có phần vỏ trang. */
+        ['TÔ MÀU THẦN KỲ', 'MAGIC COLORING'],
+        ['Tô Màu Thần Kỳ', 'Magic Coloring'],
+        ['Chạm để tô, cho bé 3-6 tuổi', 'Tap to colour, ages 3-6'],
+        ['Bảng Màu', 'Colours'],
+        ['Hình Dán', 'Stickers'],
+        ['Đổi Tranh', 'Pictures'],
+        ['Hoàn Tác', 'Undo'],
+        ['Tô Giúp Bé', 'Surprise'],
+        ['Lưu Tranh', 'Save'],
+        /* Không dùng 'Start Over' — english-game đã lấy chuỗi đó cho 'Học Lại' ở
+           phần dùng chung phía trên, và cặp nào đứng trước thì thắng. */
+        ['Tô Lại Từ Đầu', 'Start Again'],
+        ['Chọn một bức tranh', 'Pick a picture'],
+        ['Xong rồi! Đẹp quá!', 'All done! Beautiful!'],
+        ['Tranh Tiếp Theo', 'Next Picture'],
+        ['Tô Tiếp', 'Keep Colouring'],
+        ['Tô màu thế nào', 'How to colour'],
+        ['Chạm vào một màu ở phía dưới.', 'Tap a colour at the bottom.'],
+        ['Chạm vào phần nào của tranh là phần đó được tô.', 'Tap any part of the picture to fill it.'],
+        ['Chạm lại lần nữa bằng màu khác là đổi được màu.', 'Tap it again with another colour to change it.'],
+        ['Ở đây không có gì sai được cả — không đếm giờ, không tính điểm, không thua bao giờ. Mỗi bức tranh tự lưu lại nên lúc nào bé cũng có thể quay lại tô tiếp.',
+            'Nothing can go wrong here - there is no timer, no score and no way to lose. Every picture is saved by itself, so your little one can come back to it later.'],
+        ['Âm thanh bật hay tắt', 'Sound on or off'],
+        ['Hướng dẫn chơi', 'How to play'],
+        ['Chọn bức tranh khác', 'Choose another picture'],
+        ['Bỏ màu vừa tô', 'Undo the last colour'],
+        ['Dán hình lấp lánh lên tranh', 'Stick shiny stickers on the picture'],
+        ['Để cô tiên tô giúp bé', 'Let the fairy colour it for you'],
+        ['Lưu tranh về máy', 'Save the picture to your device'],
+        ['Tô lại bức tranh này từ đầu', 'Start this picture again'],
+        ['Bức tranh đang tô', 'Colouring picture'],
+
         /* ---------- Tic Tac Toe (tictactoe) ---------- */
         ['CỜ CA-RÔ', 'TIC TAC TOE'],
         ['Cờ Ca-rô', 'Tic Tac Toe'],

@@ -1,0 +1,615 @@
+/* ============================================================================
+ * Magic Coloring — styles
+ * ----------------------------------------------------------------------------
+ * The whole page is built around one rule: a 4-5 year old must be able to use
+ * it without reading anything and without an adult sitting next to them.
+ *
+ *   · every control is at least 56px, well past the 44px touch minimum, because
+ *     small fingers miss and a miss here means a wrong region gets painted
+ *   · the picture always gets the leftover space, so it is the biggest thing
+ *     on screen no matter the device
+ *   · light background — the artwork is the colourful part, the UI is not
+ *
+ * The shared header/footer come from /site-chrome.css, which reads --card-bg
+ * and --card-border. Overriding those two turns the dark chrome the other
+ * games use into a light one that suits a colouring book.
+ * ==========================================================================*/
+
+:root {
+    --card-bg: rgba(255, 255, 255, 0.86);
+    --card-border: rgba(138, 106, 176, 0.20);
+
+    --ink: #4a3550;
+    --ink-soft: #7c6a90;
+    --pink: #ff5fa2;
+    --violet: #8f7bd6;
+    --sky: #4aa8ff;
+    --sun: #ffc93c;
+    --paper: #ffffff;
+    --shadow: 0 6px 0 rgba(120, 90, 160, 0.18);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+}
+
+body {
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    color: var(--ink);
+    background: linear-gradient(160deg, #fdf2ff 0%, #eef4ff 45%, #fff4ec 100%);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+/* Soft blobs behind everything — colour without competing with the artwork. */
+.bg-blobs {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(38vmax 38vmax at 12% 8%, rgba(255, 143, 196, 0.28), transparent 60%),
+        radial-gradient(34vmax 34vmax at 88% 18%, rgba(126, 200, 255, 0.30), transparent 60%),
+        radial-gradient(40vmax 40vmax at 72% 92%, rgba(184, 164, 255, 0.28), transparent 62%),
+        radial-gradient(30vmax 30vmax at 18% 88%, rgba(255, 209, 102, 0.26), transparent 60%);
+    filter: blur(6px);
+}
+
+/* ---------- Header ---------- */
+.unified-nav { box-shadow: 0 8px 26px rgba(120, 90, 160, 0.16); }
+
+.brand-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+/* Ảnh icon và emoji là hai phương án cho cùng một chỗ: có ảnh thì ẩn emoji đi,
+   ảnh hỏng thì onerror gỡ thẻ img và emoji hiện ra. */
+.brand-img + .brand-icon { display: none; }
+
+.unified-nav .brand-title {
+    margin: 0;
+    font-family: 'Baloo 2', cursive;
+    font-weight: 800;
+    background: linear-gradient(92deg, #ff5fa2 0%, #b06bff 45%, #4aa8ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* Nền sáng nên vệt sáng trắng của site-chrome không thấy gì — đổi sang hồng. */
+.nav-home:hover,
+.nav-home:focus-visible { filter: drop-shadow(0 3px 10px rgba(255, 95, 162, 0.45)); }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 46px;
+    padding: 9px 16px;
+    border: 2px solid rgba(138, 106, 176, 0.22);
+    border-radius: 14px;
+    background: #fff;
+    color: var(--ink);
+    font-family: 'Baloo 2', cursive;
+    font-size: 0.98rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(120, 90, 160, 0.16);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.btn:hover { background: #fff6fb; }
+.btn:active { transform: translateY(3px); box-shadow: none; }
+.btn.muted { color: var(--ink-soft); background: #f1eef7; }
+
+/* ---------- Stage ---------- */
+.stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.art-wrap {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.art-box {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Khung tranh là hình vuông lớn nhất lọt được vào chỗ trống. Chỉ dùng
+   aspect-ratio thôi thì không đủ: khi bề ngang mới là cạnh bó thì chiều cao
+   vẫn giữ nguyên và khung méo đi. Container query cho phép lấy thẳng cạnh nhỏ
+   hơn trong hai cạnh, nên khung vuông ở mọi kích thước màn hình. */
+.art-frame {
+    position: relative;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 100%;
+    border-radius: 26px;
+    background: var(--paper);
+    border: 3px solid rgba(138, 106, 176, 0.18);
+    box-shadow: 0 10px 30px rgba(120, 90, 160, 0.18);
+    overflow: hidden;
+}
+
+@supports (container-type: size) {
+    .art-box { container-type: size; }
+
+    .art-frame {
+        width: min(100cqw, 100cqh);
+        height: min(100cqw, 100cqh);
+        aspect-ratio: auto;
+        max-width: none;
+    }
+}
+
+#art {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: manipulation;
+}
+
+/* Vùng tô: ngón tay chạm vào đâu là tô chỗ đó. */
+#art .region {
+    cursor: pointer;
+    transition: fill 0.16s ease;
+}
+
+#art .region:hover { filter: brightness(1.04); }
+
+/* Nhấp nháy nhẹ để bé thấy chỗ nào còn chưa tô — chỉ chạy khi bé đứng im
+   một lúc, và tắt hẳn nếu máy báo người dùng không thích chuyển động. */
+#art .region.nudge { animation: nudge 1.6s ease-in-out infinite; }
+
+@keyframes nudge {
+    0%, 100% { fill: #ffffff; }
+    50%      { fill: #ffeef7; }
+}
+
+.fx-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.spark {
+    position: absolute;
+    font-size: 22px;
+    animation: spark 0.75s ease-out forwards;
+}
+
+@keyframes spark {
+    0%   { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 1; }
+    100% { transform: translate(-50%, -160%) scale(1.5) rotate(40deg); opacity: 0; }
+}
+
+.art-caption {
+    flex-shrink: 0;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.art-caption b {
+    color: #fff;
+    background: linear-gradient(92deg, #ff8fc4, #b06bff);
+    padding: 2px 12px;
+    border-radius: 999px;
+    font-size: 0.92rem;
+}
+
+/* ---------- Colours + tools ---------- */
+.controls {
+    flex-shrink: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Bảng màu cao tối đa một phần ba màn hình rồi cuộn — dù máy có thấp đến mấy
+   thì bức tranh vẫn là thứ to nhất, không bị bảng màu đẩy bẹp. */
+.swatch-wrap {
+    background: rgba(255, 255, 255, 0.86);
+    border: 2px solid rgba(138, 106, 176, 0.18);
+    border-radius: 20px;
+    padding: 10px;
+    box-shadow: 0 6px 20px rgba(120, 90, 160, 0.14);
+    max-height: 32vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.swatches, .stickers {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* display:flex ở trên thắng cả display:none mặc định của [hidden], nên phải
+   nói lại cho rõ — nếu không thì bảng màu và bảng hình dán hiện cùng lúc. */
+.swatches[hidden], .stickers[hidden] { display: none; }
+
+/* Ô màu tròn to — bé chấm vào là chọn, không cần kéo thả gì cả. */
+.swatch {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    box-shadow: 0 3px 0 rgba(120, 90, 160, 0.22), 0 0 0 2px rgba(138, 106, 176, 0.18);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.12s ease;
+}
+
+.swatch:active { transform: scale(0.92); }
+
+/* Màu đang chọn phồng to hẳn lên — đây là phản hồi duy nhất bé cần để biết
+   mình đang cầm bút màu nào. */
+.swatch.sel {
+    transform: scale(1.18);
+    box-shadow: 0 4px 0 rgba(120, 90, 160, 0.25), 0 0 0 4px var(--pink);
+}
+
+.swatch.sel:active { transform: scale(1.08); }
+
+.sticker-btn {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    border: 3px solid rgba(138, 106, 176, 0.2);
+    background: #fff;
+    font-size: 27px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(120, 90, 160, 0.18);
+    transition: transform 0.12s ease;
+}
+
+.sticker-btn.sel {
+    transform: scale(1.12);
+    border-color: var(--pink);
+    background: #fff2f8;
+}
+
+.tools {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.tool {
+    flex: 1 1 0;
+    min-width: 76px;
+    max-width: 130px;
+    min-height: 62px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px 4px;
+    border: 2px solid rgba(138, 106, 176, 0.2);
+    border-radius: 18px;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(120, 90, 160, 0.18);
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.tool:active { transform: translateY(4px); box-shadow: none; }
+.tool.on { background: #fff0f7; border-color: var(--pink); }
+.tool[disabled] { opacity: 0.42; cursor: default; box-shadow: none; }
+
+.tool-ico { font-size: 26px; line-height: 1; }
+
+.tool-txt {
+    font-family: 'Baloo 2', cursive;
+    font-size: 0.76rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ---------- Overlays ---------- */
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(74, 53, 80, 0.42);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.overlay.hidden { display: none; }
+
+.sheet {
+    width: min(560px, 100%);
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #fff;
+    border-radius: 28px;
+    padding: 22px 20px 20px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(74, 53, 80, 0.35);
+    animation: pop 0.24s ease-out;
+}
+
+.sheet-wide { width: min(880px, 100%); }
+
+@keyframes pop {
+    from { transform: scale(0.9) translateY(14px); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+}
+
+.sheet-title {
+    margin: 0 0 14px;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.6rem;
+    background: linear-gradient(92deg, #ff5fa2, #b06bff 55%, #4aa8ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.gal-item {
+    position: relative;
+    border: 3px solid rgba(138, 106, 176, 0.18);
+    border-radius: 20px;
+    background: #fff;
+    padding: 6px 6px 4px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 rgba(120, 90, 160, 0.16);
+    transition: transform 0.12s ease;
+}
+
+.gal-item:active { transform: translateY(4px); }
+.gal-item.sel { border-color: var(--pink); background: #fff4fa; }
+.gal-item svg { display: block; width: 100%; height: auto; }
+
+.gal-name {
+    font-family: 'Baloo 2', cursive;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Dấu tích cho tranh bé đã tô xong — bé nhìn ảnh là biết, không cần đọc. */
+.gal-done::after {
+    content: '⭐';
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    font-size: 24px;
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25));
+}
+
+.big-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    min-height: 58px;
+    padding: 12px 26px;
+    border: none;
+    border-radius: 18px;
+    background: linear-gradient(92deg, #ff5fa2, #b06bff);
+    color: #fff;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1.12rem;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 5px 0 rgba(120, 90, 160, 0.35);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.big-btn:active { transform: translateY(5px); box-shadow: none; }
+
+.big-btn.ghost {
+    background: #f3eefb;
+    color: var(--ink);
+    box-shadow: 0 5px 0 rgba(120, 90, 160, 0.2);
+}
+
+.win-emoji { font-size: 3.4rem; line-height: 1; }
+
+.win-art {
+    width: min(260px, 70%);
+    margin: 6px auto 4px;
+}
+
+.win-art svg { display: block; width: 100%; height: auto; }
+
+.win-stars { font-size: 2rem; letter-spacing: 4px; }
+
+.win-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.help-list {
+    text-align: left;
+    margin: 0 0 12px;
+    padding-left: 4px;
+    list-style: none;
+    font-size: 1.06rem;
+    line-height: 1.75;
+}
+
+.help-list b { color: var(--pink); }
+
+.help-note {
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    margin: 0 0 16px;
+}
+
+/* ---------- Toast ---------- */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translate(-50%, 24px);
+    z-index: 80;
+    padding: 12px 22px;
+    border-radius: 999px;
+    background: rgba(74, 53, 80, 0.94);
+    color: #fff;
+    font-family: 'Baloo 2', cursive;
+    font-size: 1rem;
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* Pháo giấy lúc tô xong. */
+.confetti {
+    position: fixed;
+    top: -20px;
+    z-index: 70;
+    width: 11px;
+    height: 16px;
+    border-radius: 2px;
+    pointer-events: none;
+    animation: fall linear forwards;
+}
+
+@keyframes fall {
+    to { transform: translateY(108vh) rotate(680deg); opacity: 0.9; }
+}
+
+/* ---------- Wide screens ----------
+ * Màn rộng thì để tranh và bảng màu nằm cạnh nhau: tranh cao hết cỡ thay vì
+ * bị bảng màu ăn mất một khúc chiều cao. */
+@media (min-width: 900px) {
+    .stage { flex-direction: row; align-items: stretch; }
+
+    .controls {
+        width: 340px;
+        flex-shrink: 0;
+        justify-content: center;
+    }
+
+    /* Cột dọc thì bảng màu ăn hết chỗ thừa và tự cuộn, còn dãy nút luôn dính
+       đáy — bé không bao giờ phải cuộn mới thấy nút. */
+    .swatch-wrap {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none;
+    }
+
+    .tools { flex-wrap: wrap; flex-shrink: 0; }
+    .tool { flex: 1 1 44%; max-width: none; }
+}
+
+/* ---------- Small phones ---------- */
+@media (max-width: 560px) {
+    .swatch, .sticker-btn { width: 46px; height: 46px; }
+    .sticker-btn { font-size: 23px; }
+    .swatch-wrap { padding: 8px; border-radius: 16px; max-height: 26vh; }
+
+    /* Sáu nút phải nằm gọn một hàng. Xuống hai hàng là mất thêm 62px chiều cao,
+       và trên điện thoại 62px đó lấy thẳng từ bức tranh. */
+    .tools { gap: 6px; }
+    .tool { min-width: 48px; min-height: 56px; border-radius: 15px; padding: 5px 2px; }
+    .tool-ico { font-size: 23px; }
+    .tool-txt { font-size: 0.62rem; }
+
+    .art-caption { font-size: 0.92rem; }
+    .unified-nav .brand-title { font-size: 1.1rem; }
+    .brand-img { width: 32px; height: 32px; }
+
+    /* Màn hẹp thì nút trên đầu bị bóp còn 36px ngang — hẹp hơn cả đầu ngón tay.
+       Bỏ chữ đi, để lại ô vuông 46px đúng bằng vùng chạm tối thiểu. */
+    .nav-actions .btn {
+        flex-shrink: 0;
+        width: 46px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .nav-actions .btn span { display: none; }
+
+    /* Dòng chân trang gói lại một dòng: ba dòng chữ ở đây tốn 40px của tranh. */
+    .site-footer .footer-credit {
+        font-size: 0.72rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+/* Điện thoại nhỏ: bảng màu nhường thêm chỗ nữa, vì ở bề ngang này bức tranh
+   đang bị chiều cao bó chứ không phải chiều rộng. */
+@media (max-width: 400px) {
+    .swatch-wrap { max-height: 21vh; }
+    .swatch, .sticker-btn { width: 44px; height: 44px; }
+    .art-caption { font-size: 0.84rem; }
+}
+
+/* Màn thấp (điện thoại xoay ngang): bỏ chữ dưới nút, chỉ để lại biểu tượng,
+   lấy chỗ cho tranh. */
+@media (max-height: 620px) and (orientation: landscape) {
+    .tool-txt { display: none; }
+    .tool { min-height: 50px; }
+    .art-caption { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #art .region.nudge { animation: none; }
+    .spark, .confetti { animation-duration: 0.01s; }
+}
