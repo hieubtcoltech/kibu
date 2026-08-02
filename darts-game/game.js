@@ -1293,28 +1293,70 @@
                mũi tên trông rời khỏi nhân vật, bé khó thấy nó gắn với ai. Điểm
                ném thật (hx, hy) không đổi nên đường bay vẫn y nguyên. */
             const AIM_GAP = ARM * 0.35;
-            const len = 42 + this.power * 34;
+            /* Dài hơn mũi tên gạch cũ một chút: hình phi tiêu có đuôi và cán
+               nên ở độ dài cũ nó trông cụt ngủn, nhìn không ra hướng. */
+            const len = 54 + this.power * 40;
 
-            /* Một mũi tên hoàn chỉnh (thân + đầu nhọn) theo góc a. Đang có phép
-               chùm 3 thì vẽ ba cái đúng ba hướng phi tiêu sắp bay ra, để bé nhìn
-               là biết ngay ba mũi sẽ đi đâu chứ không phải đoán. */
+            /* Mũi ngắm vẽ đúng hình một mũi phi tiêu — cánh đuôi, cán thép có
+               khía, mũi nhọn — chứ không phải cây gạch có đầu tam giác. Bé nhìn
+               vào là thấy ngay "cái sắp bay ra là cái này", vì nó dùng đúng các
+               bộ phận và đúng màu với mũi phi tiêu thật ở Dart.draw().
+               Dài ngắn theo lực nạp nên nó vẫn kiêm luôn vai trò thước lực.
+               Đang có phép chùm 3 thì vẽ ba cái đúng ba hướng sắp bay ra. */
             const drawArrow = (a, alpha) => {
+                const L = len + 13 - 6;             // chiều dài toàn mũi
+                const w = Math.max(4.2, L * 0.062); // nửa bề dày cán
+
                 ctx.save();
                 ctx.globalAlpha = alpha;
                 ctx.translate(this.cx + Math.cos(a) * AIM_GAP, THROW_Y - Math.sin(a) * AIM_GAP);
                 ctx.rotate(-a);
-                ctx.strokeStyle = c.color;
-                ctx.lineWidth = 4;
-                ctx.lineCap = 'round';
+                ctx.translate(6, 0);
                 ctx.shadowColor = `rgba(${c.glow},0.9)`;
                 ctx.shadowBlur = 12;
-                ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(len, 0); ctx.stroke();
+
+                // Cánh đuôi: bốn lá xoè, màu của bé
                 ctx.fillStyle = c.color;
                 ctx.beginPath();
-                ctx.moveTo(len + 13, 0);
-                ctx.lineTo(len - 3, -7.5);
-                ctx.lineTo(len - 3, 7.5);
-                ctx.closePath(); ctx.fill();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(L * 0.20, -w * 1.85);
+                ctx.lineTo(L * 0.30, -w * 0.42);
+                ctx.lineTo(L * 0.30, w * 0.42);
+                ctx.lineTo(L * 0.20, w * 1.85);
+                ctx.closePath();
+                ctx.fill();
+                ctx.fillStyle = c.light;
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(L * 0.20, -w * 1.85);
+                ctx.lineTo(L * 0.26, -w * 0.6);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cán thép có khía chống trượt
+                ctx.shadowBlur = 0;
+                const bg = ctx.createLinearGradient(0, -w, 0, w);
+                bg.addColorStop(0, '#f2f6fb');
+                bg.addColorStop(0.45, '#aab5c4');
+                bg.addColorStop(1, '#5d6675');
+                ctx.fillStyle = bg;
+                ctx.beginPath();
+                ctx.roundRect(L * 0.26, -w * 0.62, L * 0.52, w * 1.24, w * 0.45);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(30,36,48,0.55)';
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillRect(L * 0.40 + i * L * 0.085, -w * 0.62, Math.max(1.2, L * 0.011), w * 1.24);
+                }
+
+                // Mũi nhọn
+                ctx.fillStyle = '#e9edf4';
+                ctx.beginPath();
+                ctx.moveTo(L * 0.76, -w * 0.5);
+                ctx.lineTo(L, 0);
+                ctx.lineTo(L * 0.76, w * 0.5);
+                ctx.closePath();
+                ctx.fill();
+
                 ctx.restore();
             };
 
