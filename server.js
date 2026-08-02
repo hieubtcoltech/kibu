@@ -426,7 +426,8 @@ function banner(port) {
         ['soccer-game', '⚽ Super Striker — bóng đá mini 2-4 bé'],
         ['darts-game', '🎯 Phi Tiêu Bong Bóng — 2-4 bé thi phi tiêu'],
         ['coloring-game', '🎨 Tô Màu Thần Kỳ — 30 tranh cho bé 3-6 tuổi'],
-        ['bowling-game', '🎳 Strike Party — bowling 1-4 bé, tính điểm thật']
+        ['bowling-game', '🎳 Strike Party — bowling 1-4 bé, tính điểm thật'],
+        ['sling-blast', '🪃 Sling Blast — kéo ná phá tháp, 12 màn vật lý']
     ].forEach(([slug, name]) => {
         console.log(`    ${C.dim}/${slug}${C.reset}${' '.repeat(Math.max(1, 10 - slug.length))}${name}`);
     });

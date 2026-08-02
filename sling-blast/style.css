@@ -1,0 +1,497 @@
+/* ============================================================================
+ * Sling Blast — giao diện quanh sân chơi
+ * ----------------------------------------------------------------------------
+ * Sân chơi do Phaser vẽ trong canvas; file này chỉ lo phần HTML bao quanh:
+ * khung chứa canvas, thanh thông tin, và các bảng phủ (chào, chọn màn, thắng,
+ * thua). Màu và bo góc của thẻ lấy từ /site-chrome.css để đồng bộ cả web.
+ * ==========================================================================*/
+
+:root {
+    --sb-sky: #6ec6f5;
+    --sb-ink: #16324a;
+    --sb-good: #22c55e;
+    --sb-bad: #f43f5e;
+    --sb-gold: #ffc53d;
+    --font-round: 'Fredoka', 'Baloo 2', system-ui, sans-serif;
+    --font-fat: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
+}
+
+/* Xếp dọc thành ba tầng: thanh trên, sân chơi, footer.
+   site-chrome.css cho .game-wrapper thuộc tính flex:1 1 auto để nó co vào chỗ
+   còn dư, nhưng chỉ có tác dụng khi body là flex container — mà việc đó
+   site-chrome không làm hộ, mỗi trang game phải tự khai. */
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #0d2136 0%, #0a1626 100%);
+    font-family: var(--font-round);
+    color: #eaf4ff;
+}
+
+.unified-nav,
+.site-footer {
+    flex: 0 0 auto;
+}
+
+/* Khung sân được phép co lại khi màn hình thấp, nhưng KHÔNG được phình ra:
+   site-chrome đặt flex:1 1 auto nên trên điện thoại dựng đứng nó kéo cao gấp
+   ba lần sân thật, thành một hộp tối rỗng. Lặp tên class để thắng độ ưu tiên
+   (site-chrome.css nạp sau file này). */
+body.chrome-fit > .game-wrapper.game-wrapper {
+    flex: 0 1 auto;
+}
+
+/* Chỗ dư còn lại dồn xuống dưới để footer luôn nằm sát đáy màn hình.
+   Phải viết kèm body.chrome-fit: site-chrome.css đặt `margin: 0 auto` cho
+   .site-footer và nạp sau file này, cùng độ ưu tiên thì nó thắng. */
+body.chrome-fit > .site-footer {
+    margin-top: auto;
+}
+
+/* site-chrome.css chỉ lo việc ẩn emoji khi có ảnh, còn kích thước ảnh thương
+   hiệu thì từng trang game phải tự đặt. Bỏ quên là ảnh 512 px hiện nguyên cỡ
+   và một mình nó chiếm hết chiều cao màn hình điện thoại. */
+.brand-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+}
+
+@media (max-width: 560px) {
+    .brand-img { width: 30px; height: 30px; }
+}
+
+/* ---------- Khung sân ----------
+   Tỉ lệ 16:9 khớp đúng thế giới 1280x720 bên trong Phaser, nên bình thường
+   canvas lấp đầy khung không thừa dải nào.
+   max-height là chỗ dễ quên nhất: thiếu nó thì trên màn 1280x800 khung vẫn
+   đòi đủ 720 px chiều cao, đẩy đáy sân và cả footer ra ngoài màn hình. Có nó,
+   khung co lại theo chỗ trống còn dư và Phaser tự thu canvas cho vừa. */
+.game-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1280px;
+    aspect-ratio: 16 / 9;
+    max-height: 100%;
+    margin: 0 auto;
+    background: #0b1a2b;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+@media (max-width: 900px) {
+    .game-wrapper {
+        width: 100%;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+}
+
+/* Canvas do Phaser chèn vào đây. Không đặt width/height theo id cho khung này:
+   .board-host đã chốt bốn cạnh rồi, thêm một luật theo id sẽ thắng luật theo
+   class và làm canvas thò ra ngoài. */
+.board-host {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-host canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    touch-action: none;
+    margin: 0;
+}
+
+/* ---------- Thanh thông tin ---------- */
+.hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+    font-family: var(--font-fat);
+}
+
+.hud.hidden { display: none; }
+
+.hud-left, .hud-mid, .hud-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(6, 20, 34, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    padding: 6px 14px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.hud-chip {
+    background: var(--sb-gold);
+    color: #3a2400;
+    border-radius: 999px;
+    padding: 2px 10px;
+    font-weight: 800;
+    font-size: 0.86rem;
+    white-space: nowrap;
+}
+
+.hud-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #cfe8ff;
+    white-space: nowrap;
+}
+
+.hud-tag {
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #9dc0dc;
+    white-space: nowrap;
+}
+
+.hud-num {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--sb-gold);
+    min-width: 1.2em;
+    text-align: center;
+}
+
+.hud-balls {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+.ball-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.ball-dot.spent {
+    opacity: 0.25;
+    box-shadow: none;
+}
+
+.dot-rock, .ball-dot.rock { background: linear-gradient(160deg, #b9c6d1, #6c7d8c); }
+.dot-split, .ball-dot.split { background: linear-gradient(160deg, #b5f5a0, #3aa53f); }
+.dot-bomb, .ball-dot.bomb { background: linear-gradient(160deg, #ff9d8a, #d4321c); }
+.dot-thunder, .ball-dot.thunder { background: linear-gradient(160deg, #ffe680, #ffab00); }
+
+/* ---------- Mách nước ---------- */
+.tip {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 62px;
+    z-index: 6;
+    background: rgba(6, 20, 34, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #eaf4ff;
+    pointer-events: none;
+    animation: tipIn 0.3s ease both;
+}
+
+.tip.hidden { display: none; }
+
+@keyframes tipIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ---------- Bảng phủ ---------- */
+.overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px;
+    background: rgba(4, 12, 22, 0.86);
+    overflow-y: auto;
+}
+
+.overlay.hidden { display: none; }
+
+.card {
+    width: min(720px, 100%);
+    max-height: 100%;
+    overflow-y: auto;
+    background: var(--card-bg, rgba(12, 28, 46, 0.92));
+    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.14));
+    border-radius: 20px;
+    padding: 22px 24px;
+    text-align: center;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+
+.pop-in { animation: popIn 0.28s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.title {
+    font-family: var(--font-fat);
+    font-size: clamp(1.9rem, 5vw, 2.9rem);
+    font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: 0.02em;
+    background: linear-gradient(180deg, #fff6c9, #ffb020);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 4px 18px rgba(255, 176, 32, 0.25);
+}
+
+.title-sm {
+    font-family: var(--font-fat);
+    font-size: clamp(1.4rem, 3.6vw, 2rem);
+    font-weight: 800;
+    margin: 0 0 10px;
+}
+
+.text-good { color: var(--sb-good); }
+.text-bad { color: var(--sb-bad); }
+
+.subtitle {
+    margin: 0 0 16px;
+    color: #b7d3ea;
+    font-size: 0.98rem;
+}
+
+/* ---------- Hướng dẫn ---------- */
+.how-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.how-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
+.how-emoji { font-size: 1.7rem; line-height: 1; }
+.how-item b { font-size: 0.98rem; color: #ffe9a8; }
+.how-item span:last-child { font-size: 0.84rem; color: #b7d3ea; }
+
+.ammo-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.ammo-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 12px;
+    padding: 8px 6px;
+    font-size: 0.82rem;
+}
+
+.ammo-item b { color: #eaf4ff; }
+.ammo-item span:last-child { color: #9dc0dc; }
+
+.ammo-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    flex: 0 0 auto;
+}
+
+/* ---------- Nút ---------- */
+.btn {
+    font-family: var(--font-fat);
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    border-radius: 14px;
+    padding: 11px 20px;
+    cursor: pointer;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+    background: linear-gradient(135deg, #ffb020, #ff7a18);
+    color: #3a2000;
+    box-shadow: 0 8px 22px rgba(255, 138, 24, 0.35);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #b7d3ea;
+}
+
+.btn-big {
+    font-size: 1.2rem;
+    padding: 14px 44px;
+}
+
+.row-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+/* ---------- Chọn màn ---------- */
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.lv {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+    color: #eaf4ff;
+    font-family: var(--font-fat);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.lv:hover:not(.locked) { transform: translateY(-3px); border-color: var(--sb-gold); }
+
+.lv .lv-num { font-size: 1.5rem; font-weight: 800; }
+.lv .lv-stars { font-size: 0.8rem; letter-spacing: 1px; color: var(--sb-gold); min-height: 1em; }
+
+.lv.locked {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.lv.locked .lv-num { color: #7d97ad; }
+
+.lv.done { border-color: rgba(255, 197, 61, 0.55); background: rgba(255, 197, 61, 0.1); }
+
+/* ---------- Sao ---------- */
+.stars {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 8px 0 14px;
+}
+
+.star {
+    font-size: 2.6rem;
+    color: rgba(255, 255, 255, 0.16);
+    transform: scale(0.7);
+}
+
+.star.lit {
+    color: var(--sb-gold);
+    animation: starPop 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    text-shadow: 0 0 18px rgba(255, 197, 61, 0.6);
+}
+
+.star.lit:nth-child(2) { animation-delay: 0.14s; }
+.star.lit:nth-child(3) { animation-delay: 0.28s; }
+
+@keyframes starPop {
+    from { transform: scale(0.2) rotate(-40deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.stars-total {
+    font-family: var(--font-fat);
+    font-size: 1.6rem;
+    color: var(--sb-gold);
+    margin: 10px 0 4px;
+}
+
+.score-rows {
+    max-width: 320px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-weight: 600;
+}
+
+.score-row span:last-child {
+    color: var(--sb-gold);
+    font-family: var(--font-fat);
+    font-weight: 800;
+}
+
+/* ---------- Màn hẹp ---------- */
+@media (max-width: 640px) {
+    .card { padding: 16px 14px; }
+    .hud-name { display: none; }
+    .how-item span:last-child { font-size: 0.78rem; }
+    .btn-big { font-size: 1.05rem; padding: 12px 30px; }
+    .star { font-size: 2rem; }
+}

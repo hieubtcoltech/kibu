@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sling Blast - Free Online Kids Game | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Sling Blast online for free on KIBU Games! Pull back the slingshot, knock down towers and pop every Grumpy across 12 physics levels. English & Vietnamese.">
+    <meta name="keywords" content="Sling Blast, slingshot game, physics game for kids, knock down towers, ban na, ban bi pha thap, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/sling-blast/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/sling-blast/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/sling-blast/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/sling-blast/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/sling-blast/">
+    <meta property="og:title" content="Sling Blast - Free Online Game | KIBU Games">
+    <meta property="og:description" content="Pull, aim, release! Smash towers of wood, ice and stone across 12 levels. 100% free on KIBU Games.">
+    <meta property="og:image" content="https://kibugames.com/sling-blast/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/sling-blast/">
+    <meta name="twitter:title" content="Sling Blast - Free Online Game">
+    <meta name="twitter:description" content="Pull, aim, release! Smash towers across 12 physics levels.">
+    <meta name="twitter:image" content="https://kibugames.com/sling-blast/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Sling Blast",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/sling-blast/",
+      "genre": "Puzzle",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/sling-blast/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body class="chrome-fit">
+    <header class="unified-nav">
+        <div class="nav-left">
+            <a href="/" class="nav-home" title="Home" aria-label="Home">
+                <img src="/logo.svg" alt="KIBU Games">
+            </a>
+            <div class="brand">
+                <img src="/sling-blast/icon.jpg" alt="" class="brand-img"
+                    onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><i class="fa-solid fa-bullseye brand-icon"></i>
+                <h1 class="brand-title">SLING BLAST</h1>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button id="btn-nav-levels" class="btn btn-secondary" title="Levels">
+                <i class="fa-solid fa-table-cells-large"></i> <span>Levels</span>
+            </button>
+            <button id="btn-nav-retry" class="btn btn-secondary" title="Replay level">
+                <i class="fa-solid fa-rotate-right"></i> <span>Replay</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="game-wrapper">
+        <!-- Phaser tự chèn thẻ canvas của nó vào đây -->
+        <div id="game-canvas" class="board-host"></div>
+
+        <!-- Thanh thông tin nổi trên sân -->
+        <div id="hud" class="hud hidden">
+            <div class="hud-left">
+                <span id="hud-level" class="hud-chip">Level 1</span>
+                <span id="hud-name" class="hud-name">First Throw</span>
+            </div>
+            <div class="hud-mid">
+                <span class="hud-tag">Grumpies left</span>
+                <span id="hud-targets" class="hud-num">0</span>
+            </div>
+            <div class="hud-right">
+                <span class="hud-tag">Balls left</span>
+                <span id="hud-balls" class="hud-balls"></span>
+            </div>
+        </div>
+
+        <!-- Mách nước ngắn, hiện lúc vào màn rồi tự tắt -->
+        <div id="tip" class="tip hidden"></div>
+
+        <!-- ---------- Màn chào ---------- -->
+        <div id="menu-overlay" class="overlay">
+            <div class="card pop-in">
+                <h1 class="title">SLING BLAST</h1>
+                <p class="subtitle">Pull back, let go, bring the whole tower down</p>
+
+                <div class="how-row">
+                    <div class="how-item">
+                        <span class="how-emoji">👆</span>
+                        <b>Pull and release</b>
+                        <span>Drag back from the slingshot and let go to fire.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">💥</span>
+                        <b>Tap in the air</b>
+                        <span>Tap once while a special ball is flying to set off its power.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">😠</span>
+                        <b>Pop every Grumpy</b>
+                        <span>Clear them all to win. Shots left turn into stars.</span>
+                    </div>
+                </div>
+
+                <div class="ammo-row">
+                    <div class="ammo-item"><span class="ammo-dot dot-rock"></span><b>Rock</b><span>Heavy and steady</span></div>
+                    <div class="ammo-item"><span class="ammo-dot dot-split"></span><b>Splitter</b><span>Tap to split into three</span></div>
+                    <div class="ammo-item"><span class="ammo-dot dot-bomb"></span><b>Bomb</b><span>Tap to blow up</span></div>
+                    <div class="ammo-item"><span class="ammo-dot dot-thunder"></span><b>Thunder</b><span>Tap to dive down fast</span></div>
+                </div>
+
+                <button id="btn-play" class="btn btn-primary btn-big">PLAY</button>
+            </div>
+        </div>
+
+        <!-- ---------- Chọn màn ---------- -->
+        <div id="levels-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm">CHOOSE A LEVEL</h2>
+                <div id="level-grid" class="level-grid"></div>
+                <div class="row-buttons">
+                    <button id="btn-levels-back" class="btn btn-secondary">Back</button>
+                    <button id="btn-reset-progress" class="btn btn-ghost">Reset progress</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Thắng màn ---------- -->
+        <div id="win-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm text-good">LEVEL CLEARED!</h2>
+                <div id="win-stars" class="stars"></div>
+                <div class="score-rows">
+                    <div class="score-row"><span>Score</span><span id="win-score">0</span></div>
+                    <div class="score-row"><span>Best</span><span id="win-best">0</span></div>
+                </div>
+                <div class="row-buttons">
+                    <button id="btn-next" class="btn btn-primary">Next level</button>
+                    <!-- Thay chỗ nút trên ở màn cuối: không có nó thì bảng
+                         "qua hết mọi màn" không có đường nào mở ra được. -->
+                    <button id="btn-finish" class="btn btn-primary" hidden>See all my stars</button>
+                    <button id="btn-replay" class="btn btn-secondary">Replay</button>
+                    <button id="btn-win-levels" class="btn btn-ghost">Levels</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Hết bi ---------- -->
+        <div id="lose-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm text-bad">OUT OF SHOTS!</h2>
+                <p id="lose-note" class="subtitle">A few Grumpies are still standing. Try a different angle!</p>
+                <div class="row-buttons">
+                    <button id="btn-lose-retry" class="btn btn-primary">Try again</button>
+                    <button id="btn-lose-levels" class="btn btn-ghost">Levels</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Thắng cả 12 màn ---------- -->
+        <div id="all-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title">ALL LEVELS CLEARED!</h2>
+                <p class="subtitle">You knocked down every tower. Amazing aim!</p>
+                <div id="all-stars" class="stars-total"></div>
+                <div class="row-buttons">
+                    <button id="btn-all-levels" class="btn btn-primary">Play again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+        <div class="footer-tools">
+        <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+        <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+            <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+        </button>
+        </div>
+    </footer>
+
+    <!-- Phaser 3 lấy từ CDN: máy chủ chưa bật gzip cho .js nên tự host sẽ
+         bắt bé tải 1,2 MB thô, còn CDN trả về 253 KB đã nén brotli. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"
+            integrity="sha512-/tJYyDCrI7hnHWp45P189aOwPa6lTREosRhlxEIqx8skB4A3a3rD3iz4o335SJd4sORqjVHw5y1S2hq4hciwLw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/sling-blast/game.js"></script>
+</body>
+</html>
