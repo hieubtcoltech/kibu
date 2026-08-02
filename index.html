@@ -137,11 +137,13 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            /* File logo chừa lề rộng quanh chữ, nên phải kéo ngược lại: sang
-               trái cho khoảng cách hai chữ bằng mắt thường, và xuống dưới cho
-               hai bên đứng chung một đường chân chữ. */
+            /* File logo chừa lề rộng quanh chữ nên phải kéo ngược sang trái cho
+               khoảng cách hai chữ nhìn bằng mắt thường. Chiều dọc thì căn theo
+               khối chữ chứ không theo đường chân chữ: "kibu" có nét vươn cao mà
+               không có nét thả xuống, ghim chân chữ thì cả chữ games trông như
+               bị tụt xuống dưới. */
             margin-left: -14px;
-            transform: translateY(8px);
+            transform: translateY(-2px);
             filter: drop-shadow(0 3px 12px rgba(56, 189, 248, 0.35));
             transition: filter 0.2s ease;
         }
@@ -588,7 +590,7 @@
             .poki-logo-games {
                 font-size: 1.8rem;
                 margin-left: -11px;
-                transform: translateY(6px);
+                transform: translateY(-1.5px);
             }
         }
 
@@ -677,7 +679,7 @@
     <header class="poki-navbar">
         <a href="/" class="poki-logo">
             <img src="/logo.svg" alt="KIBU" class="poki-logo-img">
-            <span class="poki-logo-games">Games</span>
+            <span class="poki-logo-games">games</span>
         </a>
         <!-- Search Bar -->
         <div class="poki-search">
