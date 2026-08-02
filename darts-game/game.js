@@ -907,7 +907,7 @@
                 // Mũi tiêu vừa rồi không trúng quả nào -> đứt chuỗi
                 this.streak = 0;
                 this.onFire = false;
-                this.addFx(T('Trượt!', 'Missed!'), '#ffb3b3', this.cx, THROW_Y - 130, 20);
+                this.addFx('Missed', '#ffb3b3', this.cx, THROW_Y - 130, 20);
                 Sfx.miss();
             }
             this.pendingHits = 0;
