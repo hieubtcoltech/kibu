@@ -42,11 +42,11 @@
        Bóng bay hội chợ đường kính thật 21 - 38cm. Tốc độ bay lên đã được
        giảm xuống so với bóng bơm khí heli thật (1-2 m/s) để bé kịp ngắm. */
     const KINDS = [
-        { key: 'big',   name: 'BIG BALLOON',   r: MS(0.19),  pts: 1,  vy: [34, 56],   w: 28 },
-        { key: 'mid',   name: 'MEDIUM BALLOON',  r: MS(0.145), pts: 2,  vy: [48, 76],   w: 32 },
-        { key: 'small', name: 'SMALL BALLOON',  r: MS(0.105), pts: 3,  vy: [66, 100],  w: 24 },
-        { key: 'gold',  name: 'GOLDEN BALLOON', r: MS(0.098), pts: 5,  vy: [98, 132],  w: 7,  gold: true },
-        { key: 'bomb',  name: 'BOMB BALLOON',  r: MS(0.155), pts: -3, vy: [44, 70],   w: 9,  bomb: true },
+        { key: 'big', name: 'BIG BALLOON', r: MS(0.19), pts: 1, vy: [34, 56], w: 28 },
+        { key: 'mid', name: 'MEDIUM BALLOON', r: MS(0.145), pts: 2, vy: [48, 76], w: 32 },
+        { key: 'small', name: 'SMALL BALLOON', r: MS(0.105), pts: 3, vy: [66, 100], w: 24 },
+        { key: 'gold', name: 'GOLDEN BALLOON', r: MS(0.098), pts: 5, vy: [98, 132], w: 7, gold: true },
+        { key: 'bomb', name: 'BOMB BALLOON', r: MS(0.155), pts: -3, vy: [44, 70], w: 9, bomb: true },
         /* Bóng thần kỳ: hiếm gặp, nổ được thì 5 giây tiếp theo mỗi lần phi ra
            một chùm ba mũi toả về ba hướng. */
         { key: 'magic', name: 'MAGIC BALLOON', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true },
@@ -99,15 +99,15 @@
     }
 
     const MODES = {
-        versus:   { key: 'versus',   name: 'VERSUS',      time: 90, mult: 1, alive: 5 },
-        sniper:   { key: 'sniper',   name: 'GOLDEN BALLOON HUNT',  time: 60, mult: 2, alive: 4, small: true },
-        practice: { key: 'practice', name: 'PRACTICE',      time: 0,  mult: 1, alive: 5 }
+        versus: { key: 'versus', name: 'VERSUS', time: 90, mult: 1, alive: 5 },
+        sniper: { key: 'sniper', name: 'GOLDEN BALLOON HUNT', time: 60, mult: 2, alive: 4, small: true },
+        practice: { key: 'practice', name: 'PRACTICE', time: 0, mult: 1, alive: 5 }
     };
 
     const DIFFS = {
-        easy:   { key: 'easy',   name: 'EASY',       sweep: 0.55, power: 1.00, guide: true,  wind: 0,    rise: 0.85 },
-        normal: { key: 'normal', name: 'MEDIUM',      sweep: 0.85, power: 1.45, guide: true,  wind: 0.28, rise: 1.00 },
-        hard:   { key: 'hard',   name: 'HARD',      sweep: 1.15, power: 1.90, guide: false, wind: 0.60, rise: 1.15 },
+        easy: { key: 'easy', name: 'EASY', sweep: 0.55, power: 1.00, guide: true, wind: 0, rise: 0.85 },
+        normal: { key: 'normal', name: 'MEDIUM', sweep: 0.85, power: 1.45, guide: true, wind: 0.28, rise: 1.00 },
+        hard: { key: 'hard', name: 'HARD', sweep: 1.15, power: 1.90, guide: false, wind: 0.60, rise: 1.15 },
         insane: { key: 'insane', name: 'INSANE', sweep: 1.35, power: 2.20, guide: false, wind: 1.15, rise: 1.30, gust: true }
     };
 
@@ -907,7 +907,7 @@
                 // Mũi tiêu vừa rồi không trúng quả nào -> đứt chuỗi
                 this.streak = 0;
                 this.onFire = false;
-                this.addFx('MISS', '#ffb3b3', this.cx, THROW_Y - 130, 20);
+                this.addFx(T('Trượt!', 'Missed!'), '#ffb3b3', this.cx, THROW_Y - 130, 20);
                 Sfx.miss();
             }
             this.pendingHits = 0;
