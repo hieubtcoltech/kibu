@@ -547,3 +547,17 @@ kbd {
 
 @media (max-height: 560px) { .app-wrapper .brand-img { height: 26px; } }
 @media (max-width: 560px) { .brand-img { height: 30px; } }
+
+
+/* Ô đếm ngược của powerup: cố định bề rộng và dùng chữ số đều nhau, để lúc
+   nhảy từ (10s) xuống (9s) cái khung không co lại — đó là nguồn rung thứ hai,
+   nhẹ hơn nhưng vẫn thấy. */
+.pb-time {
+    min-width: 3.4em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.85;
+}
+
+.pb-icon { font-size: 0.95rem; line-height: 1; }
+.pb-label { letter-spacing: 0.5px; }

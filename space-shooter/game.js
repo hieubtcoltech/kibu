@@ -942,24 +942,45 @@ function updateUI() {
     scoreVal.innerText = score.toString().padStart(6, '0');
 }
 
-function updatePowerupsHUD() {
-    activePowerupsList.innerHTML = '';
-    if (!player) return;
-    const now = Date.now();
-    for (const [key, value] of Object.entries(player.powerups)) {
-        if (value) {
-            const badge = document.createElement('div');
-            badge.className = `powerup-badge text-${key === 'shield' ? 'blue' : (key === 'rapid' ? 'green' : 'yellow')}`;
-            
-            let label = 'SHIELD';
-            let icon = '⛨';
-            if (key === 'spread') { label = 'SPREAD SHOT'; icon = '▲'; }
-            if (key === 'rapid') { label = 'RAPID FIRE'; icon = '⚡'; }
+/* Nhớ tập powerup đang bật, để biết khi nào PHẢI dựng lại thẻ. */
+let powerupHudKey = '';
 
-            const timeLeft = Math.max(0, Math.ceil((player.powerupTimers[key] - now) / 1000));
-            badge.innerHTML = `<i class="fa-solid fa-bolt"></i> ${icon} ${label} (${timeLeft}s)`;
+/* Bản cũ xoá sạch rồi dựng lại thẻ mỗi lần được gọi — mà nó được gọi khoảng
+   10-20 lần mỗi giây từ vòng lặp game. Thẻ badge lại có animation slideIn
+   0,3s trong CSS, nên nó bị tạo mới trước khi kịp chạy hết animation, lần nào
+   cũng vậy: chữ rung liên tục không đứng yên nổi.
+   Giờ chỉ dựng lại thẻ khi TẬP powerup thay đổi (nhận thêm hoặc hết hạn), còn
+   lại chỉ sửa đúng mấy chữ số đếm ngược bên trong. */
+function updatePowerupsHUD() {
+    if (!player) { activePowerupsList.innerHTML = ''; powerupHudKey = ''; return; }
+    const now = Date.now();
+    const active = Object.keys(player.powerups).filter(k => player.powerups[k]);
+    const key = active.join(',');
+
+    if (key !== powerupHudKey) {
+        powerupHudKey = key;
+        activePowerupsList.innerHTML = '';
+        for (const k of active) {
+            const badge = document.createElement('div');
+            badge.className = `powerup-badge text-${k === 'shield' ? 'blue' : (k === 'rapid' ? 'green' : 'yellow')}`;
+            badge.dataset.pk = k;
+            let label = 'SHIELD', icon = '⛨';
+            if (k === 'spread') { label = 'SPREAD SHOT'; icon = '▲'; }
+            if (k === 'rapid') { label = 'RAPID FIRE'; icon = '⚡'; }
+            /* Bỏ biểu tượng tia sét của Font Awesome đứng trước: mỗi powerup đã
+               có biểu tượng riêng rồi, để cả hai thành ra hai tia sét cạnh nhau. */
+            badge.innerHTML = '<span class="pb-icon">' + icon + '</span>'
+                + '<span class="pb-label">' + label + '</span>'
+                + '<span class="pb-time"></span>';
             activePowerupsList.appendChild(badge);
         }
+    }
+
+    for (const badge of activePowerupsList.children) {
+        const left = Math.max(0, Math.ceil((player.powerupTimers[badge.dataset.pk] - now) / 1000));
+        const t = badge.querySelector('.pb-time');
+        const txt = '(' + left + 's)';
+        if (t && t.textContent !== txt) t.textContent = txt;
     }
 }
 
