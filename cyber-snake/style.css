@@ -49,8 +49,12 @@ body {
     max-height: 800px;
     aspect-ratio: 1/1;
     background-color: rgba(2, 2, 8, 0.95);
-    border: 2px solid var(--neon-blue);
-    box-shadow: 0 0 35px rgba(0, 240, 255, 0.2);
+    /* Viền mảnh trung tính chứ không phải viền cyan dày như trước: sân chơi
+       tự vẽ khung của nó bên trong canvas, và khung đó mới là khung có nghĩa —
+       nó đổi màu theo từng màn, mờ hẳn đi ở màn có mép thông để báo cho bé.
+       Để hai đường cyan cùng độ dày sát nhau thì nhìn thành viền đôi. */
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 0 35px rgba(0, 240, 255, 0.14);
     display: flex;
     flex-direction: column;
     overflow: hidden;
