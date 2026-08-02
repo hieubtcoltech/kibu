@@ -717,3 +717,26 @@ body > .app-wrapper {
     line-height: 1.55;
     opacity: 0.66;
 }
+
+
+/* Hai hộp thiết lập của chế độ chơi ngoại tuyến xếp dọc, và nút Bắt Đầu tách
+   hẳn xuống một hàng riêng, căn giữa, to ngang bằng nút Tạo Phòng ở trên.
+   Trước đây .join-box là hàng ngang nên nút Bắt Đầu bị kẹp cạnh ô tuỳ chọn,
+   nhỏ và lọt thỏm, trông không ra nút hành động chính. */
+#local-box,
+#ai-box {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+}
+
+#local-box > .btn,
+#ai-box > .btn {
+    flex: 0 0 auto;
+    align-self: center;
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+    font-size: 1.05rem;
+    padding: 12px 18px;
+}
