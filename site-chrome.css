@@ -129,6 +129,7 @@ body > .unified-nav {
  * điện thoại 28 px bề ngang là chỗ chơi thật sự chứ không phải chỗ trang trí. */
 body > .app-wrapper,
 body > .game-wrapper,
+body > .game-container,
 body > main,
 body > .site-footer {
     width: calc(100% - 28px);
@@ -148,9 +149,40 @@ body > .site-footer {
 
     body > .app-wrapper,
     body > .game-wrapper,
+    body > .game-container,
     body > main,
     body > .site-footer {
         width: 100%;
+    }
+}
+
+/* ---------- Nhịp lề dọc ----------
+ * Các trang đặt thanh trên thẳng trong body trước đây dính sát nhau: không có
+ * khoảng nào giữa thanh trên và sân chơi, giữa sân chơi và footer, cũng không
+ * có lề dưới đáy màn hình. Lấy đúng nhịp của nhóm .app-wrapper (10/10/14). */
+body > .app-wrapper,
+body > .game-wrapper,
+body > .game-container,
+body > main {
+    margin-top: 10px;
+}
+
+body > .site-footer {
+    margin-top: 10px;
+    margin-bottom: 14px;
+}
+
+@media (max-width: 900px) {
+    body > .app-wrapper,
+    body > .game-wrapper,
+    body > .game-container,
+    body > main {
+        margin-top: 0;
+    }
+
+    body > .site-footer {
+        margin-top: 0;
+        margin-bottom: 0;
     }
 }
 

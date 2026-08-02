@@ -561,3 +561,19 @@ kbd {
 
 .pb-icon { font-size: 0.95rem; line-height: 1; }
 .pb-label { letter-spacing: 0.5px; }
+
+/* Sân chơi vốn thiết kế rộng 900 px; thu thanh trên và footer theo cho ba tầng
+   cùng một mép, thay vì nới sân ra làm hỏng bố cục game. */
+body > .unified-nav,
+body > .site-footer {
+    max-width: 900px;
+}
+
+/* Sân chơi tự bỏ giới hạn 900 px ở đúng ngưỡng này (màn thấp hoặc hẹp), nên
+   thanh trên và footer phải bỏ theo, không thì lại lệch nhau. */
+@media (max-width: 900px), (max-height: 1000px) {
+    body > .unified-nav,
+    body > .site-footer {
+        max-width: none;
+    }
+}

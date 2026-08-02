@@ -566,3 +566,8 @@ body .online-badge {
     .cell svg, .result-overlay.is-open .result-mark { animation-duration: 0.01ms; }
     .win-line { transition: none; }
 }
+
+/* Chốt bằng bề rộng thanh trên (1400 px) cho ba tầng thẳng hàng trên màn rộng */
+body > .game-wrapper {
+    max-width: 1400px;
+}

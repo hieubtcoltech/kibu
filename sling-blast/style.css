@@ -45,12 +45,9 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     flex: 1 1 auto;
 }
 
-/* Chỗ dư còn lại dồn xuống dưới để footer luôn nằm sát đáy màn hình.
-   Phải viết kèm body.chrome-fit: site-chrome.css đặt `margin: 0 auto` cho
-   .site-footer và nạp sau file này, cùng độ ưu tiên thì nó thắng. */
-body.chrome-fit > .site-footer {
-    margin-top: auto;
-}
+/* Khung sân đã tự nở chiếm hết chỗ trống nên footer luôn ở đáy rồi; dùng
+   margin-top:auto ở đây chỉ nuốt mất khoảng cách 10 px mà site-chrome.css
+   đặt giữa sân chơi và footer. */
 
 /* site-chrome.css chỉ lo việc ẩn emoji khi có ảnh, còn kích thước ảnh thương
    hiệu thì từng trang game phải tự đặt. Bỏ quên là ảnh 512 px hiện nguyên cỡ
@@ -77,7 +74,9 @@ body.chrome-fit > .site-footer {
 .game-wrapper {
     position: relative;
     width: 100%;
-    max-width: 1280px;
+    /* Bằng đúng max-width của thanh trên trong site-chrome.css. Để 1280 thì
+       trên màn rộng hơn 1400 px khung game hẹp hơn thanh trên, nhìn so le. */
+    max-width: 1400px;
     aspect-ratio: 16 / 9;
     max-height: 100%;
     margin: 0 auto;
