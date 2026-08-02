@@ -1053,7 +1053,8 @@ body {
         gap: 12px;
     }
 
-    .objectives-card { grid-column: 1 / -1; }
+    .objectives-card,
+    .game-sidebar .guide-card { grid-column: 1 / -1; }
     .objective-list { flex-direction: row; flex-wrap: wrap; }
 }
 
