@@ -427,7 +427,8 @@ function banner(port) {
         ['darts-game', '🎯 Phi Tiêu Bong Bóng — 2-4 bé thi phi tiêu'],
         ['coloring-game', '🎨 Tô Màu Thần Kỳ — 30 tranh cho bé 3-6 tuổi'],
         ['bowling-game', '🎳 Strike Party — bowling 1-4 bé, tính điểm thật'],
-        ['sling-blast', '🪃 Sling Blast — kéo ná phá tháp, 12 màn vật lý']
+        ['sling-blast', '🪃 Sling Blast — kéo ná phá tháp, 12 màn vật lý'],
+        ['flip-frenzy', '🃏 Flip Frenzy — lật hình tìm cặp, 1-4 bé chung máy']
     ].forEach(([slug, name]) => {
         console.log(`    ${C.dim}/${slug}${C.reset}${' '.repeat(Math.max(1, 10 - slug.length))}${name}`);
     });
