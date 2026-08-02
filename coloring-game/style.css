@@ -191,6 +191,64 @@ body {
     50%      { fill: #ffeef7; }
 }
 
+/* ---------- Stickers on the canvas ----------
+ * Hình dán chỉ bắt sự kiện khi bé đang ở chế độ hình dán. Ở chế độ tô màu
+ * chúng trong suốt với ngón tay, nên hình dán nằm đè lên vùng nào thì bé vẫn
+ * tô được vùng đó bình thường. */
+#art .stickers { pointer-events: none; }
+
+#art.sticker-mode .st-hit {
+    pointer-events: all;
+    cursor: grab;
+}
+
+#art.sticker-mode .st.sel .st-hit { cursor: grabbing; }
+
+.st-ring {
+    fill: none;
+    stroke: #ff5fa2;
+    stroke-width: 3.5;
+    stroke-dasharray: 9 7;
+    animation: ringspin 9s linear infinite;
+}
+
+@keyframes ringspin { to { stroke-dashoffset: -64; } }
+
+.st-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    padding: 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(138, 106, 176, 0.22);
+    box-shadow: 0 6px 18px rgba(120, 90, 160, 0.28);
+    animation: pop 0.2s ease-out;
+}
+
+.st-bar[hidden] { display: none; }
+
+.st-act {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid rgba(138, 106, 176, 0.2);
+    background: #fff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(120, 90, 160, 0.18);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.st-act:active { transform: translateY(3px); box-shadow: none; }
+.st-act[disabled] { opacity: 0.4; cursor: default; }
+.st-del { background: #fff1f4; border-color: #ffb3c7; }
+.st-ok { background: #eefbf1; border-color: #9ada86; font-size: 24px; color: #3f8f4f; }
+
 .fx-layer {
     position: absolute;
     inset: 0;

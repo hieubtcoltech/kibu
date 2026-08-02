@@ -141,9 +141,13 @@
     var curIdx = 0;
     var color = COLORS[0];
     var sticker = null;          // non-null ⇒ sticker mode
+    var selSticker = -1;         // index of the sticker being edited, -1 = none
+    var drag = null;             // in-flight drag of a sticker
     var undoStack = [];
     var idleTimer = null;
     var busy = false;            // true while "surprise" is animating
+
+    var ST_MIN = 22, ST_MAX = 130, ST_STEP = 1.25;
 
     /* ------------------------------------------------------------------ *
      * Building the picture
@@ -176,10 +180,18 @@
         }).join('');
     }
 
-    function stickerMarkup(list) {
-        return list.map(function (s) {
-            return '<text x="' + s.x + '" y="' + s.y + '" font-size="' + s.r + '" text-anchor="middle"'
-                 + ' dominant-baseline="central">' + esc(s.e) + '</text>';
+    /* Mỗi hình dán là một <g> có sẵn vòng tròn trong suốt phía sau: chữ emoji
+     * bắt chạm rất khó trúng, còn vòng tròn thì cho bé cả một vùng rộng để
+     * chạm và kéo. `sel` là chỉ số hình đang được chọn (-1 = không chọn). */
+    function stickerMarkup(list, sel) {
+        return list.map(function (s, i) {
+            var hit = s.r * 0.62;
+            return '<g class="st' + (i === sel ? ' sel' : '') + '" data-i="' + i + '"'
+                 + ' transform="translate(' + s.x + ',' + s.y + ')">'
+                 + (i === sel ? '<circle class="st-ring" r="' + (s.r * 0.72) + '"/>' : '')
+                 + '<circle class="st-hit" r="' + hit + '" fill="transparent"/>'
+                 + '<text font-size="' + s.r + '" text-anchor="middle" dominant-baseline="central">'
+                 + esc(s.e) + '</text></g>';
         }).join('');
     }
 
@@ -195,7 +207,7 @@
         svg.innerHTML = defsMarkup()
             + '<g class="regions">' + regions + '</g>'
             + '<g class="deco" style="pointer-events:none">' + decoMarkup(d) + '</g>'
-            + '<g class="stickers" style="pointer-events:none">' + stickerMarkup(slot.s) + '</g>';
+            + '<g class="stickers">' + stickerMarkup(slot.s, selSticker) + '</g>';
 
         $('artName').textContent = nameOf(d);
         updateProgress();
@@ -260,23 +272,86 @@
         return true;
     }
 
+    function stickers() { return slotFor(DRAWINGS[curIdx].id).s; }
+
+    function drawStickers() {
+        var g = svg.querySelector('.stickers');
+        if (g) g.innerHTML = stickerMarkup(stickers(), selSticker);
+    }
+
+    function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+
+    /* Chọn hình dán nào thì hiện thanh sửa của hình đó; bỏ chọn thì thanh biến
+     * mất. Thanh nằm im một chỗ dưới đáy khung tranh nên bé luôn tìm thấy nó ở
+     * cùng chỗ, không phải rê theo hình dán. */
+    function selectSticker(i) {
+        selSticker = i;
+        drawStickers();
+        $('stBar').hidden = i < 0;
+        if (i >= 0) {
+            var s = stickers()[i];
+            $('stBigger').disabled = s.r >= ST_MAX;
+            $('stSmaller').disabled = s.r <= ST_MIN;
+        }
+    }
+
     function placeSticker(x, y) {
-        var slot = slotFor(DRAWINGS[curIdx].id);
-        slot.s.push({ e: sticker, x: Math.round(x), y: Math.round(y), r: 46 });
-        undoStack.push({ t: 'sticker' });
+        var list = stickers();
+        list.push({ e: sticker, x: Math.round(x), y: Math.round(y), r: 46 });
+        undoStack.push({ t: 'st-add' });
         save();
-        svg.querySelector('.stickers').innerHTML = stickerMarkup(slot.s);
+        selectSticker(list.length - 1);
         sparkleSound();
         burst(x, y, ['✨']);
         updateProgress();
     }
+
+    function resizeSticker(mul) {
+        if (selSticker < 0) return;
+        var s = stickers()[selSticker];
+        var next = clamp(Math.round(s.r * mul), ST_MIN, ST_MAX);
+        if (next === s.r) return;
+        undoStack.push({ t: 'st-size', i: selSticker, r: s.r });
+        s.r = next;
+        save();
+        selectSticker(selSticker);
+        updateProgress();
+        tone(mul > 1 ? 880 : 520, 0.08, 'sine', 0.11);
+    }
+
+    function deleteSticker() {
+        if (selSticker < 0) return;
+        var list = stickers();
+        var s = list[selSticker];
+        undoStack.push({ t: 'st-del', i: selSticker, s: s });
+        list.splice(selSticker, 1);
+        save();
+        selectSticker(-1);
+        updateProgress();
+        tone(300, 0.14, 'sine', 0.12);
+    }
+
+    $('stBigger').addEventListener('click', function () { resizeSticker(ST_STEP); });
+    $('stSmaller').addEventListener('click', function () { resizeSticker(1 / ST_STEP); });
+    $('stDelete').addEventListener('click', deleteSticker);
+    $('stDone').addEventListener('click', function () { selectSticker(-1); });
 
     svg.addEventListener('pointerdown', function (evt) {
         if (busy) return;
         clearNudge();
 
         var p = svgPoint(evt);
-        if (sticker) { placeSticker(p.x, p.y); scheduleNudge(); return; }
+
+        if (sticker) {
+            var g = evt.target.closest ? evt.target.closest('.st') : null;
+            if (g) { startDrag(+g.dataset.i, p, evt); return; }
+            /* Chạm ra chỗ trống: đang chọn hình nào thì bỏ chọn hình đó trước.
+               Nếu dán luôn hình mới thì mỗi lần bé chạm hụt lại thêm một hình. */
+            if (selSticker >= 0) { selectSticker(-1); scheduleNudge(); return; }
+            placeSticker(p.x, p.y);
+            scheduleNudge();
+            return;
+        }
 
         var node = evt.target.closest ? evt.target.closest('.region') : null;
         if (!node) return;
@@ -287,6 +362,41 @@
         }
         scheduleNudge();
     });
+
+    function startDrag(i, p, evt) {
+        selectSticker(i);
+        var s = stickers()[i];
+        drag = { i: i, dx: s.x - p.x, dy: s.y - p.y, x0: s.x, y0: s.y, moved: false };
+        /* Bắt con trỏ ở cấp <svg>: mỗi lần vẽ lại là thẻ <g> của hình dán bị
+           thay mới, nên không thể bắt con trỏ ở chính nó. */
+        try { svg.setPointerCapture(evt.pointerId); } catch (e) { /* older browsers */ }
+    }
+
+    svg.addEventListener('pointermove', function (evt) {
+        if (!drag) return;
+        var p = svgPoint(evt);
+        var s = stickers()[drag.i];
+        if (!s) { drag = null; return; }
+        s.x = Math.round(clamp(p.x + drag.dx, 14, VIEW - 14));
+        s.y = Math.round(clamp(p.y + drag.dy, 14, VIEW - 14));
+        if (Math.abs(s.x - drag.x0) + Math.abs(s.y - drag.y0) > 2) drag.moved = true;
+        var g = svg.querySelector('.st[data-i="' + drag.i + '"]');
+        if (g) g.setAttribute('transform', 'translate(' + s.x + ',' + s.y + ')');
+    });
+
+    function endDrag(evt) {
+        if (!drag) return;
+        if (drag.moved) {
+            undoStack.push({ t: 'st-move', i: drag.i, x: drag.x0, y: drag.y0 });
+            save();
+            updateProgress();
+        }
+        try { svg.releasePointerCapture(evt.pointerId); } catch (e) { /* ignore */ }
+        drag = null;
+    }
+
+    svg.addEventListener('pointerup', endDrag);
+    svg.addEventListener('pointercancel', endDrag);
 
     /* A single unfilled region breathes after a while. One, not all of them —
      * fifteen pulsing shapes reads as an error state, one reads as a hint. */
@@ -374,6 +484,9 @@
     function openDrawing(i) {
         curIdx = ((i % DRAWINGS.length) + DRAWINGS.length) % DRAWINGS.length;
         undoStack = [];
+        drag = null;
+        selSticker = -1;
+        $('stBar').hidden = true;
         store._last = DRAWINGS[curIdx].id;
         save();
         render();
@@ -432,6 +545,9 @@
         stickerBox.hidden = !on;
         swatchBox.hidden = on;
         $('btnSticker').classList.toggle('on', on);
+        /* Chỉ ở chế độ hình dán thì hình dán mới bắt chạm — ngoài ra chúng phải
+           "trong suốt" để bé tô được vùng nằm ngay dưới chúng. */
+        svg.classList.toggle('sticker-mode', on);
         if (on) {
             if (!sticker) {
                 sticker = STICKERS[0];
@@ -440,6 +556,7 @@
             }
         } else {
             sticker = null;
+            selectSticker(-1);
         }
     }
 
@@ -457,14 +574,22 @@
         var act = undoStack.pop();
         if (!act) return;
         var slot = slotFor(DRAWINGS[curIdx].id);
+
         if (act.t === 'fill') {
             if (act.prev) slot.f[act.i] = act.prev; else delete slot.f[act.i];
             var node = svg.querySelector('.region[data-i="' + act.i + '"]');
             if (node) node.setAttribute('fill', act.prev || '#ffffff');
         } else {
-            slot.s.pop();
-            svg.querySelector('.stickers').innerHTML = stickerMarkup(slot.s);
+            /* Các thao tác hình dán được hoàn tác theo thứ tự ngược, nên một
+               lần xoá luôn được trả lại trước những thao tác cũ hơn — chỉ số i
+               trong các mục cũ vì thế vẫn trỏ đúng hình. */
+            if (act.t === 'st-add') slot.s.pop();
+            else if (act.t === 'st-del') slot.s.splice(act.i, 0, act.s);
+            else if (act.t === 'st-move' && slot.s[act.i]) { slot.s[act.i].x = act.x; slot.s[act.i].y = act.y; }
+            else if (act.t === 'st-size' && slot.s[act.i]) slot.s[act.i].r = act.r;
+            selectSticker(-1);
         }
+
         save();
         updateProgress();
         tone(330, 0.12, 'sine', 0.12);
@@ -509,6 +634,8 @@
                               'Clear all the colours on this picture and start again?'))) return;
         store[d.id] = { f: {}, s: [] };
         undoStack = [];
+        drag = null;
+        selectSticker(-1);
         save();
         render();
         tone(300, 0.2, 'sine', 0.12);

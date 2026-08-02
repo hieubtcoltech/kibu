@@ -109,6 +109,16 @@
                     <div class="art-frame" id="artFrame">
                         <svg id="art" viewBox="0 0 400 400" role="img" aria-label="Colouring picture"></svg>
                         <div class="fx-layer" id="fx" aria-hidden="true"></div>
+
+                        <!-- Hiện ra khi bé chạm vào một hình dán đã dán. Nổi trên
+                             tranh chứ không nằm dưới bảng màu, để nút không nhảy
+                             chỗ và bé không phải rời mắt khỏi hình mình đang sửa. -->
+                        <div class="st-bar" id="stBar" hidden>
+                            <button class="st-act" id="stSmaller" title="Make it smaller">➖</button>
+                            <button class="st-act" id="stBigger" title="Make it bigger">➕</button>
+                            <button class="st-act st-del" id="stDelete" title="Take it off">🗑️</button>
+                            <button class="st-act st-ok" id="stDone" title="Done">✓</button>
+                        </div>
                     </div>
                 </div>
                 <div class="art-caption"><span id="artName">Sweet Kitty</span> <b id="artProgress">0/15</b></div>
@@ -189,6 +199,7 @@
                 <li><b>1.</b> Tap a colour at the bottom.</li>
                 <li><b>2.</b> Tap any part of the picture to fill it.</li>
                 <li><b>3.</b> Tap it again with another colour to change it.</li>
+                <li><b>4.</b> With stickers on, drag a sticker to move it, or tap it to resize or take it off.</li>
             </ul>
             <p class="help-note">Nothing can go wrong here - there is no timer, no score and no way to lose. Every picture is saved by itself, so your little one can come back to it later.</p>
             <button class="big-btn" id="btnCloseHelp"><i class="fa-solid fa-thumbs-up"></i> Got It</button>

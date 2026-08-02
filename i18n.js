@@ -193,6 +193,12 @@
         ['Lưu tranh về máy', 'Save the picture to your device'],
         ['Tô lại bức tranh này từ đầu', 'Start this picture again'],
         ['Bức tranh đang tô', 'Colouring picture'],
+        ['Thu nhỏ lại', 'Make it smaller'],
+        ['Phóng to lên', 'Make it bigger'],
+        ['Bỏ hình dán này ra', 'Take it off'],
+        ['Xong', 'Done'],
+        ['Bật hình dán lên rồi kéo hình dán để chuyển chỗ, hoặc chạm vào hình dán để đổi cỡ hay bỏ ra.',
+            'With stickers on, drag a sticker to move it, or tap it to resize or take it off.'],
 
         /* ---------- Tic Tac Toe (tictactoe) ---------- */
         ['CỜ CA-RÔ', 'TIC TAC TOE'],
