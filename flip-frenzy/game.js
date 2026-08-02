@@ -246,8 +246,12 @@
                 /* hàng cuối thiếu lá thì căn giữa cho khỏi lệch hẳn sang trái */
                 var inRow = Math.min(best.cols, n - r * best.cols);
                 var offset = (best.cols - inRow) * (w + pad) / 2;
-                c.obj.x = x0 + cc * (w + pad) + offset;
-                c.obj.y = y0 + r * (h + pad);
+                c.obj.x = x0 + cc * (w + pad) + offset - w / 2;
+                c.obj.y = y0 + r * (h + pad) - h / 2;
+                c.bg.x = w / 2;
+                c.bg.y = h / 2;
+                c.txt.x = w / 2;
+                c.txt.y = h / 2;
                 c.bg.setTexture(c.up || c.done ? FACE_KEY : BACK_KEY);
                 c.bg.setDisplaySize(w, h);
                 if (c.owner !== undefined) c.bg.setTint(OWNER_TINT[c.owner]);
@@ -255,7 +259,7 @@
                 c.txt.setFontSize(Math.floor(h * 0.46));
                 c.txt.setVisible(c.up || c.done);
                 c.obj.setSize(w, h);
-                c.obj.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
+                c.obj.setInteractive(new Phaser.Geom.Rectangle(0, 0, w, h), Phaser.Geom.Rectangle.Contains);
             }
         }
 
@@ -384,7 +388,7 @@
 
         celebrate(card) {
             var color = card.face === GOLD ? 0xffd43b : (card.face === GIFT ? 0xff9de2 : 0x7ee081);
-            var em = this.add.particles(card.obj.x, card.obj.y, 'ff-px', {
+            var em = this.add.particles(card.obj.x + this.cardW / 2, card.obj.y + this.cardH / 2, 'ff-px', {
                 speed: { min: 60, max: 260 }, angle: { min: 0, max: 360 },
                 lifespan: { min: 300, max: 700 }, scale: { start: 1.1, end: 0 },
                 gravityY: 260, tint: color, emitting: false
