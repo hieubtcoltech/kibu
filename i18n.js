@@ -998,6 +998,22 @@
         ['🌀 VỆT DẦU TRƠN! XOAY TÍT XE!', '🌀 SLIPPERY OIL! SPINNING OUT!'],
 
         /* ---------- Cyber Snake ---------- */
+        /* Tên 8 màn chơi — game tự đặt theo ngôn ngữ, để đây cho phần menu */
+        ['KHỞI ĐỘNG', 'BOOT UP'],
+        ['BỐN TRỤ', 'FOUR PILLARS'],
+        ['THẬP TỰ', 'THE CROSS'],
+        ['CỔNG DỊCH CHUYỂN', 'PORTAL GRID'],
+        ['HÀNH LANG', 'CORRIDORS'],
+        ['MÊ CUNG', 'THE MAZE'],
+        ['ĐẤU TRƯỜNG', 'THE ARENA'],
+        ['LÕI NGUY HIỂM', 'DANGER CORE'],
+        ['CHẶNG', 'STAGE'],
+        ['8 màn neon, rắn trườn mượt, một thân rắn phát sáng', '8 neon stages, smooth gliding, one glowing snake'],
+        ['8 MÀN PHẢI VƯỢT', '8 STAGES TO CLEAR'],
+        ['Ăn đủ số lõi là qua màn. Ở màn CỔNG DỊCH CHUYỂN và ĐẤU TRƯỜNG, hai mép bàn thông nhau — trườn ra mép này là hiện lại ở mép kia. Vượt hết tám màn thì chơi lại từ đầu, nhanh hơn.',
+            'Eat enough cores to clear a stage. On PORTAL GRID and THE ARENA the edges wrap around - slide off one side and you come back on the other. Clear all eight and they start again, faster.'],
+        ['OVERDRIVE: nhân đôi điểm và nhân đôi tốc độ', 'OVERDRIVE: double points and double speed'],
+        ['LÕI CRYO: mọi thứ chậm hẳn lại', 'CRYO CORE: everything slows down'],
         ['Hệ Thống Power-Up Cores', 'Power-Up Core System'],
         ['Điều Khiển', 'Controls'],
         [': Mồi thường (+100đ, dài +1)', ': Standard core (+100 pts, +1 length)'],
