@@ -180,15 +180,22 @@ body {
     transition: fill 0.16s ease;
 }
 
-#art .region:hover { filter: brightness(1.04); }
+/* Rê chuột thì đổi nét viền, không dùng filter. filter trên thẻ SVG tạo một
+   ngữ cảnh vẽ riêng và ở vài trình duyệt nó làm hỏng cách vẽ phần nền của
+   hình — đổi màu viền thì không đụng gì tới ruột hình. */
+#art .region:hover { stroke: #ff5fa2; }
 
 /* Nhấp nháy nhẹ để bé thấy chỗ nào còn chưa tô — chỉ chạy khi bé đứng im
-   một lúc, và tắt hẳn nếu máy báo người dùng không thích chuyển động. */
+   một lúc, và tắt hẳn nếu máy báo người dùng không thích chuyển động.
+   Nhấp nháy bằng NÉT VIỀN chứ tuyệt đối không bằng `fill`: animation CSS
+   thắng thuộc tính fill trên thẻ, nên hễ vùng nào dính class này là màu bé
+   tô biến mất, hiện ra màu của keyframes. Đó chính là lỗi "rê chuột qua là
+   mất màu" — dữ liệu vẫn còn nguyên, chỉ phần nhìn bị đè. */
 #art .region.nudge { animation: nudge 1.6s ease-in-out infinite; }
 
 @keyframes nudge {
-    0%, 100% { fill: #ffffff; }
-    50%      { fill: #ffeef7; }
+    0%, 100% { stroke: #4a3550; stroke-width: 4.5; }
+    50%      { stroke: #ff5fa2; stroke-width: 9; }
 }
 
 /* ---------- Stickers on the canvas ----------

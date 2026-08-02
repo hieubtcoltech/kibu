@@ -167,6 +167,7 @@
     var undoStack = [];
     var idleTimer = null;
     var busy = false;            // true while "surprise" is animating
+    var celebrated = false;      // đã ăn mừng cho lần tô kín hiện tại chưa
 
     var ST_MIN = 22, ST_MAX = 130, ST_STEP = 1.25;
 
@@ -294,6 +295,9 @@
             + '<g class="stickers">' + stickerMarkup(slot.s, selSticker) + '</g>';
 
         $('artName').textContent = nameOf(d);
+        /* Mở lại một bức đã tô xong thì coi như đã ăn mừng rồi — bé quay lại
+           chỉnh vài chỗ không phải xem lại pháo giấy từ đầu. */
+        celebrated = filledCount() >= d.regions.length;
         updateProgress();
         scheduleNudge();
     }
@@ -518,9 +522,14 @@
     /* ------------------------------------------------------------------ *
      * Finishing a picture
      * ------------------------------------------------------------------ */
+    /* Chỉ ăn mừng đúng lúc bức tranh vừa chuyển từ "còn thiếu" sang "kín màu".
+       Không có cờ này thì sau khi tô xong, bé đổi màu một vùng bất kỳ là bảng
+       chúc mừng lại nhảy ra, đóng xong chạm tiếp lại nhảy ra nữa. */
     function checkWin() {
         var d = DRAWINGS[curIdx];
-        if (filledCount() < d.regions.length) return;
+        if (filledCount() < d.regions.length) { celebrated = false; return; }
+        if (celebrated) return;
+        celebrated = true;
         if (!store._done) store._done = [];
         if (store._done.indexOf(d.id) < 0) store._done.push(d.id);
         save();
