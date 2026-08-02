@@ -892,15 +892,21 @@
 
     function showEnd() {
         const res = S.result || {};
+        const local = S.mode === 'local';
         const won = res.winner && res.winner === S.mySide;
-        el('end-emblem').textContent = res.winner ? (won ? '🏆' : '😢') : '🤝';
+
+        /* Hai bé cùng ngồi trước một máy thì "BẠN THẮNG" chẳng biết là ai —
+           phải gọi tên phe thắng. Mà cũng không có bên nào để buồn, nên lúc
+           nào cũng là cúp và nhạc mừng. */
+        el('end-emblem').textContent = res.winner ? (local || won ? '🏆' : '😢') : '🤝';
         el('end-title').textContent = res.winner
-            ? (won ? tr('YOU WIN!') : tr('YOU LOSE'))
+            ? (local ? (res.winner === 'red' ? tr('ĐỎ THẮNG!') : tr('ĐEN THẮNG!'))
+                     : (won ? tr('YOU WIN!') : tr('YOU LOSE')))
             : tr('DRAW');
         el('end-reason').textContent = tr(REASONS[res.reason] || '');
         renderRematch();
         el('modal-end').classList.add('active');
-        if (res.winner) (won ? audio.win() : audio.lose());
+        if (res.winner) ((local || won) ? audio.win() : audio.lose());
         else audio.beep(false);
     }
 
