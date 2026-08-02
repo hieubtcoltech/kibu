@@ -398,6 +398,10 @@
             background: linear-gradient(135deg, #2f8fd8 0%, #7ed957 100%);
         }
 
+        .tile-bubble {
+            background: linear-gradient(135deg, #0d3b66 0%, #1b6ca8 45%, #48b8d0 100%);
+        }
+
         .tile-bowling {
             background: linear-gradient(135deg, #1e6fe0 0%, #4dc3ff 48%, #e01e37 100%);
         }
@@ -641,6 +645,14 @@
     <!-- Poki Main Grid -->
     <main class="poki-grid-container">
         <div class="poki-grid" id="cardsGrid">
+
+            <a href="/g/bubble-pop" class="poki-tile tile-bubble"
+                data-keywords="bubble pop bubble shooter ban bong tro choi ban bong pop bubbles puzzle match 3 colours ice stone star bomb 24 levels">
+                <span class="tile-badge badge-new">NEW</span>
+                <img src="/bubble-pop/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
+                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <div class="tile-label">Bubble Pop</div>
+            </a>
 
             <a href="/g/fruit-crush" class="poki-tile tile-fruit"
                 data-keywords="fruit crush match 3 candy sweets berries">
