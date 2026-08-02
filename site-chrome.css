@@ -103,7 +103,7 @@ body > .unified-nav {
 }
 
 .nav-home img {
-    height: 39px;
+    height: 51px;
     width: auto;
     display: block;
 }
@@ -304,7 +304,7 @@ body.chrome-fit > .game-wrapper {
 }
 
 @media (max-width: 560px) {
-    .nav-home img { height: 33px; }
+    .nav-home img { height: 43px; }
     .nav-left { gap: 8px; }
     .unified-nav { padding: 8px 12px; border-radius: 16px; gap: 10px; }
     /* Chỉ còn logo KIBU + icon game + dãy nút icon, gọn trên một hàng */
@@ -328,3 +328,18 @@ body.chrome-fit > .game-wrapper {
    còn là null và sinh lỗi JS. Để CSS lo: còn thẻ ảnh đứng trước thì giấu emoji,
    ảnh hỏng bị onerror gỡ đi thì emoji tự hiện ra. Không còn phụ thuộc thời điểm. */
 .brand-img + .brand-icon { display: none; }
+
+/* Đảm bảo logo KIBU tăng 30% kích thước ở tất cả các trang game, đè lên các style cũ của từng game */
+.unified-nav .nav-home img {
+    height: 51px !important;
+}
+@media (max-width: 560px) {
+    .unified-nav .nav-home img {
+        height: 43px !important;
+    }
+}
+@media (max-height: 560px) {
+    .app-wrapper .nav-home img {
+        height: 36px !important;
+    }
+}

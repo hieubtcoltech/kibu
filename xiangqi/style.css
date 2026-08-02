@@ -641,8 +641,8 @@ body > .app-wrapper {
 @media (max-height: 560px) {
     body > .app-wrapper { padding: 6px 8px 8px; gap: 6px; }
     .app-wrapper > .unified-nav { padding: 4px 10px; border-radius: 14px; }
-    .app-wrapper .nav-home { height: 28px; }
-    .app-wrapper .nav-home img { height: 28px; }
+    .app-wrapper .nav-home { height: 36px; }
+    .app-wrapper .nav-home img { height: 36px; }
     .app-wrapper .unified-nav .btn { padding: 5px 9px; font-size: 0.85rem; }
     .app-wrapper .unified-nav .brand-title { font-size: 1rem; }
     .app-wrapper > .site-footer { padding: 0; }
