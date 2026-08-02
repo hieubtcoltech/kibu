@@ -315,11 +315,55 @@ body {
     -webkit-overflow-scrolling: touch;
 }
 
-.swatches, .stickers {
+.swatches {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
+}
+
+.stickers {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.st-tabs, .st-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* Hàng chọn rổ dính ở đầu vùng cuộn: cuộn xuống xem hết hình trong rổ mà vẫn
+   đổi rổ được ngay, không phải cuộn ngược lên. */
+.st-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding-bottom: 6px;
+    background: linear-gradient(#fff 72%, rgba(255, 255, 255, 0));
+}
+
+.st-tab {
+    width: 50px;
+    height: 44px;
+    border-radius: 14px;
+    border: 2px solid rgba(138, 106, 176, 0.2);
+    background: #fbf8ff;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 3px 0 rgba(120, 90, 160, 0.14);
+    transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.st-tab:active { transform: translateY(3px); }
+
+.st-tab.sel {
+    background: #fff0f7;
+    border-color: var(--pink);
+    box-shadow: 0 3px 0 rgba(255, 95, 162, 0.3);
 }
 
 /* display:flex ở trên thắng cả display:none mặc định của [hidden], nên phải
@@ -663,6 +707,7 @@ body {
 @media (max-width: 400px) {
     .swatch-wrap { max-height: 21vh; }
     .swatch, .sticker-btn { width: 44px; height: 44px; }
+    .st-tab { width: 44px; height: 40px; font-size: 20px; }
     .art-caption { font-size: 0.84rem; }
 }
 

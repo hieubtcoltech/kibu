@@ -55,7 +55,28 @@
         dots: [[6, 7, 2.4, '#ffd166'], [19, 16, 1.9, '#ff9ec4'], [12, 22, 1.5, '#b8a4ff'], [23, 4, 1.3, '#7ec8ff']]
     };
 
-    var STICKERS = ['⭐', '💖', '🌸', '🦋', '🌈', '✨', '🍓', '👑', '🐞', '☁️'];
+    /* 72 hình dán chia làm 6 rổ. Đổ hết vào một danh sách phẳng thì bé phải
+     * cuộn mãi mới thấy hình mình muốn; chia rổ thì mỗi rổ vừa đúng hai hàng,
+     * nhìn một cái là thấy hết, và cái thẻ rổ cũng chỉ là một emoji to nên bé
+     * chưa đọc chữ vẫn chọn được.
+     *
+     * Chỉ dùng emoji đã phổ biến từ lâu (Unicode ≤ 13) để máy cũ của ông bà
+     * cũng hiện ra hình chứ không phải ô vuông rỗng. */
+    var STICKER_GROUPS = [
+        { icon: '💖', vi: 'Tim và sao', en: 'Hearts and stars',
+          items: ['💖', '💕', '💗', '💓', '❤️', '💛', '⭐', '🌟', '✨', '💫', '🌠', '💝'] },
+        { icon: '🌸', vi: 'Hoa và lá', en: 'Flowers and leaves',
+          items: ['🌸', '🌺', '🌷', '🌹', '🌻', '🌼', '🍀', '🍃', '🌿', '🌱', '🌵', '💐'] },
+        { icon: '🦋', vi: 'Con vật', en: 'Animals',
+          items: ['🦋', '🐝', '🐞', '🐰', '🐱', '🐶', '🦄', '🐥', '🐧', '🐢', '🐠', '🦉'] },
+        { icon: '🍰', vi: 'Đồ ngọt', en: 'Sweet things',
+          items: ['🍰', '🧁', '🍭', '🍬', '🍩', '🍪', '🍦', '🍓', '🍒', '🍎', '🍇', '🍯'] },
+        { icon: '👑', vi: 'Công chúa', en: 'Princess',
+          items: ['👑', '💎', '🪄', '🔮', '💍', '👗', '👠', '🎀', '🧚', '🏰', '🦢', '🎠'] },
+        { icon: '🌈', vi: 'Trời và mây', en: 'Sky and clouds',
+          items: ['🌈', '☁️', '☀️', '🌙', '⛅', '❄️', '⛄', '🎈', '🪁', '🎉', '🎊', '🌊'] }
+    ];
+    var stGroup = 0;
 
     function isSpecial(c) { return typeof c === 'string' && c.indexOf('url(') === 0; }
 
@@ -540,16 +561,34 @@
     });
 
     function buildStickers() {
-        stickerBox.innerHTML = STICKERS.map(function (e) {
-            return '<button class="sticker-btn" data-e="' + esc(e) + '">' + esc(e) + '</button>';
+        $('stTabs').innerHTML = STICKER_GROUPS.map(function (g, i) {
+            return '<button class="st-tab' + (i === stGroup ? ' sel' : '') + '" data-g="' + i + '"'
+                 + ' title="' + esc(T(g.vi, g.en)) + '" aria-label="' + esc(T(g.vi, g.en)) + '">'
+                 + g.icon + '</button>';
+        }).join('');
+        drawStickerGrid();
+    }
+
+    function drawStickerGrid() {
+        $('stGrid').innerHTML = STICKER_GROUPS[stGroup].items.map(function (e) {
+            return '<button class="sticker-btn' + (e === sticker ? ' sel' : '') + '" data-e="' + esc(e) + '">'
+                 + esc(e) + '</button>';
         }).join('');
     }
 
     stickerBox.addEventListener('click', function (evt) {
+        var tab = evt.target.closest ? evt.target.closest('.st-tab') : null;
+        if (tab) {
+            stGroup = +tab.dataset.g;
+            buildStickers();
+            tone(700, 0.07, 'sine', 0.10);
+            return;
+        }
+
         var b = evt.target.closest ? evt.target.closest('.sticker-btn') : null;
         if (!b) return;
         sticker = b.dataset.e;
-        var all = stickerBox.querySelectorAll('.sticker-btn');
+        var all = $('stGrid').querySelectorAll('.sticker-btn');
         for (var i = 0; i < all.length; i++) all[i].classList.toggle('sel', all[i] === b);
         sparkleSound();
     });
@@ -563,9 +602,8 @@
         svg.classList.toggle('sticker-mode', on);
         if (on) {
             if (!sticker) {
-                sticker = STICKERS[0];
-                var first = stickerBox.querySelector('.sticker-btn');
-                if (first) first.classList.add('sel');
+                sticker = STICKER_GROUPS[stGroup].items[0];
+                drawStickerGrid();
             }
         } else {
             sticker = null;

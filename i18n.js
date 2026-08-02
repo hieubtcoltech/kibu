@@ -193,6 +193,14 @@
         ['Lưu tranh về máy', 'Save the picture to your device'],
         ['Tô lại bức tranh này từ đầu', 'Start this picture again'],
         ['Bức tranh đang tô', 'Colouring picture'],
+        /* Tên các rổ hình dán — game tự đặt đúng ngôn ngữ, để đây cho phần
+           title/aria-label khỏi lệch nếu engine có quét tới. */
+        ['Tim và sao', 'Hearts and stars'],
+        ['Hoa và lá', 'Flowers and leaves'],
+        ['Con vật', 'Animals'],
+        ['Đồ ngọt', 'Sweet things'],
+        ['Công chúa', 'Princess'],
+        ['Trời và mây', 'Sky and clouds'],
         ['Thu nhỏ lại', 'Make it smaller'],
         ['Phóng to lên', 'Make it bigger'],
         ['Bỏ hình dán này ra', 'Take it off'],
