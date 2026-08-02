@@ -1091,15 +1091,27 @@
             this.buildLevelGrid();
         },
 
+        OVERLAYS: ['menu-overlay', 'levels-overlay', 'win-overlay', 'lose-overlay', 'all-overlay'],
+
         hideOverlays: function () {
-            ['menu-overlay', 'levels-overlay', 'win-overlay', 'lose-overlay', 'all-overlay']
-                .forEach(function (id) { $(id).classList.add('hidden'); });
+            this.OVERLAYS.forEach(function (id) { $(id).classList.add('hidden'); });
+            this.syncHint();
+        },
+
+        /* Lời nhắc xoay máy nằm dưới lớp bảng phủ nên khi có bảng nó vẫn hiện
+           mờ mờ xuyên qua. Có bảng thì giấu hẳn đi. */
+        syncHint: function () {
+            var open = this.OVERLAYS.some(function (id) {
+                return !$(id).classList.contains('hidden');
+            });
+            $('rotate-hint').hidden = open;
         },
 
         showLevels: function () {
             this.hideOverlays();
             this.buildLevelGrid();
             $('levels-overlay').classList.remove('hidden');
+            UI.syncHint();
             $('hud').classList.add('hidden');
             if (this.scene) this.scene.matter.world.pause();
         },
@@ -1108,6 +1120,7 @@
             this.hideOverlays();
             $('all-stars').textContent = '★ ' + Save.totalStars() + ' / ' + (LEVELS.length * 3);
             $('all-overlay').classList.remove('hidden');
+            UI.syncHint();
             $('hud').classList.add('hidden');
         },
 
@@ -1214,6 +1227,7 @@
             $('btn-next').hidden = last;
             $('btn-finish').hidden = !last;
             $('win-overlay').classList.remove('hidden');
+            UI.syncHint();
         },
 
         lost: function (left) {
@@ -1221,6 +1235,7 @@
                 ? 'One Grumpy is still standing. Try a different angle!'
                 : 'A few Grumpies are still standing. Try a different angle!';
             $('lose-overlay').classList.remove('hidden');
+            UI.syncHint();
         }
     };
 
