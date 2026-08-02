@@ -1467,3 +1467,10 @@ body {
 
 @media (max-height: 560px) { .app-wrapper .brand-img { height: 26px; } }
 @media (max-width: 560px) { .brand-img { height: 30px; } }
+
+/* Khớp bề rộng khung game (1200 px) để thanh trên, sân chơi và footer có
+   cùng một mép trái phải. */
+body > .unified-nav,
+body > .site-footer {
+    max-width: 1200px;
+}

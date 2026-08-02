@@ -121,6 +121,39 @@ body > .unified-nav {
  * stretch now that it shares a row with the home button. */
 .nav-left .brand { min-width: 0; }
 
+/* ---------- Lề hai bên dùng chung ----------
+ * Thanh trên là một thẻ bo góc thụt vào 14 px mỗi bên, trong khi khung game và
+ * footer lại chạy sát mép màn hình — nhìn ra ba tầng lệch nhau. Cho cả ba cùng
+ * một lề ngoài để mép trái phải thẳng hàng.
+ * Dưới 900 px thì ngược lại: bỏ lề của thanh trên cho mọi thứ sát mép, vì trên
+ * điện thoại 28 px bề ngang là chỗ chơi thật sự chứ không phải chỗ trang trí. */
+body > .app-wrapper,
+body > .game-wrapper,
+body > main,
+body > .site-footer {
+    width: calc(100% - 28px);
+    margin-left: auto;
+    margin-right: auto;
+    box-sizing: border-box;
+}
+
+@media (max-width: 900px) {
+    body > .unified-nav {
+        width: 100%;
+        margin: 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    body > .app-wrapper,
+    body > .game-wrapper,
+    body > main,
+    body > .site-footer {
+        width: 100%;
+    }
+}
+
 /* ---------- Footer ---------- */
 .site-footer {
     flex-shrink: 0;

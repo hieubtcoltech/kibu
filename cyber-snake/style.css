@@ -653,3 +653,10 @@ kbd {
     .sb-name { font-size: 1.15rem; }
     .stage-banner { padding: 12px 22px; }
 }
+
+/* Thanh trên và footer thu về đúng bề rộng bàn chơi (800 px) cho ba tầng
+   thẳng hàng — bàn cờ vuông nên nó hẹp hơn màn hình khá nhiều. */
+body > .unified-nav,
+body > .site-footer {
+    max-width: 800px;
+}
