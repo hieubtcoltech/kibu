@@ -6,7 +6,7 @@
     <title>Sling Blast - Free Online Kids Game | KIBU Games</title>
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Play Sling Blast online for free on KIBU Games! Pull back the slingshot, knock down towers and pop every Grumpy across 12 physics levels. English & Vietnamese.">
+    <meta name="description" content="Play Sling Blast online for free on KIBU Games! Pull back the slingshot, knock down towers and pop every Grumpy across 48 physics levels. English & Vietnamese.">
     <meta name="keywords" content="Sling Blast, slingshot game, physics game for kids, knock down towers, ban na, ban bi pha thap, free online kids games, KIBU Games">
     <meta name="author" content="KIBU Games">
     <meta name="robots" content="index, follow">
@@ -19,7 +19,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://kibugames.com/sling-blast/">
     <meta property="og:title" content="Sling Blast - Free Online Game | KIBU Games">
-    <meta property="og:description" content="Pull, aim, release! Smash towers of wood, ice and stone across 12 levels. 100% free on KIBU Games.">
+    <meta property="og:description" content="Pull, aim, release! Smash towers across 48 levels in four worlds: basics, rocky ridge, playground, sky high. 100% free on KIBU Games.">
     <meta property="og:image" content="https://kibugames.com/sling-blast/og-image.jpg">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -31,7 +31,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://kibugames.com/sling-blast/">
     <meta name="twitter:title" content="Sling Blast - Free Online Game">
-    <meta name="twitter:description" content="Pull, aim, release! Smash towers across 12 physics levels.">
+    <meta name="twitter:description" content="Pull, aim, release! 48 physics levels across four worlds.">
     <meta name="twitter:image" content="https://kibugames.com/sling-blast/og-image.jpg">
 
     <!-- Structured Data (JSON-LD) -->
@@ -100,6 +100,7 @@
         <div id="hud" class="hud hidden">
             <div class="hud-left">
                 <span id="hud-level" class="hud-chip">Level 1</span>
+                <span id="hud-chapter" class="hud-chapter">Basics</span>
                 <span id="hud-name" class="hud-name">First Throw</span>
             </div>
             <div class="hud-mid">
@@ -158,6 +159,7 @@
         <div id="levels-overlay" class="overlay hidden">
             <div class="card pop-in">
                 <h2 class="title-sm">CHOOSE A LEVEL</h2>
+                <div id="chapter-tabs" class="chapter-tabs"></div>
                 <div id="level-grid" class="level-grid"></div>
                 <div class="row-buttons">
                     <button id="btn-levels-back" class="btn btn-secondary">Back</button>

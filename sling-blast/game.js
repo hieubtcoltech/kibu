@@ -41,6 +41,9 @@
     var TIP_L = { x: SLING_X - Math.sin(ARM_A) * ARM_LEN, y: FORK_Y - Math.cos(ARM_A) * ARM_LEN };
     var TIP_R = { x: SLING_X + Math.sin(ARM_A) * ARM_LEN, y: FORK_Y - Math.cos(ARM_A) * ARM_LEN };
 
+    /* Bốn màu bóng bay, đổi vòng theo thứ tự khai báo trong màn */
+    var BALLOON_COLORS = [0xff6b8a, 0x6ec6f5, 0x8fe07a, 0xffd34d];
+
     /* Vật liệu: máu (hp) quyết định chịu được mấy cú, khối lượng quyết định
        nó đè sập cái gì khi rơi. Băng nhẹ và giòn, đá nặng và lì. */
     var MAT = {
@@ -95,6 +98,26 @@
 
     /* Grumpy đứng trên mặt phẳng cao y */
     function T(x, y) { return { x: x, y: y - 24 }; }
+
+
+    /* ---------- Vật thể của ba chương sau ----------
+       Mỗi chương thêm đúng một thứ mới để bé kịp làm quen, không dồn hết:
+         chương 2  địa hình cố định — tường và bệ đá không phá được
+         chương 3  bập bênh và đệm nhún — bắn kiểu nảy, kiểu bẩy
+         chương 4  bóng bay — nhà treo lơ lửng, bắn nổ bóng cho rơi
+    */
+
+    /* Tường/bệ đá: vật tĩnh, không có máu, không phá được */
+    function WALL(x, y, w, h) { return { x: x, y: y, w: w, h: h, kind: 'rock' }; }
+
+    /* Đệm nhún: cũng tĩnh nhưng nảy gần như hoàn toàn */
+    function PAD(x, y, w, h) { return { x: x, y: y, w: w, h: h, kind: 'pad' }; }
+
+    /* Bập bênh: tấm ván ghim tâm vào một điểm cố định, quay quanh điểm đó */
+    function PIVOT(x, y, w, h, m) { return { x: x, y: y, w: w, h: h, m: m || 'wood' }; }
+
+    /* Bóng bay buộc vào khối thứ `block` trong mảng blocks của màn */
+    function BALLOON(x, y, block) { return { x: x, y: y, block: block }; }
 
     var LEVELS = [
         {
@@ -217,6 +240,353 @@
                       T(940, gateTop(GROUND_Y, 2) - 28)]
         }
     ];
+
+    /* ================================================================== *
+     * 2b. CHƯƠNG 2 — ĐỒI ĐÁ
+     * ------------------------------------------------------------------
+     * Cái mới: địa hình cố định. Tường và bệ đá không bắn vỡ được, nên bé
+     * phải học bắn vòng cầu qua, luồn qua khe, hoặc nảy vào.
+     * ================================================================== */
+    var CH2 = [
+        {
+            name: 'Over The Wall',
+            tip: 'Pull high so the ball arcs over the wall.',
+            ammo: ['rock', 'rock', 'rock'],
+            terrain: [WALL(650, 500, 44, 280)],
+            blocks: gate(980, GROUND_Y, 'wood', 1),
+            targets: [T(980, GROUND_Y)]
+        },
+        {
+            name: 'The Ledge',
+            tip: 'The hut sits on rock. Rock never breaks - the hut does.',
+            ammo: ['rock', 'rock', 'rock'],
+            terrain: [WALL(980, 570, 300, 34)],
+            blocks: gate(980, 553, 'wood', 1),
+            targets: [T(980, 553)]
+        },
+        {
+            name: 'Two Pillars',
+            tip: 'Rock pillars on both sides. The only way in is the middle.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            terrain: [WALL(770, 520, 40, 240), WALL(1170, 520, 40, 240)],
+            blocks: gate(970, GROUND_Y, 'wood', 1),
+            targets: [T(970, GROUND_Y), T(970, gateTop(GROUND_Y, 1))]
+        },
+        {
+            name: 'Under The Roof',
+            tip: 'A rock roof is in the way - roll the ball in from the side.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            terrain: [WALL(1000, 430, 420, 34)],
+            blocks: [B(1190, GROUND_Y - 50, 24, 100, 'wood')],
+            targets: [T(880, GROUND_Y), T(1010, GROUND_Y)]
+        },
+        {
+            name: 'The Window',
+            tip: 'Fire through the window between the two rocks.',
+            ammo: ['rock', 'rock', 'rock'],
+            terrain: [WALL(720, 380, 44, 200), WALL(720, 610, 44, 60)],
+            blocks: gate(1010, GROUND_Y, 'wood', 1),
+            targets: [T(1010, GROUND_Y)]
+        },
+        {
+            name: 'The Canyon',
+            tip: 'All three are down in the gap. Drop one in and they all go.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            terrain: [WALL(790, 530, 40, 220), WALL(1180, 530, 40, 220)],
+            blocks: [B(880, GROUND_Y - 12, 120, 24, 'wood'),
+                     B(1090, GROUND_Y - 12, 120, 24, 'wood')],
+            targets: [T(880, GROUND_Y - 24), T(985, GROUND_Y), T(1090, GROUND_Y - 24)]
+        },
+        {
+            name: 'Bomb The Ledge',
+            tip: 'Rock blocks every path - set the bomb off right above it.',
+            ammo: ['bomb', 'rock', 'rock'],
+            terrain: [WALL(950, 545, 380, 30)],
+            blocks: gate(950, 530, 'stone', 1),
+            targets: [T(950, 530), T(950, gateTop(530, 1))]
+        },
+        {
+            name: 'Rock Bridge',
+            tip: 'One Grumpy on the bridge, one under it.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            terrain: [WALL(700, 560, 44, 160), WALL(1200, 560, 44, 160),
+                      WALL(950, 466, 500, 28)],
+            blocks: gate(950, 452, 'wood', 1),
+            targets: [T(950, 452), T(950, GROUND_Y)]
+        },
+        {
+            name: 'Stair Steps',
+            tip: 'Three steps, one Grumpy each. Higher is harder.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            terrain: [WALL(800, 610, 200, 60), WALL(1000, 560, 200, 160),
+                      WALL(1180, 500, 160, 280)],
+            targets: [T(800, 580), T(1000, 480), T(1180, 360)]
+        },
+        {
+            name: 'The Tunnel',
+            tip: 'The only way through is the tunnel near the ground.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            /* Tường dừng ở y=560, chừa khe cao 80 px sát đất — đúng cái hầm
+               mà mách nước nói tới. Bản trước tường chạm đất, không có hầm. */
+            terrain: [WALL(780, 380, 44, 360)],
+            blocks: gate(1030, GROUND_Y, 'ice', 1),
+            targets: [T(1030, GROUND_Y)]
+        },
+        {
+            name: 'High Wall',
+            tip: 'The tallest wall yet. Pull all the way back!',
+            ammo: ['rock', 'rock', 'rock'],
+            terrain: [WALL(640, 430, 44, 420)],
+            blocks: gate(1000, GROUND_Y, 'wood', 2),
+            targets: [T(1000, GROUND_Y), T(1000, gateTop(GROUND_Y, 2))]
+        },
+        {
+            name: 'Rock Fortress',
+            tip: 'End of the world - use the bomb and the thunder ball.',
+            ammo: ['bomb', 'thunder', 'rock', 'rock'],
+            terrain: [WALL(700, 520, 40, 240), WALL(1210, 520, 40, 240),
+                      WALL(955, 400, 300, 28)],
+            blocks: gate(870, GROUND_Y, 'stone', 1)
+                .concat(gate(1060, GROUND_Y, 'stone', 1)),
+            targets: [T(870, GROUND_Y), T(1060, GROUND_Y), T(955, 386)]
+        }
+    ];
+
+    /* ================================================================== *
+     * 2c. CHƯƠNG 3 — CÔNG TRƯỜNG
+     * ------------------------------------------------------------------
+     * Cái mới: đệm nhún (bi nảy gần như không mất sức) và bập bênh (tấm ván
+     * ghim tâm, quay tự do). Bé học bắn nảy và bắn bẩy.
+     * ================================================================== */
+    var CH3 = [
+        {
+            name: 'First Bounce',
+            tip: 'The green pad bounces hard - try firing straight at it!',
+            ammo: ['rock', 'rock', 'rock'],
+            terrain: [PAD(700, 618, 180, 44)],
+            blocks: gate(1030, GROUND_Y, 'wood', 1),
+            targets: [T(1030, GROUND_Y), T(1030, gateTop(GROUND_Y, 1))]
+        },
+        {
+            name: 'Bounce Over',
+            tip: 'Bounce first, then you can clear the wall behind.',
+            ammo: ['rock', 'rock', 'rock'],
+            terrain: [PAD(640, 618, 170, 44), WALL(830, 500, 40, 280)],
+            blocks: gate(1080, GROUND_Y, 'wood', 1),
+            targets: [T(1080, GROUND_Y)]
+        },
+        {
+            name: 'See-Saw',
+            tip: 'The see-saw turns on its middle pin. Hit one end, the other flies up.',
+            ammo: ['rock', 'rock', 'rock'],
+            pivots: [PIVOT(980, 500, 320, 22, 'wood')],
+            blocks: [B(1120, 466, 46, 46, 'stone')],
+            targets: [T(840, 489), T(980, GROUND_Y)]
+        },
+        {
+            name: 'Spinning Gate',
+            tip: 'The gate spins - slip past while it lies flat.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            pivots: [PIVOT(820, 470, 26, 300, 'wood')],
+            blocks: gate(1080, GROUND_Y, 'wood', 1),
+            targets: [T(1080, GROUND_Y)]
+        },
+        {
+            name: 'Double Bounce',
+            tip: 'Two pads in a row send the ball a long way.',
+            ammo: ['rock', 'rock', 'rock'],
+            terrain: [PAD(620, 618, 150, 44), PAD(830, 618, 150, 44)],
+            blocks: gate(1120, GROUND_Y, 'wood', 2),
+            targets: [T(1120, GROUND_Y), T(1120, gateTop(GROUND_Y, 2))]
+        },
+        {
+            name: 'The Catapult',
+            tip: 'Smash this end and the stone on the far end flies up.',
+            ammo: ['rock', 'rock', 'rock'],
+            pivots: [PIVOT(900, 520, 300, 22, 'wood')],
+            blocks: [B(1030, 494, 52, 30, 'stone')],
+            terrain: [WALL(1170, 560, 40, 160)],
+            targets: [T(1170, 480), T(760, GROUND_Y)]
+        },
+        {
+            name: 'Bounce And Bomb',
+            tip: 'Bounce up first, then tap to set the bomb off up close.',
+            ammo: ['bomb', 'rock', 'rock'],
+            terrain: [PAD(680, 618, 160, 44), WALL(880, 470, 40, 340)],
+            blocks: gate(1090, GROUND_Y, 'stone', 1),
+            targets: [T(1090, GROUND_Y), T(1090, gateTop(GROUND_Y, 1))]
+        },
+        {
+            name: 'Swing Bridge',
+            tip: 'The swinging bridge tips - lean it and everything slides off.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            pivots: [PIVOT(980, 470, 360, 22, 'wood')],
+            blocks: [B(880, 444, 40, 30, 'wood'), B(1080, 444, 40, 30, 'wood')],
+            targets: [T(980, 459), T(980, GROUND_Y)]
+        },
+        {
+            name: 'Trampoline Park',
+            tip: 'Three pads - see how many bounces you can get.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            terrain: [PAD(600, 618, 130, 44), PAD(780, 618, 130, 44), PAD(960, 618, 130, 44)],
+            blocks: gate(1160, GROUND_Y, 'ice', 2),
+            targets: [T(1160, GROUND_Y), T(1160, gateTop(GROUND_Y, 2))]
+        },
+        {
+            name: 'Windmill',
+            tip: 'Two blades spinning apart - find the gap.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            pivots: [PIVOT(760, 450, 24, 240, 'wood'), PIVOT(1000, 450, 24, 240, 'wood')],
+            blocks: gate(1180, GROUND_Y, 'wood', 1),
+            targets: [T(1180, GROUND_Y)]
+        },
+        {
+            name: 'Spring Tower',
+            tip: 'Bounce high, then dive straight onto the roof.',
+            ammo: ['thunder', 'rock', 'rock'],
+            terrain: [PAD(660, 618, 170, 44)],
+            blocks: gate(1050, GROUND_Y, 'wood', 3),
+            targets: [T(1050, gateTop(GROUND_Y, 3)), T(1050, GROUND_Y)]
+        },
+        {
+            name: 'Playground Boss',
+            tip: 'Pads and a see-saw together - last one of the world!',
+            ammo: ['bomb', 'rock', 'rock', 'rock'],
+            terrain: [PAD(640, 618, 150, 44), WALL(1210, 540, 40, 200)],
+            pivots: [PIVOT(900, 480, 280, 22, 'wood')],
+            blocks: gate(1090, GROUND_Y, 'stone', 1),
+            targets: [T(900, 469), T(1090, GROUND_Y), T(1090, gateTop(GROUND_Y, 1))]
+        }
+    ];
+
+    /* ================================================================== *
+     * 2d. CHƯƠNG 4 — TRÊN MÂY
+     * ------------------------------------------------------------------
+     * Cái mới: bóng bay. Cả ngôi nhà treo lơ lửng nhờ bóng; bắn nổ bóng thì
+     * nhà rơi. Bắn thẳng vào nhà cũng được, nhưng nổ bóng thì đẹp hơn nhiều.
+     * ================================================================== */
+    var CH4 = [
+        {
+            name: 'First Balloon',
+            tip: 'Pop the balloon and the hut falls to the ground.',
+            ammo: ['rock', 'rock', 'rock'],
+            blocks: [B(1000, 430, 240, 24, 'wood')],
+            balloons: [BALLOON(1000, 320, 0)],
+            targets: [T(1000, 418)]
+        },
+        {
+            name: 'Two Balloons',
+            tip: 'Two balloons, two decks - one ball each if you aim well.',
+            ammo: ['rock', 'rock', 'rock'],
+            blocks: [B(880, 420, 170, 24, 'wood'), B(1120, 420, 170, 24, 'wood')],
+            balloons: [BALLOON(880, 310, 0), BALLOON(1120, 310, 1)],
+            targets: [T(880, 408), T(1120, 408)]
+        },
+        {
+            name: 'Sky And Ground',
+            tip: 'One Grumpy in the sky, one on the ground.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            blocks: [B(1020, 400, 240, 24, 'wood')]
+                .concat(gate(880, GROUND_Y, 'wood', 1)),
+            balloons: [BALLOON(1020, 292, 0)],
+            targets: [T(1020, 388), T(880, GROUND_Y)]
+        },
+        {
+            name: 'Behind The Cloud',
+            tip: 'A rock wall in front, the balloon hides behind it.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            terrain: [WALL(700, 470, 40, 340)],
+            blocks: [B(1030, 400, 250, 24, 'wood')],
+            balloons: [BALLOON(1030, 292, 0)],
+            targets: [T(1030, 388)]
+        },
+        {
+            name: 'Balloon Tower',
+            tip: 'The sky hut has two floors.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            blocks: [B(1010, 420, 260, 24, 'wood')]
+                .concat(gate(1010, 408, 'wood', 1)),
+            balloons: [BALLOON(1010, 312, 0)],
+            targets: [T(1010, 408), T(1010, gateTop(408, 1))]
+        },
+        {
+            name: 'Bomb In The Sky',
+            tip: 'One bomb in mid-air takes down every balloon.',
+            ammo: ['bomb', 'rock', 'rock'],
+            blocks: [B(880, 400, 190, 24, 'wood'), B(1140, 400, 190, 24, 'wood')],
+            balloons: [BALLOON(880, 300, 0), BALLOON(1140, 300, 1)],
+            targets: [T(880, 388), T(1140, 388)]
+        },
+        {
+            name: 'Bounce To The Sky',
+            tip: 'Bounce off the pad all the way up to the balloon.',
+            ammo: ['rock', 'rock', 'rock'],
+            terrain: [PAD(700, 618, 170, 44)],
+            blocks: [B(1050, 360, 240, 24, 'wood')],
+            balloons: [BALLOON(1050, 252, 0)],
+            targets: [T(1050, 348)]
+        },
+        {
+            name: 'Three In A Row',
+            tip: 'Three balloons, three huts, only four balls.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            blocks: [B(820, 420, 150, 24, 'wood'), B(1010, 380, 150, 24, 'wood'),
+                     B(1200, 440, 150, 24, 'wood')],
+            balloons: [BALLOON(820, 320, 0), BALLOON(1010, 280, 1), BALLOON(1200, 340, 2)],
+            targets: [T(820, 408), T(1010, 368), T(1200, 428)]
+        },
+        {
+            name: 'Split In The Air',
+            tip: 'Tap in the air to split into three and sweep the whole row.',
+            ammo: ['split', 'rock', 'rock'],
+            blocks: [B(880, 390, 150, 24, 'wood'), B(1040, 390, 150, 24, 'wood'),
+                     B(1200, 390, 150, 24, 'wood')],
+            balloons: [BALLOON(880, 290, 0), BALLOON(1040, 290, 1), BALLOON(1200, 290, 2)],
+            targets: [T(880, 378), T(1040, 378), T(1200, 378)]
+        },
+        {
+            name: 'Sky Fortress',
+            tip: 'A flying stone fort - popping the balloons is the easy way.',
+            ammo: ['rock', 'rock', 'rock', 'rock'],
+            blocks: [B(1020, 400, 300, 26, 'stone')]
+                .concat(gate(1020, 387, 'wood', 1)),
+            balloons: [BALLOON(1020, 292, 0)],
+            targets: [T(1020, 387), T(1020, gateTop(387, 1))]
+        },
+        {
+            name: 'Storm Cloud',
+            tip: 'The thunder ball diving from above suits this one.',
+            ammo: ['thunder', 'rock', 'rock'],
+            terrain: [WALL(760, 460, 40, 360)],
+            blocks: [B(1060, 380, 260, 24, 'wood')],
+            balloons: [BALLOON(1060, 272, 0)],
+            targets: [T(1000, 368), T(1120, 368)]
+        },
+        {
+            name: 'Cloud Kingdom',
+            tip: 'The very last level. Good luck!',
+            ammo: ['bomb', 'split', 'thunder', 'rock', 'rock'],
+            terrain: [WALL(700, 500, 40, 280), PAD(880, 618, 150, 44)],
+            blocks: [B(1050, 380, 280, 26, 'stone')]
+                .concat(gate(1050, 367, 'wood', 1))
+                .concat(gate(1160, GROUND_Y, 'wood', 1)),
+            balloons: [BALLOON(1050, 272, 0)],
+            targets: [T(1050, 367), T(1050, gateTop(367, 1)),
+                      T(1160, GROUND_Y), T(1160, gateTop(GROUND_Y, 1))]
+        }
+    ];
+
+    /* Bốn chương nối lại thành một danh sách phẳng: mã màn vẫn là số chạy từ
+       0, nên tiến trình đã lưu của bé chơi bản 12 màn cũ vẫn dùng được. */
+    var CHAPTERS = [
+        { name: 'Basics', from: 0 },
+        { name: 'Rocky Ridge', from: 12 },
+        { name: 'Playground', from: 24 },
+        { name: 'Sky High', from: 36 }
+    ];
+    LEVELS = LEVELS.concat(CH2, CH3, CH4);
+
+    function chapterOf(i) { return Math.min(CHAPTERS.length - 1, Math.floor(i / 12)); }
 
     /* ================================================================== *
      * 3. ÂM THANH — tổng hợp tại chỗ, không tải file
@@ -360,6 +730,9 @@
             this.blocks = [];
             this.targets = [];
             this.balls = [];
+            this.terrain = [];
+            this.balloons = [];
+            this.pins = [];
             this.removeQueue = [];
             this.blastQueue = [];
             this.state = 'idle';
@@ -459,15 +832,52 @@
             this.shotAt = 0;
             this.matter.world.engine.timing.timeScale = 1;
 
-            for (i = 0; i < L.blocks.length; i++) {
-                b = L.blocks[i];
+            /* Có màn chỉ toàn địa hình đá, không có khối nào phá được */
+            var BL = L.blocks || [], held = {};
+            (L.balloons || []).forEach(function (o) { held[o.block] = (held[o.block] || 0) + 1; });
+
+            for (i = 0; i < BL.length; i++) {
+                b = BL[i];
                 mat = MAT[b.m];
                 body = this.matter.add.rectangle(b.x, b.y, b.w, b.h, {
                     angle: b.a, density: mat.density, friction: 0.62,
-                    frictionStatic: 0.9, restitution: 0.06, label: 'block'
+                    frictionStatic: 0.9, restitution: 0.06, label: 'block',
+                    /* Sàn đang được bóng giữ thì để tĩnh: treo một vật nặng bằng
+                       dây nối của Matter luôn rung và có lúc văng thẳng khỏi
+                       màn, trong khi cái bé cần chỉ là "đang treo" rồi "rơi". */
+                    isStatic: !!held[i]
                 });
-                body.kibu = { kind: 'block', m: b.m, w: b.w, h: b.h, hp: mat.hp, maxHp: mat.hp, body: body, dead: false };
+                body.kibu = { kind: 'block', m: b.m, w: b.w, h: b.h, hp: mat.hp,
+                              maxHp: mat.hp, body: body, dead: false, holders: held[i] || 0 };
                 this.blocks.push(body.kibu);
+            }
+
+            /* địa hình cố định */
+            for (i = 0; i < (L.terrain || []).length; i++) {
+                b = L.terrain[i];
+                body = this.matter.add.rectangle(b.x, b.y, b.w, b.h, {
+                    isStatic: true, friction: b.kind === 'pad' ? 0.2 : 0.85,
+                    restitution: b.kind === 'pad' ? 0.95 : 0.05, label: 'terrain'
+                });
+                body.kibu = { kind: 'terrain', pad: b.kind === 'pad', w: b.w, h: b.h, body: body, dead: false };
+                this.terrain.push(body.kibu);
+            }
+
+            /* bập bênh: ván ghim tâm, quay tự do quanh điểm ghim */
+            for (i = 0; i < (L.pivots || []).length; i++) {
+                b = L.pivots[i];
+                mat = MAT[b.m];
+                body = this.matter.add.rectangle(b.x, b.y, b.w, b.h, {
+                    density: mat.density * 0.6, friction: 0.6, restitution: 0.1, label: 'pivot'
+                });
+                body.kibu = { kind: 'block', m: b.m, w: b.w, h: b.h, hp: mat.hp * 3,
+                              maxHp: mat.hp * 3, body: body, dead: false, pinned: true };
+                this.blocks.push(body.kibu);
+                this.pins.push({ x: b.x, y: b.y, body: body });
+                this.matter.world.add(M.Constraint.create({
+                    pointA: { x: b.x, y: b.y }, bodyB: body, pointB: { x: 0, y: 0 },
+                    stiffness: 1, length: 0
+                }));
             }
 
             for (i = 0; i < L.targets.length; i++) {
@@ -479,17 +889,41 @@
                 this.targets.push(body.kibu);
             }
 
+            /* bóng bay: buộc vào khối đã dựng ở trên, và mỗi khung hình được
+               nâng lên đúng bằng trọng lượng của cả cụm nên nó lơ lửng tại chỗ */
+            for (i = 0; i < (L.balloons || []).length; i++) {
+                b = L.balloons[i];
+                var host = this.blocks[b.block];
+                if (!host) continue;
+                body = this.matter.add.circle(b.x, b.y, 26, { isStatic: true, label: 'balloon' });
+                body.kibu = { kind: 'balloon', r: 26, hp: 12, maxHp: 12, body: body,
+                              host: host, dead: false, hue: i % 4 };
+                this.balloons.push(body.kibu);
+            }
+
             this.arm();
             UI.levelStarted(idx, L);
             this.matter.world.resume();
         }
 
         clearWorld() {
-            var i;
-            for (i = 0; i < this.blocks.length; i++) this.matter.world.remove(this.blocks[i].body);
-            for (i = 0; i < this.targets.length; i++) this.matter.world.remove(this.targets[i].body);
-            for (i = 0; i < this.balls.length; i++) this.matter.world.remove(this.balls[i].body);
+            var i, w = this.matter.world;
+            for (i = 0; i < this.blocks.length; i++) w.remove(this.blocks[i].body);
+            for (i = 0; i < this.targets.length; i++) w.remove(this.targets[i].body);
+            for (i = 0; i < this.balls.length; i++) w.remove(this.balls[i].body);
+            for (i = 0; i < this.terrain.length; i++) w.remove(this.terrain[i].body);
+            for (i = 0; i < this.balloons.length; i++) w.remove(this.balloons[i].body);
+            /* Dây ghim của bập bênh phải gỡ theo, không thì màn sau vẫn còn một
+               điểm ghim vô hình kéo giữa không trung. */
+            M.Composite.allConstraints(w.localWorld).forEach(function (c) {
+                if (!c.bodyA || c.bodyA.label === 'ground') return;
+                if (c.bodyB && c.bodyB.kibu && c.bodyB.kibu.pinned) w.removeConstraint(c);
+            });
+            M.Composite.allConstraints(w.localWorld).forEach(function (c) {
+                if (!c.bodyA && c.bodyB) w.removeConstraint(c);
+            });
             this.blocks = []; this.targets = []; this.balls = [];
+            this.terrain = []; this.balloons = []; this.pins = [];
             this.removeQueue = []; this.blastQueue = [];
         }
 
@@ -616,6 +1050,9 @@
 
             e.hp -= dmg;
 
+            if (e.kind === 'terrain') return;           /* đá và đệm không phá được */
+            if (e.kind === 'balloon') { this.popBalloon(e); return; }
+
             if (e.kind === 'target') {
                 e.hurt = 1;
                 if (e.hp <= 0) { this.popTarget(e, cx, cy); }
@@ -637,6 +1074,22 @@
             this.burst(x, y, MAT[e.m].fill, e.m === 'ice' ? 20 : 13, e.m === 'ice' ? 260 : 180);
             if (e.m === 'tnt') {
                 this.blastQueue.push({ x: e.body.position.x, y: e.body.position.y, r: 200, power: 16, dmg: 170 });
+            }
+        }
+
+        /* Nổ bóng bay: cắt dây, ngôi nhà đang treo rơi tự do */
+        popBalloon(e, silent) {
+            if (e.dead) return;
+            e.dead = true;
+            this.removeQueue.push(e);
+            if (e.host && !e.host.dead) {
+                e.host.holders--;
+                if (e.host.holders <= 0) M.Body.setStatic(e.host.body, false);
+            }
+            if (!silent) {
+                Sfx.crack('ice');
+                this.burst(e.body.position.x, e.body.position.y, BALLOON_COLORS[e.hue], 18, 240);
+                this.score += 60;
             }
         }
 
@@ -673,7 +1126,8 @@
                     y: b.velocity.y + (dy / d) * power * f - power * 0.25 * f
                 });
                 e = b.kibu;
-                if (e && !e.dead && e.kind !== 'ball') {
+                if (e && !e.dead && e.kind === 'balloon') { this.blastQueue.push(null); this.popBalloon(e); continue; }
+                if (e && !e.dead && e.kind !== 'ball' && e.kind !== 'terrain') {
                     e.hp -= dmg * f;
                     if (e.hp <= 0) {
                         if (e.kind === 'target') this.popTarget(e, b.position.x, b.position.y);
@@ -725,7 +1179,7 @@
             /* nổ đã xếp hàng từ khung trước */
             while (this.blastQueue.length) {
                 blast = this.blastQueue.shift();
-                this.blast(blast.x, blast.y, blast.r, blast.power, blast.dmg);
+                if (blast) this.blast(blast.x, blast.y, blast.r, blast.power, blast.dmg);
             }
 
             /* dọn vật thể đã chết */
@@ -734,6 +1188,7 @@
                 this.matter.world.remove(e.body);
                 if (e.kind === 'block') this.blocks.splice(this.blocks.indexOf(e), 1);
                 else if (e.kind === 'target') this.targets.splice(this.targets.indexOf(e), 1);
+                else if (e.kind === 'balloon') this.balloons.splice(this.balloons.indexOf(e), 1);
                 else this.balls.splice(this.balls.indexOf(e), 1);
             }
 
@@ -757,6 +1212,7 @@
                     this.killBall(this.balls[i]);
                 }
             }
+
 
             /* vệt đuôi bi */
             for (i = 0; i < this.balls.length; i++) {
@@ -847,6 +1303,45 @@
             /* --- ná --- */
             this.drawSling(g);
 
+            /* --- địa hình cố định: tường đá và đệm nhún --- */
+            for (i = 0; i < this.terrain.length; i++) {
+                e = this.terrain[i]; b = e.body;
+                g.save();
+                g.translateCanvas(b.position.x, b.position.y);
+                if (e.pad) {
+                    g.fillStyle(0x2f8f4a, 1);
+                    g.fillRoundedRect(-e.w / 2, -e.h / 2, e.w, e.h, 8);
+                    g.fillStyle(0x7ee081, 1);
+                    g.fillRoundedRect(-e.w / 2, -e.h / 2, e.w, e.h * 0.55, 8);
+                    /* mấy nếp lò xo cho bé nhìn là biết chỗ này nảy */
+                    g.lineStyle(3, 0x1c5c2e, 1);
+                    for (t = 0; t < 4; t++) {
+                        g.beginPath();
+                        g.moveTo(-e.w / 2 + 6 + t * (e.w - 12) / 3.4, e.h / 2 - 3);
+                        g.lineTo(-e.w / 2 + 14 + t * (e.w - 12) / 3.4, -e.h / 2 + 6);
+                        g.strokePath();
+                    }
+                } else {
+                    g.fillStyle(0x6b7480, 1);
+                    g.fillRoundedRect(-e.w / 2, -e.h / 2, e.w, e.h, 7);
+                    g.fillStyle(0x8a94a1, 1);
+                    g.fillRoundedRect(-e.w / 2, -e.h / 2, e.w, Math.min(12, e.h * 0.35), 7);
+                    g.lineStyle(3, 0x49525c, 1);
+                    g.strokeRoundedRect(-e.w / 2, -e.h / 2, e.w, e.h, 7);
+                }
+                g.restore();
+            }
+
+            /* --- chân ghim của bập bênh --- */
+            for (i = 0; i < this.pins.length; i++) {
+                g.fillStyle(0x5c6b78, 1);
+                g.fillTriangle(this.pins[i].x - 24, this.pins[i].y + 42,
+                               this.pins[i].x + 24, this.pins[i].y + 42,
+                               this.pins[i].x, this.pins[i].y - 2);
+                g.fillStyle(0x39424b, 1);
+                g.fillCircle(this.pins[i].x, this.pins[i].y, 7);
+            }
+
             /* --- khối --- */
             for (i = 0; i < this.blocks.length; i++) {
                 e = this.blocks[i]; b = e.body;
@@ -905,6 +1400,26 @@
                 g.lineStyle(3, 0x14251a, 1);
                 g.beginPath(); g.moveTo(-7, 11); g.lineTo(7, 11); g.strokePath();
                 g.restore();
+            }
+
+            /* --- bóng bay và sợi dây --- */
+            for (i = 0; i < this.balloons.length; i++) {
+                e = this.balloons[i]; b = e.body;
+                if (e.host && !e.host.dead) {
+                    g.lineStyle(2, 0xffffff, 0.8);
+                    g.beginPath();
+                    g.moveTo(b.position.x, b.position.y + e.r);
+                    g.lineTo(e.host.body.position.x, e.host.body.position.y);
+                    g.strokePath();
+                }
+                g.fillStyle(BALLOON_COLORS[e.hue], 1);
+                g.fillEllipse(b.position.x, b.position.y, e.r * 2, e.r * 2.25);
+                g.fillStyle(0xffffff, 0.45);
+                g.fillEllipse(b.position.x - e.r * 0.3, b.position.y - e.r * 0.45, e.r * 0.5, e.r * 0.62);
+                g.fillStyle(BALLOON_COLORS[e.hue], 1);
+                g.fillTriangle(b.position.x - 5, b.position.y + e.r * 1.06,
+                               b.position.x + 5, b.position.y + e.r * 1.06,
+                               b.position.x, b.position.y + e.r * 1.35);
             }
 
             /* --- bi đang bay + vệt đuôi --- */
@@ -1056,7 +1571,8 @@
     var UI = {
         game: null,
         scene: null,
-        pending: null,       /* màn cần mở ngay khi scene sẵn sàng */
+        pending: null,
+        chapter: 0,       /* chương đang mở trong bảng chọn màn */       /* màn cần mở ngay khi scene sẵn sàng */
 
         init: function () {
             var self = this;
@@ -1111,6 +1627,7 @@
         },
 
         showLevels: function () {
+            if (this.currentLevel != null) this.chapter = chapterOf(this.currentLevel);
             this.hideOverlays();
             this.buildLevelGrid();
             $('levels-overlay').classList.remove('hidden');
@@ -1122,6 +1639,7 @@
         showAllDone: function () {
             this.hideOverlays();
             $('all-stars').textContent = '★ ' + Save.totalStars() + ' / ' + (LEVELS.length * 3);
+            this.chapter = 0;
             $('all-overlay').classList.remove('hidden');
             UI.syncHint();
             $('hud').classList.add('hidden');
@@ -1129,15 +1647,40 @@
 
         buildLevelGrid: function () {
             var grid = $('level-grid'), self = this, i, btn, stars, locked, s;
+
+            /* thanh chương: mở khoá theo màn đầu của chương đó */
+            var tabs = $('chapter-tabs'), c, tab, need, got, k;
+            tabs.innerHTML = '';
+            for (c = 0; c < CHAPTERS.length; c++) {
+                need = CHAPTERS[c].from + 1;
+                locked = need > Save.data.unlocked;
+                got = 0;
+                for (k = CHAPTERS[c].from; k < CHAPTERS[c].from + 12; k++) got += Save.data.stars[String(k)] || 0;
+                tab = document.createElement('button');
+                tab.className = 'ch-tab' + (c === this.chapter ? ' is-on' : '') + (locked ? ' locked' : '');
+                tab.appendChild(document.createTextNode(locked ? '🔒 ' + CHAPTERS[c].name : CHAPTERS[c].name));
+                s = document.createElement('span');
+                s.className = 'ch-stars';
+                s.textContent = locked ? '' : '★' + got + '/36';
+                tab.appendChild(s);
+                if (!locked) {
+                    tab.addEventListener('click', (function (idx) {
+                        return function () { self.chapter = idx; self.buildLevelGrid(); };
+                    }(c)));
+                }
+                tabs.appendChild(tab);
+            }
+
+            var from = CHAPTERS[this.chapter].from;
             grid.innerHTML = '';
-            for (i = 0; i < LEVELS.length; i++) {
+            for (i = from; i < from + 12 && i < LEVELS.length; i++) {
                 stars = Save.data.stars[String(i)] || 0;
                 locked = (i + 1) > Save.data.unlocked;
                 btn = document.createElement('button');
                 btn.className = 'lv' + (locked ? ' locked' : '') + (stars ? ' done' : '');
                 s = document.createElement('span');
                 s.className = 'lv-num';
-                s.textContent = locked ? '🔒' : String(i + 1);
+                s.textContent = locked ? '🔒' : String(i - from + 1);
                 btn.appendChild(s);
                 s = document.createElement('span');
                 s.className = 'lv-stars';
@@ -1190,7 +1733,8 @@
         },
 
         levelStarted: function (idx, L) {
-            $('hud-level').textContent = 'Level ' + (idx + 1);
+            $('hud-level').textContent = 'Level ' + (idx % 12 + 1);
+            $('hud-chapter').textContent = CHAPTERS[chapterOf(idx)].name;
             $('hud-name').textContent = L.name;
             this.updateHud(this.scene);
             var tip = $('tip');
@@ -1263,7 +1807,12 @@
             /* Toạ độ khai báo của màn, chưa qua engine. Đo sau khi Matter đã
                chạy vài khung thì mọi chỗ tiếp xúc đều lún 1-2 px, không phân
                biệt được lỗi dựng màn với lún bình thường. */
-            declared: function (i) { return { blocks: LEVELS[i].blocks, targets: LEVELS[i].targets }; },
+            declared: function (i) {
+                return { blocks: LEVELS[i].blocks || [], targets: LEVELS[i].targets,
+                         terrain: LEVELS[i].terrain || [], pivots: LEVELS[i].pivots || [],
+                         balloons: LEVELS[i].balloons || [] };
+            },
+            chapters: CHAPTERS.map(function (c) { return c.name; }),
             /* kiểm tra không có khối nào chồng lên khối nào lúc mới dựng màn */
             overlaps: function () {
                 var bs = UI.scene.blocks, out = [], i, j, a, b;

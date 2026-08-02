@@ -154,6 +154,15 @@ body.chrome-fit > .site-footer {
     white-space: nowrap;
 }
 
+.hud-chapter {
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #9dc0dc;
+    white-space: nowrap;
+}
+
 .hud-name {
     font-size: 0.92rem;
     font-weight: 600;
@@ -428,6 +437,40 @@ body.chrome-fit > .site-footer {
     margin-top: 14px;
 }
 
+/* ---------- Chọn chương ---------- */
+.chapter-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.ch-tab {
+    font-family: var(--font-fat);
+    font-size: 0.86rem;
+    font-weight: 700;
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+    color: #cfe0ee;
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.ch-tab:hover:not(.locked) { transform: translateY(-2px); }
+
+.ch-tab.is-on {
+    background: linear-gradient(135deg, #ffb020, #ff7a18);
+    border-color: #fff;
+    color: #3a2000;
+}
+
+.ch-tab.locked { opacity: 0.45; cursor: not-allowed; }
+
+.ch-tab .ch-stars { font-size: 0.72rem; opacity: 0.9; margin-left: 5px; }
+
 /* ---------- Chọn màn ---------- */
 .level-grid {
     display: grid;
@@ -528,6 +571,8 @@ body.chrome-fit > .site-footer {
 /* ---------- Màn hẹp ---------- */
 @media (max-width: 640px) {
     .card { padding: 14px 12px; }
+    .chapter-tabs { gap: 4px; margin-bottom: 9px; }
+    .ch-tab { font-size: 0.74rem; padding: 5px 10px; }
 
     /* Ba thẻ HUD cạnh nhau rộng khoảng 418 px, tràn khỏi màn 390 px và thẻ
        bi bị cắt cụt bên phải. Thu chữ và lề cho vừa. */
@@ -568,7 +613,7 @@ body.chrome-fit > .site-footer {
 
     .title { margin-bottom: 2px; }
     .subtitle { margin-bottom: 10px; font-size: 0.88rem; }
-    .hud-name { display: none; }
+    .hud-name, .hud-chapter { display: none; }
     .how-item span:last-child { font-size: 0.78rem; }
     .btn-big { font-size: 1.05rem; padding: 12px 30px; }
     .star { font-size: 2rem; }
@@ -596,6 +641,8 @@ body.chrome-fit > .site-footer {
     .btn-big { font-size: 1rem; padding: 9px 26px; }
     .row-buttons { margin-top: 9px; }
     .level-grid { grid-template-columns: repeat(6, 1fr); gap: 7px; }
+    .ch-tab { font-size: 0.74rem; padding: 5px 10px; }
+    .chapter-tabs { margin-bottom: 7px; }
     .lv .lv-num { font-size: 1.1rem; }
     .stars { margin: 4px 0 8px; }
     .star { font-size: 1.7rem; }
