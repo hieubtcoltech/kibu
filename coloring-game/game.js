@@ -310,8 +310,13 @@
 
     function updateProgress() {
         var total = DRAWINGS[curIdx].regions.length;
-        $('artProgress').textContent = filledCount() + '/' + total;
+        var n = filledCount();
+        $('artProgress').textContent = n + '/' + total;
         $('btnUndo').disabled = undoStack.length === 0;
+        /* Cờ ăn mừng đặt lại ở đây chứ không ở checkWin, vì hoàn tác và xoá
+           trắng không đi qua checkWin — để ở đó thì bé hoàn tác một nước rồi tô
+           lại sẽ không được xem pháo giấy nữa. Hàm này chạy sau mọi thay đổi. */
+        if (n < total) celebrated = false;
     }
 
     /* ------------------------------------------------------------------ *
@@ -527,7 +532,7 @@
        chúc mừng lại nhảy ra, đóng xong chạm tiếp lại nhảy ra nữa. */
     function checkWin() {
         var d = DRAWINGS[curIdx];
-        if (filledCount() < d.regions.length) { celebrated = false; return; }
+        if (filledCount() < d.regions.length) return;
         if (celebrated) return;
         celebrated = true;
         if (!store._done) store._done = [];
