@@ -771,7 +771,7 @@
             const l = this.lanes[this.turn];
             if (turnEl && l) {
                 const f = this.mode.frames ? ((this.frame + 1) + '/' + this.mode.frames) : '∞';
-                turnEl.innerHTML = l.cfg.emoji + ' <b data-i18n-skip>' + l.cfg.name + '</b> · ' + f;
+                turnEl.innerHTML = l.cfg.emoji + ' <b>' + l.cfg.name + '</b> · ' + f;
                 turnEl.style.color = l.cfg.color;
             }
             if (boxEl && l) {
@@ -1084,7 +1084,7 @@
             const set = KEYSETS[this.players] || [];
             list.innerHTML = set.map((code, i) =>
                 '<div class="key-row"><span class="key-emoji">' + PLAYERS[i].emoji + '</span>'
-                + '<b data-i18n-skip>' + PLAYERS[i].name + '</b>'
+                + '<b>' + PLAYERS[i].name + '</b>'
                 + '<kbd>' + (KEYLABEL[code] || code) + '</kbd></div>').join('');
         },
 
@@ -1111,7 +1111,7 @@
             grid.innerHTML = rows.map((r, i) =>
                 '<div class="final-card' + (i === 0 ? ' win' : '') + '" style="--pc:' + r.cfg.color + '">'
                 + '<div class="fc-medal">' + (i === 0 ? '🏆' : (i === 1 ? '🥈' : (i === 2 ? '🥉' : '🎳'))) + '</div>'
-                + '<div class="fc-name">' + r.cfg.emoji + ' <b data-i18n-skip>' + r.cfg.name + '</b></div>'
+                + '<div class="fc-name">' + r.cfg.emoji + ' <b>' + r.cfg.name + '</b></div>'
                 + '<div class="fc-score">' + r.score + '</div></div>').join('');
             const top = rows[0];
             document.getElementById('over-title').innerHTML = rows.length > 1

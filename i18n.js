@@ -160,6 +160,7 @@
         ['cần gạt', 'joystick'],
 
         /* ---------- Strike Party (bowling-game) ---------- */
+        ['🔥 SIÊU KHÓ', '🔥 INSANE'],
         ['STRIKE PARTY', 'STRIKE PARTY'],
         ['Ném Bóng Bowling', 'Strike Party'],
         ['ĐANG NÉM', 'NOW BOWLING'],
