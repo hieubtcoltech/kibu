@@ -159,6 +159,33 @@
         ['3 đường: khó thì nhiều kho báu', '3 routes: riskier means richer'],
         ['cần gạt', 'joystick'],
 
+        /* ---------- Strike Party (bowling-game) ---------- */
+        ['STRIKE PARTY', 'STRIKE PARTY'],
+        ['Ném Bóng Bowling', 'Strike Party'],
+        ['ĐANG NÉM', 'NOW BOWLING'],
+        ['Giữ phím của bé lúc quả bóng trượt ngang, thả ra là bóng lăn', 'Hold your key while the ball slides across, let go to bowl'],
+        ['VÁN ĐẦY ĐỦ', 'FULL GAME'],
+        ['Mỗi bé 10 hiệp — đúng như thật', '10 frames each - the real thing'],
+        ['VÁN NHANH', 'QUICK MATCH'],
+        ['5 hiệp — đua nhanh phân thắng bại', '5 frames - a short race for the win'],
+        ['Không có hồi kết — ném bao lâu tuỳ thích', 'No end - bowl as long as you like'],
+        ['Mũi ngắm chậm, có thanh chắn rãnh, bóng gần như không cong', 'Slow aim, bumpers on, ball barely curves'],
+        ['Có rãnh thật, bóng cong nhẹ', 'Real gutters, ball hooks a little'],
+        ['Mũi ngắm nhanh, bóng cong mạnh, không có vạch ngắm', 'Fast aim, strong hook, no aiming line'],
+        ['Lớp dầu trên đường cứ trôi đi dưới quả bóng!', 'The oil keeps shifting under the ball!'],
+        ['BẮT ĐẦU NÉM', 'START BOWLING'],
+        ['❌ STRIKE - đổ cả 10 ki ngay bóng đầu, được 10 điểm cộng thêm hai bóng sau',
+            '❌ STRIKE - all 10 on the first ball, 10 points plus your next two balls'],
+        ['➗ SPARE - đổ hết 10 ki bằng hai bóng, được 10 điểm cộng thêm một bóng sau',
+            '➗ SPARE - all 10 across two balls, 10 points plus your next ball'],
+        ['🕳️ GUTTER - bóng rơi xuống rãnh, lần này không đổ ki nào',
+            '🕳️ GUTTER - the ball fell in the channel, no pins this time'],
+        ['Bowling, cho 1-4 bé', 'Bowling, 1-4 kids'],
+        ['Làn rộng nhất, dễ ngắm nhất', 'Widest lanes, easiest to aim'],
+        ['Ba làn cạnh nhau', 'Three lanes side by side'],
+        ['Bốn làn, phải ngắm chuẩn hơn', 'Four lanes, aim has to be sharper'],
+        ['Ném một mình và phá kỷ lục của chính mình', 'Bowl alone and chase your best score'],
+
         /* ---------- Magic Coloring (coloring-game) ----------
          * Tên tranh nằm trong art.js và được game tự đặt theo đúng ngôn ngữ, nên
          * ở đây chỉ có phần vỏ trang. */

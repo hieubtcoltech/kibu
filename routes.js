@@ -35,7 +35,8 @@
         { dir: 'aqua-dash', slug: 'aqua-dash' },
         { dir: 'xiangqi', slug: 'co-tuong' },
         { dir: 'tictactoe-game', slug: 'tic-tac-toe' },
-        { dir: 'coloring-game', slug: 'magic-coloring' }
+        { dir: 'coloring-game', slug: 'magic-coloring' },
+        { dir: 'bowling-game', slug: 'strike-party' }
     ];
 
     var bySlug = {}, byDir = {};

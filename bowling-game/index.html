@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Strike Party - Free Online Bowling Game for Kids | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Strike Party free on KIBU Games! Real bowling physics with proper 10-pin scoring - 1 to 4 kids on one screen, chasing strikes and spares.">
+    <meta name="keywords" content="Strike Party, bowling game, 10 pin bowling online, tro choi bowling, bowling cho be, 2 player bowling, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/bowling-game/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/bowling-game/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/bowling-game/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/bowling-game/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/bowling-game/">
+    <meta property="og:title" content="Strike Party - Free Online Bowling Game | KIBU Games">
+    <meta property="og:description" content="Real bowling physics, real 10-pin scoring, 1 to 4 kids on one screen. Who can get the most strikes?">
+    <meta property="og:image" content="https://kibugames.com/bowling-game/og-image.jpg">
+    <!-- Kích thước khai sẵn để Facebook dựng thẻ xem trước ngay lần đầu, khỏi
+         phải đợi nó quay lại đọc ảnh -->
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/bowling-game/">
+    <meta name="twitter:title" content="Strike Party - Free Online Bowling Game">
+    <meta name="twitter:description" content="Real bowling physics and real scoring, for 1 to 4 kids on one screen.">
+    <meta name="twitter:image" content="https://kibugames.com/bowling-game/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Strike Party",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/bowling-game/",
+      "genre": "Sports",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/bowling-game/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body>
+    <div class="bg-alley-glow"></div>
+
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
+                    <img src="/logo.svg" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <img src="/bowling-game/icon.jpg" alt="" class="brand-img"
+                        onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><span class="brand-icon">🎳</span>
+                    <h1 class="brand-title">STRIKE PARTY</h1>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+                </button>
+                <button id="btn-menu" class="btn">
+                    <i class="fa-solid fa-list"></i> <span>Change Mode</span>
+                </button>
+                <button id="btn-restart" class="btn">
+                    <i class="fa-solid fa-rotate-right"></i> <span>Restart</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="game-viewport">
+            <canvas id="game-canvas"></canvas>
+
+            <div class="hud-overlay">
+                <div class="hud-top">
+                    <div id="score-rows" class="score-rows"></div>
+                    <div class="turn-box">
+                        <div class="turn-cap">NOW BOWLING</div>
+                        <div id="turn-label" class="turn-name"></div>
+                        <div id="turn-frames" class="fboxes"></div>
+                    </div>
+                </div>
+                <div class="hud-bottom">
+                    <div id="control-hint" class="control-hint">Hold your key while the ball slides across, let go to bowl</div>
+                </div>
+            </div>
+
+            <!-- Màn hình bắt đầu -->
+            <div id="screen-menu" class="screen">
+                <div class="panel">
+                    <div class="panel-emoji">🎳💥</div>
+                    <h2 class="panel-title">STRIKE PARTY</h2>
+                    <p class="panel-desc">
+                        <b>1 to 4 kids</b> bowl on one screen, each on their own lane. The ball, the pins and the
+                        lane all use <b>real bowling numbers</b> - a 7,26 kg ball against 1,53 kg pins - so a good
+                        hit into the pocket topples the whole rack the way it does at a real alley. Scoring is the
+                        <b>real 10-pin scoring</b>, strikes and spares included.
+                    </p>
+
+                    <div class="setup-block">
+                        <div class="setup-label"><i class="fa-solid fa-users"></i> NUMBER OF PLAYERS</div>
+                        <div class="opt-row">
+                            <button class="opt" data-players="1">
+                                <span class="opt-icon">🐯</span>
+                                <span class="opt-name">1 KID</span>
+                                <span class="opt-desc">Bowl alone and chase your best score</span>
+                            </button>
+                            <button class="opt sel" data-players="2">
+                                <span class="opt-icon">🐯🐼</span>
+                                <span class="opt-name">2 KIDS</span>
+                                <span class="opt-desc">Widest lanes, easiest to aim</span>
+                            </button>
+                            <button class="opt" data-players="3">
+                                <span class="opt-icon">🐯🐼🐸</span>
+                                <span class="opt-name">3 KIDS</span>
+                                <span class="opt-desc">Three lanes side by side</span>
+                            </button>
+                            <button class="opt" data-players="4">
+                                <span class="opt-icon">🐯🐼🐸🦊</span>
+                                <span class="opt-name">4 KIDS</span>
+                                <span class="opt-desc">Four lanes, aim has to be sharper</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setup-block">
+                        <div class="setup-label"><i class="fa-solid fa-gamepad"></i> CHOOSE A GAME MODE</div>
+                        <div class="opt-row">
+                            <button class="opt sel" data-mode="versus">
+                                <span class="opt-icon">⚔️</span>
+                                <span class="opt-name">FULL GAME</span>
+                                <span class="opt-desc">10 frames each - the real thing</span>
+                            </button>
+                            <button class="opt" data-mode="quick">
+                                <span class="opt-icon">⚡</span>
+                                <span class="opt-name">QUICK MATCH</span>
+                                <span class="opt-desc">5 frames - a short race for the win</span>
+                            </button>
+                            <button class="opt" data-mode="practice">
+                                <span class="opt-icon">🧘</span>
+                                <span class="opt-name">PRACTICE</span>
+                                <span class="opt-desc">No end - bowl as long as you like</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="setup-block">
+                        <div class="setup-label"><i class="fa-solid fa-signal"></i> DIFFICULTY</div>
+                        <div class="opt-row small">
+                            <button class="opt" data-diff="easy">
+                                <span class="opt-name">EASY</span>
+                                <span class="opt-desc">Slow aim, bumpers on, ball barely curves</span>
+                            </button>
+                            <button class="opt sel" data-diff="normal">
+                                <span class="opt-name">MEDIUM</span>
+                                <span class="opt-desc">Real gutters, ball hooks a little</span>
+                            </button>
+                            <button class="opt" data-diff="hard">
+                                <span class="opt-name">HARD</span>
+                                <span class="opt-desc">Fast aim, strong hook, no aiming line</span>
+                            </button>
+                            <button class="opt opt-insane" data-diff="insane">
+                                <span class="opt-name">🔥 INSANE</span>
+                                <span class="opt-desc">The oil keeps shifting under the ball!</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="keys-note">
+                        <div class="keys-head"><i class="fa-solid fa-keyboard"></i> KEYS FOR EACH KID</div>
+                        <div class="keys-list" id="keys-list"></div>
+                        <p class="keys-touch"><i class="fa-solid fa-hand-pointer"></i> On a touch screen each kid taps <b>their own lane</b>.</p>
+                    </div>
+
+                    <div class="point-legend">
+                        <span class="pt pt-x">❌ STRIKE - all 10 on the first ball, 10 points plus your next two balls</span>
+                        <span class="pt pt-s">➗ SPARE - all 10 across two balls, 10 points plus your next ball</span>
+                        <span class="pt pt-g">🕳️ GUTTER - the ball fell in the channel, no pins this time</span>
+                    </div>
+
+                    <button id="btn-start" class="big-btn">
+                        <i class="fa-solid fa-play"></i> START BOWLING
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tạm dừng -->
+            <div id="screen-pause" class="screen hidden">
+                <div class="panel panel-small">
+                    <div class="panel-emoji">⏸️</div>
+                    <h2 class="panel-title">PAUSED</h2>
+                    <p class="panel-desc">Take a short break, then jump back in!</p>
+                    <div class="over-actions">
+                        <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> RESUME</button>
+                        <button id="btn-back-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> CHANGE MODE</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kết thúc -->
+            <div id="screen-over" class="screen hidden">
+                <div class="panel">
+                    <div id="over-emoji" class="panel-emoji">🏆</div>
+                    <h2 id="over-title" class="panel-title">KID 1 WINS!</h2>
+                    <div id="final-grid" class="final-grid"></div>
+                    <div class="over-actions">
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> PLAY AGAIN</button>
+                        <a href="/" class="big-btn btn-ghost"><i class="fa-solid fa-house"></i> HOME</a>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/bowling-game/game.js"></script>
+</body>
+</html>
