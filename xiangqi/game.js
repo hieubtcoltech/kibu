@@ -484,7 +484,7 @@
         if (S.sel >= 0 && S.legal.indexOf(i) >= 0) { tryMove(S.sel, i); return; }
 
         const p = S.board[i];
-        if (p !== '.' && X.sideOf(p) === S.mySide) {
+        if (p !== '.' && X.sideOf(p) === activeSide()) {
             selectAt(i);
             S.drag = { from: i, x: pos.x, y: pos.y, moved: false };
         } else if (S.sel >= 0) {
