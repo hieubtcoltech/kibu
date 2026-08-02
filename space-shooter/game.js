@@ -1033,6 +1033,12 @@ function loop() {
             if (isBossWave && !isBossSpawned) {
                 enemies.push(new Enemy(canvas.width / 2, -50, 3));
                 isBossSpawned = true;
+                /* Trùm là con địch DUY NHẤT của wave này, nên sinh nó ra là bộ
+                   đếm phải về 0. Thiếu dòng này thì enemiesLeftInWave đứng mãi
+                   ở 1, điều kiện qua wave không bao giờ đúng, và giết trùm
+                   xong là game treo vĩnh viễn — không còn địch nào sinh ra,
+                   cũng không sang wave mới. Đây chính là chỗ chết ở wave 5. */
+                enemiesLeftInWave = 0;
             } else if (!isBossWave && enemiesLeftInWave > 0 && now - lastSpawn > spawnRate) {
                 const spawnX = 25 + Math.random() * (canvas.width - 50);
                 // Enemy type distribution based on current wave level
@@ -1045,6 +1051,16 @@ function loop() {
                 enemiesLeftInWave--;
                 lastSpawn = now;
             }
+        }
+
+        /* Kiểm tra hết wave mỗi khung hình, KHÔNG nhét trong nhánh bắn chết.
+           Địch bị xoá khỏi mảng ở hai chỗ: bị bắn chết, và bay lọt qua đáy màn
+           hình. Đặt phép kiểm tra trong nhánh bắn chết thì con cuối cùng mà bay
+           lọt là game đứng im luôn, vì không còn địch nào chết để chạy lại phép
+           kiểm tra ấy. Kiểm mỗi khung hình thì mọi đường xoá địch đều được phủ,
+           kể cả những đường thêm về sau. */
+        if (enemiesLeftInWave === 0 && enemies.length === 0) {
+            startNextWave();
         }
 
         // 6. Update bullets
@@ -1120,10 +1136,6 @@ function loop() {
                             powerups.push(new Powerup(e.x, e.y, pType));
                         }
 
-                        // Check wave clear
-                        if (enemiesLeftInWave === 0 && enemies.length === 0) {
-                            startNextWave();
-                        }
                     }
                     break; // break out of inner loop since bullet is gone
                 }
