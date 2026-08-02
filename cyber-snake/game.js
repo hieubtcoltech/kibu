@@ -421,7 +421,10 @@
             /* Viền mờ và đứt nét khi mép thông — dấu hiệu nhìn là biết màn này
                đi xuyên mép được. */
             gg.lineStyle(3, st.tint, st.wrap ? 0.2 : 0.62);
-            gg.strokeRect(1.5, 1.5, BOARD - 3, BOARD - 3);
+            /* Bo góc ngay trong canvas thay vì bo góc thẻ canvas bằng CSS:
+               bo bằng CSS thì bốn góc của khung vuông vẽ bên trong bị xén cụt.
+               Lùi vào 3px để nét vẽ nằm trọn trong canvas, không bị mép cắt. */
+            gg.strokeRoundedRect(3, 3, BOARD - 6, BOARD - 6, 12);
 
             // lõi
             const f = this.gFood;
@@ -576,7 +579,11 @@
                 parent: 'game-canvas',
                 width: BOARD, height: BOARD,
                 backgroundColor: '#05070f',
-                scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+                /* KHÔNG dùng autoCenter của Phaser: nó tự đặt lề cho canvas theo
+                   kích thước khung mà nó đo được, trong khi .board-host đã là
+                   flex căn giữa rồi — hai cơ chế cùng căn thì lệch nhau. Để
+                   một mình CSS lo việc căn. */
+                scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.NO_CENTER },
                 scene: [GameScene],
                 banner: false
             });
