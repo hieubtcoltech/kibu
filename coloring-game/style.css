@@ -604,6 +604,18 @@ body {
     margin: 0 0 16px;
 }
 
+/* Phải nằm trong cây hiển thị thì getBBox mới trả về số thật, nên không dùng
+   display:none — đẩy ra ngoài màn hình và cho trong suốt. */
+#measure {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
 /* ---------- Toast ---------- */
 .toast {
     position: fixed;

@@ -192,6 +192,68 @@
         return out + '</pattern></defs>';
     }
 
+    /* ------------------------------------------------------------------ *
+     * Canh tranh vào giữa khung
+     * --------------------------------------------------------------------
+     * Toạ độ trong art.js là do người vẽ đặt tay, nên bức thì lệch xuống dưới,
+     * bức thì nhỏ hơn bức khác, thậm chí có bức thò ra ngoài khung 400x400 và
+     * bị cắt mất chân. Thay vì đi sửa 16 bộ toạ độ — và lại lệch tiếp mỗi lần
+     * thêm tranh mới — ở đây đo kích thước thật của từng bức rồi dịch vào giữa
+     * và phóng cho vừa khung.
+     *
+     * Hình dán KHÔNG nằm trong phép biến đổi này: chúng vẫn ở hệ toạ độ gốc
+     * 0..400, nên vị trí hình dán bé đã lưu từ trước vẫn đúng nguyên.
+     * ------------------------------------------------------------------ */
+    var FILL = 0.94;             // phần khung mà bức tranh chiếm
+    var fitCache = {};
+
+    function fitOf(i) {
+        var d = DRAWINGS[i];
+        if (fitCache[d.id]) return fitCache[d.id];
+
+        var m = $('measure');
+        m.innerHTML = '<g id="mR">' + d.regions.map(function (r) {
+            return '<path d="' + r.d + '"/>';
+        }).join('') + '</g><g id="mD">' + (d.deco || []).map(function (o) {
+            return '<path d="' + o.d + '"/>';
+        }).join('') + '</g>';
+
+        var boxes = [];
+        ['mR', 'mD'].forEach(function (id) {
+            var g = m.querySelector('#' + id);
+            if (!g || !g.childNodes.length) return;
+            try {
+                var b = g.getBBox();
+                if (b.width > 0 && b.height > 0) boxes.push(b);
+            } catch (e) { /* not rendered */ }
+        });
+        m.innerHTML = '';
+
+        var fit = { t: '', k: 1, tx: 0, ty: 0 };
+        if (boxes.length) {
+            var x0 = Math.min.apply(null, boxes.map(function (b) { return b.x; }));
+            var y0 = Math.min.apply(null, boxes.map(function (b) { return b.y; }));
+            var x1 = Math.max.apply(null, boxes.map(function (b) { return b.x + b.width; }));
+            var y1 = Math.max.apply(null, boxes.map(function (b) { return b.y + b.height; }));
+            /* getBBox không tính nét viền, mà nét viền vẽ lệch ra ngoài đường
+               path đúng một nửa bề dày. */
+            var pad = STROKE / 2 + 1;
+            x0 -= pad; y0 -= pad; x1 += pad; y1 += pad;
+
+            var side = Math.max(x1 - x0, y1 - y0);
+            var k = side > 0 ? (VIEW * FILL) / side : 1;
+            var cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+            fit.k = k;
+            fit.tx = VIEW / 2 - cx * k;
+            fit.ty = VIEW / 2 - cy * k;
+            fit.t = 'translate(' + r2(fit.tx) + ',' + r2(fit.ty) + ') scale(' + r2(k) + ')';
+        }
+        fitCache[d.id] = fit;
+        return fit;
+    }
+
+    function r2(v) { return Math.round(v * 1000) / 1000; }
+
     function decoMarkup(d) {
         return (d.deco || []).map(function (o) {
             return o.fill
@@ -225,9 +287,10 @@
                  + '" stroke-width="' + STROKE + '" stroke-linejoin="round" stroke-linecap="round"/>';
         }).join('');
 
+        var t = fitOf(curIdx).t;
         svg.innerHTML = defsMarkup()
-            + '<g class="regions">' + regions + '</g>'
-            + '<g class="deco" style="pointer-events:none">' + decoMarkup(d) + '</g>'
+            + '<g class="regions" transform="' + t + '">' + regions + '</g>'
+            + '<g class="deco" transform="' + t + '" style="pointer-events:none">' + decoMarkup(d) + '</g>'
             + '<g class="stickers">' + stickerMarkup(slot.s, selSticker) + '</g>';
 
         $('artName').textContent = nameOf(d);
@@ -492,9 +555,11 @@
             return '<path d="' + r.d + '" fill="' + ((slot.f && slot.f[k]) || '#ffffff') + '" stroke="' + INK
                  + '" stroke-width="' + STROKE + '" stroke-linejoin="round"/>';
         }).join('');
+        var t = fitOf(i).t;
         return '<svg viewBox="0 0 400 400" width="' + size + '" height="' + size + '" xmlns="http://www.w3.org/2000/svg">'
-             + defsMarkup() + '<rect width="400" height="400" fill="#fff"/>' + regions
-             + decoMarkup(d) + stickerMarkup((slot.s) || []) + '</svg>';
+             + defsMarkup() + '<rect width="400" height="400" fill="#fff"/>'
+             + '<g transform="' + t + '">' + regions + decoMarkup(d) + '</g>'
+             + stickerMarkup((slot.s) || []) + '</svg>';
     }
 
     function buildGallery() {
@@ -779,6 +844,13 @@
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
 
+        /* Cùng phép canh giữa với trên màn hình, để file lưu ra giống hệt bức
+           bé nhìn thấy. Hình dán vẽ sau khi restore vì chúng ở hệ toạ độ gốc. */
+        var fit = fitOf(curIdx);
+        ctx.save();
+        ctx.translate(fit.tx, fit.ty);
+        ctx.scale(fit.k, fit.k);
+
         d.regions.forEach(function (r, i) {
             var p = new Path2D(r.d);
             var node = svg.querySelector('.region[data-i="' + i + '"]');
@@ -794,6 +866,8 @@
             if (o.fill) { ctx.fillStyle = o.fill; ctx.fill(p); }
             else { ctx.strokeStyle = o.stroke; ctx.lineWidth = o.w; ctx.stroke(p); }
         });
+
+        ctx.restore();
 
         slot.s.forEach(function (s) {
             ctx.font = s.r + 'px "Apple Color Emoji","Noto Color Emoji","Segoe UI Emoji",sans-serif';
