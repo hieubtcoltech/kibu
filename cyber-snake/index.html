@@ -93,7 +93,8 @@
 </header>
     <div class="game-wrapper">
         <!-- Canvas where snake is drawn -->
-        <canvas id="game-canvas"></canvas>
+        <!-- Phaser tự chèn thẻ canvas của nó vào đây -->
+        <div id="game-canvas" class="board-host"></div>
 
         <!-- HUD panel overlay -->
         <div id="hud" class="hud-container hidden">
@@ -107,8 +108,12 @@
                     <span id="high-score-val" class="hud-value text-purple">0</span>
                 </div>
                 <div class="hud-item">
-                    <span class="hud-label"><i class="fa-solid fa-layer-group text-green"></i> LEVEL</span>
+                    <span class="hud-label"><i class="fa-solid fa-layer-group text-green"></i> STAGE</span>
                     <span id="level-val" class="hud-value text-green">1</span>
+                </div>
+                <div class="hud-item hud-stage">
+                    <span id="stage-name" class="hud-stage-name">BOOT UP</span>
+                    <span id="stage-progress" class="hud-stage-prog">0/5</span>
                 </div>
                 <div class="hud-item">
                     <span class="hud-label"><i class="fa-solid fa-arrows-up-to-line text-blue"></i> SIZE</span>
@@ -128,11 +133,20 @@
             </div>
         </div>
 
+        <!-- Bảng báo màn mới, hiện 1,7 giây rồi tự tắt -->
+        <div id="stage-banner" class="stage-banner hidden">
+            <span class="sb-num">STAGE 1</span>
+            <span class="sb-name">BOOT UP</span>
+        </div>
+
+        <!-- Huy hiệu chuỗi ăn nhanh -->
+        <div id="combo-badge" class="combo-badge hidden">COMBO x2</div>
+
         <!-- Start Game Screen Overlay -->
         <div id="menu-overlay" class="overlay">
             <div class="menu-content glass-card pop-in">
                 <h1 class="logo-title">CYBER SNAKE</h1>
-                <p class="logo-subtitle">Neon Grid Grid Cybernetic Hack</p>
+                <p class="logo-subtitle">8 neon stages, smooth gliding, one glowing snake</p>
 
                 <div class="legend-box">
                     <h3>POWER-UP CORE SYSTEM</h3>
@@ -143,6 +157,18 @@
                         <div class="legend-item"><span class="core-dot bg-red"></span> <span><b>EMP</b>: Destroys the tail (-2 body segments)</span></div>
                         <div class="legend-item"><span class="core-dot bg-rainbow"></span> <span><b>Glitch</b>: Huge score bonus (+500 pts)</span></div>
                     </div>
+                </div>
+
+                <div class="legend-box">
+                    <h3>8 STAGES TO CLEAR</h3>
+                    <div class="stage-list">
+                        <span>1 · BOOT UP</span><span>2 · FOUR PILLARS</span><span>3 · THE CROSS</span>
+                        <span>4 · PORTAL GRID</span><span>5 · CORRIDORS</span><span>6 · THE MAZE</span>
+                        <span>7 · THE ARENA</span><span>8 · DANGER CORE</span>
+                    </div>
+                    <p class="legend-note">Eat enough cores to clear a stage. On PORTAL GRID and THE ARENA the
+                        edges wrap around - slide off one side and you come back on the other. Clear all eight
+                        and they start again, faster.</p>
                 </div>
 
                 <div class="controls-guide">
@@ -191,6 +217,10 @@
         </div>
     </footer>
 
+    <!-- Phaser 3 lấy từ CDN: máy chủ chưa bật gzip cho .js nên tự host sẽ
+         bắt bé tải 1,2 MB thô, còn CDN trả về 253 KB đã nén brotli. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"
+            integrity="sha512-/tJYyDCrI7hnHWp45P189aOwPa6lTREosRhlxEIqx8skB4A3a3rD3iz4o335SJd4sORqjVHw5y1S2hq4hciwLw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="/cyber-snake/game.js"></script>
 
     

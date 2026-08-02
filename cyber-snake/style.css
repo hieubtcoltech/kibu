@@ -502,3 +502,148 @@ kbd {
 
 @media (max-height: 560px) { .app-wrapper .brand-img { height: 26px; } }
 @media (max-width: 560px) { .brand-img { height: 30px; } }
+
+/* ============================================================================
+ * Phần thêm cho bản Phaser 3
+ * ==========================================================================*/
+
+/* Phaser tự chèn canvas của nó vào khung này. Canvas được đặt chế độ FIT nên
+   nó tự co giãn giữ đúng tỉ lệ vuông — khung chỉ cần căn giữa nó. */
+/* Chừa chỗ cho thanh HUD ở trên: để inset:0 thì bàn cờ nằm ngay dưới HUD và
+   hai hàng ô đầu bị che, con rắn bò lên đó là mất tăm. */
+.board-host {
+    position: absolute;
+    top: 78px;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-host canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 14px;
+    touch-action: none;
+}
+
+/* ---------- Tên màn trong HUD ---------- */
+.hud-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+}
+
+.hud-stage-name {
+    font-family: 'Orbitron', 'Baloo 2', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: var(--neon-blue, #00e5ff);
+    white-space: nowrap;
+}
+
+.hud-stage-prog {
+    font-size: 0.7rem;
+    opacity: 0.7;
+}
+
+/* ---------- Bảng báo màn mới ---------- */
+.stage-banner {
+    position: absolute;
+    top: 42%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 16px 34px;
+    border-radius: 16px;
+    background: rgba(5, 7, 15, 0.82);
+    border: 2px solid rgba(0, 229, 255, 0.55);
+    box-shadow: 0 0 34px rgba(0, 229, 255, 0.35);
+    pointer-events: none;
+    animation: sbIn 0.35s ease-out;
+}
+
+.stage-banner.hidden { display: none; }
+
+.sb-num {
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    opacity: 0.75;
+}
+
+.sb-name {
+    font-family: 'Orbitron', 'Baloo 2', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 0 16px rgba(0, 229, 255, 0.9);
+    white-space: nowrap;
+}
+
+@keyframes sbIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.82); }
+    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ---------- Huy hiệu chuỗi ăn nhanh ---------- */
+.combo-badge {
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 15;
+    padding: 7px 18px;
+    border-radius: 999px;
+    background: rgba(255, 215, 0, 0.16);
+    border: 2px solid #ffd700;
+    color: #ffd700;
+    font-family: 'Orbitron', 'Baloo 2', sans-serif;
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+    pointer-events: none;
+}
+
+.combo-badge.hidden { display: none; }
+.combo-badge.pop { animation: comboPop 0.45s ease-out; }
+
+@keyframes comboPop {
+    0%   { transform: translateX(-50%) scale(0.5); opacity: 0; }
+    45%  { transform: translateX(-50%) scale(1.22); opacity: 1; }
+    100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* ---------- Danh sách màn ở menu ---------- */
+.stage-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+    gap: 5px 10px;
+    margin-bottom: 8px;
+    font-size: 0.76rem;
+    opacity: 0.9;
+}
+
+.legend-note {
+    font-size: 0.74rem;
+    opacity: 0.62;
+    line-height: 1.5;
+    margin: 0;
+}
+
+@media (max-width: 620px) {
+    .board-host { top: 68px; }
+    .hud-stage { display: none; }
+    .sb-name { font-size: 1.15rem; }
+    .stage-banner { padding: 12px 22px; }
+}
