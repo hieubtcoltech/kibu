@@ -615,7 +615,7 @@
         ['Bóng Nhỏ', 'Small Balloon'],
         ['Bóng Vàng', 'Golden Balloon'],
         ['Bóng Bom', 'Bomb Balloon'],
-        ['Trượt', 'Miss'],
+        ['Trượt', 'Missed'],
         ['bụp', 'pop'],
         ['Gió', 'Wind'],
         ['🔥 BỐC LỬA!', '🔥 ON FIRE!'],
