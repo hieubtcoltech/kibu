@@ -112,11 +112,19 @@
     }
 
     // State Variables
-    let isXTurn = true;
-    let gameActive = true;
+    let currentPlayer = 'X';
+    let gameActive = true;      // ván còn đang chơi
+    let boardLocked = false;    // máy đang suy nghĩ, chặn tay bé
+    let aiTimer = null;
     let gameMode = 'pvp'; // 'pvp' or 'pve'
     let difficulty = 'medium'; // 'easy', 'medium', 'hard'
     let boardState = Array(9).fill(null);
+
+    // i18n.js phơi ra { lang, t, refresh }, không có getLang()
+    function currentLang() {
+        if (window.KibuI18n && window.KibuI18n.lang) return window.KibuI18n.lang;
+        return document.documentElement.lang === 'vi' ? 'vi' : 'en';
+    }
 
     const WINNING_COMBINATIONS = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
@@ -126,14 +134,21 @@
 
     // Initialize/Reset Board
     function startGame() {
-        isXTurn = true;
+        // Nước đi của máy đang hẹn giờ phải huỷ, không thì nó rơi vào ván mới
+        if (aiTimer !== null) {
+            clearTimeout(aiTimer);
+            aiTimer = null;
+        }
+        currentPlayer = 'X';
         gameActive = true;
+        boardLocked = false;
         boardState.fill(null);
         overlay.classList.remove('visible');
         boardElement.classList.remove('shake');
-        
+        clearWinningLine();
+
         cells.forEach(cell => {
-            cell.classList.remove('taken', 'x-cell', 'o-cell');
+            cell.classList.remove('taken', 'x-cell', 'o-cell', 'win');
             cell.innerHTML = '';
         });
 
@@ -142,31 +157,47 @@
     }
 
     function updateTurnIndicator() {
-        if (!gameActive) return;
-        const currentLang = window.KibuI18n ? window.KibuI18n.getLang() : 'en';
-        if (isXTurn) {
-            turnText.innerHTML = currentLang === 'vi' ? 
-                '<span class="x-turn">Bé X</span> Lượt Đi' : 
+        const lang = currentLang();
+        if (currentPlayer === 'X') {
+            turnText.innerHTML = lang === 'vi' ?
+                '<span class="x-turn">Bé X</span> Lượt Đi' :
                 '<span class="x-turn">Kid X\'s</span> Turn';
         } else {
-            turnText.innerHTML = currentLang === 'vi' ? 
-                '<span class="o-turn">Bé O</span> Lượt Đi' : 
-                '<span class="o-turn">Kid O\'s</span> Turn';
+            const vsAi = gameMode === 'pve';
+            turnText.innerHTML = lang === 'vi' ?
+                `<span class="o-turn">${vsAi ? 'Máy' : 'Bé O'}</span> Lượt Đi` :
+                `<span class="o-turn">${vsAi ? 'AI\'s' : 'Kid O\'s'}</span> Turn`;
         }
     }
 
     // Click handler for cells
     function handleCellClick(e) {
-        const cell = e.target.closest('[data-cell]');
-        const cellIndex = parseInt(cell.getAttribute('data-cell'));
+        if (!gameActive || boardLocked) return;
 
-        if (boardState[cellIndex] !== null || !gameActive) return;
+        const cell = e.currentTarget;
+        const cellIndex = parseInt(cell.getAttribute('data-cell'), 10);
+        if (boardState[cellIndex] !== null) return;
 
-        // X's turn
-        makeMove(cellIndex, 'X');
+        playTurn(cellIndex, currentPlayer);
 
-        if (checkWin('X')) {
-            endGame(false, 'X');
+        // Đến lượt máy: khoá bàn cờ rồi để máy đi sau một nhịp
+        if (gameActive && gameMode === 'pve' && currentPlayer === 'O') {
+            boardLocked = true;
+            aiTimer = setTimeout(() => {
+                aiTimer = null;
+                boardLocked = false;
+                aiMove();
+            }, 550);
+        }
+    }
+
+    // Một nước đi trọn vẹn: đặt quân, xét thắng/hoà, rồi đổi lượt
+    function playTurn(index, player) {
+        makeMove(index, player);
+
+        const combo = getWinningCombo(player);
+        if (combo) {
+            endGame(false, player, combo);
             return;
         }
 
@@ -175,18 +206,8 @@
             return;
         }
 
-        // Check if PvE mode
-        if (gameMode === 'pve') {
-            gameActive = false; // Temporarily block player clicks during AI turn
-            isXTurn = false;
-            updateTurnIndicator();
-            setTimeout(() => {
-                aiMove();
-            }, 550);
-        } else {
-            isXTurn = !isXTurn;
-            updateTurnIndicator();
-        }
+        currentPlayer = player === 'X' ? 'O' : 'X';
+        updateTurnIndicator();
     }
 
     function makeMove(index, player) {
@@ -215,7 +236,7 @@
 
     // AI Logic
     function aiMove() {
-        if (!gameActive && boardState.includes(null) === false) return;
+        if (!gameActive) return;
 
         let bestIndex;
         if (difficulty === 'easy') {
@@ -226,23 +247,9 @@
             bestIndex = getBestMoveMinimax();
         }
 
-        if (bestIndex !== undefined && bestIndex !== null) {
-            makeMove(bestIndex, 'O');
+        if (bestIndex === undefined || bestIndex === null) return;
 
-            if (checkWin('O')) {
-                endGame(false, 'O');
-                return;
-            }
-
-            if (checkDraw()) {
-                endGame(true);
-                return;
-            }
-        }
-
-        gameActive = true;
-        isXTurn = true;
-        updateTurnIndicator();
+        playTurn(bestIndex, 'O');
     }
 
     function getRandomMove() {
@@ -325,11 +332,11 @@
         }
     }
 
-    // Helper check states
-    function checkWin(player) {
-        return WINNING_COMBINATIONS.some(combination => {
+    // Helper check states — trả về bộ ba thắng để còn vẽ vạch nối
+    function getWinningCombo(player) {
+        return WINNING_COMBINATIONS.find(combination => {
             return combination.every(index => boardState[index] === player);
-        });
+        }) || null;
     }
 
     function checkWinState(state, player) {
@@ -343,20 +350,23 @@
     }
 
     // End Game Handler
-    function endGame(draw, winner = '') {
+    function endGame(draw, winner = '', combo = null) {
         gameActive = false;
-        const currentLang = window.KibuI18n ? window.KibuI18n.getLang() : 'en';
+        boardLocked = false;
+        const lang = currentLang();
 
         if (draw) {
             winnerText.className = 'winner-text draw';
-            winnerText.textContent = currentLang === 'vi' ? 'HOÀ RỒI!' : "IT'S A DRAW!";
+            winnerText.textContent = lang === 'vi' ? 'HOÀ RỒI!' : "IT'S A DRAW!";
             playSound('draw');
             boardElement.classList.add('shake');
         } else {
             winnerText.className = `winner-text ${winner === 'X' ? 'x-win' : 'o-win'}`;
-            winnerText.textContent = currentLang === 'vi' ? 
-                `Bé ${winner} Thắng!` : 
-                `KID ${winner} WINS!`;
+            const aiWon = gameMode === 'pve' && winner === 'O';
+            winnerText.textContent = lang === 'vi' ?
+                (aiWon ? 'MÁY THẮNG!' : `BÉ ${winner} THẮNG!`) :
+                (aiWon ? 'AI WINS!' : `KID ${winner} WINS!`);
+            highlightWin(combo);
             playSound('win');
             startConfetti();
         }
@@ -364,6 +374,47 @@
         setTimeout(() => {
             overlay.classList.add('visible');
         }, 600);
+    }
+
+    // Vạch nối ba quân thắng
+    let winningLineEl = null;
+
+    function clearWinningLine() {
+        if (winningLineEl && winningLineEl.parentNode) {
+            winningLineEl.parentNode.removeChild(winningLineEl);
+        }
+        winningLineEl = null;
+    }
+
+    function highlightWin(combo) {
+        if (!combo) return;
+        combo.forEach(i => cells[i].classList.add('win'));
+
+        clearWinningLine();
+        const boardRect = boardElement.getBoundingClientRect();
+        const first = cells[combo[0]].getBoundingClientRect();
+        const last = cells[combo[2]].getBoundingClientRect();
+        const x1 = first.left + first.width / 2 - boardRect.left;
+        const y1 = first.top + first.height / 2 - boardRect.top;
+        const x2 = last.left + last.width / 2 - boardRect.left;
+        const y2 = last.top + last.height / 2 - boardRect.top;
+        const length = Math.hypot(x2 - x1, y2 - y1);
+        const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+
+        const line = document.createElement('div');
+        line.className = 'winning-line';
+        line.style.height = '10px';
+        line.style.left = x1 + 'px';
+        line.style.top = (y1 - 5) + 'px';
+        line.style.width = '0px';
+        line.style.transform = `rotate(${angle}deg)`;
+        boardElement.appendChild(line);
+        winningLineEl = line;
+
+        // để trình duyệt kịp ghi nhận width 0 rồi mới cho chạy transition
+        requestAnimationFrame(() => {
+            if (winningLineEl === line) line.style.width = length + 'px';
+        });
     }
 
     // Interactive Confetti System

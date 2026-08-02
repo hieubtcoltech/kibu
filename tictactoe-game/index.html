@@ -91,18 +91,18 @@
             <!-- Game Setup (Mode & Difficulty) -->
             <div class="setup-section">
                 <div class="selector-group">
-                    <button id="modePvp" class="selector-btn active" data-i18n="2 BÉ">2 BÉ</button>
-                    <button id="modePve" class="selector-btn" data-i18n="ĐÁNH VỚI MÁY">ĐÁNH VỚI MÁY</button>
+                    <button id="modePvp" class="selector-btn active">2 BÉ</button>
+                    <button id="modePve" class="selector-btn">ĐÁNH VỚI MÁY</button>
                 </div>
                 <div id="difficultyContainer" class="difficulty-group" style="display: none;">
-                    <button id="diffEasy" class="difficulty-btn" data-i18n="Dễ">Dễ</button>
-                    <button id="diffMedium" class="difficulty-btn active" data-i18n="Vừa">Vừa</button>
-                    <button id="diffHard" class="difficulty-btn" data-i18n="Khó">Khó</button>
+                    <button id="diffEasy" class="difficulty-btn">Dễ</button>
+                    <button id="diffMedium" class="difficulty-btn active">Vừa</button>
+                    <button id="diffHard" class="difficulty-btn">Khó</button>
                 </div>
             </div>
 
-            <!-- Turn text indicator -->
-            <div id="turnText" class="turn-indicator"></div>
+            <!-- Turn text indicator — game.js đã tự chọn ngôn ngữ, engine khỏi dịch lại -->
+            <div id="turnText" class="turn-indicator" data-i18n-skip></div>
 
             <!-- Game board -->
             <div id="board" class="tictactoe-board">
@@ -120,15 +120,15 @@
             <!-- Restart button -->
             <div class="controls-bottom">
                 <button id="btnRestart" class="btn-game btn-restart">
-                    <i class="fa-solid fa-rotate-right"></i> <span data-i18n="Chơi Lại">Chơi Lại</span>
+                    <i class="fa-solid fa-rotate-right"></i> <span>Chơi Lại</span>
                 </button>
             </div>
 
             <!-- Game Over Overlay -->
             <div id="gameOverOverlay" class="game-over-overlay">
-                <div id="winnerText" class="winner-text"></div>
+                <div id="winnerText" class="winner-text" data-i18n-skip></div>
                 <button id="btnRematch" class="btn-game btn-rematch">
-                    <i class="fa-solid fa-play"></i> <span data-i18n="Đấu Lại">Đấu Lại</span>
+                    <i class="fa-solid fa-play"></i> <span>Đấu Lại</span>
                 </button>
                 <canvas id="confetti-canvas"></canvas>
             </div>

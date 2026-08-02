@@ -42,6 +42,8 @@ body {
 
 /* Glass Card Container */
 .tictactoe-container {
+    /* mốc định vị cho lớp phủ kết thúc ván và pháo giấy */
+    position: relative;
     background: var(--card-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
@@ -143,6 +145,7 @@ body {
 
 /* Tic Tac Toe Grid Board */
 .tictactoe-board {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
@@ -215,7 +218,19 @@ body {
     z-index: 10;
     pointer-events: none;
     transform-origin: left center;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Ba ô thắng sáng lên */
+.cell.win {
+    border-color: var(--neon-green);
+    background: rgba(57, 255, 20, 0.08);
+    animation: winPulse 1s ease-in-out infinite;
+}
+
+@keyframes winPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(57, 255, 20, 0.25); }
+    50% { box-shadow: 0 0 22px rgba(57, 255, 20, 0.6); }
 }
 
 /* Reset / Rematch Buttons */
