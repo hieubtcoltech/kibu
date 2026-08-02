@@ -284,8 +284,8 @@ body.chrome-fit > .game-wrapper {
  * its own breakpoint (600px, 780px, 900px, 980px) and two had none at all, so
  * the same window width gave a different header on each game. */
 @media (max-width: 980px) {
-    .unified-nav .btn span { display: none; }
-    .unified-nav .btn { padding: 8px 12px; }
+    .unified-nav .btn span { display: none !important; }
+    .unified-nav .btn { padding: 8px 12px !important; }
     .unified-nav .brand-title { font-size: 1.1rem; }
     .unified-nav .brand-icon { font-size: 1.5rem; }
 
@@ -313,8 +313,8 @@ body.chrome-fit > .game-wrapper {
     .unified-nav .brand-title,
     .unified-nav .brand-sub { display: none; }
     .unified-nav .brand-icon { font-size: 1.35rem; }
-    .unified-nav .btn { padding: 7px 9px; font-size: 0.9rem; }
-    .unified-nav .nav-actions { gap: 6px; }
+    .unified-nav .btn { padding: 7px 9px !important; font-size: 0.9rem !important; }
+    .unified-nav .nav-actions { gap: 6px !important; }
     .site-footer { padding: 8px 12px; font-size: 0.78rem; }
 
     /* Không đủ bề ngang cho cả câu giới thiệu lẫn hai nút: câu chữ xuống dòng
@@ -322,6 +322,14 @@ body.chrome-fit > .game-wrapper {
     .site-footer { flex-wrap: wrap; justify-content: center; text-align: center; }
     .footer-credit { flex-basis: 100%; }
     .online-badge { font-size: 0.74rem; padding: 3px 10px; }
+}
+
+@media (max-width: 400px) {
+    .unified-nav .nav-home img { height: 36px !important; }
+    .nav-left { gap: 6px; }
+    .unified-nav { padding: 6px 10px; gap: 6px; }
+    .unified-nav .btn { padding: 6px 8px !important; font-size: 0.85rem !important; }
+    .unified-nav .nav-actions { gap: 4px !important; }
 }
 
 /* Icon game trên thanh điều hướng: emoji chỉ là phương án dự phòng.
