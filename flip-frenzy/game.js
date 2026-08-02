@@ -341,8 +341,10 @@
         }
 
         tap(card) {
-            if (this.busy || card.up || card.done) return;
-            if (UI.current().isAI) return;             /* lượt của máy, bé đừng chen */
+            var why = this.busy ? 'đang bận' : (card.up ? 'lá đã ngửa'
+                : (card.done ? 'lá đã ăn' : (UI.current().isAI ? 'lượt của máy' : null)));
+            if (window.FF_LOG) window.FF_LOG.push({ la: card.index, tuChoi: why });
+            if (why) return;                           /* lượt của máy thì bé đừng chen */
             this.pick(card);
         }
 
@@ -774,7 +776,9 @@
     /* Cổng gỡ lỗi cho kiểm thử tự động, chỉ mở khi địa chỉ có ?debug=1 */
     function exposeDebug() {
         if (!/[?&]debug=1/.test(location.search)) return;
+        window.FF_LOG = [];
         window.FF = {
+            log: function () { return window.FF_LOG.splice(0); },
             scene: function () { return UI.scene; },
             state: function () {
                 var s = UI.scene;
