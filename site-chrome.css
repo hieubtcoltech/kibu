@@ -45,7 +45,8 @@ body > .unified-nav {
 .app-wrapper {
     width: 100%;
     max-width: 1400px;
-    height: 100vh;
+    height: 100vh !important;
+    height: 100dvh !important;
     margin: 0 auto;
     box-sizing: border-box;
     display: flex;
@@ -266,7 +267,8 @@ body > .unified-nav {
  * Letting it flex into the space that is actually left keeps the whole chrome
  * visible; the wrapper's own aspect-ratio still decides its width. */
 body.chrome-fit {
-    height: 100vh;
+    height: 100vh !important;
+    height: 100dvh !important;
     overflow: hidden;
 }
 
