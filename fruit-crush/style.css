@@ -1474,3 +1474,14 @@ body > .unified-nav,
 body > .site-footer {
     max-width: 1200px;
 }
+
+/* Padding ngang 20 px của khung đẩy các thẻ bên trong thụt vào so với mép thẻ
+   thanh trên — hai thứ đều là thẻ nhìn thấy được nên lệch là thấy ngay. Bỏ
+   padding ngang trên màn rộng; dưới 900 px vẫn giữ vì lúc đó khung chạy sát
+   mép màn hình, không còn lề ngoài nào cả. */
+@media (min-width: 901px) {
+    body > .game-container {
+        padding-left: 0;
+        padding-right: 0;
+    }
+}
