@@ -174,7 +174,7 @@ function playRound(seed, maxDrops) {
     const count = kind => { if (kind === 'merge' || kind === 'pop') tops++; };
     const cb = (kind, tier) => { if (tier === TOP_TIER) count(kind); };
 
-    let lateMerges = 0, maxV = 0, moved = 0, checks = 0, floating = 0, skipped = 0, restless = 0, waitSum = 0;
+    let lateMerges = 0, maxV = 0, moved = 0, checks = 0, floating = 0, skipped = 0, restless = 0, waitSum = 0, spinning = 0;
 
     while (drops < maxDrops && !over) {
         if (t >= nextDrop) {
@@ -189,6 +189,7 @@ function playRound(seed, maxDrops) {
                     moved += r.moved;
                     floating += r.floating;
                     restless += r.restless;
+                    spinning += r.spinning;
                     waitSum += r.waited;
                     maxV = Math.max(maxV, r.maxV);
                     checks++;
@@ -226,7 +227,7 @@ function playRound(seed, maxDrops) {
     }
 
     return {
-        drops, score: box.score, bestTier: box.bestTier, tops, lateMerges, checks, floating, skipped, restless, waitSum,
+        drops, score: box.score, bestTier: box.bestTier, tops, lateMerges, checks, floating, skipped, restless, waitSum, spinning,
         fruits: box.fruits.length, sleeping: box.fruits.filter(f => f.sleeping).length,
         maxV, moved, over, bad
     };
@@ -277,6 +278,16 @@ function settleAudit(box, bad) {
         audit(box, bad);
     }
 
+    /* Quả nào ĐỨNG YÊN MÀ VẪN QUAY? Đây là lỗi anh Hiếu bắt được: đống quả
+     * nhìn thì im, mà một nắm quả cứ xoay tít tại chỗ, thùng càng đông càng
+     * nhiều. Máy soát cũ không hề hỏi tới vòng quay nên chẳng thấy gì. */
+    let spinning = 0;
+    for (const f of box.fruits) {
+        const b0 = before.get(f.id);
+        const gone = b0 ? Math.hypot(f.x - b0.x, f.y - b0.y) : 99;
+        if (gone < 0.05 && Math.abs(f.spin) > 0.15) spinning++;
+    }
+
     let maxV = 0, moved = 0;
     for (const f of box.fruits) {
         maxV = Math.max(maxV, Math.hypot(f.vx, f.vy));
@@ -288,7 +299,7 @@ function settleAudit(box, bad) {
         console.log('   [soi] đỉnh=' + topAt.toFixed(2) + ' quả=' + box.fruits.length +
             ' đứng sau ' + waited + 's' + (quiet ? '' : ' (KHÔNG CHỊU ĐỨNG)') + ' rồi trôi=' + moved);
     }
-    return { lateMerges, maxV, moved, restless: quiet ? 0 : 1, waited: waited, floating: auditFloating(box) };
+    return { lateMerges, maxV, moved, spinning, restless: quiet ? 0 : 1, waited: waited, floating: auditFloating(box) };
 }
 
 /* Soát từng khung hình: quả nào ra ngoài thùng, tụt xuống dưới sàn, bay vọt
@@ -377,6 +388,7 @@ console.log('  quả bay vọt khỏi thùng  ' + flew);
 console.log('  toạ độ hoá NaN          ' + nan);
 console.log('  lần ngồi nghỉ đã soi    ' + sum('checks') + '  (bỏ qua ' + sum('skipped') + ' lần vì thùng đã tràn)');
 console.log('  quả treo lơ lửng        ' + sum('floating'));
+console.log('  đứng im mà vẫn quay     ' + sum('spinning'));
 console.log('  đống quả không chịu đứng ' + sum('restless') + ' lần (trung bình đứng sau ' +
     (sum('waitSum') / Math.max(1, sum('checks'))).toFixed(1) + 's)');
 console.log('  trôi sau khi đã đứng    ' + moveAfterQuiet);
@@ -415,6 +427,8 @@ if (sum('floating')) fails.push(sum('floating') + ' quả đứng im giữa khô
  * Mức đo được lúc chốt: 13% và 0,63 quả — dưới ngưỡng, và quãng đường của mấy
  * quả ấy chỉ chừng 0,04 ô mỗi giây, tức là quả anh đào nhích chưa tới một phần
  * mười bề ngang của nó trong một giây. */
+if (sum('spinning') > sum('checks') * 0.1)
+    fails.push(sum('spinning') + ' quả đứng im mà vẫn quay tít — nhìn là thấy sai ngay');
 if (sum('restless') > sum('checks') * 0.25)
     fails.push(sum('restless') + '/' + sum('checks') + ' lần đống quả lắc lư mãi không chịu đứng trong ' + WAIT_MAX + ' giây');
 if (moveAfterQuiet > sum('checks'))

@@ -104,6 +104,8 @@
     const CREEP_V = 0.6;        // chậm hơn ngần này ô/giây thì bắt đầu hãm
     const CREEP_DAMP = 0.97;    // mỗi bước giữ lại bấy nhiêu phần
     const STOP_V = 0.03;        // chậm hơn nữa thì dừng hẳn cho xong
+    const SPIN_FOLLOW = 0.12;   // vòng quay đuổi theo chuyển động nhanh chậm cỡ nào
+    const SPIN_MIN = 0.06;      // chậm hơn ngần này rad/giây thì thôi quay hẳn
 
     const SLEEP_D = 0.0015;     // nhúc nhích chưa tới ngần này ô mỗi bước thì coi như đứng yên
     const SLEEP_T = 0.35;
@@ -323,6 +325,7 @@
         return {
             kid: kid,                 // 1 hoặc 2, dùng cho nhãn và màu
             fruits: [],
+            contacts: new Map(),      // xung lực của bước trước, giữ lại để khởi động ấm
             score: 0,
             bestTier: 0,
             held: pickTier(),         // quả đang cầm trên tay
@@ -348,7 +351,10 @@
             x: x, y: y, vx: vx || 0, vy: vy || 0,
             rot: (Math.random() - 0.5) * 0.6, spin: 0,
             px: 0, py: 0,                  // sổ vận tốc giả, chỉ dùng để gỡ chỗ lún
-            jnF: 0, jtF: 0, jnW: 0, jtW: 0,  // xung lực đã dùng với sàn và vách trong bước này
+            jnF: 0, jtF: 0, jnW: 0, jtW: 0,  // xung lực đã dùng với sàn và vách, giữ sang bước sau
+            vx0: 0, vy0: 0,                // vận tốc lúc đầu bước, để tính phần nảy
+            stepX: x, stepY: y,            // chỗ đứng lúc đầu bước, để tính vòng quay
+            roll: 0,                       // quãng đường lăn trung bình mấy bước gần đây
             age: 0, still: 0, sleeping: false,
             lastX: x, lastY: y,            // chỗ đứng lần soát ngủ trước
 
@@ -418,8 +424,42 @@
             }
             f.x += f.vx * dt;
             f.y += f.vy * dt;
+        }
+    }
+
+    /* VÒNG QUAY bám theo QUÃNG ĐƯỜNG THẬT quả đi được, tính đúng một lần ở
+     * cuối mỗi bước.
+     *
+     * Anh Hiếu để ý: thùng càng nhiều quả thì càng có nhiều quả quay tít mà
+     * không bao giờ dừng. Đúng, và có hai lỗi chồng lên nhau.
+     *
+     * Lỗi thứ nhất: em cộng vòng quay ngay trong vòng lặp giải va chạm, mà
+     * vòng ấy chạy bảy lần mỗi bước, một trăm hai mươi bước mỗi giây. Mỗi lần
+     * chỉ cộng một tí xíu, nhưng 840 lần một giây thì quả đứng im vẫn quay tới
+     * năm vòng mỗi giây.
+     *
+     * Lỗi thứ hai: em lấy VẬN TỐC làm mốc. Đống quả nằm nghỉ vẫn còn chút vận
+     * tốc lăn tăn trong người mà vị trí không hề xê dịch — lấy nó tính vòng
+     * quay thì quả vẫn quay chậm chậm mãi.
+     *
+     * Nay lấy đúng quãng đường quả thật sự đi được trong bước: đi bao nhiêu
+     * thì lăn bấy nhiêu, đúng như bánh xe lăn không trượt. Quả đứng yên thì
+     * quãng đường bằng không, vòng quay tắt hẳn. Không có đường nào để cộng
+     * dồn, cũng không cần ngưỡng nào để chặn. */
+    function updateSpin(box, dt) {
+        for (const f of box.fruits) {
+            if (f.sleeping) { f.spin = 0; f.roll = 0; continue; }
+            /* Lấy quãng đường TRUNG BÌNH mấy bước gần đây chứ không lấy đúng
+             * bước vừa rồi. Phần gỡ lún mỗi bước lại đẩy quả qua rồi đẩy lại,
+             * cộng vào nhau thì bằng không mà từng bước thì lắc qua lắc lại —
+             * lấy nguyên một bước thì cái lắc ấy hoá thành vòng quay. Trung
+             * bình trượt làm cái lắc tự triệt tiêu, còn chuyện lăn thật thì
+             * cùng chiều nên vẫn giữ nguyên. */
+            f.roll = f.roll * 0.9 + (f.x - f.stepX) * 0.1;
+            const want = (f.roll / dt) / f.r;
+            f.spin += (want - f.spin) * SPIN_FOLLOW;
+            if (Math.abs(f.spin) < SPIN_MIN) f.spin = 0;
             f.rot += f.spin * dt;
-            f.spin *= 0.985;
         }
     }
 
@@ -434,12 +474,74 @@
                 const p = a[i], q = a[j];
                 const dx = q.x - p.x, dy = q.y - p.y;
                 const rr = p.r + q.r + 0.25;
-                /* jn cộng dồn trong suốt cả bước rồi bỏ đi cùng danh sách này —
-                 * mỗi bước một sổ mới, không mang nợ của bước trước sang. */
-                if (dx * dx + dy * dy < rr * rr) out.push({ p: p, q: q, jn: 0, jt: 0 });
+                if (dx * dx + dy * dy < rr * rr) {
+                    /* Mang xung lực của bước trước sang, xem ghi chú ở
+                     * warmStart(). Khoá là cặp mã số hai quả. */
+                    const key = p.id < q.id ? p.id + ':' + q.id : q.id + ':' + p.id;
+                    const old = box.contacts.get(key);
+                    out.push({ p: p, q: q, key: key, jn: old ? old.jn : 0, jt: old ? old.jt : 0 });
+                }
             }
         }
         return out;
+    }
+
+    /* KHỞI ĐỘNG ẤM (warm starting) — áp lại xung lực của bước trước trước khi
+     * giải bước này.
+     *
+     * Anh Hiếu để ý: thùng càng nhiều quả thì càng có nhiều quả quay tít không
+     * bao giờ dừng, mà theo lẽ thường thì lấp đầy chỗ trũng xong là phải đứng
+     * hết. Anh nói đúng, và đây là chỗ thiếu.
+     *
+     * Quả nằm im dưới đáy vẫn phải được đỡ bằng một lực đúng bằng trọng lực đè
+     * lên nó. Mỗi bước em bắt máy tìm lại cái lực ấy TỪ ĐẦU, mà bảy vòng lặp
+     * thì chưa đủ để lực truyền hết xuống đáy một chồng quả — nên bao giờ cũng
+     * còn sót lại một chút vận tốc chưa bị triệt tiêu. Vị trí thì gần như
+     * không xê dịch (chưa tới 0,04 ô mỗi giây), nhưng chút vận tốc trượt ấy
+     * lại chính là thứ em đem ra tính vòng quay của quả — thành ra cả đống
+     * đứng im mà vẫn quay tít. Đống càng cao, lực phải truyền càng xa, sót
+     * càng nhiều: đúng như anh thấy.
+     *
+     * Cách chữa là cách mọi thư viện vật lý dùng: nhớ lấy lực đỡ của bước
+     * trước rồi áp lại ngay đầu bước sau. Đống quả nằm yên thì lực đỡ bước này
+     * gần y hệt bước trước, nên vừa vào đã gần đúng, mấy vòng lặp còn lại chỉ
+     * chỉnh nốt phần lẻ. Vận tốc dư biến mất, và quả thôi quay. */
+    function warmStart(box, pairs) {
+        for (const pr of pairs) {
+            const p = pr.p, q = pr.q;
+            const dx = q.x - p.x, dy = q.y - p.y;
+            const d = Math.hypot(dx, dy);
+            /* Rời nhau ra rồi thì bỏ sổ cũ đi — áp lực đỡ của một chỗ chạm
+             * không còn tồn tại là bịa. */
+            if (d < 1e-6 || d > p.r + q.r + SLOP) { pr.jn = 0; pr.jt = 0; pr.vn0 = 0; continue; }
+            const nx = dx / d, ny = dy / d, tx = -ny, ty = nx;
+            /* Tốc độ lao vào lúc ĐẦU bước, ghi lại trước khi động vào vận tốc —
+             * phần nảy phải tính theo cú va thật, không tính theo vận tốc đã
+             * bị chính mình sửa. */
+            pr.vn0 = (q.vx - p.vx) * nx + (q.vy - p.vy) * ny;
+
+            if (!pr.jn && !pr.jt) continue;
+            const ip = invMass(p), iq = invMass(q);
+            const ix = nx * pr.jn + tx * pr.jt, iy = ny * pr.jn + ty * pr.jt;
+            p.vx -= ix * ip; p.vy -= iy * ip;
+            q.vx += ix * iq; q.vy += iy * iq;
+        }
+        /* Tường và sàn cũng vậy */
+        for (const f of box.fruits) {
+            f.vy0 = f.vy; f.vx0 = f.vx;
+            if (f.y + f.r > BH - SLOP) { f.vy -= f.jnF; f.vx -= f.jtF; }
+            else { f.jnF = 0; f.jtF = 0; }
+            if (f.x - f.r < SLOP) { f.vx += f.jnW; f.vy -= f.jtW; }
+            else if (f.x + f.r > BW - SLOP) { f.vx -= f.jnW; f.vy -= f.jtW; }
+            else { f.jnW = 0; f.jtW = 0; }
+        }
+    }
+
+    function saveContacts(box, pairs) {
+        box.contacts.clear();
+        for (const pr of pairs) {
+            if (pr.jn > 0 || pr.jt) box.contacts.set(pr.key, { jn: pr.jn, jt: pr.jt });
+        }
     }
 
     function solvePair(pr, dt, onBump) {
@@ -475,18 +577,24 @@
         /* 2. Vận tốc: chặn hai quả lao vào nhau. Chỉ cú va đủ nhanh mới được
          *    nảy, còn tiếp xúc nằm nghỉ thì không — nảy ở đây là nguồn rung
          *    của cả đống. */
-        const e = (-vn > BOUNCE_V) ? REST : 0;
-        const j = -(1 + e) * vn / im;
-        if (j > 0) {
+        /* Cộng dồn xung lực pháp tuyến của cả bước rồi mới chặn, y như ma sát
+         * ở dưới. Điểm mấu chốt là tổng ấy được phép GIẢM: khởi động ấm áp lại
+         * lực đỡ của bước trước, mà chỗ tựa vừa mất đi thì lực ấy quá tay —
+         * phải trừ bớt lại được. Bản đầu em chỉ cho cộng thêm, thế là mỗi bước
+         * lại đẩy quả lên một nhát trong khi trọng lực chỉ kéo xuống một tí:
+         * cả thùng trái cây bắn tung lên trời, máy soát đếm 2400 lần quả bay
+         * khỏi thùng. */
+        const target = (-pr.vn0 > BOUNCE_V) ? -REST * pr.vn0 : 0;
+        let accN = pr.jn - (vn - target) / im;
+        if (accN < 0) accN = 0;
+        const j = accN - pr.jn;
+        pr.jn = accN;
+        if (j !== 0) {
             p.vx -= nx * j * ip; p.vy -= ny * j * ip;
             q.vx += nx * j * iq; q.vy += ny * j * iq;
-            /* Cộng dồn xung lực pháp tuyến của cả bước. Đây chính là "quả này
-             * đè lên quả kia nặng bao nhiêu", và ma sát ở dưới cần đúng con số
-             * ấy để biết được phép giữ chặt tới đâu. */
-            pr.jn += j;
-            if (onBump && -vn > 0.9) onBump(-vn, Math.min(p.r, q.r));
-            if (-vn > WAKE_V) { wake(p); wake(q); }
         }
+        if (onBump && -vn > 0.9) onBump(-vn, Math.min(p.r, q.r));
+        if (-vn > WAKE_V) { wake(p); wake(q); }
 
         /* 3. Ma sát Coulomb: cố hãm hẳn phần trượt dọc mặt tiếp xúc về 0, nhưng
          *    không được hãm mạnh hơn MU lần lực đè lên nhau.
@@ -520,10 +628,6 @@
             pr.jt = acc;
             p.vx -= tx * jt * ip; p.vy -= ty * jt * ip;
             q.vx += tx * jt * iq; q.vy += ty * jt * iq;
-            /* Chỗ lăn chỉ để nhìn cho vui, không dội ngược vào phần tính toán
-             * — dội ngược là thêm một đường cho đống quả rung. */
-            p.spin += vt / p.r * 0.05;
-            q.spin -= vt / q.r * 0.05;
         }
     }
 
@@ -574,23 +678,21 @@
     function solveWalls(f, dt, onBump) {
         /* Sàn */
         if (f.y + f.r > BH) {
-            let jn = 0;
-            if (f.vy > 0) {
-                if (f.vy > 1.2 && onBump) onBump(f.vy, f.r);
-                if (f.vy > WAKE_V) wake(f);
-                const e = (f.vy > BOUNCE_V) ? REST : 0;
-                jn = f.vy * (1 + e);
-                f.vy = -f.vy * e;
-            }
+            if (f.vy > 1.2 && onBump) onBump(f.vy, f.r);
+            if (f.vy > WAKE_V) wake(f);
+            const target = (f.vy0 > BOUNCE_V) ? -REST * f.vy0 : 0;
+            let accN = f.jnF + (f.vy - target);
+            if (accN < 0) accN = 0;
+            f.vy -= accN - f.jnF;
+            f.jnF = accN;
+
             /* Ma sát mặt sàn, cùng một luật (và cùng một cách cộng dồn) với
              * ma sát giữa hai quả */
-            f.jnF += jn;
             const cap = MU_W * f.jnF;
             let acc = f.jtF + f.vx;
             if (acc > cap) acc = cap; else if (acc < -cap) acc = -cap;
             f.vx -= acc - f.jtF;
             f.jtF = acc;
-            f.spin += f.vx / f.r * 0.06;
         }
         /* Vách trái và vách phải, cùng một luật ma sát với sàn: chỉ giữ được
          * quả theo chiều dọc khi đống quả bên trong ÉP nó vào vách.
@@ -602,24 +704,20 @@
          * ngủ luôn — thành ra quả treo lơ lửng giữa thùng mà anh Hiếu nhìn
          * phát hiện ra. Ma sát phải đi theo lực ép, không được tự tiện hãm. */
         if (f.x - f.r < 0) {
-            let jn = 0;
-            if (f.vx < 0) {
-                if (-f.vx > WAKE_V) wake(f);
-                const e = (-f.vx > BOUNCE_V) ? REST : 0;
-                jn = -f.vx * (1 + e);
-                f.vx = -f.vx * e;
-            }
-            f.jnW += jn;
+            if (-f.vx > WAKE_V) wake(f);
+            const target = (-f.vx0 > BOUNCE_V) ? -REST * f.vx0 : 0;
+            let accN = f.jnW - (f.vx - target);
+            if (accN < 0) accN = 0;
+            f.vx += accN - f.jnW;
+            f.jnW = accN;
             wallFriction(f, MU_W * f.jnW);
         } else if (f.x + f.r > BW) {
-            let jn = 0;
-            if (f.vx > 0) {
-                if (f.vx > WAKE_V) wake(f);
-                const e = (f.vx > BOUNCE_V) ? REST : 0;
-                jn = f.vx * (1 + e);
-                f.vx = -f.vx * e;
-            }
-            f.jnW += jn;
+            if (f.vx > WAKE_V) wake(f);
+            const target = (f.vx0 > BOUNCE_V) ? -REST * f.vx0 : 0;
+            let accN = f.jnW + (f.vx - target);
+            if (accN < 0) accN = 0;
+            f.vx -= accN - f.jnW;
+            f.jnW = accN;
             wallFriction(f, MU_W * f.jnW);
         }
     }
@@ -801,9 +899,11 @@
          * TRƯỚC khi nó kịp lún, nên chẳng còn chỗ lún nào để mà đẩy ra, và cái
          * bánh cóc biến mất. */
         applyGravity(box, dt);
+        /* Chỗ đứng lúc đầu bước, để cuối bước biết quả đã thật sự đi bao xa */
+        for (const f of box.fruits) { f.stepX = f.x; f.stepY = f.y; }
 
         const pairs = pairsOf(box);
-        for (const f of box.fruits) { f.jnF = 0; f.jtF = 0; f.jnW = 0; f.jtW = 0; }
+        warmStart(box, pairs);
         const onBump = cb ? (v, r) => cb('bump', 0, 0, 0, 0, v, r) : null;
         for (let k = 0; k < ITER; k++) {
             /* Quả với quả xử trước, vách xử sau. Thứ tự này không đổi chỗ được:
@@ -813,6 +913,8 @@
             for (const pr of pairs) solvePair(pr, dt, k === 0 ? onBump : null);
             for (const f of box.fruits) solveWalls(f, dt, k === 0 ? onBump : null);
         }
+        saveContacts(box, pairs);
+
         /* Vận tốc đã sửa xong, giờ mới đem ra dời vị trí */
         movePositions(box, dt);
 
@@ -829,6 +931,7 @@
 
         for (const f of box.fruits) clampWalls(f);
 
+        updateSpin(box, dt);
         doMerges(box, cb);
         sleepIslands(box, dt);
     }
