@@ -471,3 +471,29 @@ body.chrome-fit > .game-wrapper {
         padding: 5px 12px;
     }
 }
+
+/* ---------- Nút trong bảng chọn của từng game ----------
+ * Sau khi chữa xong dãy nút trên thanh điều hướng, máy soát vẫn còn 25 lượt
+ * dính, và chúng dồn vào vài lớp lặp đi lặp lại ở nhiều game: .pill (ocean,
+ * aqua-dash, cờ tướng), .btn-toggle (bot-arena), .opt (bóng rổ, phi tiêu),
+ * .skin-swatch. Phần lớn chỉ hụt vài điểm ảnh — cao 38 tới 43 thay vì 44 —
+ * nhưng ô chọn nhân vật thì bé thật, 24×24.
+ *
+ * Mấy lớp này nằm rải ở nhiều game khác nhau, gom về đây sửa một lần thay vì
+ * đi từng tệp. Nút bấm cao thêm dăm điểm ảnh trên máy cảm ứng thì không hỏng
+ * bố cục nào, mà đổi lại ngón tay trẻ con bấm trúng. */
+@media (hover: none) and (pointer: coarse) {
+
+    .pill,
+    .btn-toggle,
+    .opt,
+    .big-btn,
+    .skin-swatch {
+        min-height: 44px;
+    }
+
+    /* Ô chọn nhân vật là hình vuông, nới cả hai chiều cho cân */
+    .skin-swatch {
+        min-width: 44px;
+    }
+}
