@@ -285,10 +285,31 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 /* Chữ dài trong li dùng flex-grow đẩy con số về sát mép phải. */
 .mission-list.static li span { flex: 1 1 auto; }
 
-/* Màn hẹp: bảng nhiệm vụ chiếm mất chỗ đặt ngón tay, thu lại còn dấu tích. */
+/* Màn hẹp: bảng nhiệm vụ và dãy vật phẩm phải LEO LÊN ĐỈNH.
+ *
+ * Hai thứ đó vốn neo theo đáy sân. Trên máy tính thì không sao vì dải đất dưới
+ * chân dày, chúng nằm gọn dưới mặt đất. Nhưng trên điện thoại dựng đứng, một
+ * đơn vị u tính theo bề ngang nên nhỏ đi nhiều, dải đất dưới chân mỏng còn
+ * chưa tới trăm điểm ảnh — thế là ba viên nhiệm vụ đè thẳng lên làn chạy, che
+ * mất cả con thú canh đang lao tới.
+ *
+ * Cho lên đỉnh là chắc ăn: bầu trời trên máy dựng đứng lúc nào cũng thừa chỗ,
+ * đó vốn là chỗ trống nhất màn hình. */
 @media (max-width: 620px) {
     .mission-list li span { display: none; }
-    .mission-list { gap: 4px; }
+    .mission-list {
+        top: 52px;
+        bottom: auto;
+        right: 10px;
+        gap: 4px;
+    }
+
+    .power-strip {
+        top: 52px;
+        bottom: auto;
+        left: 10px;
+    }
+
     .hud-zone { display: none; }
 }
 
