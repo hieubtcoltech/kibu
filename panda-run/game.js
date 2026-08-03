@@ -1271,6 +1271,18 @@
         const slide = pose === 'slide';
         const jump = pose === 'jump';
 
+        /* Đổ người về trước một chút khi chạy. Đây là dấu hiệu mạnh nhất cho
+         * biết nhân vật đang lao tới: người đứng thẳng đơ mà chân khua thì mắt
+         * đọc ra "đang giậm chân tại chỗ" chứ không phải "đang chạy". Xoay
+         * quanh điểm đặt chân nên bàn chân gần như không xê dịch. */
+        const lean = run ? 0.075 : 0;
+        if (lean) {
+            g.save();
+            g.translate(cx, foot);
+            g.rotate(lean);
+            g.translate(-cx, -foot);
+        }
+
         /* Trượt thì cả người nằm rạp xuống và ngả về trước. */
         const bodyCY = slide ? foot - 0.32 * u : foot - 0.58 * u - bob;
         const headCY = slide ? foot - 0.60 * u : foot - 1.14 * u - bob;
@@ -1336,9 +1348,14 @@
             limb(cx + 0.24 * u, bodyCY - 0.12 * u, cx + 0.58 * u, bodyCY - 0.46 * u, 0.20 * u, PANDA.black, true);
         } else {
             /* Chân sau lệch pha nửa vòng so với chân trước — đó là toàn bộ bí
-             * quyết để tám hình rời rạc nhìn ra một bước chạy. */
+             * quyết để tám hình rời rạc nhìn ra một bước chạy.
+             *
+             * Bàn chân NHẤC LÊN đúng lúc nó đang đưa TỚI TRƯỚC, và CHẠM ĐẤT
+             * suốt quãng nó lùi về sau (lúc đó mặt đất đang đẩy người đi tới).
+             * Làm ngược lại — nhấc chân lúc lùi, đặt chân lúc đưa tới — thì
+             * thành đúng cái dáng chạy giật lùi, kiểu moonwalk. */
             const bx = cx + Math.cos(a + Math.PI) * 0.26 * u;
-            const by = foot - Math.max(0, Math.sin(a + Math.PI)) * 0.17 * u;
+            const by = foot - Math.max(0, -Math.sin(a + Math.PI)) * 0.17 * u;
             limb(cx - 0.10 * u, hipY, bx, by, 0.23 * u, PANDA.ink, true);
             /* tay sau vung ra trước ngực */
             const hx = cx + Math.cos(a) * 0.22 * u;
@@ -1357,7 +1374,7 @@
         /* --- chân trước --- */
         if (!slide && !jump) {
             const fx = cx + Math.cos(a) * 0.26 * u;
-            const fy = foot - Math.max(0, Math.sin(a)) * 0.17 * u;
+            const fy = foot - Math.max(0, -Math.sin(a)) * 0.17 * u;
             limb(cx + 0.10 * u, hipY, fx, fy, 0.24 * u, PANDA.black, true);
         } else if (slide) {
             limb(cx + 0.20 * u, hipY - 0.08 * u, cx + 0.62 * u, foot - 0.03 * u, 0.24 * u, PANDA.black, true);
@@ -1457,6 +1474,8 @@
         g.ellipse(cx - 0.14 * u, headCY + 0.16 * u, 0.085 * u, 0.06 * u, 0, 0, TAU);
         g.ellipse(cx + 0.40 * u, headCY + 0.13 * u, 0.075 * u, 0.055 * u, 0, 0, TAU);
         g.fill();
+
+        if (lean) g.restore();
     }
 
     /* ---- các bạn động vật ----
