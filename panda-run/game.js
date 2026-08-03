@@ -436,9 +436,13 @@
     const sfx = {
         on: true,
         ctx: null,
+        bgm: null,
 
         init() {
             try { this.on = localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) { }
+            this.bgm = new Audio('music.mp3');
+            this.bgm.loop = true;
+            this.bgm.volume = 0.35;
         },
         /* AudioContext chỉ dựng sau cú chạm đầu tiên — trình duyệt chặn âm tự
          * phát, dựng sớm thì nó nằm im ở trạng thái suspended. */
@@ -448,11 +452,29 @@
                 if (AC) this.ctx = new AC();
             }
             if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            if (this.on && this.bgm && this.bgm.paused && G.mode !== 'paused') {
+                this.bgm.play().catch(e => console.log("BGM play failed or blocked:", e));
+            }
         },
         toggle() {
             this.on = !this.on;
             try { localStorage.setItem(SOUND_KEY, this.on ? '1' : '0'); } catch (e) { }
+            if (this.on) {
+                if (this.bgm && G.mode !== 'paused') this.bgm.play().catch(e => console.log("BGM play failed or blocked:", e));
+            } else {
+                if (this.bgm) this.bgm.pause();
+            }
             return this.on;
+        },
+        playBgm() {
+            if (this.on && this.bgm && this.bgm.paused) {
+                this.bgm.play().catch(e => console.log("BGM play failed or blocked:", e));
+            }
+        },
+        pauseBgm() {
+            if (this.bgm) {
+                this.bgm.pause();
+            }
         },
         tone(freq, dur, type, vol, slideTo) {
             if (!this.on || !this.ctx) return;
@@ -1259,7 +1281,8 @@
             while (G.beat >= 1) {
                 G.beat -= 1;
                 G.beatN++;
-                if (G.beatN % 4 === 0) sfx.kick(); else sfx.hat();
+                // Tắt nhịp trống tổng hợp để không đè nhạc nền BGM
+                // if (G.beatN % 4 === 0) sfx.kick(); else sfx.hat();
             }
         }
     }
@@ -2773,6 +2796,7 @@
 
     function play() {
         sfx.wake();
+        sfx.playBgm();
         stopCountdown();
         G.resuming = false;
         hide(ui.menu);
@@ -2791,6 +2815,7 @@
         stopCountdown();
         G.resuming = false;
         G.mode = 'paused';
+        sfx.pauseBgm();
         ui.pauseDist.textContent = G.metres;
         ui.pausePals.textContent = G.tail.length;
         ui.pauseCoins.textContent = G.coins;
@@ -2827,6 +2852,7 @@
             ui.countdown.textContent = 'GO!';
             ui.countdown.className = 'countdown go';
             sfx.pal();
+            sfx.playBgm();
             cdTimer = setTimeout(() => {
                 stopCountdown();
                 cdTimer = null;
