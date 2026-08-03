@@ -1011,6 +1011,9 @@
             'so they are easy to see, while keeping the pro ball-to-rim ratio.'],
 
         /* ---------- Darts — Balloon Darts ---------- */
+        ['1 đến 4 bé chơi chung một máy!', '1 to 4 kids play together on one screen!'],
+        ['Săn Bóng Vàng', 'GOLDEN HUNT'],
+        ['Gió thổi!', 'Windy!'],
         ['Phi Tiêu Bong Bóng', 'Balloon Darts', '>'],
         ['Săn Bóng Vàng', 'Golden Balloon Hunt'],
         ['Bắt Đầu Thi Tài', 'Start The Contest'],
