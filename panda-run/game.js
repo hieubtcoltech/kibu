@@ -437,6 +437,7 @@
         on: true,
         ctx: null,
         bgm: null,
+        bgmSource: null,
 
         init() {
             try { this.on = localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) { }
@@ -461,7 +462,18 @@
         wake() {
             if (!this.ctx) {
                 const AC = window.AudioContext || window.webkitAudioContext;
-                if (AC) this.ctx = new AC();
+                if (AC) {
+                    this.ctx = new AC();
+                    // Kết nối BGM qua AudioContext để tránh chiếm quyền âm thanh trên macOS/iOS
+                    if (this.bgm && !this.bgmSource) {
+                        try {
+                            this.bgmSource = this.ctx.createMediaElementSource(this.bgm);
+                            this.bgmSource.connect(this.ctx.destination);
+                        } catch (e) {
+                            console.warn("createMediaElementSource failed:", e);
+                        }
+                    }
+                }
             }
             if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
             if (this.on && this.bgm && this.bgm.paused && G.mode !== 'paused') {
