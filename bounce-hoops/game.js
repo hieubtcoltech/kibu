@@ -386,6 +386,8 @@
         charging: false,     // đang giữ dấu cách để lấy đà
         pwDir: 1,            // thanh lực đang chạy lên hay chạy xuống
 
+        sadUntil: -9,        // bé xìu mặt tới lúc nào
+
         parts: [],
         rings: [],
         shakeUntil: 0,
@@ -595,6 +597,7 @@
         G.spikes = [];
         G.hoop = { x: lv.hoop.x, y: lv.hoop.y };
         G.scoredAt = -9;
+        G.sadUntil = -9;     // vào màn mới thì bé thôi xìu mặt
 
         (lv.walls || []).forEach(w =>
             G.walls.push({ x: w[0], y: w[1], w: w[2], h: w[3], kind: T.BRICK }));
@@ -886,6 +889,10 @@
     }
 
     function onMiss(why) {
+        /* Trượt vì gai hay vì rơi ra ngoài thì bé xìu hẳn; còn bóng chỉ nằm im
+         * giữa sân thì tiếc nhẹ thôi, xìu dài quá cho một cú hụt vu vơ nhìn
+         * nặng nề. */
+        G.sadUntil = G.time + (why === 'stop' ? 0.7 : 1.2);
         if (why !== 'stop') {
             sfx.fail();
             puff(G.ball.x, G.ball.y, 10);
@@ -1175,27 +1182,135 @@
     /* Bé đứng ném: một khối tròn có mặt. Đứng lệch sang trái quả bóng chứ
      * không đứng ngay dưới — chồng lên nhau thì nhìn ra một cục, không biết
      * đâu là bóng để mà kéo. */
+    /* ---- bé đứng ném ----
+     * Trước đây bé chỉ là một khối vàng với hai chấm mắt, đứng chết trân suốt
+     * từ đầu tới cuối màn. Vào rổ cũng thế mà trượt cũng thế — không ai trên
+     * sân này tỏ ra có biết chuyện gì vừa xảy ra.
+     *
+     * Giờ bé thở (nhấp nhô rất khẽ), thỉnh thoảng chớp mắt, mắt dõi theo quả
+     * bóng lúc nó đang bay, cười toe và nhảy cẫng khi vào rổ, xìu xuống khi
+     * trượt. Toàn bộ nằm ở phần vẽ, không dính gì tới vật lý.
+     *
+     * Nhịp chớp mắt tính từ G.time bằng một hàm tuần hoàn chứ không rút số
+     * ngẫu nhiên mỗi khung hình: rút ngẫu nhiên thì hai khung liền nhau ra hai
+     * kết quả khác nhau, mắt bé giật lia lịa như đèn hỏng. */
+    const BLINK_EVERY = 3.4;      // trung bình mấy giây chớp một cái
+    const BLINK_LEN = 0.13;       // một cái chớp kéo dài bao lâu
+
+    function throwerFace() {
+        const since = G.time - G.scoredAt;
+        if (G.mode === 'won' || (since >= 0 && since < 1.6)) return { mood: 'happy', k: Math.min(1, since / 0.18) };
+        if (G.sadUntil > G.time) return { mood: 'sad', k: Math.min(1, (G.sadUntil - G.time) / 0.18) };
+        if (G.mode === 'fly') return { mood: 'watch', k: 1 };
+        return { mood: 'calm', k: 1 };
+    }
+
+    /* Mắt nhắm bao nhiêu phần: 0 là mở tròn, 1 là nhắm tịt. Hai nhịp chớp lệch
+     * chu kỳ nhau cho đỡ đều đặn như máy. */
+    function blinkAmount() {
+        const t = G.time;
+        const phase = (x, period) => {
+            const u = (x % period) / period;
+            return u < BLINK_LEN / period ? Math.sin((u * period / BLINK_LEN) * Math.PI) : 0;
+        };
+        return Math.min(1, phase(t, BLINK_EVERY) + phase(t + 1.7, BLINK_EVERY * 1.61));
+    }
+
     function drawThrower(W) {
         const p = G.level.ball;
-        const x = sx(p[0] - 0.62), y = sy(p[1]);
+        const face = throwerFace();
         const r = V.u * 0.42;
+
+        /* thở: nhấp nhô rất khẽ, đủ để bé không đứng chết trân */
+        let bob = Math.sin(G.time * 1.9) * r * 0.05;
+        let squish = 1;
+        if (face.mood === 'happy') {
+            /* nhảy cẫng: bật lên rồi rơi xuống, nảy nhỏ dần */
+            const s = Math.max(0, G.time - G.scoredAt);
+            bob -= Math.abs(Math.sin(s * 7.5)) * r * 0.55 * Math.exp(-s * 1.7);
+            squish = 1 + Math.sin(s * 15) * 0.06 * Math.exp(-s * 2);
+        } else if (face.mood === 'sad') {
+            bob += r * 0.12 * face.k;      // xìu xuống
+            squish = 1 - 0.07 * face.k;
+        }
+
+        const x = sx(p[0] - 0.62), y = sy(p[1]) + bob;
+        const cy = y - r * 0.5;
+
+        /* thân */
         ctx.fillStyle = '#ffb703';
         ctx.beginPath();
-        ctx.ellipse(x, y - r * 0.5, r, r * 0.9, 0, 0, 6.283);
+        ctx.ellipse(x, cy, r * (2 - squish), r * 0.9 * squish, 0, 0, 6.283);
         ctx.fill();
         ctx.strokeStyle = W.ink;
         ctx.lineWidth = Math.max(2, V.u * 0.07);
         ctx.stroke();
+
+        /* má hồng — vẽ trước mắt để mắt luôn nằm trên cùng */
+        ctx.fillStyle = 'rgba(255,120,150,' + (face.mood === 'happy' ? 0.7 : 0.45) + ')';
+        ctx.beginPath();
+        ctx.arc(x - r * 0.6, cy + r * 0.15, r * 0.16, 0, 6.283);
+        ctx.arc(x + r * 0.6, cy + r * 0.15, r * 0.16, 0, 6.283);
+        ctx.fill();
+
+        const ex = r * 0.3, ey = cy - r * 0.15, er = r * 0.11;
         ctx.fillStyle = W.ink;
+        ctx.strokeStyle = W.ink;
+        ctx.lineCap = 'round';
+
+        if (face.mood === 'happy') {
+            /* mắt cong thành hai vòng cung cười */
+            ctx.lineWidth = Math.max(1.6, er * 0.9);
+            for (const s of [-1, 1]) {
+                ctx.beginPath();
+                ctx.arc(x + s * ex, ey + er * 0.5, er * 1.25, Math.PI * 1.15, Math.PI * 1.85);
+                ctx.stroke();
+            }
+        } else {
+            /* Mắt dõi theo quả bóng lúc nó đang bay: con ngươi xê dịch một chút
+             * về phía bóng. Chỉ nhích tí thôi, quá tay thì thành lác. */
+            let dx = 0, dy = 0;
+            if (face.mood === 'watch') {
+                const a = Math.atan2(G.ball.y - p[1], G.ball.x - p[0]);
+                dx = Math.cos(a) * er * 0.55;
+                dy = Math.sin(a) * er * 0.55;
+            } else if (face.mood === 'sad') {
+                dy = er * 0.5;                  // nhìn xuống đất
+            }
+            const lid = blinkAmount();
+            if (lid > 0.75) {
+                /* đang chớp: mắt thành hai vạch ngang */
+                ctx.lineWidth = Math.max(1.5, er * 0.8);
+                for (const s of [-1, 1]) {
+                    ctx.beginPath();
+                    ctx.moveTo(x + s * ex - er, ey);
+                    ctx.lineTo(x + s * ex + er, ey);
+                    ctx.stroke();
+                }
+            } else {
+                const open = 1 - lid * 0.85;
+                for (const s of [-1, 1]) {
+                    ctx.beginPath();
+                    ctx.ellipse(x + s * ex + dx, ey + dy, er, er * open, 0, 0, 6.283);
+                    ctx.fill();
+                }
+            }
+        }
+
+        /* miệng */
+        const my = cy + r * 0.42;
+        ctx.lineWidth = Math.max(1.6, r * 0.085);
         ctx.beginPath();
-        ctx.arc(x - r * 0.3, y - r * 0.65, r * 0.11, 0, 6.283);
-        ctx.arc(x + r * 0.3, y - r * 0.65, r * 0.11, 0, 6.283);
-        ctx.fill();
-        ctx.fillStyle = 'rgba(255,120,150,0.45)';
-        ctx.beginPath();
-        ctx.arc(x - r * 0.6, y - r * 0.35, r * 0.16, 0, 6.283);
-        ctx.arc(x + r * 0.6, y - r * 0.35, r * 0.16, 0, 6.283);
-        ctx.fill();
+        if (face.mood === 'happy') {
+            ctx.arc(x, my - r * 0.12, r * 0.3, 0.15 * Math.PI, 0.85 * Math.PI);
+        } else if (face.mood === 'sad') {
+            ctx.arc(x, my + r * 0.22, r * 0.28, 1.2 * Math.PI, 1.8 * Math.PI);
+        } else if (face.mood === 'watch') {
+            ctx.ellipse(x, my, r * 0.13, r * 0.17, 0, 0, 6.283);   // há hốc hồi hộp
+        } else {
+            ctx.arc(x, my - r * 0.06, r * 0.22, 0.2 * Math.PI, 0.8 * Math.PI);
+        }
+        ctx.stroke();
     }
 
     function drawPreview() {
