@@ -320,12 +320,12 @@
         }
 
         /* Các game hot (có nhãn HOT) thì sẽ chiếm 2x2 */
-        .poki-tile:has(.tile-badge:not(.badge-new)) {
+        .poki-tile.tile-hot {
             grid-column: span 2;
             grid-row: span 2;
         }
 
-        .poki-tile:has(.tile-badge:not(.badge-new)) .tile-label {
+        .poki-tile.tile-hot .tile-label {
             font-size: 1.1rem;
             padding: 12px 8px;
         }
@@ -728,7 +728,7 @@
                 <div class="tile-label">Bubble Pop</div>
             </a>
 
-            <a href="/g/fruit-crush" class="poki-tile tile-fruit"
+            <a href="/g/fruit-crush" class="poki-tile tile-fruit tile-hot"
                 data-keywords="fruit crush match 3 candy sweets berries">
                 <span class="tile-badge">HOT</span>
                 <img src="/fruit-crush/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
@@ -752,7 +752,7 @@
                 <div class="tile-label">Magic Coloring</div>
             </a>
 
-            <a href="/g/basketball-duel" class="poki-tile tile-basket"
+            <a href="/g/basketball-duel" class="poki-tile tile-basket tile-hot"
                 data-keywords="basketball duel sports hoops 2 player shooting">
                 <span class="tile-badge">HOT</span>
                 <img src="/basketball-game/icon.jpg" alt="" class="tile-img" decoding="async"

@@ -39,7 +39,8 @@
         { dir: 'bowling-game', slug: 'strike-party' },
         { dir: 'sling-blast', slug: 'sling-blast' },
         { dir: 'bubble-pop', slug: 'bubble-pop' },
-        { dir: 'panda-run', slug: 'panda-run' }
+        { dir: 'panda-run', slug: 'panda-run' },
+        { dir: 'bounce-hoops', slug: 'bounce-hoops' }
     ];
 
     var bySlug = {}, byDir = {};

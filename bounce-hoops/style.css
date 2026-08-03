@@ -1,0 +1,505 @@
+/* ============================================================================
+ * Bounce Hoops — giao diện quanh sân chơi
+ * ----------------------------------------------------------------------------
+ * Sân chơi nằm trọn trong một canvas 2D; file này chỉ lo phần HTML bao quanh:
+ * khung chứa canvas, thanh thông tin, mách nước và các bảng phủ (chào, chọn
+ * màn, thắng, hết màn). Màu và bo góc lấy theo /site-chrome.css cho đồng bộ.
+ * ==========================================================================*/
+
+:root {
+    --bh-sky: #ffc93b;
+    --bh-ink: #2b2118;
+    --bh-ball: #4dabf7;
+    --bh-rim: #e8443c;
+    --bh-gold: #ffc53d;
+    --font-round: 'Fredoka', 'Baloo 2', system-ui, sans-serif;
+    --font-fat: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #241a10 0%, #17110b 100%);
+    font-family: var(--font-round);
+    color: #fff6e6;
+}
+
+.unified-nav,
+.site-footer {
+    flex: 0 0 auto;
+}
+
+.brand-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+}
+
+@media (max-width: 560px) {
+    .brand-img { width: 30px; height: 30px; }
+}
+
+/* ---------- Khung sân ----------
+   Sân luôn là 20×12 ô, game.js tự canh giữa trong khung này. Phần thừa hai bên
+   hoặc trên dưới chỉ là nền, không ảnh hưởng gì tới lời giải của màn chơi. */
+.game-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1400px;
+    height: 100%;
+    min-height: 0;
+    margin: 0 auto;
+    background: #1a1209;
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+body.chrome-fit > .game-wrapper.game-wrapper {
+    flex: 1 1 auto;
+}
+
+@media (max-width: 900px) {
+    .game-wrapper {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+}
+
+.board-host {
+    position: absolute;
+    inset: 0;
+}
+
+.board-host canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    touch-action: none;
+}
+
+/* ---------- Thanh thông tin ----------
+   Nền sân sáng màu nên chữ HUD phải là chữ tối trên nền sáng, ngược hẳn với
+   bubble-pop; chữ trắng đặt trên trời vàng thì gần như không đọc được. */
+.hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    pointer-events: none;
+    font-family: var(--font-fat);
+}
+
+.hud.hidden { display: none; }
+
+.hud-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.86);
+    border: 2px solid rgba(43, 33, 24, 0.85);
+    border-radius: 999px;
+    padding: 5px 14px;
+    color: var(--bh-ink);
+    box-shadow: 0 3px 0 rgba(43, 33, 24, 0.35);
+}
+
+.hud-tag {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #7a6248;
+    white-space: nowrap;
+}
+
+.hud-num {
+    font-size: 1.1rem;
+    font-weight: 800;
+    min-width: 1.1em;
+    text-align: center;
+}
+
+.hud-world {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #7a6248;
+    white-space: nowrap;
+}
+
+/* ---------- Mách nước ----------
+   Nằm thấp dưới sân: đặt trên đầu thì che mất mấy khối gạch cao, đúng chỗ bé
+   đang cần nhìn để nghĩ đường bóng. */
+.tip {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 14px;
+    z-index: 6;
+    max-width: 88%;
+    text-align: center;
+    background: rgba(43, 33, 24, 0.88);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #fff6e6;
+    pointer-events: none;
+    animation: tipIn 0.3s ease both;
+}
+
+.tip.hidden { display: none; }
+
+@keyframes tipIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ---------- Bảng phủ ---------- */
+.overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    /* align-items:center cắt mất đầu thẻ khi thẻ cao hơn bảng; margin:auto ở
+       thẻ canh giữa y hệt nhưng lúc chật thì nhường chỗ chứ không cắt. */
+    align-items: flex-start;
+    justify-content: center;
+    padding: 14px;
+    background: rgba(20, 13, 6, 0.88);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.overlay.hidden { display: none; }
+
+.card {
+    width: min(720px, 100%);
+    margin: auto;
+    background: rgba(38, 27, 16, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 20px;
+    padding: 22px 24px;
+    text-align: center;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+
+.pop-in { animation: popIn 0.28s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.title {
+    font-family: var(--font-fat);
+    font-size: clamp(1.9rem, 5vw, 2.9rem);
+    font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: 0.02em;
+    background: linear-gradient(180deg, #fff3c4, #ffb020);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 4px 18px rgba(255, 176, 32, 0.25);
+}
+
+.title-sm {
+    font-family: var(--font-fat);
+    font-size: clamp(1.4rem, 3.6vw, 2rem);
+    font-weight: 800;
+    margin: 0 0 10px;
+}
+
+.text-good { color: #8ce99a; }
+
+.subtitle {
+    margin: 0 0 16px;
+    color: #e3cfae;
+    font-size: 0.98rem;
+}
+
+/* ---------- Hướng dẫn ---------- */
+.how-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.how-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
+.how-emoji { font-size: 1.7rem; line-height: 1; }
+.how-item b { font-size: 0.98rem; color: #ffe9a8; }
+.how-item span:last-child { font-size: 0.84rem; color: #e3cfae; }
+
+.rule-note {
+    margin: 0 0 14px;
+    font-size: 0.88rem;
+    color: #e3cfae;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 9px 12px;
+}
+
+/* ---------- Nút ---------- */
+.btn {
+    font-family: var(--font-fat);
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    border-radius: 14px;
+    padding: 11px 20px;
+    cursor: pointer;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+    background: linear-gradient(135deg, #ffc93b, #ff922b);
+    color: #3a2400;
+    box-shadow: 0 8px 22px rgba(255, 146, 43, 0.35);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary.is-off { opacity: 0.55; }
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #e3cfae;
+}
+
+.btn-big {
+    font-size: 1.2rem;
+    padding: 14px 44px;
+}
+
+.row-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 14px;
+}
+
+/* ---------- Chọn thế giới ---------- */
+.world-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.ch-tab {
+    font-family: var(--font-fat);
+    font-size: 0.86rem;
+    font-weight: 700;
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+    color: #e3cfae;
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.ch-tab:hover:not(.locked) { transform: translateY(-2px); }
+
+.ch-tab.is-on {
+    background: linear-gradient(135deg, #ffc93b, #ff922b);
+    border-color: #fff;
+    color: #3a2400;
+}
+
+.ch-tab.locked { opacity: 0.45; cursor: not-allowed; }
+.ch-tab .ch-lock { font-style: normal; margin-right: 5px; }
+.ch-tab .ch-stars { font-size: 0.72rem; opacity: 0.9; margin-left: 5px; }
+
+/* ---------- Chọn màn ---------- */
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.lv {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff6e6;
+    font-family: var(--font-fat);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.lv:hover:not(.locked) { transform: translateY(-3px); border-color: var(--bh-gold); }
+
+.lv .lv-num { font-size: 1.5rem; font-weight: 800; }
+.lv .lv-stars { font-size: 0.8rem; letter-spacing: 1px; min-height: 1em; display: flex; gap: 1px; }
+
+.lv-star { font-style: normal; color: rgba(255, 255, 255, 0.2); line-height: 1; }
+.lv-star.lit { color: var(--bh-gold); text-shadow: 0 0 6px rgba(255, 197, 61, 0.55); }
+
+.lv.locked { cursor: not-allowed; opacity: 0.45; }
+.lv.locked .lv-num { color: #9c8874; }
+.lv.done { border-color: rgba(255, 197, 61, 0.55); background: rgba(255, 197, 61, 0.1); }
+
+/* ---------- Sao ---------- */
+.stars {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 8px 0 14px;
+}
+
+.star {
+    font-size: 2.6rem;
+    color: rgba(255, 255, 255, 0.16);
+    transform: scale(0.7);
+}
+
+.star.lit {
+    color: var(--bh-gold);
+    animation: starPop 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    text-shadow: 0 0 18px rgba(255, 197, 61, 0.6);
+}
+
+.star.lit:nth-child(2) { animation-delay: 0.14s; }
+.star.lit:nth-child(3) { animation-delay: 0.28s; }
+
+@keyframes starPop {
+    from { transform: scale(0.2) rotate(-40deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.stars-total {
+    font-family: var(--font-fat);
+    font-size: 1.6rem;
+    color: var(--bh-gold);
+    margin: 10px 0 4px;
+}
+
+.score-rows {
+    max-width: 320px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-weight: 600;
+}
+
+.score-row span:last-child {
+    color: var(--bh-gold);
+    font-family: var(--font-fat);
+    font-weight: 800;
+}
+
+/* ---------- Màn hẹp ---------- */
+@media (max-width: 640px) {
+    .card { padding: 14px 12px; }
+
+    .hud { top: 8px; left: 6px; right: 6px; gap: 5px; }
+    .hud-box { padding: 4px 10px; gap: 5px; }
+    .hud-tag { font-size: 0.56rem; letter-spacing: 0.03em; }
+    .hud-num { font-size: 0.95rem; }
+    .hud-world { font-size: 0.68rem; }
+    .tip { bottom: 10px; font-size: 0.82rem; padding: 7px 14px; }
+
+    .how-row { grid-template-columns: 1fr; gap: 7px; margin-bottom: 10px; }
+    .how-item {
+        text-align: left;
+        padding: 8px 10px;
+        gap: 9px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        align-items: center;
+    }
+    .how-emoji { grid-row: 1 / 3; font-size: 1.5rem; }
+    .how-item b { font-size: 0.92rem; }
+    .how-item span:last-child { font-size: 0.78rem; line-height: 1.25; }
+
+    .level-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .lv .lv-num { font-size: 1.15rem; }
+    .lv .lv-stars { font-size: 0.62rem; }
+
+    .title { margin-bottom: 2px; }
+    .subtitle { margin-bottom: 10px; font-size: 0.88rem; }
+    .btn-big { font-size: 1.05rem; padding: 12px 30px; }
+    .star { font-size: 2rem; }
+}
+
+/* ---------- Máy nằm ngang, màn thấp ----------
+   Điện thoại xoay ngang chỉ còn khoảng 250 px chiều cao cho bảng chào, mà nó
+   dựng theo bề ngang nên không rơi vào ngưỡng max-width phía trên. Ở đây co
+   theo CHIỀU CAO để bé không phải cuộn mới thấy nút CHƠI. */
+@media (max-height: 520px) {
+    .card { padding: 10px 14px; }
+    .title { font-size: 1.5rem; margin-bottom: 0; }
+    .subtitle { font-size: 0.8rem; margin-bottom: 7px; }
+
+    .how-row { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 7px; }
+    .how-item { padding: 6px 7px; gap: 1px; }
+    .how-emoji { font-size: 1.15rem; }
+    .how-item b { font-size: 0.8rem; }
+    .how-item span:last-child { font-size: 0.68rem; line-height: 1.2; }
+
+    .rule-note { padding: 6px 10px; font-size: 0.78rem; margin-bottom: 8px; }
+    .btn-big { font-size: 1rem; padding: 9px 26px; }
+    .row-buttons { margin-top: 9px; }
+    .level-grid { grid-template-columns: repeat(6, 1fr); gap: 7px; }
+    .ch-tab { font-size: 0.74rem; padding: 5px 10px; }
+    .world-tabs { margin-bottom: 7px; }
+    .lv .lv-num { font-size: 1.1rem; }
+    .stars { margin: 4px 0 8px; }
+    .star { font-size: 1.7rem; }
+}
