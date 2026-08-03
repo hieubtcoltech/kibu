@@ -490,7 +490,7 @@
         loadBgm() {
             if (!this.ctx || this.bgmBuf || this.bgmLoading) return;
             this.bgmLoading = true;
-            fetch('/panda-run/music.mp3')
+            fetch(BGM_URL)
                 .then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status))
                 .then(b => this.ctx.decodeAudioData(b))
                 .then(buf => {
@@ -500,7 +500,7 @@
                 })
                 .catch(e => {
                     this.bgmLoading = false;
-                    console.warn('Không tải được nhạc nền /panda-run/music.mp3:', e);
+                    console.warn('Không tải được nhạc nền ' + BGM_URL + ':', e);
                 });
         },
 
