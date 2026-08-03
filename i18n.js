@@ -494,9 +494,13 @@
         ['Xoay bàn cờ sau mỗi nước đi', 'Turn the board around after every move'],
         ['Để tắt khi hai bé cùng ngồi trước một màn hình. Bật lên khi hai bé chuyền tay nhau chiếc điện thoại, để bên đến lượt luôn nhìn thấy phe mình ở phía dưới.',
             'Leave it off when you both sit in front of one screen. Turn it on when you pass a phone back and forth, so the player to move always looks at their own side.'],
-        ['CỜ TƯỚNG', 'XIANGQI'],
-        ['CỜ TƯỚNG ONLINE', 'XIANGQI ONLINE'],
+        /* Viết hoa chữ đầu thôi. Bảng tra khớp không phân biệt hoa thường và
+         * bản dịch giữ lại kiểu chữ của bản gốc (applyCase), nên chỗ nào trên
+         * trang game đang viết hoa hết vẫn dịch ra chữ hoa hết — thêm một dòng
+         * viết hoa nữa chỉ tổ đè lên dòng này và bắt cả ô game ngoài trang chủ
+         * phải hét theo. */
         ['Cờ Tướng', 'Xiangqi'],
+        ['Cờ Tướng Online', 'Xiangqi Online'],
         ['Tạo phòng, gửi mã cho bạn, đánh ngay. Không cần đăng ký.',
             'Create a room, send the code to a friend, start playing. No sign-up.'],
         ['Tên của bạn', 'Your name'],
