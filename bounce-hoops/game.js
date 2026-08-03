@@ -171,8 +171,8 @@
         /* ---------- Thế giới 3: Purple Peak — khối trượt và gai ---------- */
         {
             name: 'Moving Wall', tip: 'Wait for the wall to slide away.',
-            ball: [3, 11], hoop: { x: 17, y: 10.5 }, par: 2,
-            walls: [[0, 11, 20, 1]], movers: [[7.5, 6, 1, 5, 1.5, 3.2]]
+            ball: [3, 11], hoop: { x: 15, y: 10.5 }, par: 2,
+            walls: [[0, 11, 20, 1]], movers: [[7, 6, 1, 5, 1.5, 3.2]]
         },
         {
             name: 'Sliding Roof', tip: 'The roof keeps moving. Time it.',
@@ -192,9 +192,9 @@
         },
         {
             name: 'Bounce Gate', tip: 'Pad up, then through the gate.',
-            ball: [2, 11], hoop: { x: 17, y: 3.5 }, par: 3,
+            ball: [2, 11], hoop: { x: 16.5, y: 4.5 }, par: 3,
             walls: [[0, 11, 20, 1], [13, 5, 7, 1]],
-            pads: [[6, 10.6, 3]], movers: [[10, 0, 1, 3, 2, 3]]
+            pads: [[8, 10.6, 4]], movers: [[10, 0, 1, 3, 2, 3]]
         },
         {
             name: 'The Tunnel', tip: 'Fly flat through the tunnel.',
@@ -223,8 +223,8 @@
         },
         {
             name: 'Rooftop', tip: 'Up to the roof, past the hanging block.',
-            ball: [2, 11], hoop: { x: 16, y: 3.5 }, par: 3,
-            walls: [[0, 11, 20, 1], [13, 4, 7, 1], [10, 0, 1, 3]],
+            ball: [2, 11], hoop: { x: 15.5, y: 3.5 }, par: 3,
+            walls: [[0, 11, 20, 1], [12.5, 4, 7, 1], [8, 1.5, 1, 1.5]],
             pads: [[8, 10.6, 4]]
         },
         {
