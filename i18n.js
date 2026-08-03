@@ -421,11 +421,12 @@
         ['QUA HẾT CÁC MÀN RỒI!', 'ALL LEVELS DONE!'],
         ['Màn nào bé cũng tìm ra đường cho bóng vào rổ.',
             'You found a path through every single one.'],
-        /* bốn thế giới */
+        /* năm thế giới */
         ['Sân Nắng', 'Sunny Yard'],
         ['Vịnh Xanh', 'Blue Lagoon'],
         ['Đỉnh Tím', 'Purple Peak'],
         ['Sân Đêm', 'Night Court'],
+        ['Trời Cao', 'Sky High'],
         /* tên và mách nước của từng màn */
         ['Cú Ném Đầu Tiên', 'First Shot'],
         ['Kéo lùi lại từ quả bóng rồi thả tay ra.', 'Drag back from the ball, then let go.'],
@@ -475,6 +476,21 @@
         ['Dùng bức tường bên phải mà dội bóng.', 'Use the wall on the right.'],
         ['Màn Cuối Cùng', 'Grand Finale'],
         ['Có đủ mọi thứ. Chúc bé may mắn!', 'Everything at once. Good luck!'],
+        /* sáu màn trên trời — dưới chân không có nền, hụt là bóng rơi mất */
+        ['Rời Khỏi Mây', 'Off The Cloud'],
+        ['Trên này không có nền. Ném hụt là mất quả bóng.',
+            'No floor up here. Miss it and the ball is gone.'],
+        ['Tường Mây', 'Cloud Wall'],
+        ['Qua khối đá bay, rồi thả thẳng xuống.', 'Over the floating block, then straight down.'],
+        ['Mái Trời', 'Sky Roof'],
+        ['Ném bẹt luồn dưới mái rồi thả xuống rổ.', 'Fly flat under the roof, then drop in.'],
+        ['Lò Xo Trời', 'Sky Spring'],
+        ['Tấm đệm hất bé lên cao. Dưới chân không có gì đỡ đâu.',
+            'The pad throws you high. Nothing below to catch you.'],
+        ['Giữa Thinh Không', 'Thin Air'],
+        ['Gai mọc ngay trên tấm đá duy nhất bé có.', 'Spikes on the only shelf you have got.'],
+        ['Cổng Trời', 'Sky Gate'],
+        ['Luồn quả bóng qua đúng cái khe giữa hai khối.', 'Thread the ball through the gap.'],
 
         /* ---------- Bubble Pop (bubble-pop) ---------- */
         ['Bắn Bóng Nổ', 'Bubble Pop'],

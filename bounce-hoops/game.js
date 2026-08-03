@@ -75,7 +75,8 @@
         { name: 'Sunny Yard', from: 0, sky: ['#ffd93b', '#ffc93b'], ink: '#2b2118' },
         { name: 'Blue Lagoon', from: 6, sky: ['#4dc3ff', '#2f8fd8'], ink: '#0b2a3d' },
         { name: 'Purple Peak', from: 12, sky: ['#b06cff', '#7a3fd0'], ink: '#25103f' },
-        { name: 'Night Court', from: 18, sky: ['#2c3e66', '#16213f'], ink: '#0a1020' }
+        { name: 'Night Court', from: 18, sky: ['#2c3e66', '#16213f'], ink: '#0a1020' },
+        { name: 'Sky High', from: 24, sky: ['#8ad8ff', '#cfefff'], ink: '#123047' }
     ];
 
     /* ========================================================================
@@ -238,6 +239,56 @@
             walls: [[0, 11, 20, 1], [8, 6, 3, 1], [13, 0, 1, 4]],
             pads: [[5, 10.6, 3], [9, 5.6, 2]], movers: [[15, 5, 1, 4, 1.5, 3]],
             spikes: [[9, 10.58, 3]]
+        },
+
+        /* ---------- Thế giới 5: Sky High — lơ lửng giữa trời ----------
+         * Sáu màn này KHÔNG CÓ NỀN NHÀ. Cả bốn thế giới trước đều trải khối
+         * [0, 11, 20, 1] suốt đáy sân, ném hụt thì bóng còn rơi xuống nền nảy
+         * lóc cóc, may ra vẫn lăn vào rổ. Trên này hụt là rơi thẳng ra khỏi
+         * trời, mất luôn cú đó — không phải luật mới, chỉ là dưới chân không
+         * còn gì đỡ nữa.
+         *
+         * Bé đứng trên một mỏm con ở góc trái. Mỏm này là khối tường ĐẦU TIÊN
+         * của mỗi màn, giữ đúng chỗ ấy trong danh sách vì máy chỉnh màn chừa
+         * khối đầu tiên ra không xê dịch — nó vốn viết cho cái nền nhà, mà ở
+         * đây chỗ bé đứng cũng cần được chừa y như vậy. */
+        {
+            name: 'Off The Cloud', tip: 'No floor up here. Miss it and the ball is gone.',
+            ball: [2, 9], hoop: { x: 14, y: 8 }, par: 1,
+            walls: [[1, 9, 4, 1]]
+        },
+        {
+            name: 'Cloud Wall', tip: 'Over the floating block, then straight down.',
+            ball: [2, 9], hoop: { x: 15, y: 7 }, par: 2,
+            walls: [[1, 9, 4, 1], [9, 5.5, 1, 3.5]]
+        },
+        /* Cặp đôi với màn trên: kia bắt vượt LÊN trên bức tường, màn này bắt
+         * luồn XUỐNG dưới cái mái. Bản đầu định làm "dội tấm đá bay mà trèo
+         * lên", nhưng đo ra bỏ hẳn tấm đá đi vẫn giải được rộng 24° — tấm đá
+         * chỉ là đồ trang trí và mách nước thành ra nói dối bé. */
+        {
+            name: 'Sky Roof', tip: 'Fly flat under the roof, then drop in.',
+            ball: [2, 9], hoop: { x: 17, y: 10 }, par: 2,
+            walls: [[1, 9, 4, 1], [11, 5, 7, 1]]
+        },
+        {
+            name: 'Sky Spring', tip: 'The pad throws you high. Nothing below to catch you.',
+            ball: [2, 9], hoop: { x: 16, y: 4 }, par: 2,
+            walls: [[1, 9, 4, 1], [8, 9, 4, 1]], pads: [[9, 8.6, 3]]
+        },
+        {
+            name: 'Thin Air', tip: 'Spikes on the only shelf you have got.',
+            ball: [2, 9], hoop: { x: 17, y: 7 }, par: 2,
+            walls: [[1, 9, 4, 1], [9, 7, 4, 1]], spikes: [[9.5, 6.58, 3]]
+        },
+        /* Cổng làm bằng hai khối ĐỨNG YÊN chừa một khe ở giữa. Bản đầu dùng
+         * khối trượt, nghe hay hơn nhiều, nhưng đo ra bỏ hẳn khối trượt đi thì
+         * màn còn dễ hơn — nó chẳng chặn gì cả. Mà bịt kín cho khối trượt
+         * thành cái cổng thật thì lại hoá vô phương, không cú nào lọt. */
+        {
+            name: 'Sky Gate', tip: 'Thread the ball through the gap.',
+            ball: [2, 9], hoop: { x: 16, y: 9 }, par: 2,
+            walls: [[1, 9, 4, 1], [10, 0, 1, 5], [10, 8, 1, 2]]
         }
     ];
 
