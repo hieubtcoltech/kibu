@@ -810,7 +810,12 @@
         const wasM = G.metres;
         G.metres = Math.floor(G.dist / METER);
         if (G.metres !== wasM) countMission('dist', 0, G.metres);
-        G.runCycle += dt * (G.onGround ? sp * 0.9 : 4);
+        /* Nhịp chân suy ra từ tốc độ chạy, để bàn chân đứng yên so với mặt đất
+         * lúc chống. Đặt bừa một con số ở đây là sinh ra trượt chân: bản trước
+         * để 0,9 nên bàn chân miết tới trước 85% quãng đường mỗi bước, nhìn ra
+         * đúng động tác moonwalk. */
+        const cadence = Math.min(CADENCE_MAX, TAU * sp * LEG_CONTACT / (2 * LEG_AMP));
+        G.runCycle += dt * (G.onGround ? cadence : 4);
 
         /* ---- lên xuống ---- */
         if (G.rocketT > 0) {
@@ -1244,8 +1249,22 @@
         cage: null, log: null, rock: null, spike: null
     };
 
-    const PANDA_FRAMES = 8;
+    /* Mười hai hình cho một vòng chạy thay vì tám: với nhịp chân đúng (xem
+     * LEG_AMP bên dưới) thì tám hình đổi quá thưa, mắt thấy giật. */
+    const PANDA_FRAMES = 12;
     const COIN_FRAMES = 6;
+
+    /* Biên độ trước–sau của bàn chân, và phần trăm vòng chạy mà một chân còn
+     * chống đất. Hai số này quyết định nhịp chân: bàn chân lùi được 2×LEG_AMP
+     * trong LEG_CONTACT của một vòng, nên muốn nó đứng yên so với mặt đất thì
+     *
+     *      số vòng mỗi giây = tốc độ × LEG_CONTACT / (2 × LEG_AMP)
+     *
+     * Để chống đất dưới nửa vòng (0,45) thì có những lúc cả hai chân đều rời
+     * đất — đó mới là CHẠY; đúng nửa vòng trở lên là dáng đi bộ nhanh. */
+    const LEG_AMP = 0.5;
+    const LEG_CONTACT = 0.45;
+    const CADENCE_MAX = 30;      // trần nhịp chân (rad/giây), khỏi loạn hình
 
     /* Vẽ sẵn một tấm. Trả về {c, w, h, ax, ay} — ax/ay là điểm neo (chỗ đặt
      * chân) tính trong toạ độ tấm ảnh, để lúc dán khỏi phải căn tay. */
@@ -1346,9 +1365,105 @@
         g.closePath();
         g.fill();
 
-        /* --- tay chân ---
-         * Vẽ bằng nét dày bo tròn rồi chấm thêm bàn chân ở đầu: chỉ có nét
-         * không thôi thì chân trông như que tăm cắm vào người. */
+        /* ====================================================================
+         *  CHÂN VÀ TAY — viết lại theo đúng một chu kỳ chạy
+         * --------------------------------------------------------------------
+         *  Bản trước sai ở chỗ không ai ngờ tới: pha tay chân đã đúng, nhưng
+         *  BÀN CHÂN TRƯỢT. Một lần chống đất kéo dài nửa giây, trong nửa giây
+         *  đó mặt đất trôi qua 3,5 u mà bàn chân chỉ lùi được 0,52 u so với
+         *  thân — tức là nó miết TỚI TRƯỚC gần hết quãng đường. Đó đúng là
+         *  động tác moonwalk, nên mắt đọc ra "chạy ngược" dù mọi con số pha
+         *  đều đúng.
+         *
+         *  Hai thứ phải sửa cùng lúc:
+         *    1. Lúc chống đất, bàn chân lùi ĐỀU (đường thẳng), không phải theo
+         *       hình sin. Sin thì hai đầu chậm giữa nhanh, nhìn cũng ra trượt.
+         *    2. Nhịp chân phải tính từ tốc độ chạy, sao cho quãng bàn chân lùi
+         *       đúng bằng quãng mặt đất trôi. Chỗ này làm ở stepPlayer.
+         *
+         *  Quỹ đạo bàn chân theo pha p (0 → 1 là một vòng của MỘT chân):
+         *    p ∈ [0 , 0.5]  CHỐNG ĐẤT — chân sát đất, lùi đều từ trước ra sau
+         *    p ∈ [0.5 , 1]  ĐƯA CHÂN — nhấc lên, gập gối, vòng ra trước
+         * ==================================================================*/
+        const LEG_A = LEG_AMP * u;         // biên độ trước–sau của bàn chân
+        const LEG_LIFT = 0.30 * u;         // nhấc cao nhất lúc đưa chân
+        const BONE = 0.33 * u;             // đùi và cẳng dài bằng nhau
+        const hipY = bodyCY + 0.20 * u;
+
+        function footAt(p) {
+            p = ((p % 1) + 1) % 1;
+            if (p < LEG_CONTACT) {
+                const t = p / LEG_CONTACT;
+                return { x: LEG_A * (1 - 2 * t), y: 0 };
+            }
+            const t = (p - LEG_CONTACT) / (1 - LEG_CONTACT);
+            /* Nhấc cao nhất ở giữa quãng đưa chân, và hơi lệch về nửa đầu —
+             * chân co lên nhanh rồi mới duỗi ra đón đất, chứ không phải một
+             * vòng cung cân đối. */
+            return {
+                x: LEG_A * (2 * t - 1),
+                y: LEG_LIFT * Math.sin(Math.PI * Math.pow(t, 0.78))
+            };
+        }
+
+        /* Chân hai đốt có đầu gối. Biết vị trí hông và bàn chân thì suy ngược
+         * ra chỗ đặt đầu gối — đây là bài toán giao hai đường tròn quen thuộc.
+         * Chân một đốt thẳng đơ là thứ tố cáo ngay đây là hình vẽ tay: chân
+         * thật lúc đưa về trước bao giờ cũng gập gối lại. */
+        function leg(hx, hy, fx, fy, col, w) {
+            const dx = fx - hx, dy = fy - hy;
+            const d = Math.min(Math.hypot(dx, dy), BONE * 2 - 0.001 * u);
+            const base = Math.atan2(dy, dx);
+            const cosT = (d * d) / (2 * d * BONE);
+            const t = Math.acos(Math.max(-1, Math.min(1, cosT)));
+            /* Trừ đi t: đầu gối lệch về phía trước mặt, đúng chiều gối gập. */
+            const ka = base - t;
+            const kx = hx + Math.cos(ka) * BONE;
+            const ky = hy + Math.sin(ka) * BONE;
+
+            g.strokeStyle = col;
+            g.lineWidth = w;
+            g.beginPath();
+            g.moveTo(hx, hy);
+            g.lineTo(kx, ky);
+            g.lineTo(fx, fy);
+            g.stroke();
+            /* Bàn chân nằm ngang, hơi chúi theo hướng cẳng chân. */
+            g.save();
+            g.translate(fx, fy);
+            g.rotate(Math.atan2(fy - ky, fx - kx) - Math.PI / 2);
+            g.fillStyle = col;
+            g.beginPath();
+            g.ellipse(0, 0, w * 0.75, w * 0.5, 0, 0, TAU);
+            g.fill();
+            g.restore();
+        }
+
+        /* Tay cũng hai đốt, xoay quanh vai, vung đều cả trước lẫn sau lưng.
+         * Biên độ để xấp xỉ biên độ chân thì mắt mới đọc ra được tay và chân
+         * đang ngược nhau — thứ mắt bắt là biên độ, không phải con số pha. */
+        function arm(sx0, sy0, p, col) {
+            const sw = Math.cos(p * TAU) * 1.05;
+            const upper = 0.22 * u, fore = 0.20 * u;
+            const ex = sx0 + Math.sin(sw * 0.7) * upper;
+            const ey = sy0 + Math.cos(sw * 0.7) * upper;
+            /* Cẳng tay gập thêm về trước — kiểu tay chạy, không phải tay đi bộ. */
+            const fa = sw * 0.7 + 0.85;
+            const hx = ex + Math.sin(fa) * fore;
+            const hy = ey + Math.cos(fa) * fore;
+            g.strokeStyle = col;
+            g.lineWidth = 0.17 * u;
+            g.beginPath();
+            g.moveTo(sx0, sy0);
+            g.lineTo(ex, ey);
+            g.lineTo(hx, hy);
+            g.stroke();
+            g.fillStyle = col;
+            g.beginPath();
+            g.ellipse(hx, hy, 0.115 * u, 0.09 * u, 0, 0, TAU);
+            g.fill();
+        }
+
         const limb = (x1, y1, x2, y2, w, col, paw) => {
             g.strokeStyle = col;
             g.lineWidth = w;
@@ -1364,58 +1479,22 @@
             }
         };
 
-        const hipY = bodyCY + 0.20 * u;
-
-        /* Cánh tay quay quanh khớp vai, vung ĐỀU HAI PHÍA trước và sau lưng.
-         *
-         * Bản trước tay chỉ nhúc nhích trong một khoảng hẹp và lúc nào cũng nằm
-         * phía trước bụng, nên dù pha đã đúng thì mắt vẫn không đọc ra được tay
-         * và chân đang ngược nhau — thứ mắt bắt được là biên độ, không phải con
-         * số pha. Biên độ tay giờ để xấp xỉ biên độ chân (±0,27 u) thì sự đối
-         * nghịch mới hiện ra. */
-        const arm = (sx0, sy0, phase, col) => {
-            const ang = Math.cos(phase) * 0.95;          // 0 là buông thẳng xuống
-            const len = 0.36 * u;
-            /* Khuỷu gập nhẹ về sau, cho cánh tay có đốt chứ không phải một que. */
-            const ex = sx0 + Math.sin(ang * 0.55) * len * 0.55;
-            const ey = sy0 + Math.cos(ang * 0.55) * len * 0.55;
-            const hx = ex + Math.sin(ang) * len * 0.55;
-            const hy = ey + Math.cos(ang) * len * 0.55;
-            g.strokeStyle = col;
-            g.lineWidth = 0.19 * u;
-            g.beginPath();
-            g.moveTo(sx0, sy0);
-            g.lineTo(ex, ey);
-            g.lineTo(hx, hy);
-            g.stroke();
-            g.fillStyle = col;
-            g.beginPath();
-            g.ellipse(hx, hy, 0.12 * u, 0.09 * u, 0, 0, TAU);
-            g.fill();
-        };
+        /* Pha của hai chân lệch nhau nửa vòng. Chân XA đi trước nửa nhịp. */
+        const pNear = k;
+        const pFar = k + 0.5;
 
         if (slide) {
             limb(cx - 0.10 * u, hipY - 0.06 * u, cx - 0.58 * u, foot - 0.05 * u, 0.24 * u, PANDA.limbFar, true);
-            limb(cx + 0.16 * u, hipY - 0.10 * u, cx + 0.50 * u, foot - 0.03 * u, 0.23 * u, PANDA.black, true);
         } else if (jump) {
             /* Nhảy thì co chân lại — duỗi thẳng nhìn như đang rơi chứ không bật. */
-            limb(cx - 0.14 * u, hipY, cx - 0.34 * u, foot - 0.26 * u, 0.24 * u, PANDA.limbFar, true);
-            limb(cx + 0.16 * u, hipY, cx + 0.36 * u, foot - 0.14 * u, 0.24 * u, PANDA.black, true);
-            limb(cx + 0.24 * u, bodyCY - 0.12 * u, cx + 0.58 * u, bodyCY - 0.46 * u, 0.20 * u, PANDA.black, true);
+            leg(cx - 0.11 * u, hipY, cx - 0.30 * u, foot - 0.34 * u, PANDA.limbFar, 0.21 * u);
+            arm(cx - 0.16 * u, bodyCY - 0.16 * u, 0.5, PANDA.limbFar);
         } else {
-            /* Chân sau lệch pha nửa vòng so với chân trước — đó là toàn bộ bí
-             * quyết để tám hình rời rạc nhìn ra một bước chạy.
-             *
-             * Bàn chân NHẤC LÊN đúng lúc nó đang đưa TỚI TRƯỚC, và CHẠM ĐẤT
-             * suốt quãng nó lùi về sau (lúc đó mặt đất đang đẩy người đi tới).
-             * Làm ngược lại — nhấc chân lúc lùi, đặt chân lúc đưa tới — thì
-             * thành đúng cái dáng chạy giật lùi, kiểu moonwalk. */
-            const bx = cx + Math.cos(a + Math.PI) * 0.26 * u;
-            const by = foot - Math.max(0, -Math.sin(a + Math.PI)) * 0.17 * u;
-            limb(cx - 0.10 * u, hipY, bx, by, 0.23 * u, PANDA.limbFar, true);
-            /* Tay XA đi cùng pha với chân GẦN — tức ngược pha với chân cùng bên
-             * nó (chân xa). Đó là kiểu vận động chéo: tay phải theo chân trái. */
-            arm(cx - 0.16 * u, bodyCY - 0.14 * u, a, PANDA.limbFar);
+            const f = footAt(pFar);
+            leg(cx - 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.limbFar, 0.21 * u);
+            /* Tay XA cùng pha với chân GẦN — tức ngược pha với chân cùng bên
+             * nó. Đó là vận động chéo: tay phải theo chân trái. */
+            arm(cx - 0.16 * u, bodyCY - 0.16 * u, pNear, PANDA.limbFar);
         }
 
         /* --- thân trắng --- */
@@ -1427,23 +1506,22 @@
         g.ellipse(cx, bodyCY, bodyRX, bodyRY, 0, 0, TAU);
         g.fill();
 
-        /* --- chân trước --- */
-        if (!slide && !jump) {
-            const fx = cx + Math.cos(a) * 0.26 * u;
-            const fy = foot - Math.max(0, -Math.sin(a)) * 0.17 * u;
-            limb(cx + 0.10 * u, hipY, fx, fy, 0.24 * u, PANDA.black, true);
-        } else if (slide) {
+        /* --- chân GẦN, vẽ đè lên thân --- */
+        if (slide) {
             limb(cx + 0.20 * u, hipY - 0.08 * u, cx + 0.62 * u, foot - 0.03 * u, 0.24 * u, PANDA.black, true);
+        } else if (jump) {
+            leg(cx + 0.11 * u, hipY, cx + 0.34 * u, foot - 0.18 * u, PANDA.black, 0.22 * u);
+        } else {
+            const f = footAt(pNear);
+            leg(cx + 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.black, 0.22 * u);
         }
 
-        /* --- tay GẦN: vẽ đè lên thân trắng ---
-         * Ngược pha với chân gần (chân cùng bên nó) — tay phải theo chân trái.
-         * Thiếu cánh tay thì con panda thành cái bình có chân. */
+        /* --- tay GẦN --- */
         if (jump) {
             limb(cx + 0.16 * u, bodyCY - 0.16 * u, cx + 0.52 * u, bodyCY - 0.40 * u,
                 0.19 * u, PANDA.black, true);
         } else if (!slide) {
-            arm(cx + 0.12 * u, bodyCY - 0.16 * u, a + Math.PI, PANDA.black);
+            arm(cx + 0.12 * u, bodyCY - 0.16 * u, pFar, PANDA.black);
         } else {
             limb(cx + 0.22 * u, bodyCY - 0.10 * u, cx + 0.68 * u, bodyCY + 0.06 * u,
                 0.19 * u, PANDA.black, true);
