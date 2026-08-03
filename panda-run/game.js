@@ -451,10 +451,16 @@
              * (/panda-run/style.css, /panda-run/icon.jpg), chỗ này sót lại. */
             this.bgm = new Audio('/panda-run/music.mp3');
             this.bgm.loop = true;
-            /* Nhạc nền phải nhường chỗ cho tiếng động. Để 0,35 thì cả bản
-             * phối đè lên mấy sóng đơn mỏng manh của tiếng ăn xu, tiếng va
-             * chạm — nghe như game mất tiếng, trong khi tiếng vẫn phát ra đều. */
-            this.bgm.volume = 0.15;
+            /* Nhạc nền phải nhường chỗ cho tiếng động. Để 0,35 thì cả bản phối
+             * đè lên mấy sóng đơn mỏng manh của tiếng ăn xu, tiếng va chạm —
+             * nghe như game mất tiếng, trong khi tiếng vẫn phát ra đều.
+             *
+             * Nhạc chỉ là phông nền, còn tiếng động mới là thứ NÓI CHO BÉ BIẾT
+             * vừa có chuyện gì xảy ra: ăn được xu, cứu được bạn, hay vừa đâm
+             * phải. Mất phông nền thì game vẫn chơi được; mất lời báo thì bé
+             * không biết mình vừa làm đúng hay sai. Nên khi hai bên tranh nhau,
+             * nhạc là bên phải lùi. */
+            this.bgm.volume = 0.09;
             this.bgm.preload = 'auto';
             this.bgm.addEventListener('error', () => {
                 console.warn('Không tải được /panda-run/music.mp3');
