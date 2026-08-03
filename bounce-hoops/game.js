@@ -203,8 +203,8 @@
         },
         {
             name: 'Crossfire', tip: 'Two movers, one window.',
-            ball: [2, 11], hoop: { x: 17, y: 5 }, par: 4,
-            walls: [[0, 11, 20, 1], [14, 7, 6, 1]],
+            ball: [2, 11], hoop: { x: 17, y: 9 }, par: 3,
+            walls: [[0, 11, 20, 1]],
             movers: [[8, 3, 1, 4, 2.2, 2.8], [11, 7, 1, 4, 2, 3.6]]
         },
         {
@@ -225,8 +225,8 @@
         },
         {
             name: 'Grand Finale', tip: 'Everything at once. Good luck!',
-            ball: [2, 11], hoop: { x: 18, y: 1.8 }, par: 4,
-            walls: [[0, 11, 20, 1], [7, 5, 3, 1], [15, 4, 5, 1], [12, 0, 1, 4]],
+            ball: [2, 11], hoop: { x: 18, y: 5 }, par: 4,
+            walls: [[0, 11, 20, 1], [7, 5, 3, 1], [15, 7, 5, 1], [12, 0, 1, 4]],
             pads: [[5, 10.6, 2], [8, 4.6, 2]], movers: [[13, 6, 1, 5, 1.8, 3]],
             spikes: [[10, 10.58, 3]]
         }
