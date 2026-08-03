@@ -1014,10 +1014,7 @@
         ctx.lineTo(bx + (s > 0 ? 0 : bw), y + V.u * 0.16);
         ctx.stroke();
 
-        const bg = ctx.createLinearGradient(bx, 0, bx + bw, 0);
-        bg.addColorStop(0, s > 0 ? '#ffffff' : '#e6d5b8');
-        bg.addColorStop(1, s > 0 ? '#e6d5b8' : '#ffffff');
-        ctx.fillStyle = bg;
+        ctx.fillStyle = '#fff3c4';
         roundRect(bx, by, bw, bh, V.u * 0.08);
         ctx.fill();
         ctx.strokeStyle = ink;
@@ -1123,12 +1120,6 @@
         ctx.restore();
     }
 
-    /* Quả bóng rổ thật: da cam, viền đậm, bốn đường múi.
-     *
-     * Múi bóng vẽ trong hệ toạ độ đã xoay theo b.rot, nên nhìn là biết bóng
-     * đang quay bên nào — thiếu nó thì quả bóng cứ trôi cứng đơ như hòn đá.
-     * Riêng vệt sáng thì vẽ sau khi trả lại trục, vì ánh sáng đứng yên chứ
-     * không quay theo bóng. */
     /* Ngắm bằng phím thì không có ngón tay nào trên sân để biết mình đang chỉ
      * đâu, nên phải vẽ hẳn cái mũi tên và thanh lực ra. Mũi tên dài ngắn theo
      * lực, thanh lực chia đúng số nấc mà dấu cách bấm qua — bé đếm được còn
@@ -1178,21 +1169,24 @@
         ctx.restore();
     }
 
+    /* Quả bóng rổ: da cam đặc một màu, viền đậm, bốn đường múi.
+     *
+     * Vẽ BẸT chứ không đánh khối — không loang màu, không vệt sáng. Cả sân này
+     * cái gì cũng bẹt: gạch trắng một màu, bàn nhún cam một màu, bé vàng một
+     * màu, thảy đều cùng một kiểu viền đậm. Quả bóng mà tô loang cho tròn khối
+     * thì nó nổi hẳn lên như dán từ game khác sang.
+     *
+     * Múi bóng vẽ trong hệ toạ độ đã xoay theo b.rot, nên nhìn là biết bóng
+     * đang quay bên nào — thiếu nó thì quả bóng cứ trôi cứng đơ như hòn đá. */
     function drawBall() {
         const b = G.ball;
         const x = sx(b.x), y = sy(b.y), r = BALL_R * V.u;
-        const seam = '#7a2e08';
 
         ctx.save();
         ctx.translate(x, y);
-
-        ctx.save();
         ctx.rotate(b.rot);
-        const g = ctx.createRadialGradient(-r * 0.32, -r * 0.36, r * 0.1, 0, 0, r);
-        g.addColorStop(0, '#ffc078');
-        g.addColorStop(0.55, '#fd7e14');
-        g.addColorStop(1, '#d9480f');
-        ctx.fillStyle = g;
+
+        ctx.fillStyle = '#fd7e14';
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, 6.283);
         ctx.fill();
@@ -1204,7 +1198,7 @@
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, 6.283);
         ctx.clip();
-        ctx.strokeStyle = seam;
+        ctx.strokeStyle = '#7a2e08';
         ctx.lineWidth = Math.max(1.2, r * 0.11);
         ctx.beginPath();
         ctx.moveTo(-r, 0); ctx.lineTo(r, 0);
@@ -1219,13 +1213,6 @@
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, 6.283);
         ctx.stroke();
-        ctx.restore();
-
-        /* vệt sáng đứng yên, cho quả bóng có khối chứ không phẳng lì */
-        ctx.fillStyle = 'rgba(255,255,255,0.42)';
-        ctx.beginPath();
-        ctx.ellipse(-r * 0.34, -r * 0.4, r * 0.28, r * 0.19, -0.7, 0, 6.283);
-        ctx.fill();
         ctx.restore();
     }
 
