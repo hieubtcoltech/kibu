@@ -380,6 +380,10 @@
         aimTo: null,
         preview: [],         // các chấm của đường ngắm
 
+        keyMode: false,      // bé đang chơi bằng bàn phím
+        aimAngle: -Math.PI / 4,
+        aimPower: 0.7,
+
         parts: [],
         rings: [],
         shakeUntil: 0,
@@ -605,6 +609,7 @@
         G.rings = [];
         G.preview = [];
         G.mode = 'aim';
+        if (G.keyMode) refreshKeyPreview();
         updateHud();
     }
 
@@ -655,13 +660,13 @@
         return { vx: (dx / d) * k * MAX_POWER, vy: (dy / d) * k * MAX_POWER, power: k };
     }
 
-    function throwBall() {
-        const a = aimVector();
-        if (!a || G.mode !== 'aim') return;
-        G.ball.vx = a.vx;
-        G.ball.vy = a.vy;
-        G.ball.spin = -a.vx * 0.4;
-        G.rest = false;
+    /* Ném thật sự. Kéo chuột và bấm phím đều đổ về đây, nên hai cách chơi
+     * không thể nào lệch nhau được. */
+    function launch(vx, vy) {
+        if (G.mode !== 'aim') return;
+        G.ball.vx = vx;
+        G.ball.vy = vy;
+        G.ball.spin = -vx * 0.4;
         G.mode = 'fly';
         G.flyT = 0;
         G.shots++;
@@ -670,6 +675,61 @@
         sfx.throwBall();
         puff(G.ball.x, G.ball.y, 8);
         updateHud();
+    }
+
+    function throwBall() {
+        const a = aimVector();
+        if (a) launch(a.vx, a.vy);
+    }
+
+    /* ---- ngắm bằng bàn phím ----
+     * Bàn phím đi theo từng nấc: mũi tên xoay 2°, dấu cách đổi lực từng nấc
+     * một phần mười. Cố ý KHÔNG làm thanh lực chạy qua chạy lại rồi bấm cho
+     * trúng: cả game này không có chỗ nào bắt bé nhanh tay, thêm một cái đồng
+     * hồ bấm giờ trá hình vào đây thì hỏng mất cái nết của nó.
+     *
+     * Hai nấc này chọn đúng bằng lưới mà máy dò dùng để kiểm 24 màn (2° và
+     * một phần mười lực), nên màn nào máy bảo giải được thì bấm phím cũng
+     * giải được — không có màn nào chỉ chuột mới với tới. */
+    const KEY_TURN = 2 * Math.PI / 180;
+    const KEY_PW_STEP = 0.1, KEY_PW_MIN = 0.2, KEY_PW_MAX = 1;
+
+    function keyAimVector() {
+        return {
+            vx: Math.cos(G.aimAngle) * G.aimPower * MAX_POWER,
+            vy: Math.sin(G.aimAngle) * G.aimPower * MAX_POWER
+        };
+    }
+
+    function refreshKeyPreview() {
+        if (G.mode !== 'aim') { G.preview = []; return; }
+        const a = keyAimVector();
+        G.preview = previewPath(a.vx, a.vy);
+    }
+
+    /* Xoay sao cho ĐẦU MŨI TÊN chạy về đúng phía bé vừa bấm. Cứ cộng thẳng
+     * góc thì lúc mũi tên chỉ sang trái, bấm "lên" nó lại chúi xuống — nhìn
+     * là thấy sai ngay mà sửa thì phải nghĩ. */
+    function turnAim(dx, dy) {
+        const sgn = v => (v < 0 ? -1 : 1);
+        let d = 0;
+        /* Muốn đầu mũi tên đi lên thì sin phải giảm, mà đạo hàm của sin là cos
+         * nên xoay ngược dấu cos; muốn nó sang phải thì cos phải tăng, đạo hàm
+         * của cos là −sin nên xoay ngược dấu sin. Nhớ nhầm một dấu ở đây là
+         * bấm sang phải mũi tên lại chạy sang trái. */
+        if (dy) d = dy < 0 ? -sgn(Math.cos(G.aimAngle)) : sgn(Math.cos(G.aimAngle));
+        else if (dx) d = dx > 0 ? -sgn(Math.sin(G.aimAngle)) : sgn(Math.sin(G.aimAngle));
+        G.aimAngle += d * KEY_TURN;
+        if (G.aimAngle > Math.PI) G.aimAngle -= 2 * Math.PI;
+        if (G.aimAngle < -Math.PI) G.aimAngle += 2 * Math.PI;
+        refreshKeyPreview();
+    }
+
+    function stepPower() {
+        G.aimPower += KEY_PW_STEP;
+        if (G.aimPower > KEY_PW_MAX + 1e-6) G.aimPower = KEY_PW_MIN;
+        G.aimPower = Math.round(G.aimPower * 20) / 20;
+        refreshKeyPreview();
     }
 
     function stepBall(dt) {
@@ -740,6 +800,9 @@
         /* Một nhúm khói ở chỗ bé đứng: quả bóng nhảy cái vụt về chỗ cũ, không
          * có gì đánh dấu thì bé đang nhìn đầu kia sân sẽ tưởng bóng biến mất. */
         puff(G.ball.x, G.ball.y, 6);
+        /* Chơi bằng phím thì góc và lực giữ nguyên như cũ, chỉ vẽ lại đường
+         * ngắm — ném hụt một cú mà phải ngắm lại từ đầu thì nản lắm. */
+        if (G.keyMode) refreshKeyPreview();
         updateHud();
     }
 
@@ -819,6 +882,7 @@
         drawHoop(W);
         drawThrower(W);
         drawPreview();
+        drawKeyAim();
         drawBall();
         drawParts();
         drawRings();
@@ -1065,6 +1129,55 @@
      * đang quay bên nào — thiếu nó thì quả bóng cứ trôi cứng đơ như hòn đá.
      * Riêng vệt sáng thì vẽ sau khi trả lại trục, vì ánh sáng đứng yên chứ
      * không quay theo bóng. */
+    /* Ngắm bằng phím thì không có ngón tay nào trên sân để biết mình đang chỉ
+     * đâu, nên phải vẽ hẳn cái mũi tên và thanh lực ra. Mũi tên dài ngắn theo
+     * lực, thanh lực chia đúng số nấc mà dấu cách bấm qua — bé đếm được còn
+     * mấy nấc nữa thì tới nấc mình muốn. */
+    function drawKeyAim() {
+        if (!G.keyMode || G.mode !== 'aim') return;
+        const b = G.ball;
+        const x = sx(b.x), y = sy(b.y);
+        const len = V.u * (0.85 + G.aimPower * 1.7);
+        const tx = x + Math.cos(G.aimAngle) * len;
+        const ty = y + Math.sin(G.aimAngle) * len;
+        const head = V.u * 0.26;
+
+        ctx.save();
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        for (const pass of [0, 1]) {
+            ctx.strokeStyle = pass ? '#ffffff' : 'rgba(0,0,0,0.5)';
+            ctx.fillStyle = pass ? '#ffffff' : 'rgba(0,0,0,0.5)';
+            ctx.lineWidth = pass ? V.u * 0.075 : V.u * 0.16;
+            ctx.beginPath();
+            ctx.moveTo(x + Math.cos(G.aimAngle) * V.u * 0.42, y + Math.sin(G.aimAngle) * V.u * 0.42);
+            ctx.lineTo(tx - Math.cos(G.aimAngle) * head * 0.7, ty - Math.sin(G.aimAngle) * head * 0.7);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(tx - Math.cos(G.aimAngle - 0.45) * head, ty - Math.sin(G.aimAngle - 0.45) * head);
+            ctx.lineTo(tx - Math.cos(G.aimAngle + 0.45) * head, ty - Math.sin(G.aimAngle + 0.45) * head);
+            ctx.closePath();
+            ctx.fill();
+            if (!pass) ctx.stroke();
+        }
+
+        /* thanh lực, treo ngay trên đầu quả bóng */
+        const notches = Math.round((KEY_PW_MAX - KEY_PW_MIN) / KEY_PW_STEP) + 1;
+        const on = Math.round((G.aimPower - KEY_PW_MIN) / KEY_PW_STEP) + 1;
+        const bw = V.u * 1.9, bh = V.u * 0.26;
+        const px = x - bw / 2, py = y - V.u * 1.25;
+        ctx.fillStyle = 'rgba(0,0,0,0.45)';
+        roundRect(px - V.u * 0.05, py - V.u * 0.05, bw + V.u * 0.1, bh + V.u * 0.1, bh * 0.7);
+        ctx.fill();
+        const gap = V.u * 0.035, cw = (bw - gap * (notches - 1)) / notches;
+        for (let i = 0; i < notches; i++) {
+            ctx.fillStyle = i < on ? (i < notches * 0.6 ? '#8ce99a' : '#ffd43b') : 'rgba(255,255,255,0.22)';
+            ctx.fillRect(px + i * (cw + gap), py, cw, bh);
+        }
+        ctx.restore();
+    }
+
     function drawBall() {
         const b = G.ball;
         const x = sx(b.x), y = sy(b.y), r = BALL_R * V.u;
@@ -1289,6 +1402,13 @@
             ev.preventDefault();
             sfx.wake();
             if (G.mode !== 'aim') return;
+            /* Bắt lấy con trỏ: từ giờ tới lúc thả tay, mọi tin tức của nó đều
+             * chạy về đây kể cả khi bé kéo ra ngoài khung game. Không bắt thì
+             * chuột vừa ra khỏi sân là mất luôn tin, đường ngắm đứng hình giữa
+             * chừng còn cú ném thì không bao giờ bay — mà kéo ná thì tay bé
+             * theo đà toàn kéo quá mép sân. */
+            try { host.setPointerCapture(ev.pointerId); } catch (e) { }
+            G.keyMode = false;
             G.aiming = true;
             G.aimFrom = pointAt(ev);
             G.aimTo = G.aimFrom;
@@ -1304,17 +1424,66 @@
         const end = ev => {
             if (!G.aiming) return;
             G.aiming = false;
-            if (ev) G.aimTo = pointAt(ev);
+            if (ev) {
+                try { host.releasePointerCapture(ev.pointerId); } catch (e) { }
+                G.aimTo = pointAt(ev);
+            }
             throwBall();
             G.aimFrom = G.aimTo = null;
             G.preview = [];
         };
         host.addEventListener('pointerup', ev => { ev.preventDefault(); end(ev); });
-        host.addEventListener('pointercancel', () => { G.aiming = false; G.preview = []; });
+        host.addEventListener('pointercancel', ev => {
+            if (ev) { try { host.releasePointerCapture(ev.pointerId); } catch (e) { } }
+            G.aiming = false;
+            G.aimFrom = G.aimTo = null;
+            G.preview = [];
+        });
+        /* Lưới an toàn: nếu trình duyệt nào đó vẫn để lọt mất con trỏ (chuyển
+         * cửa sổ, kéo ra khỏi trang rồi thả), thì bỏ dở cú kéo cho gọn chứ
+         * đừng để bé kẹt lại với đường ngắm treo lơ lửng. */
+        window.addEventListener('blur', () => {
+            if (!G.aiming) return;
+            G.aiming = false;
+            G.aimFrom = G.aimTo = null;
+            G.preview = [];
+        });
         host.addEventListener('contextmenu', ev => ev.preventDefault());
 
+        const TURN = {
+            ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1]
+        };
+
         window.addEventListener('keydown', ev => {
-            if (ev.key === 'r' || ev.key === 'R') { if (G.level) startLevel(G.levelIndex); }
+            if (ev.key === 'r' || ev.key === 'R') {
+                if (G.level) startLevel(G.levelIndex);
+                return;
+            }
+            if (G.mode !== 'aim') return;
+
+            const t = TURN[ev.key];
+            if (t) {
+                ev.preventDefault();
+                sfx.wake();
+                G.keyMode = true;
+                G.aiming = false;
+                turnAim(t[0], t[1]);
+                return;
+            }
+            if (ev.key === ' ' || ev.key === 'Spacebar') {
+                ev.preventDefault();
+                sfx.wake();
+                G.keyMode = true;
+                G.aiming = false;
+                stepPower();
+                sfx.rim();
+                return;
+            }
+            if (ev.key === 'Enter' && G.keyMode) {
+                ev.preventDefault();
+                const a = keyAimVector();
+                launch(a.vx, a.vy);
+            }
         });
     }
 

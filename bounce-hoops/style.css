@@ -167,6 +167,37 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* ---------- Nhắc phím ----------
+   Chỉ có nghĩa với máy có bàn phím, nên máy cảm ứng thì ẩn hẳn đi — trên điện
+   thoại nó vừa vô dụng vừa chiếm mất dải dưới sân. */
+.keys-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    z-index: 6;
+    display: none;
+    gap: 6px;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+@media (pointer: fine) {
+    .keys-hint { display: flex; }
+}
+
+.keys-hint.hidden { display: none; }
+
+.keys-hint span {
+    background: rgba(43, 33, 24, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    padding: 4px 11px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #ffe9a8;
+}
+
 /* ---------- Bảng phủ ---------- */
 .overlay {
     position: absolute;

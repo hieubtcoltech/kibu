@@ -410,6 +410,10 @@
             'No timer and no lives. Throw as many times as you like — fewer throws just means more stars.'],
         ['Chơi lại màn này', 'Play this level again'],
         ['Ném Lại', 'Retry'],
+        /* nhắc phím cho máy tính — để nguyên cụm cho khỏi lẫn vào câu khác */
+        ['Mũi tên: ngắm', 'Arrows: aim', 'x'],
+        ['Dấu cách: đổi lực', 'Space: power', 'x'],
+        ['Enter: ném', 'Enter: throw', 'x'],
         ['VÀO RỔ RỒI!', 'NICE SHOT!'],
         ['Số lần ném', 'Throws'],
         ['MÀN TIẾP', 'NEXT LEVEL'],
