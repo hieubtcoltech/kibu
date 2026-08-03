@@ -44,8 +44,8 @@
      * hình. Đổi lại tầm nhìn phía trước ngắn đi, nên RUN_MAX phải hạ theo. */
     const PLAYER_X = 5.2;
 
-    const RUN_START = 7;         // tốc độ chạy lúc mới xuất phát (u/giây)
-    const RUN_MAX = 15.5;        // trần tốc độ
+    const RUN_START = 6;         // tốc độ chạy lúc mới xuất phát (u/giây)
+    const RUN_MAX = 14;          // trần tốc độ
     /* Đường cong hình chữ S: đoạn đầu gần như phẳng cho bé làm quen ngón tay,
      * giữa quãng mới dốc lên, cuối lại thoải dần nên chạy nghìn mét vẫn còn chỗ
      * nhanh thêm.
@@ -55,11 +55,11 @@
      * đã trôi mỗi lúc một nhanh. Còn tăng tuyến tính thì hai trăm mét là chạm
      * trần, từ đó lượt chơi phẳng lì.
      *
-     * Quãng nửa đường đặt tận 700 m — xa hơn hẳn một lượt chơi thường của bé.
-     * Cố ý: game này để bé quay lại chơi lâu dài chứ không phải để vắt kiệt
-     * trong ba phút, nên tốc độ phải còn chỗ nhích lên cả nghìn mét về sau,
-     * chứ không dồn hết cái khó vào một phút đầu. */
-    const RUN_MID = 700;         // chạy tới đây thì được nửa quãng tăng tốc
+     * Quãng nửa đường đặt tận 1100 m — xa hơn nhiều lần một lượt chơi thường
+     * của bé. Cố ý: game này để bé quay lại chơi lâu dài chứ không phải để vắt
+     * kiệt trong ba phút, nên tốc độ phải còn chỗ nhích lên suốt mấy nghìn mét
+     * về sau, chứ không dồn hết cái khó vào một phút đầu. */
+    const RUN_MID = 1100;        // chạy tới đây thì được nửa quãng tăng tốc
 
     const GRAV = 52;             // trọng lực (u/giây²)
     /* Nhảy ba mức, chỉ khác nhau ở chỗ bé giữ tay bao lâu:
@@ -126,7 +126,7 @@
      *
      * Chạy chậm thì mỗi mét lâu hơn, nên quãng đổi cảnh để ngắn cho lần đổi
      * cảnh đầu tiên vẫn tới trong khoảng nửa phút. */
-    const ZONE_LEN = 140;
+    const ZONE_LEN = 110;
     const ZONES = [
         {
             key: 'jungle', name: 'Green Forest',
