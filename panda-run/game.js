@@ -1277,8 +1277,13 @@
      * đúng 1,58 u để khớp với khung va chạm 1,55 u — vẽ to hơn khung thì bé
      * thấy mình bị đụng oan, vẽ nhỏ hơn thì thấy game ăn gian.
      */
+    /* limbFar sáng hơn limb gần một bậc rõ rệt. Hai bên cùng đen kịt thì lúc
+     * tay chân chồng lên nhau mắt không tách được đâu là chi bên này, đâu là
+     * chi bên kia — mà không tách được thì cũng không thấy chúng đang ngược
+     * pha nhau, dù pha có đúng. */
     const PANDA = {
         white: '#fbfcfe', shade: '#dfe6f0', black: '#23262e', ink: '#14161b',
+        limbFar: '#4a5160',
         scarf: '#e8443c', scarfDark: '#b32a25', pack: '#4c8f3f', packDark: '#356d2b',
         cheek: 'rgba(255,120,150,0.5)'
     };
@@ -1361,12 +1366,40 @@
 
         const hipY = bodyCY + 0.20 * u;
 
+        /* Cánh tay quay quanh khớp vai, vung ĐỀU HAI PHÍA trước và sau lưng.
+         *
+         * Bản trước tay chỉ nhúc nhích trong một khoảng hẹp và lúc nào cũng nằm
+         * phía trước bụng, nên dù pha đã đúng thì mắt vẫn không đọc ra được tay
+         * và chân đang ngược nhau — thứ mắt bắt được là biên độ, không phải con
+         * số pha. Biên độ tay giờ để xấp xỉ biên độ chân (±0,27 u) thì sự đối
+         * nghịch mới hiện ra. */
+        const arm = (sx0, sy0, phase, col) => {
+            const ang = Math.cos(phase) * 0.95;          // 0 là buông thẳng xuống
+            const len = 0.36 * u;
+            /* Khuỷu gập nhẹ về sau, cho cánh tay có đốt chứ không phải một que. */
+            const ex = sx0 + Math.sin(ang * 0.55) * len * 0.55;
+            const ey = sy0 + Math.cos(ang * 0.55) * len * 0.55;
+            const hx = ex + Math.sin(ang) * len * 0.55;
+            const hy = ey + Math.cos(ang) * len * 0.55;
+            g.strokeStyle = col;
+            g.lineWidth = 0.19 * u;
+            g.beginPath();
+            g.moveTo(sx0, sy0);
+            g.lineTo(ex, ey);
+            g.lineTo(hx, hy);
+            g.stroke();
+            g.fillStyle = col;
+            g.beginPath();
+            g.ellipse(hx, hy, 0.12 * u, 0.09 * u, 0, 0, TAU);
+            g.fill();
+        };
+
         if (slide) {
-            limb(cx - 0.10 * u, hipY - 0.06 * u, cx - 0.58 * u, foot - 0.05 * u, 0.24 * u, PANDA.ink, true);
+            limb(cx - 0.10 * u, hipY - 0.06 * u, cx - 0.58 * u, foot - 0.05 * u, 0.24 * u, PANDA.limbFar, true);
             limb(cx + 0.16 * u, hipY - 0.10 * u, cx + 0.50 * u, foot - 0.03 * u, 0.23 * u, PANDA.black, true);
         } else if (jump) {
             /* Nhảy thì co chân lại — duỗi thẳng nhìn như đang rơi chứ không bật. */
-            limb(cx - 0.14 * u, hipY, cx - 0.34 * u, foot - 0.26 * u, 0.24 * u, PANDA.ink, true);
+            limb(cx - 0.14 * u, hipY, cx - 0.34 * u, foot - 0.26 * u, 0.24 * u, PANDA.limbFar, true);
             limb(cx + 0.16 * u, hipY, cx + 0.36 * u, foot - 0.14 * u, 0.24 * u, PANDA.black, true);
             limb(cx + 0.24 * u, bodyCY - 0.12 * u, cx + 0.58 * u, bodyCY - 0.46 * u, 0.20 * u, PANDA.black, true);
         } else {
@@ -1379,10 +1412,10 @@
              * thành đúng cái dáng chạy giật lùi, kiểu moonwalk. */
             const bx = cx + Math.cos(a + Math.PI) * 0.26 * u;
             const by = foot - Math.max(0, -Math.sin(a + Math.PI)) * 0.17 * u;
-            limb(cx - 0.10 * u, hipY, bx, by, 0.23 * u, PANDA.ink, true);
-            /* tay sau vung ra trước ngực */
-            const hx = cx + Math.cos(a) * 0.22 * u;
-            limb(cx - 0.20 * u, bodyCY - 0.10 * u, hx - 0.20 * u, bodyCY + 0.14 * u, 0.18 * u, PANDA.ink, true);
+            limb(cx - 0.10 * u, hipY, bx, by, 0.23 * u, PANDA.limbFar, true);
+            /* Tay XA đi cùng pha với chân GẦN — tức ngược pha với chân cùng bên
+             * nó (chân xa). Đó là kiểu vận động chéo: tay phải theo chân trái. */
+            arm(cx - 0.16 * u, bodyCY - 0.14 * u, a, PANDA.limbFar);
         }
 
         /* --- thân trắng --- */
@@ -1403,13 +1436,14 @@
             limb(cx + 0.20 * u, hipY - 0.08 * u, cx + 0.62 * u, foot - 0.03 * u, 0.24 * u, PANDA.black, true);
         }
 
-        /* --- tay trước: đen, vung ngược pha với chân, vẽ đè lên thân trắng ---
+        /* --- tay GẦN: vẽ đè lên thân trắng ---
+         * Ngược pha với chân gần (chân cùng bên nó) — tay phải theo chân trái.
          * Thiếu cánh tay thì con panda thành cái bình có chân. */
-        if (!slide) {
-            const ax2 = cx + (jump ? 0.52 * u : Math.cos(a + Math.PI) * 0.26 * u + 0.30 * u);
-            const ay2 = (jump ? bodyCY - 0.40 * u
-                : bodyCY - 0.06 * u + Math.sin(a + Math.PI) * 0.10 * u);
-            limb(cx + 0.16 * u, bodyCY - 0.16 * u, ax2, ay2, 0.19 * u, PANDA.black, true);
+        if (jump) {
+            limb(cx + 0.16 * u, bodyCY - 0.16 * u, cx + 0.52 * u, bodyCY - 0.40 * u,
+                0.19 * u, PANDA.black, true);
+        } else if (!slide) {
+            arm(cx + 0.12 * u, bodyCY - 0.16 * u, a + Math.PI, PANDA.black);
         } else {
             limb(cx + 0.22 * u, bodyCY - 0.10 * u, cx + 0.68 * u, bodyCY + 0.06 * u,
                 0.19 * u, PANDA.black, true);
