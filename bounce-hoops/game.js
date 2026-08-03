@@ -477,10 +477,13 @@
         b.y += b.vy * dt;
         b.rot += b.spin * dt;
 
-        /* tường bao quanh sân */
-        if (b.x < BALL_R) { b.x = BALL_R; b.vx = -b.vx * BOUNCE; if (onHit) onHit('wall', Math.abs(b.vx)); }
-        if (b.x > COLS - BALL_R) { b.x = COLS - BALL_R; b.vx = -b.vx * BOUNCE; if (onHit) onHit('wall', Math.abs(b.vx)); }
-        if (b.y < BALL_R) { b.y = BALL_R; b.vy = -b.vy * BOUNCE; if (onHit) onHit('wall', Math.abs(b.vy)); }
+        /* tường bao quanh sân
+         * onHit nhận thêm PHÁP TUYẾN mặt vừa đập vào, để phần vẽ biết bóp quả
+         * bóng theo trục nào. Máy dò và đường ngắm gọi step() không kèm onHit
+         * nên chỗ này không đụng gì tới chúng. */
+        if (b.x < BALL_R) { b.x = BALL_R; b.vx = -b.vx * BOUNCE; if (onHit) onHit('wall', Math.abs(b.vx), b.x, b.y, 1, 0); }
+        if (b.x > COLS - BALL_R) { b.x = COLS - BALL_R; b.vx = -b.vx * BOUNCE; if (onHit) onHit('wall', Math.abs(b.vx), b.x, b.y, 1, 0); }
+        if (b.y < BALL_R) { b.y = BALL_R; b.vy = -b.vy * BOUNCE; if (onHit) onHit('wall', Math.abs(b.vy), b.x, b.y, 0, 1); }
 
         for (const r of rectsNow(t)) {
             const h = hitOne(b, r);
@@ -497,7 +500,7 @@
                 b.vx = tx * RUB - vn * h.nx * k;
                 b.vy = ty * RUB - vn * h.ny * k;
                 b.spin = -b.vx * 0.5;
-                if (onHit) onHit(r.kind === T.PAD ? 'pad' : 'brick', speed, b.x, b.y);
+                if (onHit) onHit(r.kind === T.PAD ? 'pad' : 'brick', speed, b.x, b.y, h.nx, h.ny);
             }
         }
         return b;
@@ -666,6 +669,7 @@
      * không thể nào lệch nhau được. */
     function launch(vx, vy) {
         if (G.mode !== 'aim') return;
+        clearSquash();
         G.ball.vx = vx;
         G.ball.vy = vy;
         G.ball.spin = -vx * 0.4;
@@ -738,6 +742,57 @@
         refreshKeyPreview();
     }
 
+    /* ---- bóng bẹp khi đập ----
+     * Quả bóng thật đập vào tường thì bẹp xuống một nhát rồi phồng lại, rung
+     * vài cái mới thôi. Bóng lúc nào cũng tròn vành vạnh trông cứng như hòn bi
+     * sắt, mất hẳn cái cảm giác nó là quả bóng cao su.
+     *
+     * ĐÂY THUẦN TUÝ LÀ CHUYỆN VẼ. Không một con số vật lý nào bị đụng tới:
+     * bán kính va chạm, vận tốc, độ nảy đều y nguyên. Nếu bóp méo cả phần va
+     * chạm thì 24 màn vừa dò lại phải dò lại từ đầu, mà đổi lại chẳng được gì
+     * ngoài một đống màn khó đoán.
+     *
+     * Bẹp theo trục PHÁP TUYẾN của mặt vừa đập: đập nền thì bẹp chiều cao, đập
+     * tường bên thì bẹp chiều ngang. Bẹp bao nhiêu thì tuỳ tốc độ lúc chạm,
+     * nhưng chặn trần lại — đập mạnh mấy cũng không được dẹp thành cái bánh đa.
+     *
+     * Tắt dần theo kiểu lò xo: cos tắt dần, nên bóng bẹp xuống rồi phồng quá
+     * lên một nhịp, rồi mới về tròn. Chỉ tắt trơn một chiều thì nhìn như bóng
+     * bằng đất sét, nặn méo rồi từ từ nắn lại. */
+    const SQ_MAX = 0.34;     // bẹp nhiều nhất bằng bấy nhiêu phần bán kính
+    const SQ_V = 9;          // tốc độ chạm cho ra cú bẹp hết cỡ
+    const SQ_DECAY = 7.5;    // tắt nhanh cỡ nào
+    const SQ_WOBBLE = 26;    // rung nhanh cỡ nào
+
+    function squash(v, nx, ny) {
+        const amt = Math.min(1, Math.abs(v) / SQ_V) * SQ_MAX;
+        const b = G.ball;
+        /* Cú đập mới chỉ được ăn đứt cú cũ nếu nó mạnh hơn cái đang còn rung,
+         * chứ không thì một cú chạm nhẹ lúc bóng đang lăn cũng xoá mất nhát
+         * bẹp to vừa rồi. */
+        if (amt <= Math.abs(sqAmount())) return;
+        b.sqAmt = amt;
+        b.sqT = 0;
+        b.sqAng = Math.atan2(ny, nx);
+    }
+
+    function sqAmount() {
+        const b = G.ball;
+        if (!b || !b.sqAmt) return 0;
+        return b.sqAmt * Math.exp(-b.sqT * SQ_DECAY) * Math.cos(b.sqT * SQ_WOBBLE);
+    }
+
+    function stepSquash(dt) {
+        const b = G.ball;
+        if (!b || !b.sqAmt) return;
+        b.sqT += dt;
+        if (b.sqT > 1) b.sqAmt = 0;      // rung hết rồi thì thôi tính nữa
+    }
+
+    function clearSquash() {
+        if (G.ball) { G.ball.sqAmt = 0; G.ball.sqT = 0; G.ball.sqAng = 0; }
+    }
+
     /* Bắt đầu lấy đà. Luôn khởi động từ mức nhẹ nhất và chạy lên, để nhả tay
      * sớm là cú nhẹ, giữ lâu là cú mạnh — đúng cái bé đoán được. */
     function startCharge() {
@@ -779,7 +834,8 @@
             const h = Math.min(STEP, left);
             left -= h;
             const prevY = b.y;
-            step(b, G.time, h, (kind, v, hx, hy) => {
+            step(b, G.time, h, (kind, v, hx, hy, nx, ny) => {
+                squash(kind === 'pad' ? v * 1.6 : v, nx, ny);
                 if (kind === 'pad') {
                     sfx.pad();
                     ring(hx, hy, '#ffd43b');
@@ -1232,6 +1288,17 @@
 
         ctx.save();
         ctx.translate(x, y);
+
+        /* Bóp quả bóng theo trục vừa đập, LÀM TRƯỚC phép xoay theo b.rot: trục
+         * bẹp phải neo vào mặt tường ngoài đời thực, còn múi bóng thì cứ quay
+         * theo bóng. Làm ngược thứ tự thì nhát bẹp quay tít theo quả bóng, nhìn
+         * như cả tấm hình bị vặn. */
+        const sq = sqAmount();
+        if (sq) {
+            ctx.rotate(b.sqAng);
+            ctx.scale(1 - sq, 1 + sq * 0.72);
+            ctx.rotate(-b.sqAng);
+        }
         ctx.rotate(b.rot);
 
         ctx.fillStyle = '#fd7e14';
@@ -1588,6 +1655,7 @@
 
         if (G.mode === 'fly') stepBall(dt);
         stepCharge(dt);
+        stepSquash(dt);
         stepFx(dt);
         draw();
         requestAnimationFrame(frame);
