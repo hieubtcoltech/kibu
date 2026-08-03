@@ -1284,11 +1284,14 @@
      * Để chống đất dưới nửa vòng (0,45) thì có những lúc cả hai chân đều rời
      * đất — đó mới là CHẠY; đúng nửa vòng trở lên là dáng đi bộ nhanh.
      *
-     * Muốn chân khua CHẬM lại mà không sinh trượt thì phải tăng sải chân bù
-     * vào — nhịp và sải nằm hai vế của cùng một phép chia. Hạ mỗi nhịp thôi là
-     * bàn chân lại miết trên đất y như cũ. */
-    const LEG_AMP = 0.65;
-    const LEG_CONTACT = 0.45;
+     * Ba thứ này ràng buộc lẫn nhau, đổi một cái là hai cái kia phải theo:
+     * chân ngắn (sải nhỏ) + khua chậm + không trượt. Panda phải chân ngắn cho
+     * đúng dáng gấu trúc, mà chân ngắn thì sải ngắn, sải ngắn thì nhịp phải
+     * nhanh mới bù đủ quãng — trừ khi rút bớt thời gian chạm đất, và đó là lối
+     * ra: chạm đất 34% mỗi chân, hai chân cộng lại 68%, còn 32% là lúc cả hai
+     * chân cùng rời đất. Đúng pha bay của một cú chạy thật. */
+    const LEG_AMP = 0.5;
+    const LEG_CONTACT = 0.34;
     const CADENCE_MAX = 30;      // trần nhịp chân (rad/giây), khỏi loạn hình
 
     /* Vẽ sẵn một tấm. Trả về {c, w, h, ax, ay} — ax/ay là điểm neo (chỗ đặt
@@ -1415,7 +1418,7 @@
          * ==================================================================*/
         const LEG_A = LEG_AMP * u;         // biên độ trước–sau của bàn chân
         const LEG_LIFT = 0.30 * u;         // nhấc cao nhất lúc đưa chân
-        const BONE = 0.40 * u;             // đùi và cẳng dài bằng nhau — phải đủ với sải chân
+        const BONE = 0.33 * u;             // đùi và cẳng — vừa đủ với sải, để chân ngắn đúng dáng gấu
         const hipY = bodyCY + 0.20 * u;
 
         function footAt(p) {
@@ -1471,10 +1474,10 @@
          * Biên độ để xấp xỉ biên độ chân thì mắt mới đọc ra được tay và chân
          * đang ngược nhau — thứ mắt bắt là biên độ, không phải con số pha. */
         function arm(sx0, sy0, p, col) {
-            const sw = Math.cos(p * TAU) * 1.15;
+            const sw = Math.cos(p * TAU) * 1.05;
             /* Tay dài thêm theo sải chân: chân bước rộng mà tay khua tí tẹo thì nhìn
              * lệch. */
-            const upper = 0.24 * u, fore = 0.22 * u;
+            const upper = 0.22 * u, fore = 0.20 * u;
             const ex = sx0 + Math.sin(sw * 0.7) * upper;
             const ey = sy0 + Math.cos(sw * 0.7) * upper;
             /* Cẳng tay gập thêm về trước — kiểu tay chạy, không phải tay đi bộ. */
@@ -1517,11 +1520,11 @@
             limb(cx - 0.10 * u, hipY - 0.06 * u, cx - 0.58 * u, foot - 0.05 * u, 0.24 * u, PANDA.limbFar, true);
         } else if (jump) {
             /* Nhảy thì co chân lại — duỗi thẳng nhìn như đang rơi chứ không bật. */
-            leg(cx - 0.11 * u, hipY, cx - 0.30 * u, foot - 0.34 * u, PANDA.limbFar, 0.20 * u);
+            leg(cx - 0.11 * u, hipY, cx - 0.30 * u, foot - 0.34 * u, PANDA.limbFar, 0.21 * u);
             arm(cx - 0.16 * u, bodyCY - 0.16 * u, 0.5, PANDA.limbFar);
         } else {
             const f = footAt(pFar);
-            leg(cx - 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.limbFar, 0.20 * u);
+            leg(cx - 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.limbFar, 0.21 * u);
             /* Tay XA cùng pha với chân GẦN — tức ngược pha với chân cùng bên
              * nó. Đó là vận động chéo: tay phải theo chân trái. */
             arm(cx - 0.16 * u, bodyCY - 0.16 * u, pNear, PANDA.limbFar);
@@ -1540,10 +1543,10 @@
         if (slide) {
             limb(cx + 0.20 * u, hipY - 0.08 * u, cx + 0.62 * u, foot - 0.03 * u, 0.24 * u, PANDA.black, true);
         } else if (jump) {
-            leg(cx + 0.11 * u, hipY, cx + 0.34 * u, foot - 0.18 * u, PANDA.black, 0.235 * u);
+            leg(cx + 0.11 * u, hipY, cx + 0.34 * u, foot - 0.18 * u, PANDA.black, 0.225 * u);
         } else {
             const f = footAt(pNear);
-            leg(cx + 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.black, 0.235 * u);
+            leg(cx + 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.black, 0.225 * u);
         }
 
         /* --- tay GẦN --- */
