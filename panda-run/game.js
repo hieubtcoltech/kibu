@@ -514,6 +514,7 @@
         hurtUntil: -9,
         cheerAt: -9,         // mốc vừa cứu được bạn, để panda nhe răng cười
         wantSlide: -9,       // vừa vuốt xuống lúc còn trên không, chạm đất là nằm
+        slideHold: false,    // còn giữ tay/phím xuống thì nằm mãi
         resuming: false,     // đang đếm ngược để chạy tiếp, chưa hẳn là đã dừng
         runCycle: 0,         // pha chạy, dùng để vẽ chân tay
 
@@ -699,6 +700,7 @@
         G.hurtUntil = -9;
         G.cheerAt = -9;
         G.wantSlide = -9;
+        G.slideHold = false;
         G.runCycle = 0;
         G.tail = [];
         for (let i = 0; i < START_PALS; i++) {
@@ -866,7 +868,15 @@
             }
         }
 
-        if (G.sliding > 0) G.sliding -= dt;
+        /* Còn giữ tay (hoặc giữ phím xuống) thì nằm mãi, thả ra mới đứng dậy.
+         * Trước đó tư thế nằm tự hết sau SLIDE_T dù bé vẫn đang giữ — gặp khúc
+         * gỗ dài hoặc hai khúc liền nhau là bé nằm được nửa đường rồi bật dậy
+         * đâm vào khúc sau, mà bé thì đang giữ tay đúng như game dạy. */
+        if (G.slideHold && G.onGround && G.rocketT <= 0) {
+            G.sliding = 0.18;              // thả tay ra là đứng dậy sau 0,18 giây
+        } else if (G.sliding > 0) {
+            G.sliding -= dt;
+        }
         if (G.time - G.wantJump <= BUFFER) tryJump();
 
         /* ---- rơi xuống vực ---- */
@@ -2758,6 +2768,8 @@
             const need = Math.max(18, V.u * 0.45);
             if (ev.clientY - touchY0 < need) return;
             swiped = true;
+            /* Ngón còn đặt trên màn thì cứ nằm, nhấc lên mới đứng dậy. */
+            G.slideHold = true;
 
             /* Vừa nhảy xong mà đã vuốt xuống ngay, người còn sát đất: cú nhảy
              * ấy là ngoài ý muốn, gỡ ra cho sạch. */
@@ -2773,6 +2785,7 @@
         const endTouch = ev => {
             if (ev && ev.pointerId != null && ev.pointerId !== touchId) return;
             touchId = null;
+            G.slideHold = false;
             releaseJump();
         };
         host.addEventListener('pointerup', ev => { ev.preventDefault(); endTouch(ev); });
@@ -2790,6 +2803,7 @@
             }
             if (k === 'ArrowDown' || k === 's' || k === 'S') {
                 ev.preventDefault();
+                G.slideHold = true;
                 slide();
             }
             if (k === 'p' || k === 'P' || k === 'Escape') {
@@ -2798,10 +2812,13 @@
             }
         });
         window.addEventListener('keyup', ev => {
-            if (ev.key === ' ' || ev.key === 'ArrowUp' || ev.key === 'w' || ev.key === 'W') {
-                releaseJump();
-            }
+            const k = ev.key;
+            if (k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W') releaseJump();
+            if (k === 'ArrowDown' || k === 's' || k === 'S') G.slideHold = false;
         });
+        /* Rời khỏi cửa sổ giữa lúc đang giữ phím thì không có keyup nào tới —
+         * không thả ra ở đây là panda nằm bò mãi. */
+        window.addEventListener('blur', () => { G.slideHold = false; releaseJump(); });
     }
 
     function wireButtons() {
