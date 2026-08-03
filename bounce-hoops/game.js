@@ -39,12 +39,17 @@
     const COLS = 20;
     const ROWS = 12;
 
-    const GRAV = 26;             // trọng lực, ô/giây²
+    /* Trọng lực và lực ném đi thành một cặp: tầm xa nhất của một cú ném là
+     * v²/g. Với 22 và 20 thì tầm xa ≈ 18 ô, tức là ném hết sức ở góc 45° gần
+     * như băng hết bề ngang sân 20 ô. Đặt trọng lực nặng hơn (hồi đầu em để
+     * 26) thì tầm xa chỉ còn 8,6 ô — nửa số màn không tài nào giải nổi, mà
+     * nhìn màn hình thì không thấy được, phải chạy máy dò mới lòi ra. */
+    const GRAV = 22;             // trọng lực, ô/giây²
     const BALL_R = 0.34;         // bán kính quả bóng, tính theo ô
     const BOUNCE = 0.62;         // nảy lại bao nhiêu phần vận tốc khi đập tường
     const RUB = 0.86;            // ma sát trượt dọc mặt tường
     const STOP_V = 0.9;          // chậm hơn mức này và đang nằm đất thì cho dừng
-    const MAX_POWER = 15;        // lực ném mạnh nhất, ô/giây
+    const MAX_POWER = 20;        // lực ném mạnh nhất, ô/giây
     const AIM_MAX_DRAG = 3.4;    // kéo xa hơn bằng này ô cũng không mạnh thêm
 
     const SHOT_TTL = 12;         // bóng lăn lóc quá lâu thì tính là hỏng, cho ném lại
