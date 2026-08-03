@@ -414,6 +414,7 @@
                 c.add(m);
                 c.setData('mark', m);
                 c.setData('r', r);
+                c.setData('color', color);
                 return c;
             },
 
@@ -549,12 +550,12 @@
             },
 
             /* Khay dồn chỗ: mấy con còn lại trượt sang cho khít */
-            reflow: function (b) {
+            reflow: function (b, skip) {
                 var view = b.view;
                 for (var i = 0; i < b.hold.length; i++) {
                     var chip = view.slots[i].chip;
                     var want = view.slots[i];
-                    if (!chip) continue;
+                    if (!chip || chip === skip) continue;   /* con đang bay thì để yên */
                     if (Math.abs(chip.x - want.x) < 1) continue;
                     this.tweens.add({
                         targets: chip, x: want.x, y: want.y, duration: 220, ease: 'Cubic.easeInOut'
@@ -745,37 +746,32 @@
             b.removed[k] = 1;
             b.moves++;
 
-            /* chỗ con ốc này sẽ nằm trên khay, tính TRƯỚC khi nổ bộ ba */
-            var landing = res.hold.indexOf(b.level.screws[k].c);
-            var slotIdx = b.hold.length;
-            var cleared = null;
+            /* Chỗ con ốc vừa đặt nằm trong khay — LẤY TỪ LUẬT, không tự đoán.
+             *
+             * Bản đầu em đoán lại bằng res.hold.indexOf(màu), và sai cả hai
+             * đường. Khi chưa đủ bộ ba: khay đã có sẵn hai con cùng màu thì
+             * indexOf trả về con ĐẦU TIÊN, nên con mới bay vào đúng chỗ một
+             * con đang đứng, còn mấy con sau bị đẩy lệch hết. Khi đủ bộ ba:
+             * res.hold là khay SAU KHI nổ, ba con màu ấy đã biến mất nên
+             * indexOf trả về -1, và splice(-1) chèn nhầm vào áp chót. Nay
+             * rules.place() trả thẳng chỗ chèn ra, phần vẽ chỉ việc dùng. */
+            var insertAt = res.at;
+            var chips = view.slots.map(function (sl) { return sl.chip; });
+            chips.splice(insertAt, 0, sc);
 
+            var cleared = null;
+            var kept;
             if (res.cleared) {
-                /* dựng lại khay: ba con cùng màu (kể cả con vừa tới) sẽ nổ */
-                var all = b.hold.slice();
-                all.splice(landing, 0, b.level.screws[k].c);
-                var objs = [];
-                for (var i = 0; i < view.slots.length; i++) objs.push(view.slots[i].chip);
-                objs.splice(landing, 0, sc);
                 cleared = res.cleared.at.map(function (pos) {
-                    return { obj: objs[pos], color: res.cleared.color };
+                    return { obj: chips[pos], color: res.cleared.color };
                 });
-                /* mấy con còn lại dồn về đầu khay */
-                var kept = [];
-                for (var j = 0; j < objs.length; j++) {
-                    if (res.cleared.at.indexOf(j) < 0 && objs[j]) kept.push(objs[j]);
-                }
-                for (var t = 0; t < view.slots.length; t++) view.slots[t].chip = kept[t] || null;
-                slotIdx = Math.min(landing, view.slots.length - 1);
+                kept = chips.filter(function (o, i) { return res.cleared.at.indexOf(i) < 0; });
             } else {
-                /* chèn con mới vào đúng chỗ, đẩy mấy con sau lùi một nhịp */
-                var chips = [];
-                for (var q = 0; q < view.slots.length; q++) chips.push(view.slots[q].chip);
-                chips.splice(landing, 0, sc);
-                chips.pop();
-                for (var z = 0; z < view.slots.length; z++) view.slots[z].chip = chips[z] || null;
-                slotIdx = landing;
+                chips.pop();          /* ô cuối vốn trống, đẩy ra cho vừa khay */
+                kept = chips;
             }
+            for (var t = 0; t < view.slots.length; t++) view.slots[t].chip = kept[t] || null;
+            var slotIdx = Math.min(insertAt, view.slots.length - 1);
 
             b.hold = res.hold;
 
@@ -790,7 +786,7 @@
              * nhìn đuổi theo sau. Chặn tay bé bằng một cái hẹn giờ ngắn cho
              * khỏi bấm dồn, chứ không chặn bằng hoạt cảnh. */
             this.scene.playUnscrew(b, k, slotIdx, cleared);
-            this.scene.reflow(b);
+            this.scene.reflow(b, sc);
             this.paintChips();
             this.afterMove(b);
 

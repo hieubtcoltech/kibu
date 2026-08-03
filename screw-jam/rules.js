@@ -91,14 +91,18 @@
 
         var n = 0, i2;
         for (i2 = 0; i2 < out.length; i2++) if (out[i2] === color) n++;
-        if (n < TRIPLE) return { hold: out, cleared: null };
+        /* at = chỗ con ốc vừa đặt nằm trong khay TRƯỚC khi nổ bộ ba. Phần vẽ
+         * cần đúng con số này để cho con ốc bay tới đúng ô; tự đoán lại bằng
+         * indexOf ở bên ngoài là sai, vì trong khay có thể đã có sẵn mấy con
+         * cùng màu đứng trước nó. */
+        if (n < TRIPLE) return { hold: out, cleared: null, at: at };
 
         var kept = [], popped = [], left = TRIPLE;
         for (i2 = 0; i2 < out.length; i2++) {
             if (out[i2] === color && left > 0) { popped.push(i2); left--; }
             else kept.push(out[i2]);
         }
-        return { hold: kept, cleared: { color: color, at: popped } };
+        return { hold: kept, cleared: { color: color, at: popped }, at: at };
     }
 
     function isWon(level, removed) {

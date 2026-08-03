@@ -47,6 +47,46 @@ function mulberry32(a) {
 console.log('Vặn Ốc — soát ' + RAW.length + ' màn bằng đúng tệp luật game đang chạy\n');
 
 const fails = [];
+
+/* ---- soát riêng phép đặt ốc vào khay ----
+ * Anh Hiếu chơi thử rồi hỏi "sao con ốc vào khay trông sai sai" — và đúng thật:
+ * phần vẽ tự đoán lại chỗ con ốc vừa đặt bằng indexOf(màu), sai cả hai đường.
+ * Khay đã có sẵn hai con cùng màu thì indexOf trả về con ĐẦU tiên nên con mới
+ * bay đè lên chỗ con cũ; còn lúc đủ bộ ba thì màu ấy đã biến mất khỏi khay nên
+ * indexOf trả về -1. Nay place() trả thẳng chỗ chèn ra, và chỗ này khoá lại cái
+ * bất biến ấy để không ai lỡ tay bỏ đi. */
+(function checkPlace() {
+    const cases = [
+        { hold: [], c: 0 }, { hold: [0], c: 0 }, { hold: [0, 1], c: 0 },
+        { hold: [1, 0], c: 0 }, { hold: [0, 0], c: 0 }, { hold: [1, 0, 0], c: 0 },
+        { hold: [2, 2, 1, 1], c: 1 }, { hold: [3, 3, 0], c: 3 }, { hold: [1, 2], c: 3 }
+    ];
+    for (const t of cases) {
+        const r = R.place(t.hold.slice(), t.c, 6);
+        if (!r) { fails.push('place([' + t.hold + '] + ' + t.c + ') trả về null dù khay còn chỗ'); continue; }
+        /* dựng lại khay TRƯỚC lúc nổ rồi soi vào đúng chỗ at */
+        const pre = t.hold.slice();
+        pre.splice(r.at, 0, t.c);
+        if (pre[r.at] !== t.c) {
+            fails.push('place([' + t.hold + '] + ' + t.c + '): chỗ chèn at=' + r.at + ' không phải chỗ con ốc vừa đặt');
+        }
+        /* khay phải luôn xếp gọn theo màu, không để hai cụm cùng màu rời nhau */
+        const seenC = {};
+        let last = -1, broken = false;
+        for (const c of r.hold) {
+            if (c !== last && seenC[c]) broken = true;
+            seenC[c] = 1; last = c;
+        }
+        if (broken) fails.push('place([' + t.hold + '] + ' + t.c + '): khay để hai cụm cùng màu rời nhau');
+        /* nổ đúng ba con, và đúng màu vừa đặt */
+        if (r.cleared) {
+            if (r.cleared.at.length !== R.TRIPLE) fails.push('place([' + t.hold + '] + ' + t.c + '): nổ ' + r.cleared.at.length + ' con thay vì ' + R.TRIPLE);
+            for (const pos of r.cleared.at) {
+                if (pre[pos] !== r.cleared.color) fails.push('place([' + t.hold + '] + ' + t.c + '): nổ nhầm con ở ô ' + pos);
+            }
+        }
+    }
+})();
 const rnd = mulberry32(20260805);
 const smart = [];
 let worstHint = 0, worstHintLevel = 0, hintChecks = 0;
