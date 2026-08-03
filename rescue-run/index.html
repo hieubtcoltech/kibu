@@ -83,6 +83,9 @@
             </div>
         </div>
         <div class="nav-actions">
+            <button id="btn-nav-pause" class="btn btn-secondary" title="Pause">
+                <i id="pause-icon" class="fa-solid fa-pause"></i> <span id="pause-text">Pause</span>
+            </button>
             <button id="btn-nav-restart" class="btn btn-secondary" title="Start a new run">
                 <i class="fa-solid fa-rotate-right"></i> <span>New run</span>
             </button>
@@ -123,6 +126,26 @@
 
         <!-- Nhiệm vụ của lượt chơi -->
         <ul id="mission-list" class="mission-list"></ul>
+
+        <!-- Đếm ngược sau khi nghỉ xong, để bé kịp đặt lại ngón tay -->
+        <div id="countdown" class="countdown hidden"></div>
+
+        <!-- ---------- Tạm dừng ---------- -->
+        <div id="pause-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm">TAKE A BREAK</h2>
+                <p class="subtitle">Your friends will wait right here.</p>
+                <div class="stat-grid">
+                    <div class="stat"><b><span id="pause-dist">0</span> m</b><span>Distance</span></div>
+                    <div class="stat"><b id="pause-pals">0</b><span>Friends</span></div>
+                    <div class="stat"><b id="pause-fruit">0</b><span>Fruit</span></div>
+                </div>
+                <div class="row-buttons">
+                    <button id="btn-resume" class="btn btn-primary btn-big">KEEP RUNNING</button>
+                    <button id="btn-pause-menu" class="btn btn-ghost">Menu</button>
+                </div>
+            </div>
+        </div>
 
         <!-- ---------- Màn chào ---------- -->
         <div id="menu-overlay" class="overlay">

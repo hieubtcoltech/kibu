@@ -468,7 +468,7 @@
      * ======================================================================*/
 
     const G = {
-        mode: 'menu',        // menu | play | over | paused
+        mode: 'menu',        // menu | play | paused | over
 
         time: 0,
         dist: 0,             // quãng đường tính bằng u
@@ -1882,7 +1882,9 @@
         score: el('hud-score'), combo: el('hud-combo'), comboWrap: el('combo-wrap'),
         zone: el('hud-zone'),
         powers: el('power-strip'),
-        menu: el('menu-overlay'), over: el('over-overlay'),
+        menu: el('menu-overlay'), over: el('over-overlay'), pause: el('pause-overlay'),
+        pauseDist: el('pause-dist'), pausePals: el('pause-pals'), pauseFruit: el('pause-fruit'),
+        pauseIcon: el('pause-icon'), pauseText: el('pause-text'), countdown: el('countdown'),
         overDist: el('over-dist'), overPals: el('over-pals'), overFruit: el('over-fruit'),
         overScore: el('over-score'), overBest: el('over-best'), overNew: el('over-new'),
         overMissions: el('over-missions'),
@@ -1932,8 +1934,11 @@
 
     function showMenu() {
         G.mode = 'menu';
+        stopCountdown();
         hide(ui.hud);
         hide(ui.over);
+        hide(ui.pause);
+        paintPauseBtn();
         show(ui.menu);
         ui.menuBest.textContent = store.data.best;
         ui.menuPals.textContent = store.data.bestPals;
@@ -1952,10 +1957,77 @@
 
     function play() {
         sfx.wake();
+        stopCountdown();
         hide(ui.menu);
         hide(ui.over);
+        hide(ui.pause);
         show(ui.hud);
         startRun();
+        paintPauseBtn();
+    }
+
+    /* ---- tạm dừng ----
+     * Bé đang chạy dở mà mẹ gọi thì phải có chỗ dừng lại, không thì đoàn bạn
+     * gom cả buổi đi tong vì một cuộc gọi. */
+    function pause() {
+        if (G.mode !== 'play') return;
+        stopCountdown();
+        G.mode = 'paused';
+        ui.pauseDist.textContent = G.metres;
+        ui.pausePals.textContent = G.tail.length;
+        ui.pauseFruit.textContent = G.fruit;
+        show(ui.pause);
+        paintPauseBtn();
+    }
+
+    function resume() {
+        if (G.mode !== 'paused') return;
+        hide(ui.pause);
+        paintPauseBtn();
+        /* Đếm ngược ba nhịp rồi mới chạy tiếp: thả bé vào giữa đường ngay lúc
+         * vừa bấm thì ngón tay còn chưa về chỗ đã đâm phải hòn đá đầu tiên. */
+        countdown(3);
+    }
+
+    function togglePause() {
+        if (G.mode === 'play') pause();
+        else if (G.mode === 'paused') resume();
+    }
+
+    let cdTimer = null;
+
+    function stopCountdown() {
+        if (cdTimer) { clearTimeout(cdTimer); cdTimer = null; }
+        hide(ui.countdown);
+    }
+
+    function countdown(n) {
+        if (n <= 0) {
+            ui.countdown.textContent = 'GO!';
+            ui.countdown.className = 'countdown go';
+            sfx.pal();
+            cdTimer = setTimeout(() => {
+                stopCountdown();
+                cdTimer = null;
+                /* Chỉ cho chạy tiếp nếu trong lúc đếm bé không bấm sang chỗ
+                 * khác — bấm Menu giữa chừng mà vẫn nhảy vào lượt cũ thì lạ. */
+                if (G.mode === 'paused') G.mode = 'play';
+            }, 420);
+            return;
+        }
+        ui.countdown.textContent = n;
+        /* Gán lại className mỗi nhịp để chạy lại hiệu ứng nảy của CSS. */
+        ui.countdown.className = 'countdown';
+        void ui.countdown.offsetWidth;
+        ui.countdown.className = 'countdown tick';
+        sfx.tone(440 + (3 - n) * 90, 0.12, 'triangle', 0.09);
+        cdTimer = setTimeout(() => countdown(n - 1), 600);
+    }
+
+    function paintPauseBtn() {
+        const on = G.mode === 'paused';
+        ui.pauseIcon.className = 'fa-solid ' + (on ? 'fa-play' : 'fa-pause');
+        ui.pauseText.textContent = on ? 'Resume' : 'Pause';
     }
 
     /* ---- điều khiển ----
@@ -1989,6 +2061,10 @@
                 ev.preventDefault();
                 slide();
             }
+            if (k === 'p' || k === 'P' || k === 'Escape') {
+                ev.preventDefault();
+                togglePause();
+            }
         });
         window.addEventListener('keyup', ev => {
             if (ev.key === ' ' || ev.key === 'ArrowUp' || ev.key === 'w' || ev.key === 'W') {
@@ -2002,6 +2078,16 @@
         el('btn-again').addEventListener('click', play);
         el('btn-over-menu').addEventListener('click', showMenu);
         el('btn-nav-restart').addEventListener('click', play);
+        el('btn-nav-pause').addEventListener('click', togglePause);
+        el('btn-resume').addEventListener('click', resume);
+        el('btn-pause-menu').addEventListener('click', showMenu);
+
+        /* Chuyển tab, khoá máy hay nghe điện thoại là tự dừng luôn — bé quay
+         * lại mà thấy đoàn bạn đã mất sạch thì oan quá. */
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) pause();
+        });
+        window.addEventListener('blur', pause);
 
         const resetBtn = el('btn-reset-progress');
         if (resetBtn) resetBtn.addEventListener('click', () => {
@@ -2032,6 +2118,9 @@
         let dt = last ? t - last : 0;
         last = t;
         if (dt > 0.05) dt = 0.05;      // tab ẩn quay lại: đừng nhảy cóc
+        /* Đang nghỉ thì đồng hồ của game đứng hẳn. Để nó chạy tiếp thì lúc quay
+         * lại chuỗi combo đã tự tuột và mọi hiệu ứng đang dở đã tan mất. */
+        if (G.mode === 'paused') dt = 0;
         G.time += dt;
 
         if (G.mode === 'play') {
@@ -2067,7 +2156,7 @@
         /* Cửa sau để thử: gọi thẳng từ console hoặc từ script kiểm thử. */
         window.rescueRun = {
             G, V, ZONES, CHUNKS, store,
-            play, jump, slide, releaseJump,
+            play, jump, slide, releaseJump, pause, resume,
             state: () => ({
                 mode: G.mode, m: G.metres, pals: G.tail.length, rescued: G.pals,
                 fruit: G.fruit, score: G.score, combo: G.combo, speed: +G.speed.toFixed(2),

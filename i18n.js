@@ -355,6 +355,13 @@
         ['CHẠY LẠI', 'RUN AGAIN'],
         ['Lượt mới', 'New run'],
         ['Bắt đầu lượt mới', 'Start a new run'],
+        ['Tạm Dừng', 'Pause'],
+        /* "Resume" đã có sẵn ở mục dùng chung (→ "Chơi Tiếp"), khai lại ở đây
+         * chỉ tổ thừa: bảng tra giữ dòng đầu tiên trùng khoá. */
+        ['NGHỈ MỘT CHÚT', 'TAKE A BREAK'],
+        ['Các bạn nhỏ đứng đợi bé ngay đây nhé.', 'Your friends will wait right here.'],
+        ['CHẠY TIẾP NÀO', 'KEEP RUNNING'],
+        ['Số bạn', 'Friends'],
         ['CÁC BẠN CHẠY MẤT HẾT RỒI!', 'EVERYONE GOT AWAY!'],
         ['KỶ LỤC MỚI!', 'NEW BEST RUN!'],
         ['Xa nhất', 'Best run'],
