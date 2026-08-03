@@ -418,3 +418,50 @@ body.chrome-fit > .game-wrapper {
         height: 36px !important;
     }
 }
+
+/* ---------- Vùng chạm cho ngón tay ----------
+ * Máy soát nạp thật 20 game trên 4 cỡ màn cảm ứng và đo từng nút: nút loa
+ * 35×28, nút menu và chơi lại 32×28, nút đổi ngôn ngữ 46×28. Mức thông dụng
+ * để ngón tay bấm trúng là 44×44. Ngón tay trẻ con tính theo tỉ lệ còn to hơn
+ * ngón người lớn, nên mấy nút 28 px này bấm trượt là chuyện thường ngày.
+ *
+ * Chỉ nới trên máy cảm ứng. Chuột trỏ chính xác tới từng điểm ảnh, giao diện
+ * máy để bàn giữ nguyên chứ không phình ra vô cớ.
+ *
+ * Tệp này nạp SAU tệp style riêng của từng game, nên luật ở đây thắng và sửa
+ * một chỗ là ăn cả hai mươi game — không phải đi sửa hai mươi lần rồi quên
+ * mất một game nào đó.
+ *
+ * Cố ý KHÔNG đụng tới link chữ nằm trong câu văn (cái "About Us" ở chân
+ * trang). Độn cho nó cao 44 px thì dòng chữ vỡ ra, mà chuẩn cảm ứng cũng
+ * miễn trừ đúng loại link nằm lọt trong câu như vậy. */
+@media (hover: none) and (pointer: coarse) {
+
+    .unified-nav .btn,
+    .unified-nav button,
+    .nav-actions .btn,
+    .nav-actions button,
+    .nav-home,
+    .lang-flag-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    /* Nút chỉ còn mỗi biểu tượng khi thu hẹp (chữ bị ẩn ở mức 900 px) thì
+     * padding ngang cũ để lại một khối dẹt. Canh giữa lại cho biểu tượng nằm
+     * đúng tâm vùng chạm vừa nới. */
+    .unified-nav .btn,
+    .unified-nav button,
+    .nav-actions .btn,
+    .nav-actions button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Ảnh cờ trong nút đổi ngôn ngữ vốn cao 16 px, nút bọc ngoài giờ cao 44 px
+     * nên chừa padding vừa phải, đừng để lá cờ trôi lệch trong ô. */
+    .lang-flag-btn {
+        padding: 5px 12px;
+    }
+}
