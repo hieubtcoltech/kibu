@@ -111,7 +111,12 @@
         GAP: 'gap',         // hố, rơi xuống là mất một bạn
         ROCK: 'rock',       // chướng ngại thấp, nhảy qua
         SPIKE: 'spike',     // bụi gai, nhảy qua
-        BRANCH: 'branch',   // cành thấp, phải trượt xuống mới chui lọt
+        BRANCH: 'branch',   // khúc gỗ đổ, phải trượt xuống mới chui lọt
+        /* Thú canh: chướng ngại BIẾT CỬ ĐỘNG, và là kẻ đã nhốt các bạn nhỏ.
+         * Game tên là Giải Cứu Bạn mà không có kẻ nào nhốt thì chuồng hoá ra
+         * tự mọc giữa rừng — có đứa canh thì việc cứu mới thành việc phải
+         * giành lấy. Vài con đứng ngay trước chuồng, đúng nghĩa canh giữ. */
+        GUARD: 'guard',
         PLAT: 'plat',       // bệ lơ lửng, đứng lên được
         COIN: 'coins',
         FRIEND: 'friend',
@@ -244,6 +249,16 @@
                 line(8.6, 4, 3.7), [{ t: T.FRIEND, x: 10.5, y: 2.6 }]
             )
         },
+        /* Thú canh xuất hiện ngay ở mức dễ, một mình giữa đường trống, để bé
+         * làm quen với nó như một chướng ngại bình thường trước đã. Để dành tới
+         * mức khó mới cho gặp thì phần lớn lượt chơi ngắn chẳng bao giờ thấy
+         * mặt kẻ đã nhốt bạn mình. */
+        {
+            w: 22, tier: 0, items: [].concat(
+                [{ t: T.GUARD, x: 10 }],
+                arc(7.2, 12.8, 2.0)
+            )
+        },
 
         /* ---------- tier 1: hai việc nối nhau ---------- */
         {
@@ -256,7 +271,10 @@
             w: 28, tier: 1, items: [].concat(
                 [{ t: T.GAP, x: 8, w: 3.6 }, { t: T.GAP, x: 17, w: 3.8 }],
                 arc(7, 12, 1.7), arc(16, 21.4, 1.8),
-                [{ t: T.FRIEND, x: 14, y: 1.75 }]
+                /* Con canh đứng ngay trước chuồng: muốn cứu bạn thì phải vượt
+                 * qua nó đã. Đây là chỗ chủ đề của game hiện ra thành luật chơi
+                 * chứ không chỉ nằm trong cái tên. */
+                [{ t: T.GUARD, x: 12.2 }, { t: T.FRIEND, x: 14, y: 1.75 }]
             )
         },
         {
@@ -300,7 +318,7 @@
         {
             w: 34, tier: 2, items: [].concat(
                 [{ t: T.ROCK, x: 8, h: 1.1 }, { t: T.ROCK, x: 11.2, h: 1.1 },
-                { t: T.ROCK, x: 14.4, h: 1.1 }, { t: T.SPIKE, x: 22 },
+                { t: T.ROCK, x: 14.4, h: 1.1 }, { t: T.GUARD, x: 22 },
                 { t: T.PLAT, x: 26, y: 3, w: 4 }],
                 arc(6.5, 16, 3, 1.2), line(26.4, 3, 4.1),
                 [{ t: T.POWER, x: 28, y: 4.2, kind: POWER.SHIELD }]
@@ -319,7 +337,7 @@
                 [{ t: T.GAP, x: 9, w: 3.4 }, { t: T.GAP, x: 15, w: 3.4 },
                 { t: T.GAP, x: 21, w: 3.4 }],
                 arc(8, 13, 1.8), arc(14, 19, 1.8), arc(20, 25, 1.8),
-                [{ t: T.FRIEND, x: 30, y: 1.75 }]
+                [{ t: T.GUARD, x: 28 }, { t: T.FRIEND, x: 30, y: 1.75 }]
             )
         },
 
@@ -345,7 +363,8 @@
         {
             w: 40, tier: 3, items: [].concat(
                 [{ t: T.GAP, x: 8, w: 5 }, { t: T.GAP, x: 16, w: 5.2 },
-                { t: T.GAP, x: 24, w: 5.4 }, { t: T.FRIEND, x: 34, y: 1.75 }],
+                { t: T.GAP, x: 24, w: 5.4 }, { t: T.GUARD, x: 32 },
+                { t: T.FRIEND, x: 34, y: 1.75 }],
                 arc(7, 13.5, 2.2), arc(15, 21.7, 2.2), arc(23, 30, 2.2)
             )
         },
@@ -353,7 +372,7 @@
             w: 40, tier: 3, items: [].concat(
                 [{ t: T.ROCK, x: 8, h: 1.2 }, { t: T.BRANCH, x: 11.5 },
                 { t: T.ROCK, x: 15, h: 1.2 }, { t: T.BRANCH, x: 18.5 },
-                { t: T.ROCK, x: 22, h: 1.2 }, { t: T.FRIEND, x: 30, y: 1.75 },
+                { t: T.GUARD, x: 22 }, { t: T.FRIEND, x: 30, y: 1.75 },
                 { t: T.POWER, x: 34, y: 1.4, kind: POWER.SHIELD }],
                 line(25, 6, 1.2)
             )
@@ -988,6 +1007,7 @@
             let x0, x1, y0, y1;
             if (it.t === T.ROCK) { x0 = it.x - 0.55; x1 = it.x + 0.55; y0 = 0; y1 = it.h; }
             else if (it.t === T.SPIKE) { x0 = it.x - 0.6; x1 = it.x + 0.6; y0 = 0; y1 = 0.85; }
+            else if (it.t === T.GUARD) { x0 = it.x - 0.62; x1 = it.x + 0.62; y0 = 0; y1 = 1.35; }
             else { x0 = it.x - 0.7; x1 = it.x + 0.7; y0 = 1.05; y1 = 2.6; }   // khúc gỗ
 
             if (hits(box, x0, x1, y0, y1)) {
@@ -1267,6 +1287,7 @@
         panda: null,        // { run: [8], jump, slide, cheer }
         pals: [],           // pals[i] = { run: [2], sit }
         coin: [],           // sáu hình xu xoay
+        guard: [],          // hai hình thú canh, nhấp nhổm qua lại
         cage: null, log: null, rock: null, spike: null
     };
 
@@ -1837,6 +1858,109 @@
         g.restore();
     }
 
+    /* ---- thú canh ----
+     * Phải nhìn ra ngay là phe xấu, tách hẳn khỏi mấy bạn cần cứu: lông sẫm
+     * thay vì màu tươi, mày cau chứ không phải mắt tròn, mõm nhe răng, vòng cổ
+     * gai đỏ. Bé bốn tuổi không đọc chữ nhưng đọc được cái cau mày. */
+    const GUARD_COL = { main: '#5a5566', dark: '#332f3d', soft: '#7b7488' };
+
+    function paintGuard(g, u, frame) {
+        const cx = 0.95 * u, foot = 1.5 * u;
+        const bodyCY = foot - 0.44 * u;
+        const r = 0.42 * u;
+        const sw = frame ? 1 : -1;
+
+        /* đuôi vẫy */
+        g.strokeStyle = GUARD_COL.dark;
+        g.lineWidth = 0.14 * u;
+        g.lineCap = 'round';
+        g.beginPath();
+        g.moveTo(cx - r * 0.8, bodyCY + r * 0.1);
+        g.quadraticCurveTo(cx - r * 1.9, bodyCY - r * (0.1 + sw * 0.35),
+            cx - r * 1.6, bodyCY - r * (0.9 + sw * 0.2));
+        g.stroke();
+
+        /* chân */
+        g.strokeStyle = GUARD_COL.dark;
+        g.lineWidth = 0.17 * u;
+        g.beginPath();
+        g.moveTo(cx - r * 0.45, bodyCY + r * 0.5);
+        g.lineTo(cx - r * 0.5, foot);
+        g.moveTo(cx + r * 0.45, bodyCY + r * 0.5);
+        g.lineTo(cx + r * 0.52, foot);
+        g.stroke();
+
+        /* tai nhọn dựng đứng */
+        g.fillStyle = GUARD_COL.main;
+        [-1, 1].forEach(s => {
+            g.beginPath();
+            g.moveTo(cx + s * r * 0.3, bodyCY - r * 0.55);
+            g.lineTo(cx + s * r * 0.72, bodyCY - r * 1.35);
+            g.lineTo(cx + s * r * 0.88, bodyCY - r * 0.45);
+            g.closePath();
+            g.fill();
+        });
+
+        /* thân */
+        const bg = g.createRadialGradient(cx - r * 0.3, bodyCY - r * 0.35, r * 0.1, cx, bodyCY, r);
+        bg.addColorStop(0, GUARD_COL.soft);
+        bg.addColorStop(0.6, GUARD_COL.main);
+        bg.addColorStop(1, GUARD_COL.dark);
+        g.fillStyle = bg;
+        g.beginPath();
+        g.arc(cx, bodyCY, r, 0, TAU);
+        g.fill();
+
+        /* mõm */
+        g.fillStyle = GUARD_COL.soft;
+        g.beginPath();
+        g.ellipse(cx + r * 0.3, bodyCY + r * 0.3, r * 0.4, r * 0.28, 0, 0, TAU);
+        g.fill();
+        /* răng nanh */
+        g.fillStyle = '#ffffff';
+        [0.1, 0.42].forEach(k => {
+            g.beginPath();
+            g.moveTo(cx + r * k, bodyCY + r * 0.38);
+            g.lineTo(cx + r * (k + 0.1), bodyCY + r * 0.38);
+            g.lineTo(cx + r * (k + 0.05), bodyCY + r * 0.62);
+            g.closePath();
+            g.fill();
+        });
+
+        /* mắt và mày cau — chi tiết làm nên "kẻ xấu" */
+        g.fillStyle = '#ffe066';
+        g.beginPath();
+        g.ellipse(cx - r * 0.05, bodyCY - r * 0.12, r * 0.13, r * 0.11, 0, 0, TAU);
+        g.ellipse(cx + r * 0.42, bodyCY - r * 0.14, r * 0.13, r * 0.11, 0, 0, TAU);
+        g.fill();
+        g.fillStyle = '#1b1420';
+        g.beginPath();
+        g.ellipse(cx - r * 0.03, bodyCY - r * 0.12, r * 0.06, r * 0.09, 0, 0, TAU);
+        g.ellipse(cx + r * 0.44, bodyCY - r * 0.14, r * 0.06, r * 0.09, 0, 0, TAU);
+        g.fill();
+        g.strokeStyle = '#1b1420';
+        g.lineWidth = 0.055 * u;
+        g.beginPath();
+        g.moveTo(cx - r * 0.28, bodyCY - r * 0.42);
+        g.lineTo(cx + r * 0.1, bodyCY - r * 0.22);
+        g.moveTo(cx + r * 0.66, bodyCY - r * 0.44);
+        g.lineTo(cx + r * 0.3, bodyCY - r * 0.24);
+        g.stroke();
+
+        /* vòng cổ gai đỏ */
+        g.strokeStyle = '#c92a2a';
+        g.lineWidth = 0.11 * u;
+        g.beginPath();
+        g.arc(cx, bodyCY, r * 0.93, 0.35, 2.1);
+        g.stroke();
+        g.fillStyle = '#ffd43b';
+        [0.6, 1.1, 1.6].forEach(a2 => {
+            g.beginPath();
+            g.arc(cx + Math.cos(a2) * r * 0.93, bodyCY + Math.sin(a2) * r * 0.93, r * 0.09, 0, TAU);
+            g.fill();
+        });
+    }
+
     /* ---- chuồng gỗ ---- */
     function paintCage(g, u) {
         const w = 1.5 * u, h = 1.6 * u;
@@ -1946,6 +2070,8 @@
                 g => paintCoin(g, u, i)));
         }
 
+        SPR.guard = [0, 1].map(f => bake(1.9 * u, 1.7 * u, 0.95 * u, 1.5 * u,
+            g => paintGuard(g, u, f)));
         SPR.cage = bake(1.7 * u, 1.8 * u, 0.85 * u, 1.8 * u, g => paintCage(g, u));
         SPR.log = bake(1.82 * u, 1.62 * u, 0.91 * u, 0.81 * u, g => paintLog(g, u));
     }
@@ -2168,6 +2294,14 @@
             }
             if (it.t === T.BRANCH) {
                 drawLog(x, it);
+                return;
+            }
+            if (it.t === T.GUARD) {
+                /* Nhấp nhổm hai hình xen kẽ: đứng chết trân thì nhìn ra hòn đá
+                 * hình con thú, chứ không phải một đứa đang rình. */
+                const f = Math.floor(G.time * 5 + it.bob) % 2;
+                const bob = Math.sin(G.time * 5 + it.bob) * V.u * 0.05;
+                blit(SPR.guard[f], x, sy(0) + bob);
                 return;
             }
         });
