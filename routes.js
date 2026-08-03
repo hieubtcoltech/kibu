@@ -41,7 +41,8 @@
         { dir: 'bubble-pop', slug: 'bubble-pop' },
         { dir: 'panda-run', slug: 'panda-run' },
         { dir: 'bounce-hoops', slug: 'bounce-hoops' },
-        { dir: 'melon-drop', slug: 'melon-drop' }
+        { dir: 'melon-drop', slug: 'melon-drop' },
+        { dir: 'water-sort', slug: 'water-sort' }
     ];
 
     var bySlug = {}, byDir = {};

@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Water Sort - Free Colour Pouring Puzzle for Kids | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Water Sort free on KIBU Games! Pour the coloured water between tubes until every tube holds one colour. 60 levels, every single one machine-checked to be solvable, free hints, unlimited undo, colour marks for colour-blind kids, and a two-kid race on one screen. No timer, no lives, no ads.">
+    <meta name="keywords" content="Water Sort, colour sort puzzle, color sort, water sort puzzle, game xep mau, game rot mau, tro choi xep mau nuoc, sort puzzle for kids, colour blind friendly puzzle, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/water-sort/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/water-sort/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/water-sort/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/water-sort/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/water-sort/">
+    <meta property="og:title" content="Water Sort - Free Colour Pouring Puzzle | KIBU Games">
+    <meta property="og:description" content="Pour until every tube is one colour. 60 levels, all machine-checked solvable. Free hints, unlimited undo, colour-blind friendly. 100% free on KIBU Games.">
+    <meta property="og:image" content="https://kibugames.com/water-sort/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/water-sort/">
+    <meta name="twitter:title" content="Water Sort - Free Colour Pouring Puzzle">
+    <meta name="twitter:description" content="Pour until every tube is one colour. 60 levels, free hints, unlimited undo.">
+    <meta name="twitter:image" content="https://kibugames.com/water-sort/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Water Sort",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/water-sort/",
+      "genre": "Puzzle",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/water-sort/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body class="chrome-fit">
+    <header class="unified-nav">
+        <div class="nav-left">
+            <a href="/" class="nav-home" title="Home" aria-label="Home">
+                <img src="/logo.svg" alt="KIBU Games">
+            </a>
+            <div class="brand">
+                <img src="/water-sort/icon.jpg" alt="" class="brand-img"
+                    onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><i class="fa-solid fa-flask brand-icon"></i>
+                <h1 class="brand-title">WATER SORT</h1>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button id="btn-nav-undo" class="btn btn-secondary" title="Undo">
+                <i class="fa-solid fa-rotate-left"></i> <span>Undo</span>
+            </button>
+            <button id="btn-nav-hint" class="btn btn-secondary" title="Hint">
+                <i class="fa-solid fa-lightbulb"></i> <span>Hint</span>
+            </button>
+            <button id="btn-nav-restart" class="btn btn-secondary" title="Restart">
+                <i class="fa-solid fa-rotate-right"></i> <span>Restart</span>
+            </button>
+            <button id="btn-nav-levels" class="btn btn-secondary" title="Levels">
+                <i class="fa-solid fa-table-cells"></i> <span>Levels</span>
+            </button>
+            <button id="btn-sound" class="btn btn-secondary" title="Sound">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="game-wrapper">
+        <!-- Cả giàn ống nằm trong canvas này -->
+        <div class="board-host">
+            <canvas id="board"></canvas>
+        </div>
+
+        <!-- Thẻ tên nổi trên mỗi giàn ống; game.js tự đặt vào đúng chỗ -->
+        <div id="chip-1" class="chip chip-1" hidden>
+            <span class="chip-name" id="chip-1-name">Kid 1</span>
+            <span class="chip-moves-box"><span class="chip-tag">Moves</span>
+                <b id="chip-1-moves">0</b></span>
+        </div>
+        <div id="chip-2" class="chip chip-2" hidden>
+            <span class="chip-name" id="chip-2-name">Kid 2</span>
+            <span class="chip-moves-box"><span class="chip-tag">Moves</span>
+                <b id="chip-2-moves">0</b></span>
+        </div>
+
+        <div id="tip" class="tip hidden"></div>
+
+        <!-- ---------- Màn chào ---------- -->
+        <div id="menu-overlay" class="overlay">
+            <div class="card pop-in">
+                <h1 class="title">WATER SORT</h1>
+                <p class="subtitle">Pour until every tube holds just one colour!</p>
+
+                <div class="pick-row">
+                    <button class="kid-btn is-on" data-kids="1">1 KID</button>
+                    <button class="kid-btn" data-kids="2">2 KIDS</button>
+                </div>
+
+                <div class="how-row">
+                    <div class="how-item">
+                        <span class="how-emoji">👆</span>
+                        <b>Tap, then tap</b>
+                        <span>Tap a tube to lift the top colour, tap another to pour it in.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">🎨</span>
+                        <b>Same on same</b>
+                        <span>Colour only pours onto the same colour, or into an empty tube.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">💡</span>
+                        <b>Stuck? Just ask</b>
+                        <span>Hint and Undo are free and unlimited. No timer, no lives.</span>
+                    </div>
+                </div>
+
+                <p class="rule-note">
+                    All 60 levels were solved by a machine before they got here, so every
+                    single one can be finished. With 2 kids you both get the same tubes —
+                    first one done wins!
+                </p>
+
+                <button id="btn-marks" class="mark-btn is-on">Colour marks: ON</button>
+                <p class="mark-note">
+                    Each colour also carries its own little shape, so kids who mix up
+                    colours can still tell the tubes apart.
+                </p>
+
+                <div class="row-buttons sticky-cta">
+                    <button id="btn-play" class="btn btn-primary btn-big">PLAY</button>
+                    <button id="btn-menu-levels" class="btn btn-ghost">Levels</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Chọn màn ---------- -->
+        <div id="levels-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm">CHOOSE A LEVEL</h2>
+                <div id="world-tabs" class="world-tabs"></div>
+                <div id="level-grid" class="level-grid"></div>
+                <div class="row-buttons sticky-cta">
+                    <button id="btn-levels-back" class="btn btn-primary">Back</button>
+                    <button id="btn-nav-menu" class="btn btn-ghost">Main Menu</button>
+                    <button id="btn-reset-progress" class="btn btn-ghost">Reset progress</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Qua màn ---------- -->
+        <div id="win-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm text-good">ALL SORTED!</h2>
+                <div id="win-stars" class="stars"></div>
+                <div class="score-rows">
+                    <div class="score-row"><span>Your moves</span><span id="win-moves">0</span></div>
+                    <div class="score-row"><span>Fewest possible</span><span id="win-par">0</span></div>
+                    <div class="score-row"><span>Your best</span><span id="win-best">0</span></div>
+                </div>
+                <div class="row-buttons">
+                    <button id="btn-next" class="btn btn-primary btn-big">NEXT LEVEL</button>
+                    <button id="btn-finish" class="btn btn-primary btn-big" hidden>FINISH</button>
+                    <button id="btn-replay" class="btn btn-ghost">Try again</button>
+                    <button id="btn-win-levels" class="btn btn-ghost">Levels</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Hai bé thi ---------- -->
+        <div id="duo-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm text-good" id="duo-title">Kid 1 wins!</h2>
+                <p class="subtitle">Same tubes, same start — fair and square.</p>
+                <div class="row-buttons">
+                    <button id="btn-duo-again" class="btn btn-primary btn-big">RACE AGAIN</button>
+                    <button id="btn-duo-menu" class="btn btn-ghost">Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+        <div class="footer-tools">
+        <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+        <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+            <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+        </button>
+        </div>
+    </footer>
+
+    <script src="/water-sort/levels.js"></script>
+    <script src="/water-sort/game.js"></script>
+</body>
+</html>
