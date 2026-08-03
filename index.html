@@ -307,9 +307,7 @@
         .poki-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            /* Mọi ô cùng một cỡ nên lưới chảy đều trái sang phải, trên xuống
-               dưới ở mọi bề rộng: không lỗ hổng, và thứ tự nhìn thấy đúng bằng
-               thứ tự trong HTML (dense sẽ kéo ô phía sau vượt lên lấp chỗ trống). */
+            grid-auto-flow: dense;
             gap: 16px;
             width: 100%;
         }
@@ -319,6 +317,21 @@
                 grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
                 gap: 20px;
             }
+        }
+
+        /* Top 3 games có lượt chơi nhiều nhất có layout 2x2 */
+        .poki-tile.tile-panda,
+        .poki-tile.tile-bubble,
+        .poki-tile.tile-fruit {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .poki-tile.tile-panda .tile-label,
+        .poki-tile.tile-bubble .tile-label,
+        .poki-tile.tile-fruit .tile-label {
+            font-size: 1.1rem;
+            padding: 12px 8px;
         }
 
         /* Nhãn góc: HOT cho game đông bé chơi, MỚI cho game vừa ra */
