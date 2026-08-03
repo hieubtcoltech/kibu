@@ -515,9 +515,11 @@ body {
     gap: 8px;
 }
 
-.setup-grid .opt-row.small {
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-}
+/* Số cột của từng hàng phải viết ở đây chứ không đặt style thẳng trên thẻ:
+   style gắn trên thẻ đè cả luật responsive bên dưới, hàng độ khó cứ giữ 4 cột
+   trên điện thoại và đẩy trang rộng ra ngoài màn hình. */
+.opt-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.opt-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
 
 .opt {
     font-family: var(--font-main);
@@ -527,6 +529,10 @@ body {
     padding: 10px 9px;
     cursor: pointer;
     color: #cbd5e1;
+    /* Ô lưới mặc định không co hẹp hơn chữ bên trong. Không mở khoá hai dòng
+       này thì một nhãn dài như "🔥 INSANE" cũng đủ làm cả bảng tràn ngang. */
+    min-width: 0;
+    overflow-wrap: anywhere;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -801,11 +807,12 @@ body {
     .vs-badge { padding: 2px 0; }
     .final-grid { grid-template-columns: 1fr; }
     .setup-grid { grid-template-columns: 1fr; }
-    .opt-row { grid-template-columns: 1fr; }
-    /* Hàng cấu hình nhỏ có luật riêng ở trên (auto-fit 90px) và luật đó "nặng ký"
-       hơn dòng ngay trên đây, nên trên điện thoại nó vẫn cố nhét nhiều cột rộng
-       90px — chữ bị ép thành từng cột dọc. Phải đè lại đúng bằng mức cụ thể đó. */
-    .setup-grid .opt-row.small { grid-template-columns: 1fr; }
+    /* Điện thoại: mọi hàng chọn đều xếp dọc một cột, kể cả hàng đã khai báo
+       số cột cụ thể ở trên (cols-2 / cols-4) — cùng độ "nặng ký" nên dòng sau
+       thắng. */
+    .opt-row,
+    .opt-row.cols-2,
+    .opt-row.cols-4 { grid-template-columns: 1fr; }
     .opt { flex-direction: row; justify-content: flex-start; gap: 9px; text-align: left; }
     .opt-desc { flex: 1; }
 }
