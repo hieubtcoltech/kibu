@@ -487,21 +487,41 @@
         /* Đường dẫn viết đầy đủ từ gốc, không được viết tương đối: trang game
          * có hai kiểu địa chỉ (/panda-run/ và /vi/g/panda-run), viết tương đối
          * thì ở kiểu thứ hai nó đi tìm /vi/g/music.mp3 và nhận 404. */
+        bgmErr: '',         // ghi lại hỏng ở khâu nào, cho bảng chẩn đoán đọc
+
         loadBgm() {
             if (!this.ctx || this.bgmBuf || this.bgmLoading) return;
             this.bgmLoading = true;
+            const done = buf => {
+                this.bgmBuf = buf;
+                this.bgmLoading = false;
+                this.bgmErr = '';
+                if (this.bgmWant) this.playBgm();
+            };
+            const fail = (khau, e) => {
+                this.bgmLoading = false;
+                this.bgmErr = khau + ': ' + (e && e.message ? e.message : e);
+                console.warn('Nhạc nền hỏng ở khâu ' + khau, e);
+            };
             fetch(BGM_URL)
-                .then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status))
-                .then(b => this.ctx.decodeAudioData(b))
-                .then(buf => {
-                    this.bgmBuf = buf;
-                    this.bgmLoading = false;
-                    if (this.bgmWant) this.playBgm();
+                .then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error('HTTP ' + r.status)))
+                .then(b => {
+                    /* Safari đời cũ chỉ nhận decodeAudioData kiểu gọi lại, chưa
+                     * trả về promise — gọi kiểu promise thì nó nuốt luôn, nhạc
+                     * im mà chẳng có lỗi nào. Gọi kèm cả hai cách cho chắc:
+                     * bản mới dùng promise, bản cũ rơi vào hai hàm gọi lại. */
+                    let xong = false;
+                    const ret = this.ctx.decodeAudioData(
+                        b,
+                        buf => { if (!xong) { xong = true; done(buf); } },
+                        err => { if (!xong) { xong = true; fail('giải mã', err); } }
+                    );
+                    if (ret && typeof ret.then === 'function') {
+                        ret.then(buf => { if (!xong) { xong = true; done(buf); } })
+                            .catch(err => { if (!xong) { xong = true; fail('giải mã', err); } });
+                    }
                 })
-                .catch(e => {
-                    this.bgmLoading = false;
-                    console.warn('Không tải được nhạc nền ' + BGM_URL + ':', e);
-                });
+                .catch(e => fail('tải tệp', e));
         },
 
         toggle() {
@@ -3189,6 +3209,37 @@
         window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 
         /* Cửa sau để thử: gọi thẳng từ console hoặc từ script kiểm thử. */
+        /* Bảng chẩn đoán âm thanh, chỉ hiện khi địa chỉ có ?audio=debug.
+         *
+         * Máy của bé thì mình không cầm được, mà lỗi âm thanh trên iOS có mấy
+         * nguyên nhân nhìn từ ngoài giống hệt nhau: máy đang ở chế độ im lặng,
+         * bộ tạo âm chưa được đánh thức, tệp nhạc tải hỏng, hay Safari đời cũ
+         * không giải mã được. Bảng này in thẳng trạng thái từng khâu ra màn
+         * hình để người cầm máy đọc hộ. */
+        if (/[?&]audio=debug/.test(location.search)) {
+            const box = document.createElement('div');
+            box.style.cssText = 'position:absolute;left:8px;top:96px;z-index:99;' +
+                'background:rgba(4,20,12,0.92);border:1px solid rgba(255,255,255,0.25);' +
+                'border-radius:10px;padding:8px 10px;font:600 11px/1.5 monospace;' +
+                'color:#8ce99a;white-space:pre;pointer-events:none;max-width:76vw';
+            canvas.parentElement.appendChild(box);
+            setInterval(() => {
+                const c = sfx.ctx;
+                box.textContent = [
+                    'bật tiếng   : ' + (sfx.on ? 'CÓ' : 'KHÔNG'),
+                    'bộ tạo âm   : ' + (c ? c.state : 'chưa dựng'),
+                    'tần số      : ' + (c ? c.sampleRate + ' Hz' : '-'),
+                    'nhạc giải mã: ' + (sfx.bgmBuf
+                        ? Math.round(sfx.bgmBuf.duration) + 's'
+                        : (sfx.bgmLoading ? 'đang tải…' : 'chưa')),
+                    'nhạc chạy   : ' + (sfx.bgmSrc ? 'CÓ' : 'KHÔNG'),
+                    'âm lượng    : ' + (sfx.bgmGain ? sfx.bgmGain.gain.value : '-'),
+                    'lỗi         : ' + (sfx.bgmErr || 'không'),
+                    'thẻ audio   : ' + document.querySelectorAll('audio,video').length
+                ].join('\n');
+            }, 400);
+        }
+
         window.pandaRun = {
             G, V, SPR, ANIMALS, ZONES, CHUNKS, store, sfx,
             play, jump, slide, releaseJump, pause, resume,
