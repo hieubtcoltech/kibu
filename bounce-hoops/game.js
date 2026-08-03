@@ -501,8 +501,17 @@
         ];
     }
 
+    /* Mốc ghi điểm nằm ĐÚNG mép vành (h.y), không thấp hơn.
+     *
+     * Ban đầu em lấy mốc thấp hơn mép vành 0,12 ô cho chắc ăn, và nó làm hỏng
+     * mọi cái rổ đặt trên bệ: bóng rơi vào rổ thì mặt bệ đỡ nó lại ở đúng
+     * h.y, tâm bóng không bao giờ xuống nổi h.y + 0,12, nên vào rổ rồi mà
+     * không tính điểm. Nằm ở mép vành thì đúng nghĩa hơn: hai cọc chặn hai
+     * bên, tâm bóng đi từ trên xuống qua mép vành trong khoảng giữa hai cọc
+     * thì chỉ còn đường rơi tiếp vào lưới. */
     function crossedHoop(prevY, b, h) {
-        if (prevY >= h.y + 0.12 || b.y < h.y + 0.12) return false;
+        if (b.vy <= 0) return false;                       // phải đang rơi xuống
+        if (prevY >= h.y || b.y < h.y) return false;
         return Math.abs(b.x - h.x) < 0.92;
     }
 
