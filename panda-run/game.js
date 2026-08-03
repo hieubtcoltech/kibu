@@ -451,7 +451,10 @@
              * (/panda-run/style.css, /panda-run/icon.jpg), chỗ này sót lại. */
             this.bgm = new Audio('/panda-run/music.mp3');
             this.bgm.loop = true;
-            this.bgm.volume = 0.35;
+            /* Nhạc nền phải nhường chỗ cho tiếng động. Để 0,35 thì cả bản
+             * phối đè lên mấy sóng đơn mỏng manh của tiếng ăn xu, tiếng va
+             * chạm — nghe như game mất tiếng, trong khi tiếng vẫn phát ra đều. */
+            this.bgm.volume = 0.15;
             this.bgm.preload = 'auto';
             this.bgm.addEventListener('error', () => {
                 console.warn('Không tải được /panda-run/music.mp3');
@@ -527,25 +530,31 @@
             src.start();
         },
 
-        jump() { this.tone(420, 0.14, 'triangle', 0.08, 760); },
-        land() { this.noise(0.05, 0.05, 300); this.tone(150, 0.07, 'sine', 0.06, 90); },
-        slide() { this.noise(0.22, 0.06, 1400); },
+        /* Âm lượng các tiếng động phải to hơn hẳn nhạc nền, không thì chúng
+         * chìm nghỉm dưới bản nhạc và bé tưởng game mất tiếng.
+         *
+         * Tiếng động ở đây là sóng đơn, mỏng như một sợi chỉ; còn nhạc là cả
+         * một bản phối dày đặc. Cùng một con số âm lượng thì tai vẫn nghe nhạc
+         * to gấp mấy lần. Nên tiếng động để 0,16–0,24 trong khi nhạc chỉ 0,15. */
+        jump() { this.tone(420, 0.14, 'triangle', 0.14, 760); },
+        land() { this.noise(0.05, 0.09, 300); this.tone(150, 0.07, 'sine', 0.11, 90); },
+        slide() { this.noise(0.22, 0.11, 1400); },
         /* Quả ăn liên tiếp leo dần lên theo thang ngũ cung, chuỗi càng dài tai
          * càng nghe ra là mình đang ăn đậm. */
-        coin(i) { this.tone(NOTES[Math.min(i, NOTES.length - 1)], 0.1, 'sine', 0.085); },
+        coin(i) { this.tone(NOTES[Math.min(i, NOTES.length - 1)], 0.1, 'sine', 0.17); },
         pal() {
             [784, 1046, 1318].forEach((f, i) =>
-                setTimeout(() => this.tone(f, 0.16, 'triangle', 0.12), i * 65));
+                setTimeout(() => this.tone(f, 0.16, 'triangle', 0.22), i * 65));
         },
-        hurt() { this.noise(0.2, 0.14, 200); this.tone(220, 0.26, 'sawtooth', 0.11, 80); },
+        hurt() { this.noise(0.2, 0.24, 200); this.tone(220, 0.26, 'sawtooth', 0.2, 80); },
         power() {
             [660, 880, 1320].forEach((f, i) =>
-                setTimeout(() => this.tone(f, 0.14, 'square', 0.08), i * 55));
+                setTimeout(() => this.tone(f, 0.14, 'square', 0.15), i * 55));
         },
-        rocket() { this.noise(0.5, 0.1, 320); this.tone(180, 0.5, 'sawtooth', 0.08, 520); },
+        rocket() { this.noise(0.5, 0.18, 320); this.tone(180, 0.5, 'sawtooth', 0.15, 520); },
         zone() {
             [523, 659, 784, 1046, 1318].forEach((f, i) =>
-                setTimeout(() => this.tone(f, 0.2, 'triangle', 0.11), i * 80));
+                setTimeout(() => this.tone(f, 0.2, 'triangle', 0.2), i * 80));
         },
         over() {
             [440, 370, 311, 262].forEach((f, i) =>
