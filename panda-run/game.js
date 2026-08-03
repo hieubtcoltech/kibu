@@ -2941,34 +2941,65 @@
      *  đất thì gỡ cú nhảy ra, trả về mặt đất rồi cho nằm. Cửa sổ gỡ chỉ hơn
      *  một phần năm giây nên mắt gần như không thấy.
      */
+    /* Ngón tay vừa đặt xuống thì chưa biết bé định NHẢY hay định VUỐT XUỐNG để
+     * nằm — hai thao tác bắt đầu giống hệt nhau.
+     *
+     * Bản trước cho nhảy ngay lúc chạm, phát hiện vuốt thì mới gỡ cú nhảy ra.
+     * Nhưng gỡ xong thì mắt đã kịp thấy panda nhổm lên rồi mới nằm xuống — sai
+     * hẳn động tác, đúng như anh gặp trên iPad.
+     *
+     * Giờ chờ đúng một nhịp rất ngắn trước khi quyết:
+     *   ngón trượt xuống quá ngưỡng trong nhịp đó → NẰM, cú nhảy không bao giờ
+     *                                               xảy ra, không còn gì để gỡ
+     *   hết nhịp mà ngón vẫn đứng yên            → NHẢY
+     *   nhấc ngón trước khi hết nhịp             → NHẢY ngay lập tức
+     *
+     * Cái giá là độ trễ TOUCH_WAIT giây cho mỗi cú nhảy. Ở tốc độ đầu game bé
+     * chỉ đi thêm được nửa đơn vị trong quãng đó — đổi lấy việc động tác không
+     * bao giờ sai nữa thì quá rẻ. Bàn phím không dính độ trễ này. */
+    const TOUCH_WAIT = 0.085;
+
     function wireInput() {
         const host = canvas.parentElement;
         let touchId = null, touchY0 = 0, touchAt = 0, swiped = false;
+        let waitTimer = null;
+
+        const clearWait = () => {
+            if (waitTimer) { clearTimeout(waitTimer); waitTimer = null; }
+        };
 
         host.addEventListener('pointerdown', ev => {
             ev.preventDefault();
             sfx.wake();
             if (G.mode !== 'play') return;
+            clearWait();
             touchId = ev.pointerId;
             touchY0 = ev.clientY;
             touchAt = G.time;
             swiped = false;
-            jump();
+            /* Chưa nhảy vội — chờ xem có phải bé đang vuốt xuống không. */
+            waitTimer = setTimeout(() => {
+                waitTimer = null;
+                if (!swiped) jump();
+            }, TOUCH_WAIT * 1000);
         });
 
         host.addEventListener('pointermove', ev => {
             if (G.mode !== 'play' || swiped || ev.pointerId !== touchId) return;
-            /* Ngưỡng vuốt để thấp thôi: nhận ra sớm chừng nào thì cú nhảy ngoài ý muốn
-             * bị gỡ sớm chừng ấy, bé càng ít thấy người nhấp nhổm. */
-            const need = Math.max(18, V.u * 0.45);
+            /* Ngưỡng vuốt để thấp: nhận ra càng sớm thì càng chắc bắt kịp trong
+             * nhịp chờ, khỏi phải rơi xuống đường gỡ cú nhảy phía dưới. */
+            const need = Math.max(16, V.u * 0.32);
             if (ev.clientY - touchY0 < need) return;
             swiped = true;
+            /* Bắt kịp trong nhịp chờ: huỷ cú nhảy khi nó còn chưa xảy ra. Đây
+             * là đường đi sạch nhất, không để lại vết gì trên màn hình. */
+            clearWait();
             /* Ngón còn đặt trên màn thì cứ nằm, nhấc lên mới đứng dậy. */
             G.slideHold = true;
 
-            /* Vừa nhảy xong mà đã vuốt xuống ngay, người còn sát đất: cú nhảy
-             * ấy là ngoài ý muốn, gỡ ra cho sạch. */
-            if (G.time - touchAt < 0.22 && !G.onGround && G.vy < 0 && G.y < 1.0) {
+            /* Vuốt chậm quá, cú nhảy đã kịp nổ: gỡ ra, trả về mặt đất. Đường dự
+             * phòng thôi — nhịp chờ ở trên bắt được gần hết. */
+            if (G.time - touchAt < 0.3 && !G.onGround && G.vy < 0 && G.y < 1.2) {
                 G.y = G.groundAt;
                 G.vy = 0;
                 G.onGround = true;
@@ -2979,6 +3010,13 @@
 
         const endTouch = ev => {
             if (ev && ev.pointerId != null && ev.pointerId !== touchId) return;
+            /* Nhấc ngón trước khi hết nhịp chờ: đó là một cú chạm nhanh, cho
+             * nhảy ngay rồi thả liền — thành cú nhảy thấp, đúng như bé muốn. */
+            if (waitTimer && !swiped) {
+                clearWait();
+                jump();
+            }
+            clearWait();
             touchId = null;
             G.slideHold = false;
             releaseJump();
