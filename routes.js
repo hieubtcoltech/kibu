@@ -43,7 +43,8 @@
         { dir: 'bounce-hoops', slug: 'bounce-hoops' },
         { dir: 'melon-drop', slug: 'melon-drop' },
         { dir: 'water-sort', slug: 'water-sort' },
-        { dir: 'screw-jam', slug: 'screw-jam' }
+        { dir: 'screw-jam', slug: 'screw-jam' },
+        { dir: 'claw-machine', slug: 'claw-machine' }
     ];
 
     var bySlug = {}, byDir = {};

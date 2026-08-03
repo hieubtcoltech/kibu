@@ -1,0 +1,713 @@
+/* ============================================================================
+ * Máy Gắp Thú — giao diện quanh cái tủ
+ * ----------------------------------------------------------------------------
+ * Bàn ván và mấy con ốc do Phaser vẽ trong canvas; file này chỉ lo phần HTML
+ * bao quanh: khung chứa canvas, thẻ tên, mách nước và các bảng phủ (chào, chọn
+ * màn, qua màn, kết quả hai bé). Màu và bo góc lấy theo /site-chrome.css.
+ *
+ * Tông màu xưởng mộc: nền gỗ sẫm, chữ kem. Nền tối vừa phải để tám màu ốc nổi
+ * hẳn lên — cả lối chơi nằm ở chỗ phân biệt màu ốc.
+ * ==========================================================================*/
+
+:root {
+    --ws-ink: #1a1440;
+    --ws-gold: #ffd43b;
+    --ws-kid1: #ff4d8d;
+    --ws-kid2: #63e6be;
+    --font-round: 'Fredoka', 'Baloo 2', system-ui, sans-serif;
+    --font-fat: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
+}
+
+/* Thuộc tính hidden của HTML chỉ ẩn nhờ style mặc định của trình duyệt, mà
+   style đó thua mọi khai báo display của mình — thiếu dòng này thì cái nút đặt
+   hidden vẫn hiện ra. Bảng qua màn từng hiện cùng lúc cả "MÀN TIẾP" lẫn "XONG
+   RỒI" đúng vì chuyện đó. */
+[hidden] { display: none !important; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #2a1f5e 0%, #140f30 100%);
+    font-family: var(--font-round);
+    color: #f0ecff;
+}
+
+.unified-nav,
+.site-footer {
+    flex: 0 0 auto;
+}
+
+.brand-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    display: block;
+}
+
+@media (max-width: 560px) {
+    .brand-img { width: 30px; height: 30px; }
+}
+
+/* ---------- Khung sân ---------- */
+.game-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1400px;
+    height: 100%;
+    min-height: 0;
+    margin: 0 auto;
+    background: radial-gradient(circle at 50% 12%, #3d2f8a 0%, #1a1440 70%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+body.chrome-fit > .game-wrapper.game-wrapper {
+    flex: 1 1 auto;
+}
+
+@media (max-width: 900px) {
+    .game-wrapper {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+}
+
+/* Phaser tự đặt canvas vào đây rồi co theo tỉ lệ (Scale.FIT); chỗ này chỉ lo
+   căn nó vào giữa khung. Đặt luật theo id thì nó thắng luật theo class, nên
+   canvas không thò ra ngoài được. */
+.board-host {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-host canvas {
+    display: block;
+    max-width: 100%;
+    max-height: 100%;
+    touch-action: none;
+    margin: 0;
+}
+
+/* ---------- Thẻ tên ----------
+   Một thẻ cho mỗi bé, game.js đặt đúng trên đầu bàn của bé ấy. Toạ độ phải
+   quy từ thế giới 1280×720 của Phaser về điểm ảnh thật, vì canvas co theo
+   khung chứ không đứng nguyên cỡ. */
+.chip {
+    position: absolute;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 2px solid rgba(11, 58, 93, 0.75);
+    box-shadow: 0 3px 0 rgba(4, 26, 45, 0.35);
+    color: var(--ws-ink);
+    font-family: var(--font-fat);
+    pointer-events: none;
+    box-sizing: border-box;
+}
+
+.chip[hidden] { display: none; }
+
+.chip-1 { border-color: var(--ws-kid1); }
+.chip-2 { border-color: var(--ws-kid2); }
+
+.chip-name {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.chip-moves-box {
+    display: flex;
+    align-items: baseline;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.chip-tag {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.6;
+}
+
+.chip-moves-box b { font-size: 1.05rem; font-weight: 800; }
+
+/* ---------- Mách nước ---------- */
+.tip {
+    position: absolute;
+    top: 46%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 8;
+    max-width: 88%;
+    text-align: center;
+    background: rgba(11, 58, 93, 0.92);
+    border: 2px solid var(--ws-gold);
+    border-radius: 999px;
+    padding: 10px 24px;
+    font-family: var(--font-fat);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #ffd9e8;
+    pointer-events: none;
+    animation: tipIn 0.3s ease both;
+}
+
+.tip.hidden { display: none; }
+
+@keyframes tipIn {
+    from { opacity: 0; transform: translateX(-50%) scale(0.8); }
+    to { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+/* ---------- Bảng phủ ---------- */
+.overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    /* align-items:center cắt mất đầu thẻ khi thẻ cao hơn bảng; margin:auto ở
+       thẻ canh giữa y hệt nhưng lúc chật thì nhường chỗ chứ không cắt. */
+    align-items: flex-start;
+    justify-content: center;
+    padding: 14px;
+    background: rgba(12, 9, 32, 0.92);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.overlay.hidden { display: none; }
+
+.card {
+    width: min(700px, 100%);
+    margin: auto;
+    background: rgba(40, 30, 92, 0.97);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 20px;
+    padding: 20px 22px;
+    text-align: center;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+
+.pop-in { animation: popIn 0.28s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
+
+@keyframes popIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.title {
+    font-family: var(--font-fat);
+    font-size: clamp(1.9rem, 5vw, 2.9rem);
+    font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: 0.02em;
+    background: linear-gradient(180deg, #ffe9f3, #ff4d8d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 4px 22px rgba(255, 77, 141, 0.35);
+}
+
+.title-sm {
+    font-family: var(--font-fat);
+    font-size: clamp(1.4rem, 3.6vw, 2rem);
+    font-weight: 800;
+    margin: 0 0 8px;
+}
+
+.text-good { color: #8ce99a; }
+
+.subtitle {
+    margin: 0 0 12px;
+    color: #cfc7f5;
+    font-size: 0.98rem;
+}
+
+/* ---------- Chọn số bé ---------- */
+.pick-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 14px;
+}
+
+.kid-btn {
+    font-family: var(--font-fat);
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 10px 26px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.06);
+    color: #cfc7f5;
+    cursor: pointer;
+    transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.kid-btn:hover { transform: translateY(-2px); }
+
+.kid-btn.is-on {
+    background: linear-gradient(135deg, #ff7fae, #ff4d8d);
+    border-color: #fff;
+    color: #fff;
+}
+
+/* ---------- Hướng dẫn ---------- */
+.how-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.how-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+
+.how-emoji { font-size: 1.7rem; line-height: 1; }
+.how-item b { font-size: 0.98rem; color: #ffd9e8; }
+.how-item span:last-child { font-size: 0.84rem; color: #cfc7f5; }
+
+.rule-note {
+    margin: 0 0 12px;
+    font-size: 0.88rem;
+    color: #cfc7f5;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 9px 12px;
+}
+
+/* ---------- Nút ký hiệu cho bé mù màu ---------- */
+.mark-btn {
+    font-family: var(--font-fat);
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 9px 20px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.06);
+    color: #cfc7f5;
+    cursor: pointer;
+}
+
+.mark-btn.is-on {
+    background: rgba(12, 166, 120, 0.28);
+    border-color: #0ca678;
+    color: #d3f9d8;
+}
+
+.mark-note {
+    margin: 6px 0 0;
+    font-size: 0.78rem;
+    color: #9d94c9;
+}
+
+/* ---------- Nút ---------- */
+.btn {
+    font-family: var(--font-fat);
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    border-radius: 14px;
+    padding: 11px 20px;
+    cursor: pointer;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary {
+    background: linear-gradient(135deg, #ff7fae, #ff4d8d);
+    color: #fff;
+    box-shadow: 0 8px 22px rgba(255, 77, 141, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary.is-off { opacity: 0.55; }
+
+.btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #cfc7f5;
+}
+
+.btn-big {
+    font-size: 1.2rem;
+    padding: 14px 44px;
+}
+
+.row-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
+
+/* Nút chính ghim đáy khung cuộn — bài học từ lần sửa vùng chạm hai mươi game:
+   bảng dài thì nút rơi xuống dưới đáy màn hình, mà trẻ con không tự nghĩ ra
+   chuyện cuộn xuống tìm nút, thấy bảng dài không có nút là tưởng game hỏng. */
+.row-buttons.sticky-cta {
+    position: sticky;
+    bottom: -20px;
+    padding: 10px 0 12px;
+    margin-bottom: -12px;
+    background: linear-gradient(180deg, rgba(40, 30, 92, 0), rgba(40, 30, 92, 0.97) 35%);
+}
+
+/* ---------- Chọn thế giới ---------- */
+.world-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.ch-tab {
+    font-family: var(--font-fat);
+    font-size: 0.86rem;
+    font-weight: 700;
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.05);
+    color: #cfc7f5;
+    cursor: pointer;
+    transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.ch-tab:hover:not(.locked) { transform: translateY(-2px); }
+
+.ch-tab.is-on {
+    background: linear-gradient(135deg, #ff7fae, #ff4d8d);
+    border-color: #fff;
+    color: #fff;
+}
+
+.ch-tab.locked { opacity: 0.45; cursor: not-allowed; }
+.ch-tab .ch-lock { font-style: normal; margin-right: 5px; }
+.ch-tab .ch-stars { font-size: 0.72rem; opacity: 0.9; margin-left: 5px; }
+
+/* ---------- Chọn màn ---------- */
+.level-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.lv {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+    color: #f0ecff;
+    font-family: var(--font-fat);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.lv:hover:not(.locked) { transform: translateY(-3px); background: rgba(255, 255, 255, 0.14); }
+.lv.locked { opacity: 0.4; cursor: not-allowed; }
+.lv.done { border-color: rgba(255, 197, 61, 0.7); }
+
+.lv .lv-num { font-size: 1.3rem; font-weight: 800; }
+.lv .lv-stars { font-size: 0.68rem; letter-spacing: 1px; }
+.lv .lv-star { color: rgba(255, 255, 255, 0.25); font-style: normal; }
+.lv .lv-star.lit { color: var(--ws-gold); }
+
+/* ---------- Sao và bảng điểm ---------- */
+.stars {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 6px 0 12px;
+}
+
+.star {
+    font-size: 2.4rem;
+    color: rgba(255, 255, 255, 0.2);
+}
+
+.star.lit {
+    color: var(--ws-gold);
+    animation: starPop 0.4s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.star.lit:nth-child(2) { animation-delay: 0.14s; }
+.star.lit:nth-child(3) { animation-delay: 0.28s; }
+
+@keyframes starPop {
+    from { transform: scale(0.2) rotate(-40deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.score-rows {
+    max-width: 340px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-weight: 600;
+}
+
+.score-row span:last-child {
+    color: var(--ws-gold);
+    font-family: var(--font-fat);
+    font-weight: 800;
+}
+
+/* ---------- Màn hẹp ---------- */
+@media (max-width: 640px) {
+    .card { padding: 14px 12px; }
+
+    .chip { padding: 3px 9px; gap: 5px; }
+    .chip-name { font-size: 0.66rem; }
+    .chip-tag { font-size: 0.54rem; }
+    .chip-moves-box b { font-size: 0.95rem; }
+
+    .tip { font-size: 0.95rem; padding: 8px 18px; }
+
+    .how-row { grid-template-columns: 1fr; gap: 7px; margin-bottom: 10px; }
+    .how-item {
+        text-align: left;
+        padding: 8px 10px;
+        gap: 9px;
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto;
+        align-items: center;
+    }
+    .how-emoji { grid-row: 1 / 3; font-size: 1.5rem; }
+    .how-item b { font-size: 0.92rem; }
+    .how-item span:last-child { font-size: 0.78rem; line-height: 1.25; }
+
+    .title { margin-bottom: 2px; }
+    .subtitle { margin-bottom: 8px; font-size: 0.88rem; }
+    .btn-big { font-size: 1.05rem; padding: 12px 30px; }
+    .level-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .lv .lv-num { font-size: 1.1rem; }
+    .star { font-size: 2rem; }
+    .mark-note { font-size: 0.72rem; }
+}
+
+/* ---------- Máy nằm ngang, màn thấp ----------
+   Điện thoại xoay ngang chỉ còn khoảng 250 px chiều cao cho bảng chào, mà nó
+   dựng theo bề ngang nên không rơi vào ngưỡng max-width phía trên. Ở đây co
+   theo CHIỀU CAO để bé không phải cuộn mới thấy nút CHƠI. */
+@media (max-height: 520px) {
+    .card { padding: 10px 14px; }
+    .title { font-size: 1.5rem; margin-bottom: 0; }
+    .subtitle { font-size: 0.8rem; margin-bottom: 6px; }
+
+    .pick-row { margin-bottom: 8px; }
+    .kid-btn { padding: 8px 20px; font-size: 0.9rem; }
+
+    .how-row { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 7px; }
+    .how-item { padding: 6px 7px; gap: 1px; }
+    .how-emoji { font-size: 1.15rem; }
+    .how-item b { font-size: 0.8rem; }
+    .how-item span:last-child { font-size: 0.68rem; line-height: 1.2; }
+
+    .rule-note { padding: 6px 10px; font-size: 0.78rem; margin-bottom: 8px; }
+    .mark-btn { padding: 7px 14px; font-size: 0.82rem; }
+    .mark-note { display: none; }
+    .btn-big { font-size: 1rem; padding: 9px 26px; }
+    .row-buttons { margin-top: 9px; }
+    .level-grid { grid-template-columns: repeat(8, 1fr); gap: 7px; }
+    .ch-tab { font-size: 0.74rem; padding: 5px 10px; }
+    .world-tabs { margin-bottom: 7px; }
+    .star { font-size: 1.7rem; }
+}
+
+
+/* ---------- Bảng số nổi trên tủ ---------- */
+.hud {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 6;
+    display: flex;
+    gap: 8px;
+    pointer-events: none;
+    font-family: var(--font-fat);
+}
+
+.hud[hidden] { display: none; }
+
+.hud-box {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.93);
+    border: 2px solid #3b2a8f;
+    color: var(--ws-ink);
+    box-shadow: 0 3px 0 rgba(12, 9, 32, 0.4);
+    white-space: nowrap;
+}
+
+.hud-tag {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.72;
+}
+
+.hud-box b { font-size: 1.05rem; font-weight: 800; }
+
+/* ---------- Bàn điều khiển ----------
+   Ba nút to đặt dưới đáy khung, ngay tầm hai ngón cái khi bé cầm máy dựng
+   đứng. Nút mũi tên GIỮ để chạy chứ không bấm từng nhịp — máy gắp thật cũng
+   thế, và ngón tay bé giữ dễ hơn bấm liên tiếp. */
+.pad {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    z-index: 7;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pad[hidden] { display: none; }
+
+.pad-btn {
+    width: 86px;
+    height: 64px;
+    border-radius: 20px;
+    border: none;
+    background: linear-gradient(180deg, #6c5ce7, #4936c4);
+    color: #fff;
+    font-size: 2rem;
+    font-family: var(--font-fat);
+    cursor: pointer;
+    box-shadow: 0 6px 0 #2b2073, 0 10px 22px rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    user-select: none;
+}
+
+.pad-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #2b2073; }
+
+.pad-drop {
+    width: 150px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    background: linear-gradient(180deg, #ff7fae, #e6317a);
+    box-shadow: 0 6px 0 #a81f56, 0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+.pad-drop:active { box-shadow: 0 2px 0 #a81f56; }
+
+@media (max-width: 560px) {
+    .pad-btn { width: 74px; height: 58px; font-size: 1.7rem; }
+    .pad-drop { width: 124px; font-size: 1.05rem; }
+    .hud-box { padding: 4px 10px; }
+    .hud-tag { font-size: 0.58rem; }
+}
+
+/* ---------- Tủ trưng bày ---------- */
+.shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
+    gap: 8px;
+    margin: 4px 0 6px;
+    max-height: 46vh;
+    overflow-y: auto;
+}
+
+.shelf-cell {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* Con chưa gắp được thì để bóng đen — bé nhìn ra ngay còn thiếu con nào, mà
+   vẫn thấy được dáng nó, đủ để tò mò. */
+.shelf-cell img {
+    width: 86%;
+    height: 86%;
+    object-fit: contain;
+    filter: brightness(0) opacity(0.28);
+}
+
+.shelf-cell.got {
+    background: rgba(255, 212, 59, 0.14);
+    border-color: rgba(255, 212, 59, 0.6);
+}
+
+.shelf-cell.got img { filter: none; }
+
+.shelf-n {
+    position: absolute;
+    right: 4px;
+    bottom: 3px;
+    font-family: var(--font-fat);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--ws-gold);
+}

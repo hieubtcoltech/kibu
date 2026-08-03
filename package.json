@@ -12,7 +12,8 @@
     "check:water-sort": "node water-sort/check-levels.js",
     "make:water-sort": "node water-sort/make-levels.js",
     "check:screw-jam": "node screw-jam/check-levels.js",
-    "make:screw-jam": "node screw-jam/make-levels.js"
+    "make:screw-jam": "node screw-jam/make-levels.js",
+    "check:claw-machine": "node -e \"console.log('Mở http://localhost:PORT/claw-machine/check-grab.html — máy đo chạy trong trình duyệt vì nó dùng chính vật lý Matter của game')\""
   },
   "engines": {
     "node": ">=18"

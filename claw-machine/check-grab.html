@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Máy Gắp Thú — đo tỉ lệ gắp</title>
+<style>
+ body{margin:0;background:#140f30;color:#f0ecff;font:15px/1.55 ui-monospace,Menlo,monospace;padding:22px}
+ h1{font:700 20px/1.3 system-ui;margin:0 0 6px}
+ p{max-width:72ch;color:#cfc7f5;font:14px/1.6 system-ui}
+ pre{background:#0c0920;border:1px solid #3d2f8a;border-radius:12px;padding:14px 16px;overflow:auto}
+ .ok{color:#63e6be;font-weight:700}
+ .bad{color:#ff8fae;font-weight:700}
+ /* Sân chơi thật vẫn phải dựng để đo, nhưng đẩy ra ngoài màn hình cho gọn */
+ #stage{position:fixed;left:-4000px;top:0;width:720px;height:1000px}
+</style>
+</head>
+<body>
+<h1>Máy Gắp Thú — đo tỉ lệ gắp</h1>
+<p>
+  Trang này gắp thử vài trăm lượt ở khắp bề ngang tủ rồi in ra tỉ lệ trúng. Nó chạy
+  ĐÚNG cái vật lý bé đang chơi — cùng một tệp <code>game.js</code>, cùng một lực
+  càng — chứ không phải một bản chép để đo cho đẹp. Mở trang là nó tự chạy.
+</p>
+<p>
+  Đây là chỗ chứng minh câu “máy này không ăn gian”: lực càng là một hằng số, nên
+  tỉ lệ trúng chỉ phụ thuộc vào chỗ bé ngắm và đống thú đang nằm thế nào. Không có
+  bộ đếm nào rình cho bé trượt, không có lượt bị cố tình làm yếu đi.
+</p>
+<pre id="out">đang dựng tủ…</pre>
+<div id="stage"><div id="game-canvas"></div></div>
+
+<!-- Mấy thẻ giao diện mà game.js cần có mặt; ở đây giấu đi vì trang này chỉ đo. -->
+<div style="display:none">
+  <div id="hud"><span id="hud-turn"></span><b id="hud-left"></b><b id="hud-got"></b></div>
+  <div id="pad"></div><div id="tip"></div>
+  <div id="menu-overlay"></div><div id="win-overlay"></div><div id="duo-overlay"></div>
+  <div id="shelf-overlay"></div><div id="shelf-grid"></div><span id="shelf-count"></span>
+  <span id="win-title"></span><span id="win-count"></span><span id="win-best"></span>
+  <span id="win-kinds"></span><span id="win-new"></span><span id="duo-title"></span>
+  <div id="duo-rows"></div>
+  <button id="btn-play"></button><button id="btn-menu-shelf"></button><button id="btn-shelf-back"></button>
+  <button id="btn-nav-menu"></button><button id="btn-nav-shelf"></button><button id="btn-again"></button>
+  <button id="btn-win-menu"></button><button id="btn-duo-again"></button><button id="btn-duo-menu"></button>
+  <button id="btn-reset-shelf"></button><button id="btn-left"></button><button id="btn-right"></button>
+  <button id="btn-drop"></button><button id="btn-sound"><i id="sound-icon"></i></button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
+<script src="/claw-machine/plush.js"></script>
+<script src="/claw-machine/game.js"></script>
+<script>
+(function () {
+    var out = document.getElementById('out');
+    var lines = [];
+    function line(t) { lines.push(t); out.textContent = lines.join('\n'); }
+
+    function start() {
+        var cm = window.clawMachine;
+        if (!cm || !cm.UI.scene) { setTimeout(start, 250); return; }
+
+        var COLS = +(new URLSearchParams(location.search).get('cols') || 12);
+        var TRIES = +(new URLSearchParams(location.search).get('tries') || 10);
+
+        lines = [];
+        line('lực càng: ma sát càng ' + cm.GRIP.friction +
+             ', ma sát thú ' + cm.GRIP.plushFriction +
+             '  (hằng số, không đổi theo lượt chơi)');
+        line('');
+
+        var lo = cm.CLAW.minX, hi = cm.CLAW.maxX;
+        var totalHit = 0, totalTry = 0;
+        var col = 0;
+
+        /* Đo từng cột một, nhả nhịp giữa các cột để trang không đơ */
+        (function nextCol() {
+            if (col >= COLS) { finish(); return; }
+            var x = lo + (hi - lo) * (col / (COLS - 1));
+            var hit = 0;
+            for (var t = 0; t < TRIES; t++) {
+                cm.start(1);          /* tủ mới, đống thú xếp lại từ đầu */
+                cm.settle(2.2);       /* chờ đống thú nằm yên */
+                cm.grabAt(x);
+                /* Đếm bằng SỐ CON ĐÃ GẮP ĐƯỢC, không đếm bằng "còn mấy con
+                 * trong tủ". Lần đầu em đếm kiểu sau và máy báo 0% ở cả tám vị
+                 * trí — hoá ra gắp được con nào thì game thả bù ngay một con
+                 * mới, nên số thú trong tủ không bao giờ đổi. Máy đo mà đo sai
+                 * thì còn tệ hơn không đo: suýt nữa em đi sửa cái càng vốn đã
+                 * chạy đúng. */
+                if (cm.state().won[0] > 0) hit++;
+            }
+            totalHit += hit; totalTry += TRIES;
+            var pct = Math.round(100 * hit / TRIES);
+            var full = Math.round(pct / 5);
+            line('  x=' + String(Math.round(x)).padStart(3) + '   ' +
+                 new Array(full + 1).join('#') + new Array(21 - full).join('.') +
+                 ' ' + String(pct).padStart(3) + '%');
+            col++;
+            setTimeout(nextCol, 0);
+        })();
+
+        function finish() {
+            var avg = Math.round(100 * totalHit / totalTry);
+            line('');
+            line('gắp thử ' + totalTry + ' lượt ở ' + COLS + ' vị trí ngang tủ');
+            line('trung bình cả tủ: ' + avg + '%');
+            line('');
+            /* Ngưỡng: dưới 20% thì bé gắp mãi không được, chán ngay; trên 75%
+             * thì gắp phát nào trúng phát ấy, cũng chán nốt. Khoảng giữa mới là
+             * chơi được — hồi hộp mà vẫn có phần thưởng. */
+            var ok = avg >= 20 && avg <= 75;
+            line(ok
+                ? 'ĐẠT — tỉ lệ nằm trong khoảng chơi được (20–75%), và giống nhau ở mọi lượt.'
+                : 'KHÔNG ĐẠT — tỉ lệ ' + avg + '% nằm ngoài khoảng chơi được (20–75%).');
+            out.innerHTML = out.textContent
+                .replace('ĐẠT —', '<span class="ok">ĐẠT</span> —')
+                .replace('KHÔNG <span class="ok">ĐẠT</span> —', '<span class="bad">KHÔNG ĐẠT</span> —');
+            document.title = 'ket qua ' + avg;
+        }
+    }
+
+    setTimeout(function () {
+        var cm = window.clawMachine;
+        if (cm) cm.start(1);
+        setTimeout(start, 800);
+    }, 300);
+})();
+</script>
+</body>
+</html>
