@@ -53,16 +53,36 @@
 
     /* Ba con số quyết định đống quả nằm yên hay rung mãi.
      *   REST  độ nảy. Để 0,05 tức là gần như không nảy — trái cây chín rơi
-     *         xuống thì lún chứ không tưng như quả bóng cao su.
-     *   BIAS  mỗi vòng chỉ đẩy nhau ra 65% chỗ chồng lấn. Đẩy hết 100% một
-     *         phát thì quả này bắn vào quả kia rồi dội ngược, cả đống giật.
+     *         xuống thì lún chứ không tưng như quả bóng cao su. Và chỉ cú va
+     *         nào nhanh hơn BOUNCE_V mới được nảy: tiếp xúc nằm nghỉ mà cũng
+     *         nảy thì cả đống rung li ti không bao giờ dứt.
+     *   BAUM  chỗ lún vào nhau được gỡ ra bao nhiêu phần trong một bước, dưới
+     *         dạng vận tốc tách. Để 0,25 thì đè lún lúc cân bằng chỉ khoảng
+     *         0,007 ô — mắt không nhìn ra. Cao hơn thì đống quả nảy tưng.
      *   SLOP  chồng lấn nhỏ hơn ngần này thì kệ. Không có nó thì đống quả cứ
      *         nhích qua nhích lại quanh con số 0 tuyệt đối, không bao giờ ngủ.
      */
     const REST = 0.05;
-    const BIAS = 0.65;
+    const BOUNCE_V = 1.0;       // chậm hơn ngần này thì coi như đặt xuống, không nảy
+    const BAUM = 0.25;
+    const MAX_BIAS = 3;         // vận tốc tách ra tối đa, kẻo lún sâu thì bắn vọt
+    /* Mười vòng gỡ lún nghe nhiều, nhưng đây là chỗ quyết định đống quả có
+     * chịu đứng im hay không, và máy dò thông số nói rõ: để 3 vòng thì 44/124
+     * quả vẫn trôi sau ba giây, để 10 vòng thì chỉ còn 6/132 và quả trôi xa
+     * nhất chỉ 0,09 ô — mắt không thấy được. Đắt hơn chừng 40% thời gian tính,
+     * mà cả thùng cũng chỉ hơn hai chục quả nên vẫn nhanh gấp hàng chục lần
+     * mức cần thiết. */
+    const PITER = 10;           // số vòng gỡ lún
+    const BIAS = 0.65;          // chỉ còn dùng cho phép kéo cứng ở clampWalls
     const SLOP = 0.004;
-    const FRICT = 0.78;         // giữ lại bao nhiêu phần vận tốc trượt sau mỗi va chạm
+
+    /* Hệ số ma sát. Đây là thứ giữ cho đống quả đứng yên thay vì bò lổm ngổm:
+     * quả nằm nghiêng trên mặt cong của quả dưới chỉ trượt xuống khi độ dốc
+     * chỗ tiếp xúc vượt quá MU (tức khoảng 19°). Dốc hơn thì vẫn lăn như
+     * thường, nên đống quả vẫn tự tìm chỗ trũng mà lấp — chỉ là lấp xong thì
+     * đứng hẳn. */
+    const MU = 0.6;            // quả với quả
+    const MU_W = 0.7;           // quả với sàn và vách
 
     /* Ngủ: quả nào đứng gần như một chỗ suốt SLEEP_T giây thì cho đứng hẳn.
      * Không có bước này thì cả đống rung li ti mãi, mà rung là hai quả cạnh
@@ -74,7 +94,18 @@
      * ngày, vì mỗi bước trọng lực lại cộng thêm g×dt rồi sàn lại chặn lại. Lấy
      * vận tốc làm mốc thì không quả nào ngủ nổi — đo lần đầu ra đúng 0% số quả
      * chịu ngủ. Quãng đường thì thật thà: nằm im là bằng không. */
-    const SLEEP_D = 0.012;      // nhúc nhích chưa tới ngần này ô thì coi như đứng yên
+    /* Ngưỡng này phải CHẶT. Hồi đầu em để 0,012 ô mỗi bước, nghe thì bé tí,
+     * nhưng một bước là 1/120 giây — hoá ra cho phép quả bò 1,4 ô mỗi giây mà
+     * vẫn được tính là "đứng yên". Đống quả ngủ say trong khi thật ra nó đang
+     * trôi cả ô trong ba giây, mắt nhìn thấy rõ mà máy soát vẫn khen đạt. Từ
+     * lúc phần gỡ lún chuyển sang sổ vận tốc giả thì đống quả nghỉ thật sự
+     * đứng im tuyệt đối (đo được đúng 0,00000), nên xiết hẳn xuống được. */
+    /* Sức cản lúc đi chậm — xem ghi chú ở movePositions() */
+    const CREEP_V = 0.6;        // chậm hơn ngần này ô/giây thì bắt đầu hãm
+    const CREEP_DAMP = 0.97;    // mỗi bước giữ lại bấy nhiêu phần
+    const STOP_V = 0.03;        // chậm hơn nữa thì dừng hẳn cho xong
+
+    const SLEEP_D = 0.0015;     // nhúc nhích chưa tới ngần này ô mỗi bước thì coi như đứng yên
     const SLEEP_T = 0.35;
 
     /* Đánh thức quả đang ngủ thì phải có cú chạm ra hồn. Mỗi bước trọng lực
@@ -83,7 +114,18 @@
      * đống đánh thức nhau mỗi khung hình và không quả nào ngủ được phút nào.
      * Đây là lỗi máy soát bắt được ở lần chạy thứ hai. */
     const WAKE_V = 0.5;
-    const WAKE_D = 0.02;        // bị đẩy xa hơn ngần này ô thì cũng phải tỉnh
+
+    /* Hai quả cách nhau chưa tới ngần này ô thì coi là đang chạm — dùng chung
+     * cho cả việc nhập quả lẫn việc gộp đám lúc xét ngủ, để hai chỗ ấy không
+     * bao giờ hiểu khác nhau về chữ "chạm". */
+    const TOUCH = 0.02;
+
+    /* Riêng lúc gộp đám để xét ngủ thì nới rộng hơn. Đống quả nằm nghỉ không
+     * còn lún vào nhau nữa (nhờ thứ tự tính đã sửa), nên hai quả kề nhau có
+     * thể hở một khe mảnh mà vẫn đang tựa vào nhau thật; lấy đúng 0,02 thì máy
+     * tưởng chúng rời nhau, mỗi quả một đám, đám nào cũng "không chạm sàn" và
+     * chẳng quả nào ngủ được. */
+    const ISLAND_GAP = 0.08;
 
     const DROP_CD = 0.42;       // thả xong phải chờ ngần này giây mới thả quả kế
     const TOPOUT_T = 2.0;       // quả nằm trên vạch đỏ lâu ngần này giây thì hết lượt
@@ -305,6 +347,8 @@
             id: seq++, tier: tier, r: FRUITS[tier].r,
             x: x, y: y, vx: vx || 0, vy: vy || 0,
             rot: (Math.random() - 0.5) * 0.6, spin: 0,
+            px: 0, py: 0,                  // sổ vận tốc giả, chỉ dùng để gỡ chỗ lún
+            jnF: 0, jtF: 0, jnW: 0, jtW: 0,  // xung lực đã dùng với sàn và vách trong bước này
             age: 0, still: 0, sleeping: false,
             lastX: x, lastY: y,            // chỗ đứng lần soát ngủ trước
 
@@ -331,14 +375,47 @@
     function invMass(f) { return 1 / (f.r * f.r); }
 
     /* Đánh thức quả đang ngủ. Bất cứ thứ gì chạm vào nó đều phải gọi hàm này,
-     * không thì quả ngủ biến thành bức tường bất động giữa thùng. */
-    function wake(f) { f.sleeping = false; f.still = 0; }
+     * không thì quả ngủ biến thành bức tường bất động giữa thùng.
+     *
+     * Chỉ mở mắt nó ra thôi, KHÔNG xoá đồng hồ đứng-yên. Đồng hồ ấy đo bằng
+     * quãng đường đi được, và đó mới là sự thật: đống quả nằm nghỉ vẫn còn
+     * chút vận tốc lắc lư trong người (chừng 0,3–0,8 ô/giây) mà vị trí không
+     * hề nhúc nhích. Hồi trước hàm này xoá đồng hồ, thế là mấy quả ấy cứ đánh
+     * thức lẫn nhau vòng quanh, không quả nào tích nổi ba phần mười giây đứng
+     * yên, và cả thùng không bao giờ ngủ được — đo ra đúng 0%. Quả nào bị đẩy
+     * đi thật thì quãng đường tự nó lớn lên, đồng hồ tự đếm lại từ đầu, không
+     * cần ai xoá hộ. */
+    function wake(f) { f.sleeping = false; }
 
-    function integrate(box, dt) {
+    /* Trọng lực cộng vào vận tốc. Tách hẳn khỏi bước dời vị trí, vì thứ tự
+     * giữa hai việc này quyết định đống quả có đứng im được hay không — xem
+     * ghi chú dài ở stepBox(). */
+    function applyGravity(box, dt) {
         for (const f of box.fruits) {
             f.age += dt;
             if (f.sleeping) continue;
             f.vy += GRAV * dt;
+        }
+    }
+
+    function movePositions(box, dt) {
+        for (const f of box.fruits) {
+            if (f.sleeping) continue;
+            /* Sức cản của chỗ nằm: quả đi CHẬM thì hãm dần cho dừng hẳn.
+             *
+             * Hình tròn tuyệt đối nhẵn thì trên lý thuyết lăn mãi không dừng —
+             * ma sát trượt không cản được chuyện lăn. Quả thật thì mềm, hơi
+             * bẹp chỗ tiếp xúc, nên lăn một lúc là hết đà. Không có vế này thì
+             * cứ năm đống quả lại có một đống lăn tăn hoài không chịu đứng,
+             * máy soát đo được 50 lần trong 266 lần ngồi soi.
+             *
+             * Chỉ hãm phần đi chậm hơn CREEP_V. Quả đang rơi hay đang lăn thật
+             * thì không đụng tới, nên bé vẫn thấy trái cây lăn tự nhiên. */
+            const sp = Math.hypot(f.vx, f.vy);
+            if (sp < CREEP_V) {
+                if (sp < STOP_V) { f.vx = 0; f.vy = 0; }
+                else { f.vx *= CREEP_DAMP; f.vy *= CREEP_DAMP; }
+            }
             f.x += f.vx * dt;
             f.y += f.vy * dt;
             f.rot += f.spin * dt;
@@ -357,13 +434,16 @@
                 const p = a[i], q = a[j];
                 const dx = q.x - p.x, dy = q.y - p.y;
                 const rr = p.r + q.r + 0.25;
-                if (dx * dx + dy * dy < rr * rr) out.push([p, q]);
+                /* jn cộng dồn trong suốt cả bước rồi bỏ đi cùng danh sách này —
+                 * mỗi bước một sổ mới, không mang nợ của bước trước sang. */
+                if (dx * dx + dy * dy < rr * rr) out.push({ p: p, q: q, jn: 0, jt: 0 });
             }
         }
         return out;
     }
 
-    function solvePair(p, q, onBump) {
+    function solvePair(pr, dt, onBump) {
+        const p = pr.p, q = pr.q;
         let dx = q.x - p.x, dy = q.y - p.y;
         let d = Math.hypot(dx, dy);
         /* Hai quả trùng khít tâm (hiếm, nhưng xảy ra khi ba quả nhập liên
@@ -375,63 +455,183 @@
         const nx = dx / d, ny = dy / d;
         const ip = invMass(p), iq = invMass(q), im = ip + iq;
 
-        /* 1. Đẩy vị trí ra cho hết chồng lấn (trừ phần SLOP bỏ qua) */
-        const corr = (overlap - SLOP) * BIAS / im;
-        p.x -= nx * corr * ip; p.y -= ny * corr * ip;
-        q.x += nx * corr * iq; q.y += ny * corr * iq;
-        /* Quả đang ngủ mà bị xô đi hẳn một đoạn thì phải tỉnh, không thì chỗ
-         * đỡ nó trôi đi mất mà nó vẫn treo lơ lửng tại chỗ cũ. */
-        if (p.sleeping && corr * ip > WAKE_D) wake(p);
-        if (q.sleeping && corr * iq > WAKE_D) wake(q);
-
-        /* 2. Sửa vận tốc: chỉ can thiệp khi hai quả đang lao vào nhau */
+        /* 1. Chỗ lún vào nhau không đẩy thẳng bằng cách dời toạ độ, mà biến
+         *    thành một VẬN TỐC tách ra rồi giao cho phần vận tốc lo.
+         *
+         *    Bản đầu em dời toạ độ trực tiếp. Nghe thì hợp lý mà hỏng: dời toạ
+         *    độ là bịa ra chuyển động không có vận tốc nào đi kèm, nên ma sát
+         *    không tài nào ghì lại được — mỗi bước trọng lực ép đống quả lún
+         *    xuống một tí rồi phép dời lại đẩy ra một tí, quả nào nằm nghiêng
+         *    thì mỗi lần đẩy lại xê ra một chút. Nhìn màn hình thì thấy đống
+         *    quả bò lổm ngổm mãi không đứng, mà máy soát đếm được hơn trăm quả
+         *    còn trôi sau ba giây bé không hề đụng vào.
+         *
+         *    Đưa nó về thành vận tốc thì mọi thứ nằm chung một sổ: ma sát nhìn
+         *    thấy, phép soát đứng-yên nhìn thấy, và cái ngưỡng đè lún cân bằng
+         *    chỉ còn khoảng 0,007 ô — mắt không thấy được. */
         const rvx = q.vx - p.vx, rvy = q.vy - p.vy;
         const vn = rvx * nx + rvy * ny;
-        if (vn < 0) {
-            const j = -(1 + REST) * vn / im;
+
+        /* 2. Vận tốc: chặn hai quả lao vào nhau. Chỉ cú va đủ nhanh mới được
+         *    nảy, còn tiếp xúc nằm nghỉ thì không — nảy ở đây là nguồn rung
+         *    của cả đống. */
+        const e = (-vn > BOUNCE_V) ? REST : 0;
+        const j = -(1 + e) * vn / im;
+        if (j > 0) {
             p.vx -= nx * j * ip; p.vy -= ny * j * ip;
             q.vx += nx * j * iq; q.vy += ny * j * iq;
+            /* Cộng dồn xung lực pháp tuyến của cả bước. Đây chính là "quả này
+             * đè lên quả kia nặng bao nhiêu", và ma sát ở dưới cần đúng con số
+             * ấy để biết được phép giữ chặt tới đâu. */
+            pr.jn += j;
             if (onBump && -vn > 0.9) onBump(-vn, Math.min(p.r, q.r));
             if (-vn > WAKE_V) { wake(p); wake(q); }
         }
 
-        /* 3. Ma sát: hãm bớt phần trượt dọc mặt tiếp xúc, đồng thời cho hai quả
-         *    lăn theo nhau. Chỗ lăn chỉ để nhìn cho vui, không dội ngược vào
-         *    phần tính toán — dội ngược là thêm một đường cho đống quả rung. */
+        /* 3. Ma sát Coulomb: cố hãm hẳn phần trượt dọc mặt tiếp xúc về 0, nhưng
+         *    không được hãm mạnh hơn MU lần lực đè lên nhau.
+         *
+         *    Bản đầu em làm ma sát kiểu "cứ nhân vận tốc trượt với 0,78 cho nó
+         *    nhỏ dần", không nhìn tới lực đè. Kiểu ấy không có ma sát TĨNH: quả
+         *    nằm trên mặt cong của quả dưới lúc nào cũng trượt xuống một tí,
+         *    nên cả đống quả bò lổm ngổm mãi không đứng hẳn — máy soát đếm được
+         *    43 quả vẫn trôi sau ba giây bé không đụng vào. Trước đó em che nó
+         *    đi bằng cách cho từng quả ngủ, mà chính chỗ ấy đẻ ra lỗi quả treo
+         *    lơ lửng. Có ma sát thật thì đống quả tự nó đứng, không cần che. */
         const tx = -ny, ty = nx;
         const vt = rvx * tx + rvy * ty;
-        if (Math.abs(vt) > 0.001) {
-            const jt = -vt * (1 - FRICT) / im;
+        if (pr.jn > 0) {
+            /* CỘNG DỒN rồi mới chặn, chứ không chặn từng vòng một.
+             *
+             * Bản trước em chặn riêng từng vòng: mỗi vòng được phép hãm tới
+             * MU×jn, mà một bước chạy bảy vòng, thành ra tổng cộng hãm gấp bảy
+             * lần mức vật lý cho phép. Hãm quá tay thì phần trượt bị đẩy ngược
+             * lại, vòng sau lại đẩy ngược nữa — mỗi lần một tí, và đống quả
+             * bắt đầu tự lắc mạnh dần lên theo cấp số nhân. Máy soát nhìn thấy
+             * rõ: quãng đường mỗi nửa giây cứ nhân lên 1,13 lần, 0,02 → 0,14 ô
+             * sau tám giây, không bao giờ chịu đứng.
+             *
+             * Chặn theo TỔNG xung lực đã dùng trong cả bước thì mới đúng luật
+             * Coulomb: hãm nhiều lắm cũng chỉ tới mức lực đè cho phép. */
+            const cap = MU * pr.jn;
+            let acc = pr.jt + (-vt / im);
+            if (acc > cap) acc = cap; else if (acc < -cap) acc = -cap;
+            const jt = acc - pr.jt;
+            pr.jt = acc;
             p.vx -= tx * jt * ip; p.vy -= ty * jt * ip;
             q.vx += tx * jt * iq; q.vy += ty * jt * iq;
+            /* Chỗ lăn chỉ để nhìn cho vui, không dội ngược vào phần tính toán
+             * — dội ngược là thêm một đường cho đống quả rung. */
             p.spin += vt / p.r * 0.05;
             q.spin -= vt / q.r * 0.05;
         }
     }
 
-    function solveWalls(f, onBump) {
+    /* Gỡ chỗ lún bằng VẬN TỐC GIẢ (split impulse).
+     *
+     * Chỗ lún không được đẩy thẳng bằng cách dời toạ độ: dời toạ độ là bịa ra
+     * chuyển động mà không có vận tốc nào đi kèm, nên ma sát không ghì lại
+     * được, và quả nào nằm nghiêng thì mỗi bước lại bị xê ra một chút — đống
+     * quả bò lổm ngổm mãi không đứng. Cũng không được cộng thẳng vào vận tốc
+     * thật: làm thế là bơm năng lượng vào đống quả, thử rồi, cả đống bật tung.
+     *
+     * Cách đúng là mở một sổ vận tốc riêng chỉ để gỡ lún. Gỡ xong thì đem sổ
+     * ấy dời vị trí rồi xoá đi, vận tốc thật không hề hay biết. */
+    function solvePairPos(pr, dt) {
+        const p = pr.p, q = pr.q;
+        const dx = q.x - p.x, dy = q.y - p.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 1e-6) return;
+        const pen = p.r + q.r - d - SLOP;
+        if (pen <= 0) return;
+
+        const nx = dx / d, ny = dy / d;
+        const ip = invMass(p), iq = invMass(q), im = ip + iq;
+        let want = BAUM * pen / dt;
+        if (want > MAX_BIAS) want = MAX_BIAS;
+
+        const rel = (q.px - p.px) * nx + (q.py - p.py) * ny;
+        const j = (want - rel) / im;
+        if (j <= 0) return;
+        p.px -= nx * j * ip; p.py -= ny * j * ip;
+        q.px += nx * j * iq; q.py += ny * j * iq;
+    }
+
+    function solveWallsPos(f, dt) {
+        if (f.y + f.r > BH + SLOP) {
+            const want = Math.min(MAX_BIAS, BAUM * (f.y + f.r - BH - SLOP) / dt);
+            if (-f.py < want) f.py = -want;
+        }
+        if (f.x - f.r < -SLOP) {
+            const want = Math.min(MAX_BIAS, BAUM * (f.r - f.x - SLOP) / dt);
+            if (f.px < want) f.px = want;
+        } else if (f.x + f.r > BW + SLOP) {
+            const want = Math.min(MAX_BIAS, BAUM * (f.x + f.r - BW - SLOP) / dt);
+            if (-f.px < want) f.px = -want;
+        }
+    }
+
+    function solveWalls(f, dt, onBump) {
         /* Sàn */
         if (f.y + f.r > BH) {
-            const over = f.y + f.r - BH;
-            f.y -= over * BIAS;
+            let jn = 0;
             if (f.vy > 0) {
                 if (f.vy > 1.2 && onBump) onBump(f.vy, f.r);
                 if (f.vy > WAKE_V) wake(f);
-                f.vy = -f.vy * REST;
+                const e = (f.vy > BOUNCE_V) ? REST : 0;
+                jn = f.vy * (1 + e);
+                f.vy = -f.vy * e;
             }
-            f.vx *= FRICT;
+            /* Ma sát mặt sàn, cùng một luật (và cùng một cách cộng dồn) với
+             * ma sát giữa hai quả */
+            f.jnF += jn;
+            const cap = MU_W * f.jnF;
+            let acc = f.jtF + f.vx;
+            if (acc > cap) acc = cap; else if (acc < -cap) acc = -cap;
+            f.vx -= acc - f.jtF;
+            f.jtF = acc;
             f.spin += f.vx / f.r * 0.06;
         }
-        /* Vách trái và vách phải */
+        /* Vách trái và vách phải, cùng một luật ma sát với sàn: chỉ giữ được
+         * quả theo chiều dọc khi đống quả bên trong ÉP nó vào vách.
+         *
+         * Chỗ này từng là một lỗi nặng. Bản đầu em viết f.vy *= 0.78 cho quả
+         * nào chạm vách — nhìn thì vô hại, nhưng nó chạy bảy vòng mỗi bước, tức
+         * là mỗi bước cắt mất 82% vận tốc rơi. Quả nào lỡ chạm vách coi như bị
+         * dán vào tường, tụt xuống chậm tới mức máy tưởng nó đứng yên rồi cho
+         * ngủ luôn — thành ra quả treo lơ lửng giữa thùng mà anh Hiếu nhìn
+         * phát hiện ra. Ma sát phải đi theo lực ép, không được tự tiện hãm. */
         if (f.x - f.r < 0) {
-            f.x += (f.r - f.x) * BIAS;
-            if (f.vx < 0) { if (-f.vx > WAKE_V) wake(f); f.vx = -f.vx * REST; }
-            f.vy *= FRICT;
+            let jn = 0;
+            if (f.vx < 0) {
+                if (-f.vx > WAKE_V) wake(f);
+                const e = (-f.vx > BOUNCE_V) ? REST : 0;
+                jn = -f.vx * (1 + e);
+                f.vx = -f.vx * e;
+            }
+            f.jnW += jn;
+            wallFriction(f, MU_W * f.jnW);
         } else if (f.x + f.r > BW) {
-            f.x -= (f.x + f.r - BW) * BIAS;
-            if (f.vx > 0) { if (f.vx > WAKE_V) wake(f); f.vx = -f.vx * REST; }
-            f.vy *= FRICT;
+            let jn = 0;
+            if (f.vx > 0) {
+                if (f.vx > WAKE_V) wake(f);
+                const e = (f.vx > BOUNCE_V) ? REST : 0;
+                jn = f.vx * (1 + e);
+                f.vx = -f.vx * e;
+            }
+            f.jnW += jn;
+            wallFriction(f, MU_W * f.jnW);
         }
+    }
+
+    /* Hãm phần trượt dọc mặt vách, cộng dồn rồi chặn theo tổng — y như chỗ hai
+     * quả đè nhau, và vì cùng một lý do. */
+    function wallFriction(f, cap) {
+        if (cap <= 0) return;
+        let acc = f.jtW + f.vy;
+        if (acc > cap) acc = cap; else if (acc < -cap) acc = -cap;
+        f.vy -= acc - f.jtW;
+        f.jtW = acc;
     }
 
     /* Vách và sàn là tường thật, không phải gợi ý: sau khi giải xong mọi va
@@ -444,30 +644,76 @@
         if (f.y > BH - f.r) { f.y = BH - f.r; if (f.vy > 0) f.vy = 0; }
     }
 
-    /* Cho ngủ những quả gần như đứng một chỗ. Ngủ rồi thì trọng lực thôi kéo,
-     * nên đống quả đứng im tuyệt đối chứ không rung li ti nữa. */
-    function trySleep(box, dt) {
-        for (const f of box.fruits) {
-            /* Quả đang ngủ thì vận tốc phải luôn bằng không. Nghe thừa, nhưng
-             * không có dòng này thì hỏng: mấy hàm gỡ chồng lấn vẫn cộng lực
-             * vào quả đang ngủ (cú chạm nhẹ không đủ đánh thức nó), mà quả ngủ
-             * thì không ai đem vận tốc ấy ra dùng — nó cứ nằm đó cộng dồn.
-             * Máy soát bắt được một quả đang ngủ mà trong người mang sẵn 1,1
-             * ô/giây. Đứng yên thì không sao, nhưng tới lúc có quả rơi trúng
-             * đánh thức nó dậy, nó sẽ vọt đi như bị ai đá — bé nhìn chỉ thấy
-             * quả tự dưng nhảy, không hiểu vì sao. */
-            if (f.sleeping) { f.vx = 0; f.vy = 0; f.spin = 0; continue; }
+    /* Cho ngủ những quả đã đứng im. Ngủ rồi thì trọng lực thôi kéo, nên đống
+     * quả đứng im tuyệt đối chứ không rung li ti nữa.
+     *
+     * NGỦ THEO CẢ ĐÁM, KHÔNG NGỦ LẺ TỪNG QUẢ
+     * Bản đầu cho từng quả tự ngủ riêng. Chơi thử là thấy ngay: có quả dâu
+     * treo lơ lửng giữa lưng chừng thùng, dưới chân trống hoác. Lý do là quả
+     * dâu ngủ trên đầu một quả cam, rồi quả cam từ từ lăn đi chỗ khác — lăn
+     * chậm nên không có cú chạm nào đủ mạnh để đánh thức quả dâu, mà quả đang
+     * ngủ thì trọng lực không kéo nữa. Thế là nó đứng nguyên chỗ cũ, không có
+     * gì đỡ. Nhìn là biết sai ngay, mà máy soát lúc ấy lại không bắt được vì
+     * nó chỉ đo "có nhúc nhích không", còn quả này thì đứng im thật.
+     *
+     * Chữa đúng gốc bằng cách gộp những quả đang chạm nhau thành một ĐÁM rồi
+     * xét cả đám một lượt, đúng cách các thư viện vật lý thật vẫn làm:
+     *   · cả đám cùng đứng im đủ lâu thì mới cho ngủ;
+     *   · trong đám phải có ít nhất một quả chạm sàn — cả đám lơ lửng giữa
+     *     không trung thì đời nào cho ngủ;
+     *   · một quả trong đám động đậy là cả đám tỉnh theo.
+     * Nhờ vế thứ ba, quả cam vừa nhúc nhích là quả dâu trên đầu tỉnh ngay và
+     * rơi xuống như lẽ thường.
+     */
+    function sleepIslands(box, dt) {
+        const a = box.fruits, n = a.length;
+        if (!n) return;
+
+        /* 1. Quả nào đứng yên đủ lâu. Đo cho MỌI quả, kể cả quả đang ngủ: quả
+         *    ngủ mà bị đẩy đi thì chính chỗ này phát hiện ra rồi đếm lại từ
+         *    đầu, khỏi cần thêm luật đánh thức riêng nào. */
+        for (let i = 0; i < n; i++) {
+            const f = a[i];
             const moved = Math.hypot(f.x - f.lastX, f.y - f.lastY);
             f.lastX = f.x; f.lastY = f.y;
-            if (moved < SLEEP_D) {
-                f.still += dt;
-                if (f.still > SLEEP_T) {
-                    f.sleeping = true;
-                    f.vx = 0; f.vy = 0; f.spin = 0;
+            f.still = moved < SLEEP_D ? f.still + dt : 0;
+        }
+
+        /* 2. Gộp đám: hai quả chạm nhau thì về chung một đám */
+        const root = new Array(n);
+        for (let i = 0; i < n; i++) root[i] = i;
+        const find = i => { while (root[i] !== i) { root[i] = root[root[i]]; i = root[i]; } return i; };
+
+        for (let i = 0; i < n; i++) {
+            for (let j = i + 1; j < n; j++) {
+                const p = a[i], q = a[j];
+                const dx = q.x - p.x, dy = q.y - p.y;
+                const rr = p.r + q.r + ISLAND_GAP;
+                if (dx * dx + dy * dy <= rr * rr) {
+                    const ri = find(i), rj = find(j);
+                    if (ri !== rj) root[ri] = rj;
                 }
-            } else {
-                f.still = 0;
             }
+        }
+
+        /* 3. Đám nào cả làng đứng im VÀ có chân chạm sàn thì cho ngủ */
+        const allStill = new Map(), grounded = new Map();
+        for (let i = 0; i < n; i++) {
+            const f = a[i], r = find(i);
+            if (!allStill.has(r)) { allStill.set(r, true); grounded.set(r, false); }
+            if (f.still <= SLEEP_T) allStill.set(r, false);
+            if (f.y + f.r > BH - ISLAND_GAP) grounded.set(r, true);
+        }
+
+        for (let i = 0; i < n; i++) {
+            const f = a[i], r = find(i);
+            const nap = allStill.get(r) && grounded.get(r);
+            f.sleeping = nap;
+            /* Quả ngủ thì vận tốc phải bằng không. Mấy hàm gỡ chồng lấn vẫn
+             * cộng lực vào nó, mà ngủ thì không ai đem ra dùng — cứ thế cộng
+             * dồn. Máy soát từng bắt được một quả nằm im mà trong người mang
+             * sẵn 1,1 ô/giây; tới lúc tỉnh dậy nó vọt đi như bị ai đá. */
+            if (nap) { f.vx = 0; f.vy = 0; f.spin = 0; }
         }
     }
 
@@ -486,7 +732,7 @@
                 const q = a[j];
                 if (dead.has(q.id) || q.tier !== p.tier) continue;
                 const dx = q.x - p.x, dy = q.y - p.y;
-                const touch = p.r + q.r + 0.02;
+                const touch = p.r + q.r + TOUCH;
                 if (dx * dx + dy * dy > touch * touch) continue;
 
                 dead.add(p.id); dead.add(q.id);
@@ -535,22 +781,56 @@
      * ngoài, ai muốn kêu tiếng thì tự kêu. */
     function stepBox(box, dt, cb) {
         box.time += dt;
-        integrate(box, dt);
+
+        /* THỨ TỰ TRONG MỘT BƯỚC — chỗ này em làm sai một lần, và cái sai ấy
+         * chính là thứ anh Hiếu nhìn thấy.
+         *
+         * Lúc đầu em cho quả RƠI trước rồi mới giải va chạm. Nghe thì tự
+         * nhiên, nhưng nó sinh ra một cái bánh cóc: mỗi bước trọng lực dìm quả
+         * lún thẳng XUỐNG một khoảng g·dt² (chừng 0,002 ô), rồi phần gỡ lún
+         * đẩy nó ra theo hướng PHÁP TUYẾN của chỗ chạm — mà chỗ chạm giữa hai
+         * hình tròn thì hầu như bao giờ cũng chéo. Lún thẳng xuống, đẩy ra
+         * chéo lên: mỗi bước quả xê ngang một tí, một trăm hai mươi bước một
+         * giây. Vận tốc đo được gần như bằng không (0,005 ô/giây) mà quả vẫn
+         * bò ngang 0,1 ô mỗi giây — nhìn màn hình thì thấy cả đống trái cây cứ
+         * nhúc nhích trườn đi, không đứng hẳn bao giờ.
+         *
+         * Thứ tự đúng, cũng là thứ tự mọi thư viện vật lý dùng: cộng trọng lực
+         * vào VẬN TỐC → giải va chạm trên vận tốc → rồi mới đem vận tốc đã sửa
+         * ra dời vị trí. Làm vậy thì quả nằm nghỉ có vận tốc bị triệt tiêu
+         * TRƯỚC khi nó kịp lún, nên chẳng còn chỗ lún nào để mà đẩy ra, và cái
+         * bánh cóc biến mất. */
+        applyGravity(box, dt);
 
         const pairs = pairsOf(box);
+        for (const f of box.fruits) { f.jnF = 0; f.jtF = 0; f.jnW = 0; f.jtW = 0; }
         const onBump = cb ? (v, r) => cb('bump', 0, 0, 0, 0, v, r) : null;
         for (let k = 0; k < ITER; k++) {
             /* Quả với quả xử trước, vách xử sau. Thứ tự này không đổi chỗ được:
              * vòng nào cũng phải KẾT THÚC bằng vách, vì lần đẩy cuối cùng của
              * mấy quả bên cạnh hay tống quả này lún vào tường, mà lún xong
              * không ai kéo ra thì nó nằm luôn ngoài thùng. */
-            for (const pr of pairs) solvePair(pr[0], pr[1], k === 0 ? onBump : null);
-            for (const f of box.fruits) solveWalls(f, k === 0 ? onBump : null);
+            for (const pr of pairs) solvePair(pr, dt, k === 0 ? onBump : null);
+            for (const f of box.fruits) solveWalls(f, dt, k === 0 ? onBump : null);
         }
+        /* Vận tốc đã sửa xong, giờ mới đem ra dời vị trí */
+        movePositions(box, dt);
+
+        /* Lượt riêng để gỡ nốt chỗ lún còn sót, chạy trên sổ vận tốc giả rồi
+         * mới đem dời vị trí. */
+        for (const f of box.fruits) { f.px = 0; f.py = 0; }
+        for (let k = 0; k < PITER; k++) {
+            for (const pr of pairs) solvePairPos(pr, dt);
+            for (const f of box.fruits) solveWallsPos(f, dt);
+        }
+        for (const f of box.fruits) {
+            if (f.px || f.py) { f.x += f.px * dt; f.y += f.py * dt; }
+        }
+
         for (const f of box.fruits) clampWalls(f);
 
         doMerges(box, cb);
-        trySleep(box, dt);
+        sleepIslands(box, dt);
     }
 
     /* Có quả nào nhô lên trên vạch đỏ mà đã nằm im chưa? Quả đang rơi vèo qua
