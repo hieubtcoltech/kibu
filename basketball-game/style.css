@@ -952,3 +952,21 @@ body {
     .keys-head, .keys-list { display: none; }
     .keys-touch { margin-top: 0; }
 }
+
+/* ---------- Nút bắt đầu luôn nằm trong tầm mắt ----------
+ * Bảng cấu hình xếp chồng số bé, chế độ, độ khó, cách ngắm, bảng phím rồi mới
+ * tới nút bắt đầu — trên iPad dựng đứng nó rơi xuống tận y=1162 trong khi màn
+ * hình chỉ cao 1024. Khung .screen có cuộn được thật, nhưng trẻ con không tự
+ * nghĩ ra chuyện cuộn xuống tìm nút; thấy một bảng dài không có nút bấm là bé
+ * tưởng game hỏng.
+ *
+ * Dán nút xuống đáy khung cuộn: còn chỗ thì nó nằm đúng vị trí cũ cuối bảng,
+ * hết chỗ thì nó bám lại mép dưới, cuộn kiểu gì cũng luôn nhìn thấy. Chỉ làm
+ * trên máy cảm ứng, vì trên máy để bàn bảng vốn đã lọt màn hình. */
+@media (hover: none) and (pointer: coarse) {
+    #screen-menu .big-btn {
+        position: sticky;
+        bottom: 6px;
+        z-index: 5;
+    }
+}

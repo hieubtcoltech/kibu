@@ -435,6 +435,12 @@ body.chrome-fit > .game-wrapper {
  * Cố ý KHÔNG đụng tới link chữ nằm trong câu văn (cái "About Us" ở chân
  * trang). Độn cho nó cao 44 px thì dòng chữ vỡ ra, mà chuẩn cảm ứng cũng
  * miễn trừ đúng loại link nằm lọt trong câu như vậy. */
+/* Lần sửa đầu em chặn thêm min-height 480px, vì nới thanh trên lên 44 px trên
+ * điện thoại nằm ngang (chỉ cao 390) đẩy nút bấm chính xuống dưới mép — máy
+ * soát bắt được ngay. Nhưng chữa bằng cách bỏ mặc nút bé thì chữa nhầm chỗ:
+ * nguyên nhân thật là bảng cấu hình quá dài, và đã chữa đúng gốc bằng cách dán
+ * nút bắt đầu vào đáy khung cuộn. Chữa xong gốc rồi thì bỏ luôn cái chặn này,
+ * để màn hình nào cũng được vùng chạm tử tế. */
 @media (hover: none) and (pointer: coarse) {
 
     .unified-nav .btn,
