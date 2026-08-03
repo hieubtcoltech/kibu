@@ -45,7 +45,7 @@
     const PLAYER_X = 5.2;
 
     const RUN_START = 7;         // tốc độ chạy lúc mới xuất phát (u/giây)
-    const RUN_MAX = 16;          // trần tốc độ
+    const RUN_MAX = 15.5;        // trần tốc độ
     /* Đường cong hình chữ S: đoạn đầu gần như phẳng cho bé làm quen ngón tay,
      * giữa quãng mới dốc lên, cuối lại thoải dần nên chạy nghìn mét vẫn còn chỗ
      * nhanh thêm.
@@ -53,8 +53,13 @@
      * Trước dùng hàm bão hoà (1 - e^-m/H), nhưng hàm đó dốc nhất đúng ngay lúc
      * xuất phát — sai hẳn chỗ cần: bé còn chưa biết chạm vào đâu thì màn hình
      * đã trôi mỗi lúc một nhanh. Còn tăng tuyến tính thì hai trăm mét là chạm
-     * trần, từ đó lượt chơi phẳng lì. */
-    const RUN_MID = 320;         // chạy tới đây thì được nửa quãng tăng tốc
+     * trần, từ đó lượt chơi phẳng lì.
+     *
+     * Quãng nửa đường đặt tận 700 m — xa hơn hẳn một lượt chơi thường của bé.
+     * Cố ý: game này để bé quay lại chơi lâu dài chứ không phải để vắt kiệt
+     * trong ba phút, nên tốc độ phải còn chỗ nhích lên cả nghìn mét về sau,
+     * chứ không dồn hết cái khó vào một phút đầu. */
+    const RUN_MID = 700;         // chạy tới đây thì được nửa quãng tăng tốc
 
     const GRAV = 52;             // trọng lực (u/giây²)
     const JUMP_V = 15.2;         // vận tốc bật lên
