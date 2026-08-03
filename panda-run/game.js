@@ -440,9 +440,21 @@
 
         init() {
             try { this.on = localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) { }
-            this.bgm = new Audio('music.mp3');
+            /* Đường dẫn phải viết đầy đủ từ gốc, không được viết tương đối.
+             *
+             * Trang game có hai kiểu địa chỉ: /panda-run/ và /vi/g/panda-run.
+             * Viết 'music.mp3' thì ở kiểu thứ nhất nó tìm đúng chỗ, nhưng ở
+             * kiểu thứ hai — chính là địa chỉ bé bấm vào từ trang chủ — nó đi
+             * tìm /vi/g/music.mp3 và nhận 404. Nhạc im ru mà chẳng báo lỗi gì
+             * ra màn hình. Mọi tài nguyên khác trong trang đều viết đầy đủ
+             * (/panda-run/style.css, /panda-run/icon.jpg), chỗ này sót lại. */
+            this.bgm = new Audio('/panda-run/music.mp3');
             this.bgm.loop = true;
             this.bgm.volume = 0.35;
+            this.bgm.preload = 'auto';
+            this.bgm.addEventListener('error', () => {
+                console.warn('Không tải được /panda-run/music.mp3');
+            });
         },
         /* AudioContext chỉ dựng sau cú chạm đầu tiên — trình duyệt chặn âm tự
          * phát, dựng sớm thì nó nằm im ở trạng thái suspended. */
@@ -3059,7 +3071,7 @@
 
         /* Cửa sau để thử: gọi thẳng từ console hoặc từ script kiểm thử. */
         window.pandaRun = {
-            G, V, SPR, ANIMALS, ZONES, CHUNKS, store,
+            G, V, SPR, ANIMALS, ZONES, CHUNKS, store, sfx,
             play, jump, slide, releaseJump, pause, resume,
             state: () => ({
                 mode: G.mode, m: G.metres, pals: G.tail.length, rescued: G.pals,
