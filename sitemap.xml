@@ -432,4 +432,22 @@
       <changefreq>weekly</changefreq>
       <priority>0.8</priority>
    </url>
+   <url>
+      <loc>https://kibugames.com/vi/g/screw-jam</loc>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/g/screw-jam"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/g/screw-jam"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/g/screw-jam"/>
+      <lastmod>2026-08-04</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
+   <url>
+      <loc>https://kibugames.com/en/g/screw-jam</loc>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/g/screw-jam"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/g/screw-jam"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/g/screw-jam"/>
+      <lastmod>2026-08-04</lastmod>
+      <changefreq>weekly</changefreq>
+      <priority>0.8</priority>
+   </url>
 </urlset>

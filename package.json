@@ -10,7 +10,9 @@
     "check:bounce-hoops": "node bounce-hoops/check-levels.js",
     "check:melon-drop": "node melon-drop/check-physics.js",
     "check:water-sort": "node water-sort/check-levels.js",
-    "make:water-sort": "node water-sort/make-levels.js"
+    "make:water-sort": "node water-sort/make-levels.js",
+    "check:screw-jam": "node screw-jam/check-levels.js",
+    "make:screw-jam": "node screw-jam/make-levels.js"
   },
   "engines": {
     "node": ">=18"

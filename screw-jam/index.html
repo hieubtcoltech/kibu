@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Screw Jam - Free Nuts and Bolts Puzzle for Kids | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Screw Jam free on KIBU Games! Unscrew the coloured bolts, drop them in the tray, three of a kind pop. Plates fall away and reveal the layer underneath. 60 levels, every one machine-checked to be solvable with the tray you get - no extra slots to buy, no ads, colour marks for colour-blind kids, and a two-kid race.">
+    <meta name="keywords" content="Screw Jam, screw puzzle, nuts and bolts puzzle, unscrew puzzle, game van oc, tro choi thao oc vit, pin puzzle for kids, colour blind friendly puzzle, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/screw-jam/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/screw-jam/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/screw-jam/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/screw-jam/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/screw-jam/">
+    <meta property="og:title" content="Screw Jam - Free Nuts and Bolts Puzzle | KIBU Games">
+    <meta property="og:description" content="Unscrew the bolts in the right order, three of a colour pop. 60 levels, all machine-checked solvable with no extra slots to buy. 100% free on KIBU Games.">
+    <meta property="og:image" content="https://kibugames.com/screw-jam/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/screw-jam/">
+    <meta name="twitter:title" content="Screw Jam - Free Nuts and Bolts Puzzle">
+    <meta name="twitter:description" content="Unscrew in the right order. 60 levels, all solvable, no ads, no extra slots to buy.">
+    <meta name="twitter:image" content="https://kibugames.com/screw-jam/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Screw Jam",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/screw-jam/",
+      "genre": "Puzzle",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/screw-jam/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body class="chrome-fit">
+    <header class="unified-nav">
+        <div class="nav-left">
+            <a href="/" class="nav-home" title="Home" aria-label="Home">
+                <img src="/logo.svg" alt="KIBU Games">
+            </a>
+            <div class="brand">
+                <img src="/screw-jam/icon.jpg" alt="" class="brand-img"
+                    onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><i class="fa-solid fa-screwdriver-wrench brand-icon"></i>
+                <h1 class="brand-title">SCREW JAM</h1>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button id="btn-nav-undo" class="btn btn-secondary" title="Undo">
+                <i class="fa-solid fa-rotate-left"></i> <span>Undo</span>
+            </button>
+            <button id="btn-nav-hint" class="btn btn-secondary" title="Hint">
+                <i class="fa-solid fa-lightbulb"></i> <span>Hint</span>
+            </button>
+            <button id="btn-nav-restart" class="btn btn-secondary" title="Restart">
+                <i class="fa-solid fa-rotate-right"></i> <span>Restart</span>
+            </button>
+            <button id="btn-nav-levels" class="btn btn-secondary" title="Levels">
+                <i class="fa-solid fa-table-cells"></i> <span>Levels</span>
+            </button>
+            <button id="btn-sound" class="btn btn-secondary" title="Sound">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="game-wrapper" id="board-wrap">
+        <!-- Phaser dựng canvas vào đây -->
+        <div id="game-canvas" class="board-host"></div>
+
+        <!-- Thẻ tên nổi trên mỗi bàn; game.js tự đặt vào đúng chỗ -->
+        <div id="chip-1" class="chip chip-1" hidden>
+            <span class="chip-name" id="chip-1-name">Kid 1</span>
+            <span class="chip-moves-box"><span class="chip-tag">Moves</span>
+                <b id="chip-1-moves">0</b></span>
+        </div>
+        <div id="chip-2" class="chip chip-2" hidden>
+            <span class="chip-name" id="chip-2-name">Kid 2</span>
+            <span class="chip-moves-box"><span class="chip-tag">Moves</span>
+                <b id="chip-2-moves">0</b></span>
+        </div>
+
+        <div id="tip" class="tip hidden"></div>
+
+        <!-- ---------- Màn chào ---------- -->
+        <div id="menu-overlay" class="overlay">
+            <div class="card pop-in">
+                <h1 class="title">SCREW JAM</h1>
+                <p class="subtitle">Unscrew the bolts and take the whole board apart!</p>
+
+                <div class="pick-row">
+                    <button class="kid-btn is-on" data-kids="1">1 KID</button>
+                    <button class="kid-btn" data-kids="2">2 KIDS</button>
+                </div>
+
+                <div class="how-row">
+                    <div class="how-item">
+                        <span class="how-emoji">🔩</span>
+                        <b>Tap a bolt</b>
+                        <span>It spins out and drops into the tray below.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">✨</span>
+                        <b>Three of a colour</b>
+                        <span>Three same-colour bolts in the tray pop and free the space.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">🪵</span>
+                        <b>Watch the order</b>
+                        <span>A plate with no bolts falls away and shows the layer under it.</span>
+                    </div>
+                </div>
+
+                <p class="rule-note">
+                    Every one of the 60 levels was taken apart by a machine first, using
+                    exactly the tray you get — so there is never an extra slot to buy and
+                    never a level that cannot be finished.
+                </p>
+
+                <button id="btn-marks" class="mark-btn is-on">Colour marks: ON</button>
+                <p class="mark-note">
+                    The slot on each bolt head is a different shape for each colour, so
+                    kids who mix up colours can still tell them apart.
+                </p>
+
+                <div class="row-buttons sticky-cta">
+                    <button id="btn-play" class="btn btn-primary btn-big">PLAY</button>
+                    <button id="btn-menu-levels" class="btn btn-ghost">Levels</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Chọn màn ---------- -->
+        <div id="levels-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm">CHOOSE A LEVEL</h2>
+                <div id="world-tabs" class="world-tabs"></div>
+                <div id="level-grid" class="level-grid"></div>
+                <div class="row-buttons sticky-cta">
+                    <button id="btn-levels-back" class="btn btn-primary">Back</button>
+                    <button id="btn-nav-menu" class="btn btn-ghost">Main Menu</button>
+                    <button id="btn-reset-progress" class="btn btn-ghost">Reset progress</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Qua màn ---------- -->
+        <div id="win-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm text-good">BOARD CLEARED!</h2>
+                <div id="win-stars" class="stars"></div>
+                <div class="score-rows">
+                    <div class="score-row"><span>Your moves</span><span id="win-moves">0</span></div>
+                    <div class="score-row"><span>Bolts on the board</span><span id="win-par">0</span></div>
+                    <div class="score-row"><span>Your best</span><span id="win-best">0</span></div>
+                </div>
+                <div class="row-buttons">
+                    <button id="btn-next" class="btn btn-primary btn-big">NEXT LEVEL</button>
+                    <button id="btn-finish" class="btn btn-primary btn-big" hidden>FINISH</button>
+                    <button id="btn-replay" class="btn btn-ghost">Try again</button>
+                    <button id="btn-win-levels" class="btn btn-ghost">Levels</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Hai bé thi ---------- -->
+        <div id="duo-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm text-good" id="duo-title">Kid 1 wins!</h2>
+                <p class="subtitle">Same board, same bolts — fair and square.</p>
+                <div class="row-buttons">
+                    <button id="btn-duo-again" class="btn btn-primary btn-big">RACE AGAIN</button>
+                    <button id="btn-duo-menu" class="btn btn-ghost">Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+        <div class="footer-tools">
+        <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+        <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+            <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+        </button>
+        </div>
+    </footer>
+
+    <!-- Phaser 3 lấy từ CDN: máy chủ chưa bật gzip cho .js nên tự host sẽ
+         bắt bé tải 1,2 MB thô, còn CDN trả về 253 KB đã nén brotli. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"
+            integrity="sha512-/tJYyDCrI7hnHWp45P189aOwPa6lTREosRhlxEIqx8skB4A3a3rD3iz4o335SJd4sORqjVHw5y1S2hq4hciwLw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/screw-jam/rules.js"></script>
+    <script src="/screw-jam/levels.js"></script>
+    <script src="/screw-jam/game.js"></script>
+</body>
+</html>

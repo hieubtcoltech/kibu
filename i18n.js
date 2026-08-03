@@ -492,6 +492,33 @@
         ['Cổng Trời', 'Sky Gate'],
         ['Luồn quả bóng qua đúng cái khe giữa hai khối.', 'Thread the ball through the gap.'],
 
+        /* ---------- Screw Jam (screw-jam) ---------- */
+        ['Vặn Ốc', 'Screw Jam'],
+        ['Vặn ốc ra rồi tháo tung cả bàn ván!', 'Unscrew the bolts and take the whole board apart!'],
+        ['Chạm vào con ốc', 'Tap a bolt'],
+        ['Nó tự xoay ra rồi rơi xuống khay bên dưới.', 'It spins out and drops into the tray below.'],
+        ['Đủ ba con cùng màu', 'Three of a colour'],
+        ['Ba con cùng màu nằm trên khay là cả ba biến mất, trả lại chỗ trống.',
+            'Three same-colour bolts in the tray pop and free the space.'],
+        ['Để ý thứ tự tháo', 'Watch the order'],
+        ['Tấm ván nào rút hết ốc thì rơi xuống, để lộ lớp nằm dưới.',
+            'A plate with no bolts falls away and shows the layer under it.'],
+        ['Cả sáu mươi màn đều được máy tháo thử trước bằng ĐÚNG cái khay bé được dùng — nên không bao giờ phải mua thêm chỗ, cũng không có màn nào tắc.',
+            'Every one of the 60 levels was taken apart by a machine first, using exactly the tray you get — so there is never an extra slot to buy and never a level that cannot be finished.'],
+        ['Rãnh trên đầu mỗi con ốc mang một hình riêng theo màu, để bé nào hay lẫn màu vẫn phân biệt được.',
+            'The slot on each bolt head is a different shape for each colour, so kids who mix up colours can still tell them apart.'],
+        ['THÁO SẠCH RỒI!', 'BOARD CLEARED!'],
+        ['Số ốc trên bàn', 'Bolts on the board'],
+        ['Khay đầy rồi — bé lùi lại một nước nhé!', 'Tray is full — undo a move!'],
+        ['Hết chỗ đặt rồi — lùi lại hoặc chơi lại nhé!', 'No room left — undo or try again!'],
+        ['Hai bé cùng một bàn ván, cùng một đám ốc — công bằng nhé.',
+            'Same board, same bolts — fair and square.'],
+        /* bốn thế giới */
+        ['Tập Vặn', 'First Turns'],
+        ['Chồng Ván', 'Stacked Up'],
+        ['Nhiều Màu', 'Colour Crowd'],
+        ['Khay Chật', 'Tight Tray'],
+
         /* ---------- Water Sort (water-sort) ---------- */
         ['Rót Màu', 'Water Sort'],
         ['Rót tới khi mỗi ống chỉ còn đúng một màu!', 'Pour until every tube holds just one colour!'],
