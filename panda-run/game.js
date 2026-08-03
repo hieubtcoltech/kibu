@@ -1272,8 +1272,12 @@
      *      số vòng mỗi giây = tốc độ × LEG_CONTACT / (2 × LEG_AMP)
      *
      * Để chống đất dưới nửa vòng (0,45) thì có những lúc cả hai chân đều rời
-     * đất — đó mới là CHẠY; đúng nửa vòng trở lên là dáng đi bộ nhanh. */
-    const LEG_AMP = 0.5;
+     * đất — đó mới là CHẠY; đúng nửa vòng trở lên là dáng đi bộ nhanh.
+     *
+     * Muốn chân khua CHẬM lại mà không sinh trượt thì phải tăng sải chân bù
+     * vào — nhịp và sải nằm hai vế của cùng một phép chia. Hạ mỗi nhịp thôi là
+     * bàn chân lại miết trên đất y như cũ. */
+    const LEG_AMP = 0.65;
     const LEG_CONTACT = 0.45;
     const CADENCE_MAX = 30;      // trần nhịp chân (rad/giây), khỏi loạn hình
 
@@ -1313,7 +1317,10 @@
      * pha nhau, dù pha có đúng. */
     const PANDA = {
         white: '#fbfcfe', shade: '#dfe6f0', black: '#23262e', ink: '#14161b',
-        limbFar: '#4a5160',
+        /* Chân xa cũng ĐEN như chân gần, chỉ sẫm hơn một nấc và vẽ mảnh hơn
+         * chút. Để đúng hai màu đen y hệt thì lúc hai chân chồng nhau mắt dính
+         * thành một khối, không đọc ra được bước chạy nữa. */
+        limbFar: '#15181f',
         scarf: '#e8443c', scarfDark: '#b32a25', pack: '#4c8f3f', packDark: '#356d2b',
         cheek: 'rgba(255,120,150,0.5)'
     };
@@ -1398,7 +1405,7 @@
          * ==================================================================*/
         const LEG_A = LEG_AMP * u;         // biên độ trước–sau của bàn chân
         const LEG_LIFT = 0.30 * u;         // nhấc cao nhất lúc đưa chân
-        const BONE = 0.33 * u;             // đùi và cẳng dài bằng nhau
+        const BONE = 0.40 * u;             // đùi và cẳng dài bằng nhau — phải đủ với sải chân
         const hipY = bodyCY + 0.20 * u;
 
         function footAt(p) {
@@ -1454,8 +1461,10 @@
          * Biên độ để xấp xỉ biên độ chân thì mắt mới đọc ra được tay và chân
          * đang ngược nhau — thứ mắt bắt là biên độ, không phải con số pha. */
         function arm(sx0, sy0, p, col) {
-            const sw = Math.cos(p * TAU) * 1.05;
-            const upper = 0.22 * u, fore = 0.20 * u;
+            const sw = Math.cos(p * TAU) * 1.15;
+            /* Tay dài thêm theo sải chân: chân bước rộng mà tay khua tí tẹo thì nhìn
+             * lệch. */
+            const upper = 0.24 * u, fore = 0.22 * u;
             const ex = sx0 + Math.sin(sw * 0.7) * upper;
             const ey = sy0 + Math.cos(sw * 0.7) * upper;
             /* Cẳng tay gập thêm về trước — kiểu tay chạy, không phải tay đi bộ. */
@@ -1498,11 +1507,11 @@
             limb(cx - 0.10 * u, hipY - 0.06 * u, cx - 0.58 * u, foot - 0.05 * u, 0.24 * u, PANDA.limbFar, true);
         } else if (jump) {
             /* Nhảy thì co chân lại — duỗi thẳng nhìn như đang rơi chứ không bật. */
-            leg(cx - 0.11 * u, hipY, cx - 0.30 * u, foot - 0.34 * u, PANDA.limbFar, 0.21 * u);
+            leg(cx - 0.11 * u, hipY, cx - 0.30 * u, foot - 0.34 * u, PANDA.limbFar, 0.20 * u);
             arm(cx - 0.16 * u, bodyCY - 0.16 * u, 0.5, PANDA.limbFar);
         } else {
             const f = footAt(pFar);
-            leg(cx - 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.limbFar, 0.21 * u);
+            leg(cx - 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.limbFar, 0.20 * u);
             /* Tay XA cùng pha với chân GẦN — tức ngược pha với chân cùng bên
              * nó. Đó là vận động chéo: tay phải theo chân trái. */
             arm(cx - 0.16 * u, bodyCY - 0.16 * u, pNear, PANDA.limbFar);
@@ -1521,10 +1530,10 @@
         if (slide) {
             limb(cx + 0.20 * u, hipY - 0.08 * u, cx + 0.62 * u, foot - 0.03 * u, 0.24 * u, PANDA.black, true);
         } else if (jump) {
-            leg(cx + 0.11 * u, hipY, cx + 0.34 * u, foot - 0.18 * u, PANDA.black, 0.22 * u);
+            leg(cx + 0.11 * u, hipY, cx + 0.34 * u, foot - 0.18 * u, PANDA.black, 0.235 * u);
         } else {
             const f = footAt(pNear);
-            leg(cx + 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.black, 0.22 * u);
+            leg(cx + 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.black, 0.235 * u);
         }
 
         /* --- tay GẦN --- */
