@@ -130,7 +130,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     text-align: center;
 }
 
-.hud-world {
+.hud-name {
     font-size: 0.78rem;
     font-weight: 700;
     color: #7a6248;
@@ -452,7 +452,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     .hud-box { padding: 4px 10px; gap: 5px; }
     .hud-tag { font-size: 0.56rem; letter-spacing: 0.03em; }
     .hud-num { font-size: 0.95rem; }
-    .hud-world { font-size: 0.68rem; }
+    .hud-name { font-size: 0.68rem; }
     .tip { top: 46px; font-size: 0.82rem; padding: 7px 14px; }
 
     .how-row { grid-template-columns: 1fr; gap: 7px; margin-bottom: 10px; }

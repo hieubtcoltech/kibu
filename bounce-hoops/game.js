@@ -48,12 +48,18 @@
     const BALL_R = 0.34;         // bán kính quả bóng, tính theo ô
     const BOUNCE = 0.62;         // nảy lại bao nhiêu phần vận tốc khi đập tường
     const RUB = 0.86;            // ma sát trượt dọc mặt tường
-    const STOP_V = 0.9;          // chậm hơn mức này và đang nằm đất thì cho dừng
     const MAX_POWER = 20;        // lực ném mạnh nhất, ô/giây
     const AIM_MAX_DRAG = 3.4;    // kéo xa hơn bằng này ô cũng không mạnh thêm
 
     const SHOT_TTL = 12;         // bóng lăn lóc quá lâu thì tính là hỏng, cho ném lại
     const STEP = 1 / 240;        // bước tính vật lý, cố định để mọi máy ra một kết quả
+
+    /* Lúc nào coi là bóng đã nằm im. Đo bằng QUÃNG ĐƯỜNG chứ không đo bằng vận
+     * tốc: bóng lăn chậm dọc bệ đá về phía mép vẫn là một lượt ném còn sống,
+     * cắt nó đi là cướp mất lời giải của màn Zigzag. Đứng lì một chỗ mới là
+     * chết thật. */
+    const STILL_D = 0.12;        // nhúc nhích chưa tới bằng này ô thì coi như đứng yên
+    const STILL_T = 0.7;         // đứng yên lâu bằng này giây thì kết thúc lượt
 
     const T = {
         BRICK: 'brick',          // tường gạch, bóng nảy lại
@@ -355,9 +361,9 @@
         level: null,
 
         ball: { x: 0, y: 0, vx: 0, vy: 0, spin: 0, rot: 0 },
-        rest: true,          // bóng đang nằm yên chờ ném
         shots: 0,
         flyT: 0,
+        stillAt: { x: 0, y: 0, t: 0 },   // lần cuối quả bóng còn nhúc nhích
 
         walls: [],           // mọi khối cứng, kể cả khối trượt đã tính vị trí
         pads: [],
@@ -373,7 +379,6 @@
 
         parts: [],
         rings: [],
-        floats: [],
         shakeUntil: 0,
         shakeMag: 0,
         time: 0
@@ -547,7 +552,6 @@
         resetBall();
         G.parts = [];
         G.rings = [];
-        G.floats = [];
         G.preview = [];
         G.mode = 'aim';
         updateHud();
@@ -556,7 +560,7 @@
     function resetBall() {
         const p = G.level.ball;
         G.ball = { x: p[0], y: p[1] - 0.6, vx: 0, vy: 0, spin: 0, rot: 0 };
-        G.rest = true;
+        G.stillAt = { x: G.ball.x, y: G.ball.y, t: 0 };
         G.flyT = 0;
         G.mode = G.mode === 'won' ? 'won' : 'aim';
     }
@@ -565,15 +569,24 @@
      * mỗi vài bước. Vì dùng chung hàm step nên chấm nằm ĐÚNG chỗ bóng sẽ đi
      * qua, không phải một đường parabol vẽ xấp xỉ.
      *
+     * Phải chạy thử bằng ĐÚNG bước STEP của quả bóng thật, không được lấy bước
+     * to hơn cho nhanh. Hồi đầu em chạy bước gấp bốn lần cho đỡ tốn máy, chấm
+     * lệch khỏi đường bóng tới 0,24 ô — gần bằng cả bán kính quả bóng, đủ để
+     * một cú ném ngắm trúng mép rổ lại đi trượt. Chung hàm step thôi chưa đủ,
+     * phải chung cả bước nhảy thì hai đường mới trùng khít.
+     *
      * Chỉ vẽ tới cú đập tường đầu tiên: vẽ hết cả đường thì màn giải đố chẳng
      * còn gì để nghĩ, bé chỉ việc dò theo vạch. */
+    const PREVIEW_STEPS = 960;       // 4 giây bay, đủ dài cho mọi cú ném
+    const PREVIEW_GAP = 16;          // cách 16 bước chấm một cái
+
     function previewPath(vx, vy) {
         const b = { x: G.ball.x, y: G.ball.y, vx: vx, vy: vy, spin: 0, rot: 0 };
         const pts = [];
         let hit = false;
-        for (let i = 0; i < 240 && !hit; i++) {
-            step(b, G.time, STEP * 4, () => { hit = true; });
-            if (i % 4 === 0) pts.push({ x: b.x, y: b.y });
+        for (let i = 0; i < PREVIEW_STEPS && !hit; i++) {
+            step(b, G.time, STEP, () => { hit = true; });
+            if (i % PREVIEW_GAP === 0) pts.push({ x: b.x, y: b.y });
             if (b.y > ROWS + 2) break;
         }
         return pts;
@@ -635,11 +648,14 @@
         }
 
         G.flyT += dt;
-        /* Bóng đã nằm im dưới đất thì kết thúc lượt ngay, không bắt bé ngồi chờ
-         * hết mười hai giây mới được ném lại. */
-        const slow = Math.hypot(b.vx, b.vy) < STOP_V;
-        const onFloor = b.y > ROWS - 1 - BALL_R - 0.15;
-        if ((slow && onFloor) || G.flyT > SHOT_TTL) onMiss('stop');
+        /* Bóng đã nằm im thì kết thúc lượt ngay, không bắt bé ngồi chờ hết mười
+         * hai giây mới được ném lại. Trước đây chỗ này chỉ nhận ra bóng nằm im
+         * trên NỀN NHÀ, nên quả nào dừng lại trên một bệ đá — chuyện xảy ra ở
+         * quá nửa số màn — là bé phải ngồi nhìn nó mười hai giây. */
+        if (Math.hypot(b.x - G.stillAt.x, b.y - G.stillAt.y) > STILL_D) {
+            G.stillAt = { x: b.x, y: b.y, t: G.flyT };
+        }
+        if (G.flyT - G.stillAt.t > STILL_T || G.flyT > SHOT_TTL) onMiss('stop');
     }
 
     function onScore() {
@@ -1018,7 +1034,7 @@
 
     const el = id => document.getElementById(id);
     const ui = {
-        hud: el('hud'), level: el('hud-level'), worldName: el('hud-world'),
+        hud: el('hud'), level: el('hud-level'), levelName: el('hud-name'),
         shots: el('hud-shots'), tip: el('tip'),
         menu: el('menu-overlay'), levels: el('levels-overlay'),
         win: el('win-overlay'), all: el('all-overlay'),
@@ -1032,10 +1048,14 @@
     function hide(n) { if (n) n.classList.add('hidden'); }
     function hideAll() { [ui.menu, ui.levels, ui.win, ui.all].forEach(hide); }
 
+    /* Thanh thông tin ghi TÊN MÀN chứ không ghi tên thế giới: bốn cái tên thế
+     * giới đã nằm sẵn ở bảng chọn màn và nhìn màu trời cũng biết đang ở đâu,
+     * còn tên màn thì chẳng chỗ nào nói — mà mỗi màn là một câu đố riêng, có
+     * tên gọi thì bé mới nhớ được màn nào ra màn nào. */
     function updateHud() {
         if (!G.level || !ui.level) return;
         ui.level.textContent = 'Level ' + (G.levelIndex + 1);
-        ui.worldName.textContent = WORLDS[worldOf(G.levelIndex)].name;
+        ui.levelName.textContent = G.level.name;
         ui.shots.textContent = G.shots;
     }
 
