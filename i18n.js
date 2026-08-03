@@ -492,6 +492,36 @@
         ['Cổng Trời', 'Sky Gate'],
         ['Luồn quả bóng qua đúng cái khe giữa hai khối.', 'Thread the ball through the gap.'],
 
+        /* ---------- Melon Drop (melon-drop) ---------- */
+        ['Ghép Dưa Hấu', 'Melon Drop'],
+        ['Hai quả giống nhau chạm vào nhau là thành một quả to hơn!',
+            'Two of the same fruit touch and become a bigger one!'],
+        ['Đưa qua đưa lại rồi thả', 'Move and drop'],
+        ['Kéo sang trái sang phải, nhả tay ra là quả rơi xuống thùng.',
+            'Slide left and right, let go to drop the fruit in.'],
+        ['Giống gặp giống', 'Same touches same'],
+        ['Hai quả anh đào thành quả dâu, hai quả dâu thành chùm nho.',
+            'Two cherries make a strawberry, two strawberries make a grape.'],
+        ['Giữ cho thấp xuống', 'Keep it low'],
+        ['Đừng để trái cây dâng lên khỏi vạch đỏ. Làm ra được quả dưa hấu là nhất!',
+            'Stay under the red line. Reach the watermelon to win big!'],
+        ['Chơi hai bé thì mỗi bé một thùng. Bé nào ra quả dưa hấu trước là thắng — thùng bé nào tràn thì bé kia được.',
+            'With 2 kids each one gets a basket. The first watermelon wins — and if a basket overflows, the other kid takes it.'],
+        /* nhãn ngắn trên thẻ điểm, để riêng cho khỏi lẫn vào "Màn tiếp" */
+        ['Quả sau', 'Next', 'x'],
+        ['ĐẦY THÙNG RỒI!', 'BASKET FULL!'],
+        ['Kỷ lục mới!', 'New best score!'],
+        ['Quả to nhất từng làm ra', 'Biggest fruit ever'],
+        ['Bé {0} thắng!', 'Kid {0} wins!'],
+        ['Ra quả dưa hấu trước!', 'First watermelon!'],
+        ['Thùng bên kia đầy tràn mất rồi', 'The other basket overflowed'],
+        ['ĐƯỢC QUẢ DƯA HẤU RỒI! 🍉', 'WATERMELON! 🍉'],
+        /* nhắc phím cho máy tính — để nguyên cụm cho khỏi lẫn vào câu khác */
+        ['Đưa quả: kéo tay hoặc mũi tên', 'Move: drag or arrows', 'x'],
+        ['Thả quả: nhả tay hoặc dấu cách', 'Drop: let go or space', 'x'],
+        ['Bé 1: A D, thả bằng S', 'Kid 1: A D, drop with S', 'x'],
+        ['Bé 2: phím mũi tên, thả bằng mũi tên xuống', 'Kid 2: arrow keys, drop with down', 'x'],
+
         /* ---------- Bubble Pop (bubble-pop) ---------- */
         ['Bắn Bóng Nổ', 'Bubble Pop'],
         ['Ngắm, nảy tường, nổ sạch cả bàn', 'Aim, bounce off the walls, pop them all'],

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Melon Drop - Free Fruit Merge Puzzle Game for Kids | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Melon Drop free on KIBU Games! Drop fruit into the basket - two of the same kind touch and merge into a bigger one. Climb from cherry all the way to watermelon without overflowing. Play solo or two kids on one screen. English & Vietnamese, no download.">
+    <meta name="keywords" content="Melon Drop, fruit merge game, watermelon game, suika style game, merge puzzle, game ghep trai cay, game dua hau, tro choi ghep hoa qua, drop and merge, 2 player merge game, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/melon-drop/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/melon-drop/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/melon-drop/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/melon-drop/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/melon-drop/">
+    <meta property="og:title" content="Melon Drop - Free Fruit Merge Puzzle | KIBU Games">
+    <meta property="og:description" content="Drop the fruit, match two of a kind, grow all the way to the watermelon. Solo or two kids on one screen. 100% free on KIBU Games.">
+    <meta property="og:image" content="https://kibugames.com/melon-drop/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/melon-drop/">
+    <meta name="twitter:title" content="Melon Drop - Free Fruit Merge Puzzle">
+    <meta name="twitter:description" content="Two of the same fruit touch and become a bigger one. How far can you get?">
+    <meta name="twitter:image" content="https://kibugames.com/melon-drop/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Melon Drop",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/melon-drop/",
+      "genre": "Puzzle",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/melon-drop/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body class="chrome-fit">
+    <header class="unified-nav">
+        <div class="nav-left">
+            <a href="/" class="nav-home" title="Home" aria-label="Home">
+                <img src="/logo.svg" alt="KIBU Games">
+            </a>
+            <div class="brand">
+                <img src="/melon-drop/icon.jpg" alt="" class="brand-img"
+                    onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><i class="fa-solid fa-lemon brand-icon"></i>
+                <h1 class="brand-title">MELON DROP</h1>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button id="btn-nav-menu" class="btn btn-secondary" title="Main Menu">
+                <i class="fa-solid fa-house"></i> <span>Menu</span>
+            </button>
+            <button id="btn-nav-restart" class="btn btn-secondary" title="Restart">
+                <i class="fa-solid fa-rotate-right"></i> <span>Restart</span>
+            </button>
+            <button id="btn-sound" class="btn btn-secondary" title="Sound">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="game-wrapper">
+        <!-- Cả thùng trái cây nằm trong canvas này -->
+        <div class="board-host">
+            <canvas id="board"></canvas>
+        </div>
+
+        <!-- Thẻ điểm nổi trên mỗi thùng; game.js tự đặt vào đúng chỗ -->
+        <div id="chip-1" class="chip chip-1" hidden>
+            <span class="chip-name">Kid 1</span>
+            <span class="chip-score" id="chip-1-score">0</span>
+            <span class="chip-next">Next <b id="chip-1-next">🍒</b></span>
+        </div>
+        <div id="chip-2" class="chip chip-2" hidden>
+            <span class="chip-name">Kid 2</span>
+            <span class="chip-score" id="chip-2-score">0</span>
+            <span class="chip-next">Next <b id="chip-2-next">🍒</b></span>
+        </div>
+
+        <!-- Lời khen chạy ngang màn -->
+        <div id="tip" class="tip hidden"></div>
+
+        <!-- Nhắc phím, chỉ hiện trên máy có chuột. Hai bé thì đổi sang bảng
+             phím của từng bé, vì lúc ấy mới cần biết ai bấm phím nào. -->
+        <div id="keys" class="keys-hint">
+            <span class="k-solo">Move: drag or arrows</span>
+            <span class="k-solo">Drop: let go or space</span>
+            <span class="k-duo">Kid 1: A D, drop with S</span>
+            <span class="k-duo">Kid 2: arrow keys, drop with down</span>
+        </div>
+
+        <!-- ---------- Màn chào ---------- -->
+        <div id="menu-overlay" class="overlay">
+            <div class="card pop-in">
+                <h1 class="title">MELON DROP</h1>
+                <p class="subtitle">Two of the same fruit touch and become a bigger one!</p>
+
+                <div class="ladder" aria-hidden="true">
+                    <span>🍒</span><span>🍓</span><span>🍇</span><span>🍊</span><span>🍋</span>
+                    <span>🍎</span><span>🍑</span><span>🍍</span><span>🍈</span>
+                    <span class="ladder-goal">🍉</span>
+                </div>
+
+                <div class="pick-row">
+                    <button class="kid-btn is-on" data-kids="1">1 KID</button>
+                    <button class="kid-btn" data-kids="2">2 KIDS</button>
+                </div>
+
+                <div class="how-row">
+                    <div class="how-item">
+                        <span class="how-emoji">👆</span>
+                        <b>Move and drop</b>
+                        <span>Slide left and right, let go to drop the fruit in.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">🍒</span>
+                        <b>Same touches same</b>
+                        <span>Two cherries make a strawberry, two strawberries make a grape.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">🍉</span>
+                        <b>Keep it low</b>
+                        <span>Stay under the red line. Reach the watermelon to win big!</span>
+                    </div>
+                </div>
+
+                <p class="rule-note">
+                    With 2 kids each one gets a basket. The first watermelon wins —
+                    and if a basket overflows, the other kid takes it.
+                </p>
+
+                <div class="row-buttons sticky-cta">
+                    <button id="btn-play" class="btn btn-primary btn-big">PLAY</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Hết lượt, một bé ---------- -->
+        <div id="over-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm" id="over-title">BASKET FULL!</h2>
+                <p class="big-fruit"><span id="over-fruit">🍒</span></p>
+                <p class="new-best" id="over-new" hidden>New best score!</p>
+                <div class="score-rows">
+                    <div class="score-row"><span>Score</span><span id="over-score">0</span></div>
+                    <div class="score-row"><span>Best</span><span id="over-best">0</span></div>
+                    <div class="score-row"><span>Biggest fruit ever</span><span id="over-bigfruit">🍒</span></div>
+                </div>
+                <div class="row-buttons">
+                    <button id="btn-again" class="btn btn-primary btn-big">TRY AGAIN</button>
+                    <button id="btn-over-menu" class="btn btn-ghost">Main Menu</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Hết lượt, hai bé ---------- -->
+        <div id="duo-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm text-good" id="duo-title">Kid 1 wins!</h2>
+                <p class="subtitle" id="duo-why"></p>
+                <div class="score-rows">
+                    <div class="score-row"><span>Kid 1</span><span id="duo-score-1">0</span></div>
+                    <div class="score-row"><span>Kid 2</span><span id="duo-score-2">0</span></div>
+                </div>
+                <div class="row-buttons">
+                    <button id="btn-duo-again" class="btn btn-primary btn-big">PLAY AGAIN</button>
+                    <button id="btn-duo-menu" class="btn btn-ghost">Main Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+        <div class="footer-tools">
+        <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+        <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+            <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+        </button>
+        </div>
+    </footer>
+
+    <script src="/melon-drop/game.js"></script>
+</body>
+</html>

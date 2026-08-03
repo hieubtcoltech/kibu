@@ -40,7 +40,8 @@
         { dir: 'sling-blast', slug: 'sling-blast' },
         { dir: 'bubble-pop', slug: 'bubble-pop' },
         { dir: 'panda-run', slug: 'panda-run' },
-        { dir: 'bounce-hoops', slug: 'bounce-hoops' }
+        { dir: 'bounce-hoops', slug: 'bounce-hoops' },
+        { dir: 'melon-drop', slug: 'melon-drop' }
     ];
 
     var bySlug = {}, byDir = {};
