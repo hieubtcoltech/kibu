@@ -497,16 +497,55 @@
         return b;
     }
 
-    /* ---- vành rổ ----
-     * Vành gồm hai cọc cứng hai bên; ghi bàn khi tâm bóng đi TỪ TRÊN XUỐNG qua
-     * đoạn nằm giữa hai cọc. Bắt buộc phải đi từ trên xuống: hất ngược từ dưới
-     * lên mà tính điểm thì bé lách luật bằng cách ném thẳng vào đáy rổ. */
+    /* ---- cái rổ ----
+     * Rổ có ba khối cứng: tấm bảng dựng phía sau và hai cọc vành hai bên. Ghi
+     * bàn khi tâm bóng đi TỪ TRÊN XUỐNG qua đoạn nằm giữa hai cọc. Bắt buộc
+     * phải đi từ trên xuống: hất ngược từ dưới lên mà tính điểm thì bé lách
+     * luật bằng cách ném thẳng vào đáy rổ.
+     *
+     * Kích thước khai báo Ở ĐÂY và chỉ ở đây, phần vẽ cũng đọc lại đúng hàm
+     * này. Trước đây tấm bảng chỉ được VẼ ra chứ không có tên trong danh sách
+     * vật cản, nên ném thẳng vào bảng là bóng xuyên qua như xuyên qua không
+     * khí — nhìn thấy tấm ván to đùng mà bóng chui lọt thì còn tin vào cái gì
+     * trên sân nữa. Giờ bảng cản bóng thật, và ném dội bảng cho rơi vào rổ
+     * đã thành một đường bóng dùng được, y như ngoài sân thật. */
+    const HOOP = {
+        half: 0.95,        // nửa bề ngang miệng rổ
+        post: 0.28,        // bề ngang một cọc vành
+        postH: 0.34,       // chiều cao cọc vành
+        board: 0.26,       // bề dày tấm bảng
+        boardUp: 1.15,     // bảng nhô lên trên mép vành
+        boardDown: 0.55    // và thò xuống dưới mép vành
+    };
+
+    /* Bảng quay ra phía bờ sân gần nhất, tức là đứng SAU cái rổ so với chỗ bé
+     * ném — đúng như ngoài sân thật. */
+    function hoopSide(h) { return h.x > COLS / 2 ? 1 : -1; }
+
+    function hoopParts(h) {
+        const s = hoopSide(h);
+        const bx = s > 0 ? h.x + HOOP.half + HOOP.post
+            : h.x - HOOP.half - HOOP.post - HOOP.board;
+        return {
+            board: {
+                x: bx, y: h.y - HOOP.boardUp,
+                w: HOOP.board, h: HOOP.boardUp + HOOP.boardDown,
+                kind: T.BRICK, hoop: true
+            },
+            postL: {
+                x: h.x - HOOP.half - HOOP.post, y: h.y,
+                w: HOOP.post, h: HOOP.postH, kind: T.BRICK, hoop: true
+            },
+            postR: {
+                x: h.x + HOOP.half, y: h.y,
+                w: HOOP.post, h: HOOP.postH, kind: T.BRICK, hoop: true
+            }
+        };
+    }
+
     function hoopRects(h) {
-        const w = 0.28, half = 0.95;
-        return [
-            { x: h.x - half - w, y: h.y, w: w, h: 0.34, kind: T.BRICK },
-            { x: h.x + half, y: h.y, w: w, h: 0.34, kind: T.BRICK }
-        ];
+        const p = hoopParts(h);
+        return [p.board, p.postL, p.postR];
     }
 
     /* Mốc ghi điểm nằm ĐÚNG mép vành (h.y), không thấp hơn.
@@ -857,7 +896,7 @@
 
     function drawWalls(W) {
         for (const r of G.walls) {
-            if (r.h < 0.5 && r.kind === T.BRICK) continue;   // cọc vành rổ vẽ riêng
+            if (r.hoop) continue;                            // bảng và vành rổ vẽ riêng
             brick(r.x, r.y, r.w, r.h, W, r.kind === T.PAD);
         }
         for (const m of G.movers) {
@@ -888,51 +927,90 @@
         }
     }
 
+    /* Cái rổ vẽ đúng theo hoopParts(), tức là đúng mấy khối mà quả bóng va vào.
+     * Sân nhìn ngang nên tấm bảng thấy được cạnh bên, thành một tấm ván đứng —
+     * ngoài sân thật nhìn từ bên hông cũng đúng như vậy. */
     function drawHoop(W) {
         const h = G.hoop;
+        const P = hoopParts(h);
         const x = sx(h.x), y = sy(h.y);
-        const half = 0.95 * V.u;
+        const half = HOOP.half * V.u;
+        const s = hoopSide(h);
+        const ink = '#241a12';
 
-        /* Bảng rổ quay ra phía bờ sân gần nhất, đúng như cái rổ thật treo trên
-         * cột. Không có nó thì cái vành trông như đang lơ lửng giữa trời. */
-        const side = h.x > COLS / 2 ? 1 : -1;
-        const bx = x + side * (half + V.u * 0.42);
-        ctx.fillStyle = '#fff3c4';
-        roundRect(bx - V.u * 0.13, y - V.u * 1.15, V.u * 0.26, V.u * 1.7, V.u * 0.1);
-        ctx.fill();
-        ctx.strokeStyle = W.ink;
-        ctx.lineWidth = Math.max(2, V.u * 0.07);
-        ctx.stroke();
+        /* ---- tấm bảng ---- */
+        const bx = sx(P.board.x), by = sy(P.board.y);
+        const bw = P.board.w * V.u, bh = P.board.h * V.u;
 
-        /* Lưới rổ */
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-        ctx.lineWidth = Math.max(1.5, V.u * 0.05);
+        /* cần treo nối bảng với vành, cho cái rổ dính vào bảng chứ đừng rời ra */
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = Math.max(2, V.u * 0.09);
         ctx.beginPath();
-        for (let i = 0; i <= 4; i++) {
-            const t = i / 4;
-            ctx.moveTo(x - half + t * half * 2, y + V.u * 0.1);
-            ctx.lineTo(x - half * 0.45 + t * half * 0.9, y + V.u * 0.75);
-        }
-        ctx.moveTo(x - half * 0.45, y + V.u * 0.75);
-        ctx.lineTo(x + half * 0.45, y + V.u * 0.75);
+        ctx.moveTo(x + s * half, y + V.u * 0.16);
+        ctx.lineTo(bx + (s > 0 ? 0 : bw), y + V.u * 0.16);
         ctx.stroke();
 
-        /* Vành: hai cọc đỏ hai bên, chính là hai khối cứng bóng có thể đập vào */
-        ctx.fillStyle = '#e8443c';
-        roundRect(x - half - V.u * 0.28, y, V.u * 0.28, V.u * 0.34, V.u * 0.1); ctx.fill();
-        roundRect(x + half, y, V.u * 0.28, V.u * 0.34, V.u * 0.1); ctx.fill();
-        ctx.strokeStyle = W.ink;
-        ctx.lineWidth = Math.max(1.5, V.u * 0.05);
-        roundRect(x - half - V.u * 0.28, y, V.u * 0.28, V.u * 0.34, V.u * 0.1); ctx.stroke();
-        roundRect(x + half, y, V.u * 0.28, V.u * 0.34, V.u * 0.1); ctx.stroke();
+        const bg = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+        bg.addColorStop(0, s > 0 ? '#ffffff' : '#e6d5b8');
+        bg.addColorStop(1, s > 0 ? '#e6d5b8' : '#ffffff');
+        ctx.fillStyle = bg;
+        roundRect(bx, by, bw, bh, V.u * 0.08);
+        ctx.fill();
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = Math.max(2, V.u * 0.075);
+        ctx.stroke();
+
+        /* ke sắt bắt vành vào bảng */
+        ctx.fillStyle = ink;
+        ctx.fillRect(bx + (s > 0 ? -V.u * 0.08 : bw), y + V.u * 0.02, V.u * 0.08, V.u * 0.26);
+
+        /* ---- lưới ----
+         * Mấy sợi dọc thu dần vào cộng với mấy vòng ngang là ra mắt lưới hình
+         * quả trám. Hồi đầu em vẽ hai chùm dây bắt chéo nhau cho giống lưới
+         * thật, nhưng thu nhỏ bằng cái rổ trong game thì đống dây rối thành
+         * một búi trắng, chẳng ra hình gì. */
+        const netTop = y + V.u * 0.14, netBot = y + V.u * 0.82;
+        const lipT = half * 0.96, lipB = half * 0.52;
+        ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+        ctx.lineWidth = Math.max(1, V.u * 0.038);
+        ctx.beginPath();
+        for (let i = 0; i <= 5; i++) {
+            const t = i / 5;
+            ctx.moveTo(x - lipT + t * lipT * 2, netTop);
+            ctx.lineTo(x - lipB + t * lipB * 2, netBot);
+        }
+        for (const k of [0.34, 0.67, 1]) {
+            const wy = netTop + (netBot - netTop) * k;
+            const ww = lipT + (lipB - lipT) * k;
+            ctx.moveTo(x - ww, wy);
+            ctx.lineTo(x + ww, wy);
+        }
+        ctx.stroke();
+
+        /* ---- vành: hai cọc cam, chính là hai khối bóng đập vào được ---- */
+        ctx.fillStyle = '#f76707';
+        ctx.strokeStyle = ink;
+        ctx.lineWidth = Math.max(1.5, V.u * 0.055);
+        for (const p of [P.postL, P.postR]) {
+            roundRect(sx(p.x), sy(p.y), p.w * V.u, p.h * V.u, V.u * 0.09);
+            ctx.fill();
+            ctx.stroke();
+        }
+        /* thanh vành nối hai cọc, nằm ngay mép ghi điểm */
+        ctx.strokeStyle = '#f76707';
+        ctx.lineWidth = Math.max(2, V.u * 0.1);
+        ctx.beginPath();
+        ctx.moveTo(x - half, y + V.u * 0.05);
+        ctx.lineTo(x + half, y + V.u * 0.05);
+        ctx.stroke();
 
         /* Mũi tên chỉ xuống: nhắc bóng phải RƠI TỪ TRÊN vào mới tính điểm. */
         const bob = Math.sin(G.time * 3) * V.u * 0.06;
         ctx.fillStyle = W.ink;
         ctx.beginPath();
-        ctx.moveTo(x - V.u * 0.3, y - V.u * 0.75 + bob);
-        ctx.lineTo(x + V.u * 0.3, y - V.u * 0.75 + bob);
-        ctx.lineTo(x, y - V.u * 0.35 + bob);
+        ctx.moveTo(x - V.u * 0.3, y - V.u * 0.78 + bob);
+        ctx.lineTo(x + V.u * 0.3, y - V.u * 0.78 + bob);
+        ctx.lineTo(x, y - V.u * 0.38 + bob);
         ctx.closePath();
         ctx.fill();
     }
@@ -981,28 +1059,60 @@
         ctx.restore();
     }
 
+    /* Quả bóng rổ thật: da cam, viền đậm, bốn đường múi.
+     *
+     * Múi bóng vẽ trong hệ toạ độ đã xoay theo b.rot, nên nhìn là biết bóng
+     * đang quay bên nào — thiếu nó thì quả bóng cứ trôi cứng đơ như hòn đá.
+     * Riêng vệt sáng thì vẽ sau khi trả lại trục, vì ánh sáng đứng yên chứ
+     * không quay theo bóng. */
     function drawBall() {
         const b = G.ball;
         const x = sx(b.x), y = sy(b.y), r = BALL_R * V.u;
+        const seam = '#7a2e08';
+
         ctx.save();
         ctx.translate(x, y);
+
+        ctx.save();
         ctx.rotate(b.rot);
-        const g = ctx.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r);
-        g.addColorStop(0, '#8ed0ff');
-        g.addColorStop(0.6, '#4dabf7');
-        g.addColorStop(1, '#1971c2');
+        const g = ctx.createRadialGradient(-r * 0.32, -r * 0.36, r * 0.1, 0, 0, r);
+        g.addColorStop(0, '#ffc078');
+        g.addColorStop(0.55, '#fd7e14');
+        g.addColorStop(1, '#d9480f');
         ctx.fillStyle = g;
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, 6.283);
         ctx.fill();
-        ctx.strokeStyle = '#0b2a3d';
-        ctx.lineWidth = Math.max(1.5, r * 0.14);
-        ctx.stroke();
-        /* Hai đường cong kiểu quả bóng rổ, nhờ nó mà thấy được bóng đang xoay. */
+
+        /* Bốn đường múi: một dọc, một ngang, hai đường cong hai bên — đúng cái
+         * hình ai nhìn cũng biết ngay là quả bóng rổ. Cắt theo hình tròn để
+         * đường cong không thò ra ngoài mép bóng. */
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, 6.283);
+        ctx.clip();
+        ctx.strokeStyle = seam;
+        ctx.lineWidth = Math.max(1.2, r * 0.11);
         ctx.beginPath();
         ctx.moveTo(-r, 0); ctx.lineTo(r, 0);
         ctx.moveTo(0, -r); ctx.lineTo(0, r);
+        ctx.moveTo(0, -r); ctx.quadraticCurveTo(-r * 1.15, 0, 0, r);
+        ctx.moveTo(0, -r); ctx.quadraticCurveTo(r * 1.15, 0, 0, r);
         ctx.stroke();
+        ctx.restore();
+
+        ctx.strokeStyle = '#5c2708';
+        ctx.lineWidth = Math.max(1.5, r * 0.15);
+        ctx.beginPath();
+        ctx.arc(0, 0, r, 0, 6.283);
+        ctx.stroke();
+        ctx.restore();
+
+        /* vệt sáng đứng yên, cho quả bóng có khối chứ không phẳng lì */
+        ctx.fillStyle = 'rgba(255,255,255,0.42)';
+        ctx.beginPath();
+        ctx.ellipse(-r * 0.34, -r * 0.4, r * 0.28, r * 0.19, -0.7, 0, 6.283);
+        ctx.fill();
         ctx.restore();
     }
 
