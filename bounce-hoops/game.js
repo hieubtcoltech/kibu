@@ -1297,7 +1297,12 @@
             }
         }
 
-        /* miệng */
+        /* Miệng chỉ vẽ khi bé có chuyện để tỏ thái độ. Lúc đứng chờ thì để mặt
+         * không, chỉ đôi mắt — cười sẵn từ trước khi ném thì lúc vào rổ nụ cười
+         * chẳng còn nghĩa gì nữa, mà ngồi ngắm mãi một nụ cười cứng đơ cũng
+         * chóng chán. */
+        if (face.mood === 'calm') return;
+
         const my = cy + r * 0.42;
         ctx.lineWidth = Math.max(1.6, r * 0.085);
         ctx.beginPath();
@@ -1305,10 +1310,8 @@
             ctx.arc(x, my - r * 0.12, r * 0.3, 0.15 * Math.PI, 0.85 * Math.PI);
         } else if (face.mood === 'sad') {
             ctx.arc(x, my + r * 0.22, r * 0.28, 1.2 * Math.PI, 1.8 * Math.PI);
-        } else if (face.mood === 'watch') {
-            ctx.ellipse(x, my, r * 0.13, r * 0.17, 0, 0, 6.283);   // há hốc hồi hộp
         } else {
-            ctx.arc(x, my - r * 0.06, r * 0.22, 0.2 * Math.PI, 0.8 * Math.PI);
+            ctx.ellipse(x, my, r * 0.13, r * 0.17, 0, 0, 6.283);   // há hốc hồi hộp
         }
         ctx.stroke();
     }
