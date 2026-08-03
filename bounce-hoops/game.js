@@ -87,143 +87,148 @@
      *  Mỗi màn phải giải được — có kiểm tự động bằng máy, xem phần kiểm thử.
      * ======================================================================*/
 
+    /* Quy ước dựng màn, giữ đúng cho cả 24 màn để bé không phải học lại:
+     *   · nền nhà là khối [0, 11, 20, 1], mặt trên ở y = 11
+     *   · ball[1] là mặt sàn bé đang đứng, tâm bóng nằm cao hơn 0,6 ô
+     *   · rổ đặt trên một bệ thì hoop.y = mặt bệ trừ 0,34 (đúng chiều cao cọc)
+     *   · gai luôn mọc từ dưới lên, nên spike[1] = mặt sàn trừ 0,42 */
     const LEVELS = [
         /* ---------- Thế giới 1: Sunny Yard — dạy tay ---------- */
         {
-            name: 'First Shot', tip: 'Drag back, then let go to throw.',
-            ball: [3, 9], hoop: { x: 15, y: 8 }, par: 1,
+            name: 'First Shot', tip: 'Drag back from the ball, then let go.',
+            ball: [3, 11], hoop: { x: 14, y: 9 }, par: 1,
             walls: [[0, 11, 20, 1]]
         },
         {
             name: 'Over The Wall', tip: 'Throw high to clear the wall.',
-            ball: [3, 9], hoop: { x: 16, y: 8 }, par: 1,
-            walls: [[0, 11, 20, 1], [9, 6, 1, 5]]
+            ball: [3, 11], hoop: { x: 16, y: 9 }, par: 1,
+            walls: [[0, 11, 20, 1], [9, 7, 1, 4]]
         },
         {
-            name: 'Under The Roof', tip: 'A low throw fits under the roof.',
-            ball: [3, 9], hoop: { x: 16, y: 9 }, par: 1,
-            walls: [[0, 11, 20, 1], [7, 0, 1, 7], [7, 6, 9, 1]]
+            name: 'Under The Roof', tip: 'A flat throw fits under the roof.',
+            ball: [3, 11], hoop: { x: 16, y: 10 }, par: 1,
+            walls: [[0, 11, 20, 1], [9, 0, 1, 7]]
         },
         {
-            name: 'Bounce In', tip: 'Bounce the ball off the floor into the hoop.',
-            ball: [2, 4], hoop: { x: 17, y: 9 }, par: 2,
-            walls: [[0, 11, 20, 1], [0, 5, 5, 1], [12, 0, 1, 6]]
+            name: 'Off The Ledge', tip: 'Over the tall pillar, then down.',
+            ball: [2, 5], hoop: { x: 17, y: 10 }, par: 2,
+            walls: [[0, 11, 20, 1], [0, 5, 5, 1], [11, 4, 1, 7]]
         },
         {
             name: 'The Gap', tip: 'Squeeze the ball through the gap.',
-            ball: [3, 9], hoop: { x: 16, y: 4 }, par: 2,
-            walls: [[0, 11, 20, 1], [10, 0, 1, 4], [10, 7, 1, 4], [13, 6, 7, 1]]
+            ball: [3, 11], hoop: { x: 16, y: 9 }, par: 2,
+            walls: [[0, 11, 20, 1], [10, 0, 1, 5], [10, 8, 1, 3]]
         },
         {
-            name: 'Two Walls', tip: 'Two walls, one narrow path.',
-            ball: [2, 9], hoop: { x: 17, y: 8 }, par: 2,
-            walls: [[0, 11, 20, 1], [7, 5, 1, 6], [13, 0, 1, 7]]
+            name: 'Two Walls', tip: 'Over the first, under the second.',
+            ball: [2, 11], hoop: { x: 17, y: 9 }, par: 2,
+            walls: [[0, 11, 20, 1], [7, 6, 1, 5], [13, 0, 1, 7]]
         },
 
         /* ---------- Thế giới 2: Blue Lagoon — bàn nhún ---------- */
         {
             name: 'Springboard', tip: 'The orange pad throws the ball high.',
-            ball: [2, 9], hoop: { x: 17, y: 3 }, par: 2,
-            walls: [[0, 11, 20, 1], [14, 5, 6, 1]], pads: [[9, 10, 3]]
+            ball: [2, 11], hoop: { x: 17, y: 4.66 }, par: 2,
+            walls: [[0, 11, 20, 1], [13, 5, 7, 1]], pads: [[9, 10.6, 3]]
         },
         {
             name: 'Double Bounce', tip: 'Use both pads to climb.',
-            ball: [2, 9], hoop: { x: 18, y: 2 }, par: 3,
-            walls: [[0, 11, 20, 1], [12, 6, 3, 1], [15, 4, 5, 1]], pads: [[7, 10, 2], [12, 5, 2]]
+            ball: [2, 11], hoop: { x: 18, y: 2.66 }, par: 3,
+            walls: [[0, 11, 20, 1], [11, 6, 3, 1], [15, 3, 5, 1]],
+            pads: [[7, 10.6, 2], [12, 5.6, 2]]
         },
         {
-            name: 'Ceiling Drop', tip: 'Drop in from above the rim.',
-            ball: [2, 4], hoop: { x: 14, y: 9 }, par: 2,
-            walls: [[0, 11, 20, 1], [0, 5, 4, 1], [9, 0, 1, 7], [11, 6, 9, 1]],
-            pads: [[16, 10, 3]]
+            name: 'Ceiling Drop', tip: 'Fall below the roof before you cross.',
+            ball: [2, 5], hoop: { x: 15, y: 10 }, par: 2,
+            walls: [[0, 11, 20, 1], [0, 5, 4, 1], [9, 0, 1, 6]]
         },
         {
-            name: 'Zigzag', tip: 'Bounce left, then right.',
-            ball: [2, 2], hoop: { x: 17, y: 9 }, par: 3,
-            walls: [[0, 11, 20, 1], [0, 3, 6, 1], [8, 6, 6, 1], [12, 0, 1, 5]]
+            name: 'Zigzag', tip: 'Land on the shelf, then roll off the end.',
+            ball: [2, 3], hoop: { x: 17, y: 10 }, par: 3,
+            walls: [[0, 11, 20, 1], [0, 3, 6, 1], [8, 6, 6, 1], [13, 0, 1, 4]]
         },
         {
-            name: 'The Chimney', tip: 'Send the ball up the chimney.',
-            ball: [3, 9], hoop: { x: 12, y: 2 }, par: 3,
-            walls: [[0, 11, 20, 1], [9, 4, 1, 7], [14, 4, 1, 7], [9, 3, 2, 1], [13, 3, 2, 1]],
-            pads: [[11, 10, 2]]
+            name: 'The Well', tip: 'Drop the ball straight down the well.',
+            ball: [3, 11], hoop: { x: 12, y: 10 }, par: 3,
+            walls: [[0, 11, 20, 1], [9, 3, 1, 8], [14, 3, 1, 8]],
+            pads: [[5, 10.6, 2]]
         },
         {
-            name: 'Pinball', tip: 'Let it rattle around.',
-            ball: [2, 9], hoop: { x: 17, y: 5 }, par: 3,
-            walls: [[0, 11, 20, 1], [6, 7, 4, 1], [11, 4, 4, 1], [15, 7, 5, 1], [8, 0, 1, 3]]
+            name: 'Pinball', tip: 'Let it rattle around the shelves.',
+            ball: [2, 11], hoop: { x: 17, y: 5.66 }, par: 3,
+            walls: [[0, 11, 20, 1], [6, 8, 4, 1], [11, 4, 4, 1], [15, 6, 5, 1]]
         },
 
-        /* ---------- Thế giới 3: Purple Peak — khối trượt ---------- */
+        /* ---------- Thế giới 3: Purple Peak — khối trượt và gai ---------- */
         {
             name: 'Moving Wall', tip: 'Wait for the wall to slide away.',
-            ball: [3, 9], hoop: { x: 17, y: 8 }, par: 2,
+            ball: [3, 11], hoop: { x: 17, y: 9 }, par: 2,
             walls: [[0, 11, 20, 1]], movers: [[10, 6, 1, 5, 2.5, 3.2]]
         },
         {
             name: 'Sliding Roof', tip: 'The roof keeps moving. Time it.',
-            ball: [3, 9], hoop: { x: 16, y: 9 }, par: 2,
-            walls: [[0, 11, 20, 1], [7, 0, 1, 6]], movers: [[9, 6, 5, 1, 2, 4]]
+            ball: [3, 11], hoop: { x: 16, y: 10 }, par: 2,
+            walls: [[0, 11, 20, 1], [7, 0, 1, 6]], movers: [[10, 6, 4, 1, 2, 4]]
         },
         {
             name: 'Spike Alley', tip: 'Keep away from the green spikes.',
-            ball: [2, 9], hoop: { x: 17, y: 8 }, par: 2,
-            walls: [[0, 11, 20, 1], [8, 5, 1, 4]], spikes: [[10, 10, 5]]
+            ball: [2, 11], hoop: { x: 17, y: 9 }, par: 2,
+            walls: [[0, 11, 20, 1], [8, 6, 1, 5]], spikes: [[10, 10.58, 5]]
         },
         {
-            name: 'Narrow Escape', tip: 'One gap, and it will not wait.',
-            ball: [2, 5], hoop: { x: 17, y: 9 }, par: 3,
+            name: 'Narrow Escape', tip: 'One gap, and a block guarding it.',
+            ball: [2, 6], hoop: { x: 17, y: 10 }, par: 3,
             walls: [[0, 11, 20, 1], [0, 6, 4, 1], [11, 0, 1, 5], [11, 8, 1, 3]],
-            movers: [[13, 4, 1, 3, 1.6, 2.6]]
+            movers: [[14, 4, 1, 3, 1.6, 2.6]]
         },
         {
             name: 'Bounce Gate', tip: 'Pad up, then through the gate.',
-            ball: [2, 9], hoop: { x: 17, y: 2 }, par: 3,
-            walls: [[0, 11, 20, 1], [13, 4, 7, 1], [8, 0, 1, 4]],
-            pads: [[6, 10, 3]], movers: [[12, 1, 1, 3, 1.4, 3]]
+            ball: [2, 11], hoop: { x: 17, y: 2.66 }, par: 3,
+            walls: [[0, 11, 20, 1], [13, 3, 7, 1]],
+            pads: [[6, 10.6, 3]], movers: [[11, 0, 1, 3, 1.4, 3]]
         },
         {
-            name: 'The Tunnel', tip: 'Straight through the tunnel.',
-            ball: [2, 8], hoop: { x: 18, y: 8 }, par: 2,
-            walls: [[0, 11, 20, 1], [6, 0, 1, 7], [6, 10, 1, 1], [11, 0, 1, 7], [11, 10, 1, 1],
-            [14, 6, 6, 1]], spikes: [[7, 10, 4]]
+            name: 'The Tunnel', tip: 'Fly flat through the tunnel.',
+            ball: [2, 11], hoop: { x: 18, y: 9 }, par: 2,
+            walls: [[0, 11, 20, 1], [6, 0, 1, 8], [11, 0, 1, 8]],
+            spikes: [[7, 10.58, 4]]
         },
 
         /* ---------- Thế giới 4: Night Court — tổng hợp ---------- */
         {
-            name: 'High Climb', tip: 'Climb the ledges to the top.',
-            ball: [2, 9], hoop: { x: 17, y: 1 }, par: 3,
-            walls: [[0, 11, 20, 1], [6, 8, 3, 1], [11, 5, 3, 1], [15, 3, 5, 1]],
-            pads: [[4, 10, 2], [12, 4, 2]]
+            name: 'High Climb', tip: 'Climb the ledges to the top shelf.',
+            ball: [2, 11], hoop: { x: 17, y: 1.66 }, par: 3,
+            walls: [[0, 11, 20, 1], [6, 8, 3, 1], [11, 5, 3, 1], [15, 2, 5, 1]],
+            pads: [[4, 10.6, 2], [12, 4.6, 2]]
         },
         {
             name: 'Crossfire', tip: 'Two movers, one window.',
-            ball: [2, 9], hoop: { x: 17, y: 5 }, par: 4,
+            ball: [2, 11], hoop: { x: 17, y: 6.66 }, par: 4,
             walls: [[0, 11, 20, 1], [14, 7, 6, 1]],
             movers: [[8, 3, 1, 4, 2.2, 2.8], [11, 7, 1, 4, 2, 3.6]]
         },
         {
-            name: 'Spike Ceiling', tip: 'Low and fast, the ceiling bites.',
-            ball: [2, 9], hoop: { x: 17, y: 9 }, par: 2,
-            walls: [[0, 11, 20, 1], [9, 7, 1, 4]], spikes: [[5, 5, 10]]
+            name: 'Spike Bridge', tip: 'Over the spikes or under the bridge.',
+            ball: [2, 11], hoop: { x: 17, y: 10 }, par: 2,
+            walls: [[0, 11, 20, 1], [8, 7, 5, 1]], spikes: [[8, 6.58, 5]]
         },
         {
-            name: 'The Well', tip: 'Drop it straight down the well.',
-            ball: [3, 3], hoop: { x: 14, y: 10 }, par: 3,
-            walls: [[0, 11, 20, 1], [0, 4, 6, 1], [12, 4, 1, 7], [16, 4, 1, 7], [12, 3, 5, 1]],
-            pads: [[8, 10, 3]]
+            name: 'Rooftop', tip: 'Up to the roof, past the hanging block.',
+            ball: [2, 11], hoop: { x: 16, y: 3.66 }, par: 3,
+            walls: [[0, 11, 20, 1], [13, 4, 7, 1], [11, 0, 1, 3]],
+            pads: [[9, 10.6, 2]]
         },
         {
-            name: 'Bank Shot', tip: 'Use the back wall.',
-            ball: [3, 9], hoop: { x: 12, y: 8 }, par: 2,
+            name: 'Bank Shot', tip: 'Use the wall on the right.',
+            ball: [3, 11], hoop: { x: 12, y: 9 }, par: 2,
             walls: [[0, 11, 20, 1], [8, 0, 1, 7], [16, 2, 1, 9], [10, 5, 7, 1]]
         },
         {
             name: 'Grand Finale', tip: 'Everything at once. Good luck!',
-            ball: [2, 9], hoop: { x: 18, y: 3 }, par: 4,
-            walls: [[0, 11, 20, 1], [7, 6, 3, 1], [15, 5, 5, 1], [11, 0, 1, 4]],
-            pads: [[5, 10, 2], [8, 5, 2]], movers: [[13, 6, 1, 5, 1.8, 3]],
-            spikes: [[9, 10, 3]]
+            ball: [2, 11], hoop: { x: 18, y: 2.66 }, par: 4,
+            walls: [[0, 11, 20, 1], [7, 5, 3, 1], [15, 3, 5, 1], [12, 0, 1, 4]],
+            pads: [[5, 10.6, 2], [8, 4.6, 2]], movers: [[13, 6, 1, 5, 1.8, 3]],
+            spikes: [[10, 10.58, 3]]
         }
     ];
 
