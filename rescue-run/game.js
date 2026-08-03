@@ -44,13 +44,17 @@
      * hình. Đổi lại tầm nhìn phía trước ngắn đi, nên RUN_MAX phải hạ theo. */
     const PLAYER_X = 5.2;
 
-    const RUN_START = 9.5;       // tốc độ chạy lúc mới xuất phát (u/giây)
-    const RUN_MAX = 17;          // trần tốc độ
-    /* Nhanh dần theo đường cong bão hoà chứ không theo đường thẳng: đoạn đầu
-     * tăng rõ để bé thấy game đang khó lên, càng về sau càng nhích chậm nên
-     * chạy nghìn mét vẫn còn chỗ để nhanh thêm. Tăng tuyến tính thì chỉ hai
-     * trăm mét là chạm trần, từ đó trở đi lượt chơi phẳng lì. */
-    const RUN_HALF = 420;        // chạy bấy nhiêu mét thì đi được ~63% quãng tăng tốc
+    const RUN_START = 7;         // tốc độ chạy lúc mới xuất phát (u/giây)
+    const RUN_MAX = 16;          // trần tốc độ
+    /* Đường cong hình chữ S: đoạn đầu gần như phẳng cho bé làm quen ngón tay,
+     * giữa quãng mới dốc lên, cuối lại thoải dần nên chạy nghìn mét vẫn còn chỗ
+     * nhanh thêm.
+     *
+     * Trước dùng hàm bão hoà (1 - e^-m/H), nhưng hàm đó dốc nhất đúng ngay lúc
+     * xuất phát — sai hẳn chỗ cần: bé còn chưa biết chạm vào đâu thì màn hình
+     * đã trôi mỗi lúc một nhanh. Còn tăng tuyến tính thì hai trăm mét là chạm
+     * trần, từ đó lượt chơi phẳng lì. */
+    const RUN_MID = 320;         // chạy tới đây thì được nửa quãng tăng tốc
 
     const GRAV = 52;             // trọng lực (u/giây²)
     const JUMP_V = 15.2;         // vận tốc bật lên
@@ -103,7 +107,9 @@
     /* Bốn vùng cảnh, đổi sau mỗi ZONE_LEN mét. Đổi cảnh không chỉ cho đẹp: nó
      * là cái mốc để bé biết mình đã đi được xa tới đâu, con số mét trên HUD
      * chạy quá nhanh nên mắt không bám kịp. */
-    const ZONE_LEN = 200;
+    /* Chạy chậm hơn thì mỗi mét lâu hơn, nên rút ngắn quãng đổi cảnh lại cho
+     * lần đổi cảnh đầu tiên vẫn tới trong khoảng nửa phút. */
+    const ZONE_LEN = 140;
     const ZONES = [
         {
             key: 'jungle', name: 'Jungle',
@@ -750,7 +756,8 @@
 
     function stepPlayer(dt) {
         /* ---- chạy tới ---- */
-        G.speed = RUN_START + (RUN_MAX - RUN_START) * (1 - Math.exp(-G.metres / RUN_HALF));
+        const mm = G.metres * G.metres;
+        G.speed = RUN_START + (RUN_MAX - RUN_START) * (mm / (mm + RUN_MID * RUN_MID));
         const sp = G.speed * (G.rocketT > 0 ? 1.25 : 1);
         G.x += sp * dt;
         G.dist += sp * dt;
