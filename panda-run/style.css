@@ -93,20 +93,32 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 }
 
 /* ---------- Thanh thông tin ---------- */
+/* Lưới ba cột 1fr–auto–1fr chứ không phải flex space-between.
+   Với space-between, ô giữa bị đẩy đi theo chênh lệch bề rộng của hai ô hai
+   bên: thanh trái có thêm tên vùng cảnh nên rộng hơn thanh phải, ô giữa lệch
+   sang phải 48px — mà viên combo lại neo đúng tâm sân, thành ra hai thứ nằm
+   ngay dưới nhau mà không thẳng hàng. Cột 1fr hai bên bằng nhau thì ô giữa
+   đứng đúng tâm bất kể hai ô kia rộng hẹp ra sao. */
 .hud {
     position: absolute;
     top: 10px;
     left: 10px;
     right: 10px;
     z-index: 5;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: start;
     gap: 8px;
     pointer-events: none;
     font-family: var(--font-fat);
-    flex-wrap: wrap;
 }
+
+.hud > .hud-box:nth-of-type(1) { justify-self: start; }
+.hud > .hud-box:nth-of-type(2) { justify-self: center; }
+.hud > .hud-box:nth-of-type(3) { justify-self: end; }
+
+/* Ô hai bên co lại được khi màn hẹp, chứ giữ nguyên bề rộng thì tràn ra ngoài. */
+.hud > .hud-box { min-width: 0; }
 
 .hud.hidden { display: none; }
 
@@ -140,7 +152,13 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 
 .hud-fruit { color: #ffd43b; }
 .hud-score { color: #8ce99a; }
-.hud-ico { font-size: 0.95rem; }
+/* Biểu tượng dùng icon vector chứ không dùng emoji.
+   Emoji 🪙 và 🐾 trên máy người dùng hiện ra là hình tròn xám và vệt xám đen
+   — không phải máy nào cũng có bộ emoji màu, mà emoji thì không tô màu lại
+   được. Icon vector thì luôn hiện đúng và nhuộm được cho nổi trên nền sẫm. */
+.hud-ico { font-size: 0.92rem; line-height: 1; }
+.ico-paw { color: #ffd8a8; }
+.ico-coin { color: #ffc93b; }
 
 .hud-zone {
     font-size: 0.7rem;
