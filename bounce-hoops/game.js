@@ -907,10 +907,12 @@
         ctx.fill();
     }
 
-    /* Bé đứng ném: một khối tròn có mặt, ngồi ngay dưới quả bóng. */
+    /* Bé đứng ném: một khối tròn có mặt. Đứng lệch sang trái quả bóng chứ
+     * không đứng ngay dưới — chồng lên nhau thì nhìn ra một cục, không biết
+     * đâu là bóng để mà kéo. */
     function drawThrower(W) {
         const p = G.level.ball;
-        const x = sx(p[0]), y = sy(p[1]);
+        const x = sx(p[0] - 0.62), y = sy(p[1]);
         const r = V.u * 0.42;
         ctx.fillStyle = '#ffb703';
         ctx.beginPath();
