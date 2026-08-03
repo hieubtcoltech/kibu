@@ -1414,11 +1414,10 @@
          *
          *  Quỹ đạo bàn chân theo pha p (0 → 1 là một vòng của MỘT chân):
          *    p ∈ [0 , 0.5]  CHỐNG ĐẤT — chân sát đất, lùi đều từ trước ra sau
-         *    p ∈ [0.5 , 1]  ĐƯA CHÂN — nhấc lên, gập gối, vòng ra trước
+         *    p ∈ [0.5 , 1]  ĐƯA CHÂN — nhấc lên, vòng ra trước
          * ==================================================================*/
         const LEG_A = LEG_AMP * u;         // biên độ trước–sau của bàn chân
         const LEG_LIFT = 0.30 * u;         // nhấc cao nhất lúc đưa chân
-        const BONE = 0.33 * u;             // đùi và cẳng — vừa đủ với sải, để chân ngắn đúng dáng gấu
         const hipY = bodyCY + 0.20 * u;
 
         function footAt(p) {
@@ -1437,35 +1436,29 @@
             };
         }
 
-        /* Chân hai đốt có đầu gối. Biết vị trí hông và bàn chân thì suy ngược
-         * ra chỗ đặt đầu gối — đây là bài toán giao hai đường tròn quen thuộc.
-         * Chân một đốt thẳng đơ là thứ tố cáo ngay đây là hình vẽ tay: chân
-         * thật lúc đưa về trước bao giờ cũng gập gối lại. */
+        /* Chân MỘT KHÚC liền từ hông xuống bàn chân, không đầu gối.
+         *
+         * Gấu trúc chân ngắn và mập, gập gối vào chỉ tổ làm cái chân vốn đã
+         * ngắn nay gãy làm đôi, nhìn còn ngắn hơn. Chân một khúc bo tròn hai
+         * đầu hợp với tạo hình tròn trịa của cả con vật hơn.
+         *
+         * Bỏ luôn được phần giải ngược tìm đầu gối, nên bàn chân bao giờ cũng
+         * đặt đúng chỗ cần đặt — trước đó khi hông và bàn chân xa nhau quá tầm
+         * hai đốt thì phải kẹp lại, bàn chân hụt khỏi mặt đất một chút. */
         function leg(hx, hy, fx, fy, col, w) {
-            const dx = fx - hx, dy = fy - hy;
-            const d = Math.min(Math.hypot(dx, dy), BONE * 2 - 0.001 * u);
-            const base = Math.atan2(dy, dx);
-            const cosT = (d * d) / (2 * d * BONE);
-            const t = Math.acos(Math.max(-1, Math.min(1, cosT)));
-            /* Trừ đi t: đầu gối lệch về phía trước mặt, đúng chiều gối gập. */
-            const ka = base - t;
-            const kx = hx + Math.cos(ka) * BONE;
-            const ky = hy + Math.sin(ka) * BONE;
-
             g.strokeStyle = col;
             g.lineWidth = w;
             g.beginPath();
             g.moveTo(hx, hy);
-            g.lineTo(kx, ky);
             g.lineTo(fx, fy);
             g.stroke();
-            /* Bàn chân nằm ngang, hơi chúi theo hướng cẳng chân. */
+            /* Bàn chân nằm vuông góc với ống chân. */
             g.save();
             g.translate(fx, fy);
-            g.rotate(Math.atan2(fy - ky, fx - kx) - Math.PI / 2);
+            g.rotate(Math.atan2(fy - hy, fx - hx) - Math.PI / 2);
             g.fillStyle = col;
             g.beginPath();
-            g.ellipse(0, 0, w * 0.75, w * 0.5, 0, 0, TAU);
+            g.ellipse(0, 0, w * 0.72, w * 0.5, 0, 0, TAU);
             g.fill();
             g.restore();
         }
