@@ -3077,7 +3077,7 @@
 
         /* Cửa sau để thử: gọi thẳng từ console hoặc từ script kiểm thử. */
         window.pandaRun = {
-            G, V, SPR, ANIMALS, ZONES, CHUNKS, store, sfx,
+            G, V, SPR, ANIMALS, ZONES, CHUNKS, store,
             play, jump, slide, releaseJump, pause, resume,
             state: () => ({
                 mode: G.mode, m: G.metres, pals: G.tail.length, rescued: G.pals,
