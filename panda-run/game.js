@@ -2961,7 +2961,7 @@
 
     function wireInput() {
         const host = canvas.parentElement;
-        let touchId = null, touchY0 = 0, touchAt = 0, swiped = false;
+        let touchId = null, touchX0 = 0, touchY0 = 0, touchAt = 0, swiped = false;
         let waitTimer = null;
 
         const clearWait = () => {
@@ -2974,6 +2974,7 @@
             if (G.mode !== 'play') return;
             clearWait();
             touchId = ev.pointerId;
+            touchX0 = ev.clientX;
             touchY0 = ev.clientY;
             touchAt = G.time;
             swiped = false;
@@ -2986,10 +2987,15 @@
 
         host.addEventListener('pointermove', ev => {
             if (G.mode !== 'play' || swiped || ev.pointerId !== touchId) return;
-            /* Ngưỡng vuốt để thấp: nhận ra càng sớm thì càng chắc bắt kịp trong
-             * nhịp chờ, khỏi phải rơi xuống đường gỡ cú nhảy phía dưới. */
-            const need = Math.max(16, V.u * 0.32);
-            if (ev.clientY - touchY0 < need) return;
+            /* Ngưỡng để thấp thì mới bắt kịp cả cú vuốt chậm rề của bé trong
+             * nhịp chờ 85 mili giây. Nhưng hạ ngưỡng suông thì ngón tay chỉ
+             * hơi trôi lúc đang giữ để nhảy cao cũng bị hiểu nhầm là vuốt —
+             * nên bắt thêm điều kiện HƯỚNG: phải đi xuống nhiều hơn đi ngang
+             * thì mới tính là vuốt xuống. */
+            const need = Math.max(12, V.u * 0.22);
+            const dy = ev.clientY - touchY0;
+            const dx = Math.abs(ev.clientX - touchX0);
+            if (dy < need || dy < dx) return;
             swiped = true;
             /* Bắt kịp trong nhịp chờ: huỷ cú nhảy khi nó còn chưa xảy ra. Đây
              * là đường đi sạch nhất, không để lại vết gì trên màn hình. */
