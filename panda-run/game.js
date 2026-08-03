@@ -433,7 +433,16 @@
 
     const NOTES = [523, 587, 659, 784, 880, 1046, 1174, 1318, 1568, 1760, 2093];
 
-    const BGM_VOL = 0.09;   // nhạc nền, xem chú thích ở playBgm
+    const BGM_VOL = 0.09;   // nhạc nền, xem chú thích ở startBgm
+
+    /* Đuôi ?v= là dấu phiên bản, đổi số này mỗi lần thay tệp nhạc.
+     *
+     * Máy chủ cho trình duyệt giữ tệp âm thanh hẳn bảy ngày (xem server.js) —
+     * hợp lý vì chúng nặng và gần như không đổi. Nhưng đúng vì thế mà thay
+     * nhạc xong, bé nào đã vào game rồi sẽ còn nghe bản cũ cả tuần, không cách
+     * nào biết mà xoá đệm. Đổi số này là địa chỉ đổi theo, trình duyệt coi như
+     * một tệp mới và tải lại ngay. */
+    const BGM_URL = '/panda-run/music.mp3?v=2';
 
     const sfx = {
         on: true,
