@@ -433,45 +433,13 @@
 
     const NOTES = [523, 587, 659, 784, 880, 1046, 1174, 1318, 1568, 1760, 2093];
 
-    const BGM_VOL = 0.09;   // nhạc nền, xem chú thích ở startBgm
-
-    /* Đuôi ?v= là dấu phiên bản, đổi số này mỗi lần thay tệp nhạc.
-     *
-     * Máy chủ cho trình duyệt giữ tệp âm thanh hẳn bảy ngày (xem server.js) —
-     * hợp lý vì chúng nặng và gần như không đổi. Nhưng đúng vì thế mà thay
-     * nhạc xong, bé nào đã vào game rồi sẽ còn nghe bản cũ cả tuần, không cách
-     * nào biết mà xoá đệm. Đổi số này là địa chỉ đổi theo, trình duyệt coi như
-     * một tệp mới và tải lại ngay. */
-    const BGM_URL = '/panda-run/music.mp3?v=2';
-
     const sfx = {
         on: true,
         ctx: null,
 
-        /* Nhạc nền đi qua Web Audio, KHÔNG dùng thẻ <audio>.
-         *
-         * Vì sao phải đổi: iOS chỉ dựng bảng điều khiển nhạc ở màn hình khoá
-         * khi có một thẻ audio hoặc video đang phát. Máy hiểu "trang này đang
-         * mở nhạc" nên đưa nút tạm dừng ra ngoài màn khoá, đúng như với Spotify
-         * hay YouTube. Mười tám game còn lại của nhà mình không dính vì chúng
-         * chỉ tổng hợp tiếng bằng Web Audio, không hề có thẻ audio nào — và
-         * Web Audio thì máy coi là hiệu ứng của trang, không phải nhạc.
-         *
-         * Nên chỉ cần phát bản nhạc bằng đúng đường ấy: tải tệp về, giải mã ra
-         * rồi cho chạy vòng lặp qua Web Audio. Nhạc vẫn y nguyên, mà máy không
-         * còn thấy có "phiên phát nhạc" nào để đưa lên màn khoá. */
-        bgmBuf: null,       // bản nhạc đã giải mã
-        bgmSrc: null,       // nguồn đang phát
-        bgmGain: null,
-        bgmAt: 0,           // mốc đồng hồ lúc bắt đầu phát
-        bgmOffset: 0,       // đã phát tới giây thứ mấy của bản nhạc
-        bgmWant: false,     // game có muốn nhạc chạy không
-        bgmLoading: false,
-
         init() {
             try { this.on = localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) { }
         },
-
         /* AudioContext chỉ dựng sau cú chạm đầu tiên — trình duyệt chặn âm tự
          * phát, dựng sớm thì nó nằm im ở trạng thái suspended. */
         wake() {
@@ -480,103 +448,12 @@
                 if (AC) this.ctx = new AC();
             }
             if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-            this.loadBgm();
-            if (this.bgmWant) this.playBgm();
         },
-
-        /* Đường dẫn viết đầy đủ từ gốc, không được viết tương đối: trang game
-         * có hai kiểu địa chỉ (/panda-run/ và /vi/g/panda-run), viết tương đối
-         * thì ở kiểu thứ hai nó đi tìm /vi/g/music.mp3 và nhận 404. */
-        bgmErr: '',         // ghi lại hỏng ở khâu nào, cho bảng chẩn đoán đọc
-
-        loadBgm() {
-            if (!this.ctx || this.bgmBuf || this.bgmLoading) return;
-            this.bgmLoading = true;
-            const done = buf => {
-                this.bgmBuf = buf;
-                this.bgmLoading = false;
-                this.bgmErr = '';
-                if (this.bgmWant) this.playBgm();
-            };
-            const fail = (khau, e) => {
-                this.bgmLoading = false;
-                this.bgmErr = khau + ': ' + (e && e.message ? e.message : e);
-                console.warn('Nhạc nền hỏng ở khâu ' + khau, e);
-            };
-            fetch(BGM_URL)
-                .then(r => r.ok ? r.arrayBuffer() : Promise.reject(new Error('HTTP ' + r.status)))
-                .then(b => {
-                    /* Safari đời cũ chỉ nhận decodeAudioData kiểu gọi lại, chưa
-                     * trả về promise — gọi kiểu promise thì nó nuốt luôn, nhạc
-                     * im mà chẳng có lỗi nào. Gọi kèm cả hai cách cho chắc:
-                     * bản mới dùng promise, bản cũ rơi vào hai hàm gọi lại. */
-                    let xong = false;
-                    const ret = this.ctx.decodeAudioData(
-                        b,
-                        buf => { if (!xong) { xong = true; done(buf); } },
-                        err => { if (!xong) { xong = true; fail('giải mã', err); } }
-                    );
-                    if (ret && typeof ret.then === 'function') {
-                        ret.then(buf => { if (!xong) { xong = true; done(buf); } })
-                            .catch(err => { if (!xong) { xong = true; fail('giải mã', err); } });
-                    }
-                })
-                .catch(e => fail('tải tệp', e));
-        },
-
         toggle() {
             this.on = !this.on;
             try { localStorage.setItem(SOUND_KEY, this.on ? '1' : '0'); } catch (e) { }
-            if (this.on) { if (this.bgmWant) this.startBgm(); }
-            else this.stopBgm();
             return this.on;
         },
-
-        /* Nhạc phải nhường chỗ cho tiếng động. Nhạc chỉ là phông nền, còn tiếng
-         * động mới là thứ nói cho bé biết vừa có chuyện gì xảy ra: ăn được xu,
-         * cứu được bạn, hay vừa đâm phải. Mất phông nền thì game vẫn chơi được;
-         * mất lời báo thì bé không biết mình vừa làm đúng hay sai. */
-        startBgm() {
-            if (!this.on || !this.ctx || !this.bgmBuf || this.bgmSrc) return;
-            if (!this.bgmGain) {
-                this.bgmGain = this.ctx.createGain();
-                this.bgmGain.gain.value = BGM_VOL;
-                this.bgmGain.connect(this.ctx.destination);
-            }
-            const s = this.ctx.createBufferSource();
-            s.buffer = this.bgmBuf;
-            s.loop = true;
-            s.connect(this.bgmGain);
-            /* Nguồn kiểu này không tạm dừng được, chỉ dừng hẳn rồi tạo lại —
-             * nên phải tự nhớ đang phát dở tới đâu mà nối tiếp cho đúng chỗ. */
-            s.start(0, this.bgmOffset % this.bgmBuf.duration);
-            this.bgmAt = this.ctx.currentTime;
-            this.bgmSrc = s;
-        },
-
-        stopBgm() {
-            if (!this.bgmSrc) return;
-            if (this.bgmBuf) {
-                this.bgmOffset = (this.bgmOffset + (this.ctx.currentTime - this.bgmAt))
-                    % this.bgmBuf.duration;
-            }
-            try { this.bgmSrc.stop(); } catch (e) { }
-            try { this.bgmSrc.disconnect(); } catch (e) { }
-            this.bgmSrc = null;
-        },
-
-        playBgm() {
-            this.bgmWant = true;
-            if (!this.ctx) return;
-            if (!this.bgmBuf) { this.loadBgm(); return; }
-            this.startBgm();
-        },
-
-        pauseBgm() {
-            this.bgmWant = false;
-            this.stopBgm();
-        },
-
         tone(freq, dur, type, vol, slideTo) {
             if (!this.on || !this.ctx) return;
             const t = this.ctx.currentTime;
@@ -604,31 +481,25 @@
             src.start();
         },
 
-        /* Âm lượng các tiếng động phải to hơn hẳn nhạc nền, không thì chúng
-         * chìm nghỉm dưới bản nhạc và bé tưởng game mất tiếng.
-         *
-         * Tiếng động ở đây là sóng đơn, mỏng như một sợi chỉ; còn nhạc là cả
-         * một bản phối dày đặc. Cùng một con số âm lượng thì tai vẫn nghe nhạc
-         * to gấp mấy lần. Nên tiếng động để 0,16–0,24 trong khi nhạc chỉ 0,15. */
-        jump() { this.tone(420, 0.14, 'triangle', 0.14, 760); },
-        land() { this.noise(0.05, 0.09, 300); this.tone(150, 0.07, 'sine', 0.11, 90); },
-        slide() { this.noise(0.22, 0.11, 1400); },
+        jump() { this.tone(420, 0.14, 'triangle', 0.08, 760); },
+        land() { this.noise(0.05, 0.05, 300); this.tone(150, 0.07, 'sine', 0.06, 90); },
+        slide() { this.noise(0.22, 0.06, 1400); },
         /* Quả ăn liên tiếp leo dần lên theo thang ngũ cung, chuỗi càng dài tai
          * càng nghe ra là mình đang ăn đậm. */
-        coin(i) { this.tone(NOTES[Math.min(i, NOTES.length - 1)], 0.1, 'sine', 0.17); },
+        coin(i) { this.tone(NOTES[Math.min(i, NOTES.length - 1)], 0.1, 'sine', 0.085); },
         pal() {
             [784, 1046, 1318].forEach((f, i) =>
-                setTimeout(() => this.tone(f, 0.16, 'triangle', 0.22), i * 65));
+                setTimeout(() => this.tone(f, 0.16, 'triangle', 0.12), i * 65));
         },
-        hurt() { this.noise(0.2, 0.24, 200); this.tone(220, 0.26, 'sawtooth', 0.2, 80); },
+        hurt() { this.noise(0.2, 0.14, 200); this.tone(220, 0.26, 'sawtooth', 0.11, 80); },
         power() {
             [660, 880, 1320].forEach((f, i) =>
-                setTimeout(() => this.tone(f, 0.14, 'square', 0.15), i * 55));
+                setTimeout(() => this.tone(f, 0.14, 'square', 0.08), i * 55));
         },
-        rocket() { this.noise(0.5, 0.18, 320); this.tone(180, 0.5, 'sawtooth', 0.15, 520); },
+        rocket() { this.noise(0.5, 0.1, 320); this.tone(180, 0.5, 'sawtooth', 0.08, 520); },
         zone() {
             [523, 659, 784, 1046, 1318].forEach((f, i) =>
-                setTimeout(() => this.tone(f, 0.2, 'triangle', 0.2), i * 80));
+                setTimeout(() => this.tone(f, 0.2, 'triangle', 0.11), i * 80));
         },
         over() {
             [440, 370, 311, 262].forEach((f, i) =>
@@ -1388,8 +1259,7 @@
             while (G.beat >= 1) {
                 G.beat -= 1;
                 G.beatN++;
-                // Tắt nhịp trống tổng hợp để không đè nhạc nền BGM
-                // if (G.beatN % 4 === 0) sfx.kick(); else sfx.hat();
+                if (G.beatN % 4 === 0) sfx.kick(); else sfx.hat();
             }
         }
     }
@@ -2903,7 +2773,6 @@
 
     function play() {
         sfx.wake();
-        sfx.playBgm();
         stopCountdown();
         G.resuming = false;
         hide(ui.menu);
@@ -2922,7 +2791,6 @@
         stopCountdown();
         G.resuming = false;
         G.mode = 'paused';
-        sfx.pauseBgm();
         ui.pauseDist.textContent = G.metres;
         ui.pausePals.textContent = G.tail.length;
         ui.pauseCoins.textContent = G.coins;
@@ -2959,7 +2827,6 @@
             ui.countdown.textContent = 'GO!';
             ui.countdown.className = 'countdown go';
             sfx.pal();
-            sfx.playBgm();
             cdTimer = setTimeout(() => {
                 stopCountdown();
                 cdTimer = null;
@@ -3209,37 +3076,6 @@
         window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 
         /* Cửa sau để thử: gọi thẳng từ console hoặc từ script kiểm thử. */
-        /* Bảng chẩn đoán âm thanh, chỉ hiện khi địa chỉ có ?audio=debug.
-         *
-         * Máy của bé thì mình không cầm được, mà lỗi âm thanh trên iOS có mấy
-         * nguyên nhân nhìn từ ngoài giống hệt nhau: máy đang ở chế độ im lặng,
-         * bộ tạo âm chưa được đánh thức, tệp nhạc tải hỏng, hay Safari đời cũ
-         * không giải mã được. Bảng này in thẳng trạng thái từng khâu ra màn
-         * hình để người cầm máy đọc hộ. */
-        if (/[?&]audio=debug/.test(location.search)) {
-            const box = document.createElement('div');
-            box.style.cssText = 'position:absolute;left:8px;top:96px;z-index:99;' +
-                'background:rgba(4,20,12,0.92);border:1px solid rgba(255,255,255,0.25);' +
-                'border-radius:10px;padding:8px 10px;font:600 11px/1.5 monospace;' +
-                'color:#8ce99a;white-space:pre;pointer-events:none;max-width:76vw';
-            canvas.parentElement.appendChild(box);
-            setInterval(() => {
-                const c = sfx.ctx;
-                box.textContent = [
-                    'bật tiếng   : ' + (sfx.on ? 'CÓ' : 'KHÔNG'),
-                    'bộ tạo âm   : ' + (c ? c.state : 'chưa dựng'),
-                    'tần số      : ' + (c ? c.sampleRate + ' Hz' : '-'),
-                    'nhạc giải mã: ' + (sfx.bgmBuf
-                        ? Math.round(sfx.bgmBuf.duration) + 's'
-                        : (sfx.bgmLoading ? 'đang tải…' : 'chưa')),
-                    'nhạc chạy   : ' + (sfx.bgmSrc ? 'CÓ' : 'KHÔNG'),
-                    'âm lượng    : ' + (sfx.bgmGain ? sfx.bgmGain.gain.value : '-'),
-                    'lỗi         : ' + (sfx.bgmErr || 'không'),
-                    'thẻ audio   : ' + document.querySelectorAll('audio,video').length
-                ].join('\n');
-            }, 400);
-        }
-
         window.pandaRun = {
             G, V, SPR, ANIMALS, ZONES, CHUNKS, store, sfx,
             play, jump, slide, releaseJump, pause, resume,
