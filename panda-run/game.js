@@ -62,9 +62,20 @@
     const RUN_MID = 700;         // chạy tới đây thì được nửa quãng tăng tốc
 
     const GRAV = 52;             // trọng lực (u/giây²)
-    const JUMP_V = 15.2;         // vận tốc bật lên
-    const HOLD_T = 0.20;         // giữ tay thêm bấy nhiêu giây thì nhảy cao hơn
-    const HOLD_G = 0.34;         // lúc đang giữ thì trọng lực chỉ còn bấy nhiêu
+    /* Nhảy ba mức, chỉ khác nhau ở chỗ bé giữ tay bao lâu:
+     *
+     *   chạm rồi thả ngay  → nhảy ~1,2 u, vừa đủ qua hòn đá thấp
+     *   chạm bình thường   → nhảy ~2,7 u
+     *   chạm rồi giữ tay   → nhảy ~4,0 u, tới được bệ cao và hố rộng nhất
+     *
+     * Hai cơ chế ghép lại mới ra được ba mức đó. Giữ tay thì trọng lực nhẹ đi
+     * (bay lên lâu hơn); thả tay sớm thì CẮT bớt đà đang bay lên. Chỉ có vế
+     * giữ tay thôi là không đủ: cú chạm nhanh nhất vẫn bay gần hết tầm, vì đà
+     * bật ban đầu đã ném bé lên rồi. */
+    const JUMP_V = 14.0;         // vận tốc bật lên
+    const JUMP_CUT = 11.0;       // thả tay sớm thì đà bay lên chỉ còn bấy nhiêu
+    const HOLD_T = 0.26;         // giữ tay thêm bấy nhiêu giây thì nhảy cao hơn
+    const HOLD_G = 0.32;         // lúc đang giữ thì trọng lực chỉ còn bấy nhiêu
     const COYOTE = 0.10;         // vừa rời mép đất, trong ngần này giây vẫn nhảy được
     const BUFFER = 0.14;         // bấm sớm trước khi chạm đất bấy nhiêu vẫn ăn
 
@@ -502,6 +513,7 @@
         sliding: 0,          // còn bao lâu nữa hết trượt
         hurtUntil: -9,
         cheerAt: -9,         // mốc vừa cứu được bạn, để panda nhe răng cười
+        resuming: false,     // đang đếm ngược để chạy tiếp, chưa hẳn là đã dừng
         runCycle: 0,         // pha chạy, dùng để vẽ chân tay
 
         tail: [],            // các bạn đã cứu, phần tử là chỉ số màu trong ANIMALS
@@ -744,7 +756,15 @@
         puff(G.x, G.y, 7, '#ffffff');
     }
 
-    function releaseJump() { G.jumpHold = 0; }
+    /* Thả tay giữa chừng thì cắt bớt đà đang bay lên — bé thả càng sớm càng
+     * nhảy thấp. Chỉ cắt khi vẫn còn trong quãng được giữ (jumpHold > 0): giữ
+     * quá HOLD_T rồi mới thả nghĩa là bé đã "mua" trọn cú nhảy cao, cắt lúc đó
+     * là ăn cướp công. Cũng không cắt khi đang đứng trên đất, vì cú thả tay ấy
+     * có thể là của thao tác trượt chứ không phải của cú nhảy nào cả. */
+    function releaseJump() {
+        if (!G.onGround && G.jumpHold > 0 && G.vy < -JUMP_CUT) G.vy = -JUMP_CUT;
+        G.jumpHold = 0;
+    }
 
     function slide() {
         if (G.mode !== 'play' || G.rocketT > 0) return;
@@ -821,6 +841,9 @@
                 G.vy = 0;
                 G.onGround = true;
                 G.groundAt = sup;
+                /* Chạm đất là hết quãng giữ tay của cú nhảy vừa rồi; không xoá
+                 * thì cú thả tay sau đó lại đi cắt nhầm cú nhảy kế tiếp. */
+                G.jumpHold = 0;
             } else {
                 if (G.onGround) G.lastGround = G.time;
                 G.onGround = false;
@@ -2455,6 +2478,7 @@
     function showMenu() {
         G.mode = 'menu';
         stopCountdown();
+        G.resuming = false;
         hide(ui.hud);
         hide(ui.over);
         hide(ui.pause);
@@ -2478,6 +2502,7 @@
     function play() {
         sfx.wake();
         stopCountdown();
+        G.resuming = false;
         hide(ui.menu);
         hide(ui.over);
         hide(ui.pause);
@@ -2490,8 +2515,9 @@
      * Bé đang chạy dở mà mẹ gọi thì phải có chỗ dừng lại, không thì đoàn bạn
      * gom cả buổi đi tong vì một cuộc gọi. */
     function pause() {
-        if (G.mode !== 'play') return;
+        if (G.mode !== 'play' && !G.resuming) return;
         stopCountdown();
+        G.resuming = false;
         G.mode = 'paused';
         ui.pauseDist.textContent = G.metres;
         ui.pausePals.textContent = G.tail.length;
@@ -2503,6 +2529,9 @@
     function resume() {
         if (G.mode !== 'paused') return;
         hide(ui.pause);
+        /* Đang đếm ngược thì coi như đã chạy tiếp rồi: nút phải đọc là "Tạm
+         * dừng", và bấm vào nó phải dừng lại chứ không phải đếm lại từ đầu. */
+        G.resuming = true;
         paintPauseBtn();
         /* Đếm ngược ba nhịp rồi mới chạy tiếp: thả bé vào giữa đường ngay lúc
          * vừa bấm thì ngón tay còn chưa về chỗ đã đâm phải hòn đá đầu tiên. */
@@ -2510,7 +2539,7 @@
     }
 
     function togglePause() {
-        if (G.mode === 'play') pause();
+        if (G.mode === 'play' || G.resuming) pause();
         else if (G.mode === 'paused') resume();
     }
 
@@ -2532,6 +2561,10 @@
                 /* Chỉ cho chạy tiếp nếu trong lúc đếm bé không bấm sang chỗ
                  * khác — bấm Menu giữa chừng mà vẫn nhảy vào lượt cũ thì lạ. */
                 if (G.mode === 'paused') G.mode = 'play';
+                G.resuming = false;
+                /* Vẽ lại nút SAU khi mode đã đổi. Vẽ trước thì hàm vẽ vẫn đọc
+                 * thấy mode là 'paused' và nhãn kẹt ở "Chơi tiếp" mãi mãi. */
+                paintPauseBtn();
             }, 420);
             return;
         }
@@ -2545,7 +2578,9 @@
     }
 
     function paintPauseBtn() {
-        const on = G.mode === 'paused';
+        /* Chỉ đọc là "chơi tiếp" khi thật sự đang đứng im. Lúc đang đếm ngược
+         * thì game coi như đã chạy, nút phải quay về "tạm dừng". */
+        const on = G.mode === 'paused' && !G.resuming;
         ui.pauseIcon.className = 'fa-solid ' + (on ? 'fa-play' : 'fa-pause');
         ui.pauseText.textContent = on ? 'Resume' : 'Pause';
     }
