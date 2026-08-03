@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rescue Run - Free Endless Runner Game for Kids | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Rescue Run free on KIBU Games! Jump, slide and free trapped animal friends who join your running line. Bump into something and you only lose a friend, never the whole run. English & Vietnamese, no download.">
+    <meta name="keywords" content="Rescue Run, endless runner, game chay vo tan, tro choi chay, running game for kids, jump and slide, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/rescue-run/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/rescue-run/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/rescue-run/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/rescue-run/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/rescue-run/">
+    <meta property="og:title" content="Rescue Run - Free Endless Runner | KIBU Games">
+    <meta property="og:description" content="Run, jump and slide through jungle, beach, cave and starry fields. Free your friends and they run right behind you. 100% free on KIBU Games.">
+    <meta property="og:image" content="https://kibugames.com/rescue-run/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/rescue-run/">
+    <meta name="twitter:title" content="Rescue Run - Free Endless Runner">
+    <meta name="twitter:description" content="Jump, slide, rescue friends. A running game where a bump costs you a friend, not the whole run.">
+    <meta name="twitter:image" content="https://kibugames.com/rescue-run/og-image.png">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Rescue Run",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/rescue-run/",
+      "genre": "Arcade",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/rescue-run/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body class="chrome-fit">
+    <header class="unified-nav">
+        <div class="nav-left">
+            <a href="/" class="nav-home" title="Home" aria-label="Home">
+                <img src="/logo.svg" alt="KIBU Games">
+            </a>
+            <div class="brand">
+                <img src="/rescue-run/icon.png" alt="" class="brand-img"
+                    onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><i class="fa-solid fa-person-running brand-icon"></i>
+                <h1 class="brand-title">RESCUE RUN</h1>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button id="btn-nav-restart" class="btn btn-secondary" title="Start a new run">
+                <i class="fa-solid fa-rotate-right"></i> <span>New run</span>
+            </button>
+            <button id="btn-sound" class="btn btn-secondary" title="Sound">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="game-wrapper">
+        <!-- Cả sân chơi nằm trong canvas này -->
+        <div class="board-host">
+            <canvas id="board"></canvas>
+        </div>
+
+        <!-- Thanh thông tin nổi trên sân -->
+        <div id="hud" class="hud hidden">
+            <div class="hud-box">
+                <span class="hud-tag">Metres</span>
+                <span class="hud-num" id="hud-dist">0</span>
+                <span class="hud-zone" id="hud-zone">Jungle</span>
+            </div>
+            <div class="hud-box">
+                <span class="hud-ico">🐾</span><span class="hud-num" id="hud-pals">0</span>
+                <span class="hud-ico">🍊</span><span class="hud-num hud-fruit" id="hud-fruit">0</span>
+            </div>
+            <div class="hud-box">
+                <span class="hud-tag">Score</span>
+                <span class="hud-num hud-score" id="hud-score">0</span>
+            </div>
+            <div id="combo-wrap" class="combo-chip hidden">
+                <span id="hud-combo">x0</span>
+            </div>
+        </div>
+
+        <!-- Vật phẩm đang chạy -->
+        <div id="power-strip" class="power-strip"></div>
+
+        <!-- Nhiệm vụ của lượt chơi -->
+        <ul id="mission-list" class="mission-list"></ul>
+
+        <!-- ---------- Màn chào ---------- -->
+        <div id="menu-overlay" class="overlay">
+            <div class="card pop-in">
+                <h1 class="title">RESCUE RUN</h1>
+                <p class="subtitle">Run, jump and free your friends. They run right behind you.</p>
+
+                <div class="how-row">
+                    <div class="how-item">
+                        <span class="how-emoji">👆</span>
+                        <b>Tap up top to jump</b>
+                        <span>Hold your finger down to jump higher.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">👇</span>
+                        <b>Tap down low to slide</b>
+                        <span>Slide under the low branches.</span>
+                    </div>
+                    <div class="how-item">
+                        <span class="how-emoji">🐾</span>
+                        <b>Free your friends</b>
+                        <span>Every friend you free doubles down your score.</span>
+                    </div>
+                </div>
+
+                <p class="rule-note">
+                    Bump into something and one friend runs off — the run keeps going.
+                    You only stop when nobody is left behind you.
+                </p>
+
+                <div class="best-row">
+                    <div class="best-item"><span>Best run</span><b><span id="menu-best">0</span> m</b></div>
+                    <div class="best-item"><span>Most friends</span><b id="menu-pals">0</b></div>
+                </div>
+
+                <div class="row-buttons">
+                    <button id="btn-play" class="btn btn-primary btn-big">RUN!</button>
+                    <button id="btn-reset-progress" class="btn btn-ghost">Reset progress</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---------- Hết lượt ---------- -->
+        <div id="over-overlay" class="overlay hidden">
+            <div class="card pop-in">
+                <h2 class="title-sm text-bad">EVERYONE GOT AWAY!</h2>
+                <p id="over-new" class="new-best" hidden>NEW BEST RUN!</p>
+                <!-- Ba con số phụ nằm ngang một hàng, chỉ điểm tổng mới ăn trọn
+                     bề ngang: xếp dọc năm dòng thì thẻ cao quá một màn hình,
+                     mà bé sẽ không cuộn xuống tìm nút chơi lại. -->
+                <div class="stat-grid">
+                    <div class="stat"><b><span id="over-dist">0</span> m</b><span>Distance</span></div>
+                    <div class="stat"><b id="over-pals">0</b><span>Friends rescued</span></div>
+                    <div class="stat"><b id="over-fruit">0</b><span>Fruit</span></div>
+                </div>
+                <div class="score-row big"><span>Score</span><span id="over-score">0</span></div>
+                <p class="best-line">Best run <b><span id="over-best">0</span> m</b></p>
+                <ul id="over-missions" class="mission-list static"></ul>
+                <div class="row-buttons">
+                    <button id="btn-again" class="btn btn-primary btn-big">RUN AGAIN</button>
+                    <button id="btn-over-menu" class="btn btn-ghost">Menu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+        <div class="footer-tools">
+        <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+        <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+            <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+        </button>
+        </div>
+    </footer>
+
+    <script src="/rescue-run/game.js"></script>
+</body>
+</html>

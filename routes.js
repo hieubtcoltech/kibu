@@ -38,7 +38,8 @@
         { dir: 'coloring-game', slug: 'magic-coloring' },
         { dir: 'bowling-game', slug: 'strike-party' },
         { dir: 'sling-blast', slug: 'sling-blast' },
-        { dir: 'bubble-pop', slug: 'bubble-pop' }
+        { dir: 'bubble-pop', slug: 'bubble-pop' },
+        { dir: 'rescue-run', slug: 'rescue-run' }
     ];
 
     var bySlug = {}, byDir = {};

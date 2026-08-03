@@ -438,6 +438,10 @@
             background: linear-gradient(135deg, #0d3b66 0%, #1b6ca8 45%, #48b8d0 100%);
         }
 
+        .tile-rescue {
+            background: linear-gradient(135deg, #0b3d2e 0%, #1f7a4d 55%, #7ed957 100%);
+        }
+
         .tile-bowling {
             background: linear-gradient(135deg, #1e6fe0 0%, #4dc3ff 48%, #e01e37 100%);
         }
@@ -698,6 +702,14 @@
     <!-- Poki Main Grid -->
     <main class="poki-grid-container">
         <div class="poki-grid" id="cardsGrid">
+
+            <a href="/g/rescue-run" class="poki-tile tile-rescue"
+                data-keywords="rescue run endless runner chay vo tan tro choi chay running jump slide platformer rescue animals friends arcade">
+                <span class="tile-badge badge-new">NEW</span>
+                <img src="/rescue-run/icon.png" alt="" class="tile-img" fetchpriority="high" decoding="async"
+                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <div class="tile-label">Rescue Run</div>
+            </a>
 
             <a href="/g/bubble-pop" class="poki-tile tile-bubble"
                 data-keywords="bubble pop bubble shooter ban bong tro choi ban bong pop bubbles puzzle match 3 colours ice stone star bomb 24 levels">
