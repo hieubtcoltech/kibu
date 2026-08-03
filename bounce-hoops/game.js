@@ -90,7 +90,10 @@
      *      spikes [x, y, rộng] bụi gai
      *      par   ném bao nhiêu lần thì vẫn được ba sao
      *
-     *  Mỗi màn phải giải được — có kiểm tự động bằng máy, xem phần kiểm thử.
+     *  Sửa toạ độ ở đây xong thì chạy `node bounce-hoops/check-levels.js`. Máy
+     *  đó ném thử vài nghìn cú mỗi màn và báo lại đường ném trúng rộng mấy độ.
+     *  Bắt buộc phải chạy: nhích một bức tường nửa ô là màn nhìn vẫn y hệt mà
+     *  đường bóng duy nhất đi lọt đã mất, mắt thường không tài nào thấy.
      * ======================================================================*/
 
     /* Quy ước dựng màn, giữ đúng cho cả 24 màn để bé không phải học lại:
@@ -127,15 +130,15 @@
         },
         {
             name: 'Two Walls', tip: 'Over the first, under the second.',
-            ball: [2, 11], hoop: { x: 17, y: 9 }, par: 2,
-            walls: [[0, 11, 20, 1], [7, 6, 1, 5], [13, 0, 1, 7]]
+            ball: [2, 11], hoop: { x: 16, y: 10 }, par: 2,
+            walls: [[0, 11, 20, 1], [6.5, 6, 1, 5], [13, 2, 1, 5]]
         },
 
         /* ---------- Thế giới 2: Blue Lagoon — bàn nhún ---------- */
         {
             name: 'Springboard', tip: 'The orange pad throws the ball high.',
-            ball: [2, 11], hoop: { x: 17, y: 5 }, par: 2,
-            walls: [[0, 11, 20, 1]], pads: [[9, 10.6, 3]]
+            ball: [2, 11], hoop: { x: 17, y: 5.5 }, par: 2,
+            walls: [[0, 11, 20, 1]], pads: [[9, 10.6, 4]]
         },
         {
             name: 'Double Bounce', tip: 'Use both pads to climb.',
@@ -155,21 +158,21 @@
         },
         {
             name: 'The Well', tip: 'Drop the ball straight down the well.',
-            ball: [3, 11], hoop: { x: 12, y: 10 }, par: 3,
-            walls: [[0, 11, 20, 1], [9, 3, 1, 8], [14, 3, 1, 8]],
-            pads: [[5, 10.6, 2]]
+            ball: [3, 11], hoop: { x: 11.5, y: 10.5 }, par: 3,
+            walls: [[0, 11, 20, 1], [9, 4.5, 1, 6.5], [13, 2.5, 1, 8.5]],
+            pads: [[4, 10.6, 4]]
         },
         {
             name: 'Pinball', tip: 'Let it rattle around the shelves.',
-            ball: [2, 11], hoop: { x: 17, y: 4.5 }, par: 3,
-            walls: [[0, 11, 20, 1], [6, 8, 4, 1], [11, 4, 4, 1], [15, 7, 5, 1]]
+            ball: [2, 11], hoop: { x: 16, y: 5 }, par: 3,
+            walls: [[0, 11, 20, 1], [6, 8.5, 4, 1], [10, 5, 4, 1], [13.5, 9, 5, 1]]
         },
 
         /* ---------- Thế giới 3: Purple Peak — khối trượt và gai ---------- */
         {
             name: 'Moving Wall', tip: 'Wait for the wall to slide away.',
-            ball: [3, 11], hoop: { x: 17, y: 9 }, par: 2,
-            walls: [[0, 11, 20, 1]], movers: [[10, 6, 1, 5, 2.5, 3.2]]
+            ball: [3, 11], hoop: { x: 17, y: 10.5 }, par: 2,
+            walls: [[0, 11, 20, 1]], movers: [[7.5, 6, 1, 5, 1.5, 3.2]]
         },
         {
             name: 'Sliding Roof', tip: 'The roof keeps moving. Time it.',
@@ -178,8 +181,8 @@
         },
         {
             name: 'Spike Alley', tip: 'Keep away from the green spikes.',
-            ball: [2, 11], hoop: { x: 17, y: 9 }, par: 2,
-            walls: [[0, 11, 20, 1], [8, 6, 1, 5]], spikes: [[10, 10.58, 5]]
+            ball: [2, 11], hoop: { x: 17.5, y: 8.5 }, par: 2,
+            walls: [[0, 11, 20, 1], [8.5, 8.5, 1, 2.5]], spikes: [[9.5, 10.58, 5]]
         },
         {
             name: 'Narrow Escape', tip: 'One gap, and a block guarding it.',
@@ -189,40 +192,40 @@
         },
         {
             name: 'Bounce Gate', tip: 'Pad up, then through the gate.',
-            ball: [2, 11], hoop: { x: 17, y: 1.5 }, par: 3,
-            walls: [[0, 11, 20, 1], [13, 4, 7, 1]],
-            pads: [[6, 10.6, 3]], movers: [[11, 0, 1, 3, 1.4, 3]]
+            ball: [2, 11], hoop: { x: 17, y: 3.5 }, par: 3,
+            walls: [[0, 11, 20, 1], [13, 5, 7, 1]],
+            pads: [[6, 10.6, 3]], movers: [[10, 0, 1, 3, 2, 3]]
         },
         {
             name: 'The Tunnel', tip: 'Fly flat through the tunnel.',
-            ball: [2, 11], hoop: { x: 18, y: 9.5 }, par: 2,
-            walls: [[0, 11, 20, 1], [6, 0, 1, 8], [11, 0, 1, 8]],
-            spikes: [[7, 10.58, 4]]
+            ball: [2, 11], hoop: { x: 17, y: 10.5 }, par: 2,
+            walls: [[0, 11, 20, 1], [5.5, 0, 1, 8], [11.5, 0, 1, 8]],
+            spikes: [[5, 10.58, 4]]
         },
 
         /* ---------- Thế giới 4: Night Court — tổng hợp ---------- */
         {
             name: 'High Climb', tip: 'Climb the ledges to the top shelf.',
-            ball: [2, 11], hoop: { x: 17, y: 2.5 }, par: 3,
-            walls: [[0, 11, 20, 1], [6, 8, 3, 1], [11, 5, 3, 1]],
-            pads: [[4, 10.6, 2], [12, 4.6, 2]]
+            ball: [2, 11], hoop: { x: 17.5, y: 3.5 }, par: 3,
+            walls: [[0, 11, 20, 1], [6.5, 6, 3, 3], [10, 5, 5, 1]],
+            pads: [[3.5, 10.6, 3.5], [10.5, 4.6, 4]]
         },
         {
             name: 'Crossfire', tip: 'Two movers, one window.',
-            ball: [2, 11], hoop: { x: 17, y: 9 }, par: 3,
+            ball: [2, 11], hoop: { x: 14.5, y: 10 }, par: 3,
             walls: [[0, 11, 20, 1]],
-            movers: [[8, 3, 1, 4, 2.2, 2.8], [11, 7, 1, 4, 2, 3.6]]
+            movers: [[8, 3, 1, 4, 2.5, 2.8], [8, 7, 1, 4, 3, 3.6]]
         },
         {
             name: 'Spike Bridge', tip: 'Over the spikes or under the bridge.',
-            ball: [2, 11], hoop: { x: 17, y: 10 }, par: 2,
-            walls: [[0, 11, 20, 1], [8, 7, 5, 1]], spikes: [[8, 6.58, 5]]
+            ball: [2, 11], hoop: { x: 14, y: 10.5 }, par: 2,
+            walls: [[0, 11, 20, 1], [6, 9, 5, 1]], spikes: [[6, 8.58, 5]]
         },
         {
             name: 'Rooftop', tip: 'Up to the roof, past the hanging block.',
-            ball: [2, 11], hoop: { x: 16, y: 2.5 }, par: 3,
-            walls: [[0, 11, 20, 1], [13, 4, 7, 1], [11, 0, 1, 3]],
-            pads: [[9, 10.6, 2]]
+            ball: [2, 11], hoop: { x: 16, y: 3.5 }, par: 3,
+            walls: [[0, 11, 20, 1], [13, 4, 7, 1], [10, 0, 1, 3]],
+            pads: [[8, 10.6, 4]]
         },
         {
             name: 'Bank Shot', tip: 'Use the wall on the right.',
@@ -231,10 +234,10 @@
         },
         {
             name: 'Grand Finale', tip: 'Everything at once. Good luck!',
-            ball: [2, 11], hoop: { x: 18, y: 5 }, par: 4,
-            walls: [[0, 11, 20, 1], [7, 5, 3, 1], [15, 7, 5, 1], [12, 0, 1, 4]],
-            pads: [[5, 10.6, 2], [8, 4.6, 2]], movers: [[13, 6, 1, 5, 1.8, 3]],
-            spikes: [[10, 10.58, 3]]
+            ball: [2, 11], hoop: { x: 17, y: 10.5 }, par: 4,
+            walls: [[0, 11, 20, 1], [8, 6, 3, 1], [13, 0, 1, 4]],
+            pads: [[5, 10.6, 3], [9, 5.6, 2]], movers: [[15, 5, 1, 4, 1.5, 3]],
+            spikes: [[9, 10.58, 3]]
         }
     ];
 
@@ -513,10 +516,19 @@
      * h.y, tâm bóng không bao giờ xuống nổi h.y + 0,12, nên vào rổ rồi mà
      * không tính điểm. Nằm ở mép vành thì đúng nghĩa hơn: hai cọc chặn hai
      * bên, tâm bóng đi từ trên xuống qua mép vành trong khoảng giữa hai cọc
-     * thì chỉ còn đường rơi tiếp vào lưới. */
+     * thì chỉ còn đường rơi tiếp vào lưới.
+     *
+     * Chừa thêm một khe hở SCORE_EPS ngay trên mép vành, vì đúng cái mốc bằng
+     * nhau chằn chặn là chỗ máy tính hay sai nhất. Rổ đặt trên bệ theo đúng
+     * quy ước (mép vành = mặt bệ trừ 0,34) thì quả bóng nằm nghỉ trên bệ có
+     * tâm rơi trúng y hệt mép vành — mà 9 − 0,34 trong máy ra 8,659999…, hụt
+     * mốc vài phần tỉ ô, thế là bóng nằm gọn trong rổ mà đời đời không được
+     * tính điểm. Cái bẫy này không nhìn ra được, chỉ máy dò mới thấy. */
+    const SCORE_EPS = 0.03;
+
     function crossedHoop(prevY, b, h) {
         if (b.vy <= 0) return false;                       // phải đang rơi xuống
-        if (prevY >= h.y || b.y < h.y) return false;
+        if (prevY >= h.y || b.y < h.y - SCORE_EPS) return false;
         return Math.abs(b.x - h.x) < 0.92;
     }
 
@@ -682,8 +694,13 @@
         if (why !== 'stop') {
             sfx.fail();
             puff(G.ball.x, G.ball.y, 10);
+        } else {
+            puff(G.ball.x, G.ball.y, 5);
         }
         resetBall();
+        /* Một nhúm khói ở chỗ bé đứng: quả bóng nhảy cái vụt về chỗ cũ, không
+         * có gì đánh dấu thì bé đang nhìn đầu kia sân sẽ tưởng bóng biến mất. */
+        puff(G.ball.x, G.ball.y, 6);
         updateHud();
     }
 
@@ -731,9 +748,6 @@
         for (let i = G.rings.length - 1; i >= 0; i--) {
             G.rings[i].age += dt;
             if (G.rings[i].age >= G.rings[i].life) G.rings.splice(i, 1);
-        }
-        for (let i = G.floats.length - 1; i >= 0; i--) {
-            if (G.time - G.floats[i].born > 1.1) G.floats.splice(i, 1);
         }
     }
 
