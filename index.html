@@ -319,17 +319,13 @@
             }
         }
 
-        /* Top 3 games có lượt chơi nhiều nhất có layout 2x2 */
-        .poki-tile.tile-panda,
-        .poki-tile.tile-bubble,
-        .poki-tile.tile-fruit {
+        /* Các game hot (có nhãn HOT) thì sẽ chiếm 2x2 */
+        .poki-tile:has(.tile-badge:not(.badge-new)) {
             grid-column: span 2;
             grid-row: span 2;
         }
 
-        .poki-tile.tile-panda .tile-label,
-        .poki-tile.tile-bubble .tile-label,
-        .poki-tile.tile-fruit .tile-label {
+        .poki-tile:has(.tile-badge:not(.badge-new)) .tile-label {
             font-size: 1.1rem;
             padding: 12px 8px;
         }
