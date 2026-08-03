@@ -513,6 +513,7 @@
         sliding: 0,          // còn bao lâu nữa hết trượt
         hurtUntil: -9,
         cheerAt: -9,         // mốc vừa cứu được bạn, để panda nhe răng cười
+        wantSlide: -9,       // vừa vuốt xuống lúc còn trên không, chạm đất là nằm
         resuming: false,     // đang đếm ngược để chạy tiếp, chưa hẳn là đã dừng
         runCycle: 0,         // pha chạy, dùng để vẽ chân tay
 
@@ -697,6 +698,7 @@
         G.sliding = 0;
         G.hurtUntil = -9;
         G.cheerAt = -9;
+        G.wantSlide = -9;
         G.runCycle = 0;
         G.tail = [];
         for (let i = 0; i < START_PALS; i++) {
@@ -769,10 +771,12 @@
     function slide() {
         if (G.mode !== 'play' || G.rocketT > 0) return;
         if (!G.onGround) {
-            /* Trên không bấm trượt thì rơi sập xuống — vừa là đòn né nhanh vừa
-             * cứu được cú nhảy lỡ đà. */
+            /* Trên không vuốt xuống thì rơi sập — vừa là đòn né nhanh vừa cứu
+             * được cú nhảy lỡ đà. Ghi nhớ ý định để chạm đất là nằm xuống luôn,
+             * không bắt bé vuốt lần nữa: bé vuốt xuống là đã nói rõ muốn nằm. */
             G.vy = Math.max(G.vy, 16);
             G.jumpHold = 0;
+            G.wantSlide = G.time;
             return;
         }
         G.sliding = SLIDE_T;
@@ -849,6 +853,13 @@
                 /* Chạm đất là hết quãng giữ tay của cú nhảy vừa rồi; không xoá
                  * thì cú thả tay sau đó lại đi cắt nhầm cú nhảy kế tiếp. */
                 G.jumpHold = 0;
+                /* Vừa vuốt xuống lúc còn trên không thì đáp xuống là nằm luôn. */
+                if (G.time - G.wantSlide < 0.4) {
+                    G.wantSlide = -9;
+                    G.sliding = SLIDE_T;
+                    sfx.slide();
+                    puff(G.x - 0.4, sup, 6, '#ffe9a8');
+                }
             } else {
                 if (G.onGround) G.lastGround = G.time;
                 G.onGround = false;
@@ -2700,19 +2711,63 @@
     /* ---- điều khiển ----
      * Một ngón là đủ: chạm nửa trên nhảy, chạm nửa dưới trượt. Bàn phím có
      * thêm mũi tên cho ai chơi trên máy tính. */
+    /* ---- điều khiển bằng chạm ----
+     *  chạm bất kỳ đâu   → nhảy
+     *  chạm rồi giữ      → nhảy xa hơn
+     *  vuốt từ trên xuống → nằm
+     *
+     *  Bản trước chia màn hình làm hai nửa: nửa trên nhảy, nửa dưới nằm. Trên
+     *  iPad màn to, bé cầm hai tay ở mép dưới nên ngón cái rơi đúng vào vùng
+     *  "nằm" — định nhảy mà thành nằm. Chạm đâu cũng nhảy thì không còn cái
+     *  bẫy đó nữa.
+     *
+     *  Chỗ khó: cú nhảy phải nổ NGAY lúc đặt ngón xuống, không thì mất cảm
+     *  giác nhạy, mà lúc đó chưa biết bé sắp vuốt xuống hay không. Nên vẫn cho
+     *  nhảy ngay; nếu ngay sau đó phát hiện vuốt xuống trong lúc bé còn sát
+     *  đất thì gỡ cú nhảy ra, trả về mặt đất rồi cho nằm. Cửa sổ gỡ chỉ hơn
+     *  một phần năm giây nên mắt gần như không thấy.
+     */
     function wireInput() {
         const host = canvas.parentElement;
+        let touchId = null, touchY0 = 0, touchAt = 0, swiped = false;
 
         host.addEventListener('pointerdown', ev => {
             ev.preventDefault();
             sfx.wake();
             if (G.mode !== 'play') return;
-            const r = canvas.getBoundingClientRect();
-            const rel = (ev.clientY - r.top) / r.height;
-            if (rel > 0.66) slide(); else jump();
+            touchId = ev.pointerId;
+            touchY0 = ev.clientY;
+            touchAt = G.time;
+            swiped = false;
+            jump();
         });
-        host.addEventListener('pointerup', ev => { ev.preventDefault(); releaseJump(); });
-        host.addEventListener('pointercancel', releaseJump);
+
+        host.addEventListener('pointermove', ev => {
+            if (G.mode !== 'play' || swiped || ev.pointerId !== touchId) return;
+            /* Ngưỡng vuốt để thấp thôi: nhận ra sớm chừng nào thì cú nhảy ngoài ý muốn
+             * bị gỡ sớm chừng ấy, bé càng ít thấy người nhấp nhổm. */
+            const need = Math.max(18, V.u * 0.45);
+            if (ev.clientY - touchY0 < need) return;
+            swiped = true;
+
+            /* Vừa nhảy xong mà đã vuốt xuống ngay, người còn sát đất: cú nhảy
+             * ấy là ngoài ý muốn, gỡ ra cho sạch. */
+            if (G.time - touchAt < 0.22 && !G.onGround && G.vy < 0 && G.y < 1.0) {
+                G.y = G.groundAt;
+                G.vy = 0;
+                G.onGround = true;
+                G.jumpHold = 0;
+            }
+            slide();
+        });
+
+        const endTouch = ev => {
+            if (ev && ev.pointerId != null && ev.pointerId !== touchId) return;
+            touchId = null;
+            releaseJump();
+        };
+        host.addEventListener('pointerup', ev => { ev.preventDefault(); endTouch(ev); });
+        host.addEventListener('pointercancel', endTouch);
         host.addEventListener('contextmenu', ev => ev.preventDefault());
 
         window.addEventListener('keydown', ev => {
