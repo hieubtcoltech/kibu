@@ -102,55 +102,71 @@
         SPIKE: 'spike',     // bụi gai, nhảy qua
         BRANCH: 'branch',   // cành thấp, phải trượt xuống mới chui lọt
         PLAT: 'plat',       // bệ lơ lửng, đứng lên được
-        FRUIT: 'fruit',
+        COIN: 'coins',
         FRIEND: 'friend',
         POWER: 'power'
     };
 
     const POWER = { SHIELD: 'shield', MAGNET: 'magnet', ROCKET: 'rocket' };
 
-    /* Bốn vùng cảnh, đổi sau mỗi ZONE_LEN mét. Đổi cảnh không chỉ cho đẹp: nó
+    /* Sáu vùng cảnh, đổi sau mỗi ZONE_LEN mét. Đổi cảnh không chỉ cho đẹp: nó
      * là cái mốc để bé biết mình đã đi được xa tới đâu, con số mét trên HUD
-     * chạy quá nhanh nên mắt không bám kịp. */
-    /* Chạy chậm hơn thì mỗi mét lâu hơn, nên rút ngắn quãng đổi cảnh lại cho
-     * lần đổi cảnh đầu tiên vẫn tới trong khoảng nửa phút. */
+     * chạy quá nhanh nên mắt không bám kịp.
+     *
+     * Chạy chậm thì mỗi mét lâu hơn, nên quãng đổi cảnh để ngắn cho lần đổi
+     * cảnh đầu tiên vẫn tới trong khoảng nửa phút. */
     const ZONE_LEN = 140;
     const ZONES = [
         {
-            key: 'jungle', name: 'Jungle',
+            key: 'jungle', name: 'Green Forest',
             sky: ['#0b3d2e', '#125c3f', '#2f8f5b'],
             far: '#0d4733', mid: '#116b46', ground: '#1f7a4d', dirt: '#134e33',
             accent: '#ffd43b'
         },
         {
-            key: 'beach', name: 'Sunny Bay',
-            sky: ['#0a3d62', '#1a6fa8', '#4fc3e8'],
-            far: '#12547f', mid: '#1b7bb0', ground: '#e6c377', dirt: '#b3894a',
-            accent: '#ff922b'
+            key: 'desert', name: 'Desert',
+            sky: ['#8a4a15', '#c2711f', '#efc069'],
+            far: '#a35c1e', mid: '#c9822f', ground: '#e6c377', dirt: '#b3894a',
+            accent: '#fff3bf'
         },
         {
-            key: 'cave', name: 'Crystal Cave',
-            sky: ['#150a2e', '#2a1055', '#4b2a80'],
-            far: '#1d0f3d', mid: '#33195e', ground: '#4a2f7a', dirt: '#2a1750',
+            key: 'ice', name: 'Frozen Land',
+            sky: ['#0a3555', '#12608f', '#6fc4e0'],
+            far: '#12547f', mid: '#2f8db8', ground: '#d6f0ff', dirt: '#8dc4dd',
             accent: '#8ed0ff'
         },
         {
-            key: 'night', name: 'Star Fields',
-            sky: ['#06101f', '#0d2140', '#1b3f6b'],
-            far: '#0a1a30', mid: '#123055', ground: '#1a4a72', dirt: '#0d2b45',
-            accent: '#ffe066'
+            key: 'city', name: 'Big City',
+            sky: ['#0e1830', '#22314f', '#5b7099'],
+            far: '#1a2740', mid: '#2c3d5e', ground: '#5d6480', dirt: '#343a4d',
+            accent: '#ffd43b'
+        },
+        {
+            key: 'lava', name: 'Lava Land',
+            sky: ['#2b0704', '#71190a', '#c94a16'],
+            far: '#4a0f07', mid: '#8a2410', ground: '#4f2719', dirt: '#2b120b',
+            accent: '#ff922b'
+        },
+        {
+            key: 'fairy', name: 'Fairy Castle',
+            sky: ['#1b0b33', '#3a1a63', '#8452b0'],
+            far: '#26104a', mid: '#4a2388', ground: '#63409a', dirt: '#33195e',
+            accent: '#ff9de2'
         }
     ];
 
-    /* Màu lông của các bạn nhỏ — mỗi bạn cứu được nhận một màu khác nhau cho
-     * đoàn chạy nhìn ra từng đứa chứ không thành một vệt liền. */
-    const PALS = [
-        { main: '#ff6b6b', dark: '#c92a2a', ear: '#ffa8a8', face: 'cat' },
-        { main: '#ffd43b', dark: '#e8a800', ear: '#fff3bf', face: 'duck' },
-        { main: '#69db7c', dark: '#2f9e44', ear: '#b2f2bb', face: 'frog' },
-        { main: '#74c0fc', dark: '#1c7ed6', ear: '#a5d8ff', face: 'bunny' },
-        { main: '#e599f7', dark: '#9c36b5', ear: '#f3d9fa', face: 'pig' },
-        { main: '#ffa94d', dark: '#e8590c', ear: '#ffd8a8', face: 'fox' }
+    /* Sáu bạn cần giải cứu, đúng bộ trong bản thiết kế. Mỗi bạn là một loài
+     * riêng chứ không phải một quả bóng đổi màu: bé phải nhận ra mình vừa cứu
+     * được CON GÌ thì việc cứu mới có nghĩa với bé. */
+    const ANIMALS = [
+        { key: 'rabbit', name: 'Rabbit', main: '#e4ebf3', dark: '#a3aebd', soft: '#ffd3e0' },
+        { key: 'fox', name: 'Fox', main: '#ff9f45', dark: '#d1580d', soft: '#fff1e0' },
+        /* Khỉ để nâu ngả vàng hẳn, khác gấu nâu đỏ — hai con cùng thân tròn tai
+         * tròn, chỉ còn màu với cái đuôi để phân biệt. */
+        { key: 'monkey', name: 'Monkey', main: '#c99a5e', dark: '#8d6432', soft: '#f7e3c2' },
+        { key: 'chick', name: 'Chick', main: '#ffd93b', dark: '#e0a400', soft: '#fff6c8' },
+        { key: 'elephant', name: 'Elephant', main: '#a9c7e8', dark: '#6f93bd', soft: '#dfeaf8' },
+        { key: 'bear', name: 'Bear Cub', main: '#c98a4b', dark: '#8a5626', soft: '#f3ddc0' }
     ];
 
     /* ========================================================================
@@ -174,14 +190,14 @@
         const span = (x1 - x0) / 2;
         for (let x = x0; x <= x1 + 0.001; x += (step || 1.1)) {
             const k = span ? (x - mid) / span : 0;
-            out.push({ t: T.FRUIT, x: x, y: 1.1 + top * (1 - k * k) });
+            out.push({ t: T.COIN, x: x, y: 1.1 + top * (1 - k * k) });
         }
         return out;
     }
 
     function line(x0, n, y, step) {
         const out = [];
-        for (let i = 0; i < n; i++) out.push({ t: T.FRUIT, x: x0 + i * (step || 1.1), y: y });
+        for (let i = 0; i < n; i++) out.push({ t: T.COIN, x: x0 + i * (step || 1.1), y: y });
         return out;
     }
 
@@ -351,7 +367,7 @@
      * ======================================================================*/
 
     const store = {
-        data: { best: 0, bestPals: 0, fruit: 0, runs: 0 },
+        data: { best: 0, bestPals: 0, coins: 0, runs: 0 },
 
         load() {
             try {
@@ -362,17 +378,17 @@
         save() {
             try { localStorage.setItem(STORE_KEY, JSON.stringify(this.data)); } catch (e) { }
         },
-        record(dist, pals, fruit) {
+        record(dist, pals, coins) {
             let newBest = false;
             if (dist > this.data.best) { this.data.best = dist; newBest = true; }
             if (pals > this.data.bestPals) this.data.bestPals = pals;
-            this.data.fruit += fruit;
+            this.data.coins += coins;
             this.data.runs++;
             this.save();
             return newBest;
         },
         reset() {
-            this.data = { best: 0, bestPals: 0, fruit: 0, runs: 0 };
+            this.data = { best: 0, bestPals: 0, coins: 0, runs: 0 };
             this.save();
         }
     };
@@ -440,7 +456,7 @@
         slide() { this.noise(0.22, 0.06, 1400); },
         /* Quả ăn liên tiếp leo dần lên theo thang ngũ cung, chuỗi càng dài tai
          * càng nghe ra là mình đang ăn đậm. */
-        fruit(i) { this.tone(NOTES[Math.min(i, NOTES.length - 1)], 0.1, 'sine', 0.085); },
+        coin(i) { this.tone(NOTES[Math.min(i, NOTES.length - 1)], 0.1, 'sine', 0.085); },
         pal() {
             [784, 1046, 1318].forEach((f, i) =>
                 setTimeout(() => this.tone(f, 0.16, 'triangle', 0.12), i * 65));
@@ -485,9 +501,10 @@
         wantJump: -9,        // mốc bấm nhảy, dùng cho buffer
         sliding: 0,          // còn bao lâu nữa hết trượt
         hurtUntil: -9,
+        cheerAt: -9,         // mốc vừa cứu được bạn, để panda nhe răng cười
         runCycle: 0,         // pha chạy, dùng để vẽ chân tay
 
-        tail: [],            // các bạn đã cứu, phần tử là chỉ số màu trong PALS
+        tail: [],            // các bạn đã cứu, phần tử là chỉ số màu trong ANIMALS
         trail: [],           // vệt đường đã đi, để đoàn bám theo
 
         items: [],           // vật thể đang có trên đường
@@ -496,7 +513,7 @@
         builtTo: 0,          // đã dựng đường tới toạ độ nào
         lastChunk: -1,
 
-        fruit: 0,
+        coins: 0,
         combo: 0,
         comboAt: -9,
         bestCombo: 0,
@@ -554,6 +571,9 @@
         V.groundY = h - GROUND_UP * V.u;
         V.cols = w / V.u;
         V.skyU = V.groundY / V.u;      // bầu trời cao bao nhiêu u, để nền tự lấp
+        /* Sprite vẽ theo cỡ u nên đổi cỡ màn hình là phải vẽ lại, không thì ảnh
+         * bị kéo giãn nhoè hết nét. */
+        bakeSprites();
     }
 
     /* Đổi toạ độ thế giới sang toạ độ màn hình. Người chơi luôn đứng yên tại
@@ -623,7 +643,7 @@
         G.items.push({
             t: it.t, x: x, y: it.y || 0, h: it.h || 1,
             kind: it.kind, gone: false, born: G.time,
-            pal: Math.floor(Math.random() * PALS.length),
+            pal: Math.floor(Math.random() * ANIMALS.length),
             bob: Math.random() * 6.28
         });
     }
@@ -664,10 +684,11 @@
         G.groundAt = 0;
         G.sliding = 0;
         G.hurtUntil = -9;
+        G.cheerAt = -9;
         G.runCycle = 0;
         G.tail = [];
         for (let i = 0; i < START_PALS; i++) {
-            G.tail.push(Math.floor(Math.random() * PALS.length));
+            G.tail.push(Math.floor(Math.random() * ANIMALS.length));
         }
         G.trail = [{ x: -30, y: 0 }, { x: 0, y: 0 }];
         G.items = [];
@@ -678,7 +699,7 @@
         /* Ép khối đầu tiên là khối nghỉ: chướng ngại ngay giây thứ hai thì bé
          * còn chưa kịp biết ngón tay mình làm được gì. */
         G.chunksSince = 99;
-        G.fruit = 0;
+        G.coins = 0;
         G.combo = 0;
         G.comboAt = -9;
         G.bestCombo = 0;
@@ -878,7 +899,7 @@
             if (it.x < G.x - 3) continue;
             if (it.x > G.x + V.cols) break;
 
-            if (it.t === T.FRUIT) {
+            if (it.t === T.COIN) {
                 /* Nam châm kéo quả về phía bé, cả những quả bé không kịp với. */
                 if (magnet || G.rocketT > 0) {
                     const d = Math.hypot(it.x - G.x, it.y - (G.y + 0.7));
@@ -891,7 +912,7 @@
                 }
                 if (hits(box, it.x - 0.45, it.x + 0.45, it.y - 0.45, it.y + 0.45)) {
                     it.gone = true;
-                    takeFruit(it);
+                    takeCoin(it);
                 }
                 continue;
             }
@@ -918,7 +939,7 @@
             let x0, x1, y0, y1;
             if (it.t === T.ROCK) { x0 = it.x - 0.55; x1 = it.x + 0.55; y0 = 0; y1 = it.h; }
             else if (it.t === T.SPIKE) { x0 = it.x - 0.6; x1 = it.x + 0.6; y0 = 0; y1 = 0.85; }
-            else { x0 = it.x - 0.7; x1 = it.x + 0.7; y0 = 1.05; y1 = 3.2; }   // cành
+            else { x0 = it.x - 0.7; x1 = it.x + 0.7; y0 = 1.05; y1 = 2.6; }   // khúc gỗ
 
             if (hits(box, x0, x1, y0, y1)) {
                 if (G.time < G.hurtUntil) continue;
@@ -943,25 +964,26 @@
         }
     }
 
-    function takeFruit(it) {
-        G.fruit++;
+    function takeCoin(it) {
+        G.coins++;
         bumpCombo();
         G.score += 10 * mult();
-        sfx.fruit(Math.min(G.combo, NOTES.length - 1));
+        sfx.coin(Math.min(G.combo, NOTES.length - 1));
         G.parts.push.apply(G.parts, burst(it.x, it.y, 6, '#ffd43b'));
         G.rings.push({ x: it.x, y: it.y, r0: 0.3, grow: 2.2, life: 0.26, age: 0, col: '#ffe066' });
-        countMission('fruit', 1);
+        countMission('coins', 1);
     }
 
     function rescue(it) {
         if (G.tail.length < MAX_TAIL) G.tail.push(it.pal);
+        G.cheerAt = G.time;
         G.pals++;
         bumpCombo();
         G.score += 120 * mult();
         sfx.pal();
         shake(0.16, 0.2);
         flash('#ffe066', 0.3);
-        G.parts.push.apply(G.parts, burst(it.x, it.y + 0.8, 18, PALS[it.pal].main));
+        G.parts.push.apply(G.parts, burst(it.x, it.y + 0.8, 18, ANIMALS[it.pal].main));
         G.rings.push({ x: it.x, y: it.y + 0.8, r0: 0.5, grow: 3.4, life: 0.4, age: 0, col: '#ffffff' });
         G.floats.push({
             text: 'RESCUED!', x: it.x, y: it.y + 2.6, born: G.time, big: true, col: '#ffe066'
@@ -1035,7 +1057,7 @@
             /* Bạn cuối đoàn bị văng ra và chạy mất — nhìn thấy được thì bé mới
              * xót, mà xót thì lần sau mới né cẩn thận. */
             const pal = G.tail.pop();
-            G.parts.push.apply(G.parts, burst(G.x - 1, G.y + 0.6, 14, PALS[pal].main));
+            G.parts.push.apply(G.parts, burst(G.x - 1, G.y + 0.6, 14, ANIMALS[pal].main));
             G.floats.push({
                 text: '-1 FRIEND', x: G.x, y: G.y + 2.8, born: G.time, big: true, col: '#ff8787'
             });
@@ -1053,7 +1075,7 @@
         G.mode = 'over';
         sfx.over();
         shake(0.6, 0.5);
-        const newBest = store.record(G.metres, G.pals, G.fruit);
+        const newBest = store.record(G.metres, G.pals, G.coins);
         G.score += G.metres * 5;
         showOver(newBest);
     }
@@ -1061,7 +1083,7 @@
     /* ---- nhiệm vụ mỗi lượt ---- */
     const MISSION_POOL = [
         { key: 'pals', text: 'Rescue {n} friends', pick: () => 3 + Math.floor(Math.random() * 3) },
-        { key: 'fruit', text: 'Collect {n} fruit', pick: () => 30 + Math.floor(Math.random() * 4) * 10 },
+        { key: 'coins', text: 'Collect {n} coins', pick: () => 30 + Math.floor(Math.random() * 4) * 10 },
         { key: 'dist', text: 'Run {n} m', pick: () => 250 + Math.floor(Math.random() * 4) * 100 },
         { key: 'combo', text: 'Reach a {n} combo', pick: () => 12 + Math.floor(Math.random() * 3) * 6 }
     ];
@@ -1174,7 +1196,582 @@
     }
 
     /* ========================================================================
-     *  10. VẼ
+     *  10. SPRITE
+     * ------------------------------------------------------------------------
+     *  Mỗi tư thế được vẽ MỘT LẦN vào một tấm canvas ẩn, từ đó về sau mỗi khung
+     *  hình chỉ dán tấm ảnh đó lên sân. Hai cái lợi:
+     *
+     *    • Mượt hơn. Chu kỳ chạy tám hình chuyển liên tục, chứ vẽ lại đường nét
+     *      mỗi khung thì phải giữ hình thật đơn giản mới kịp, mà đơn giản quá
+     *      thì nhân vật trông như quả bóng có mặt.
+     *    • Nhẹ hơn. Con panda có gần bốn mươi nét vẽ; nhân với đoàn bạn chạy
+     *      sau lưng và sáu chục đồng xu trên màn hình là mỗi khung hình phải
+     *      dựng lại hàng nghìn đường. Dán ảnh sẵn thì chỉ còn vài chục lệnh.
+     *
+     *  Sprite nướng lại mỗi lần đổi cỡ màn hình, vì cỡ một đơn vị u đổi theo.
+     * ======================================================================*/
+
+    const TAU = Math.PI * 2;
+
+    const SPR = {
+        u: 0,               // cỡ u lúc nướng; khác với V.u hiện tại thì nướng lại
+        panda: null,        // { run: [8], jump, slide, cheer }
+        pals: [],           // pals[i] = { run: [2], sit }
+        coin: [],           // sáu hình xu xoay
+        cage: null, log: null, rock: null, spike: null
+    };
+
+    const PANDA_FRAMES = 8;
+    const COIN_FRAMES = 6;
+
+    /* Vẽ sẵn một tấm. Trả về {c, w, h, ax, ay} — ax/ay là điểm neo (chỗ đặt
+     * chân) tính trong toạ độ tấm ảnh, để lúc dán khỏi phải căn tay. */
+    function bake(w, h, ax, ay, paint) {
+        const c = document.createElement('canvas');
+        const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+        c.width = Math.max(1, Math.ceil(w * dpr));
+        c.height = Math.max(1, Math.ceil(h * dpr));
+        const g = c.getContext('2d');
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        g.lineJoin = 'round';
+        g.lineCap = 'round';
+        paint(g);
+        return { c: c, w: w, h: h, ax: ax, ay: ay };
+    }
+
+    function blit(s, x, y, scale, alpha) {
+        if (!s) return;
+        const k = scale == null ? 1 : scale;
+        ctx.save();
+        if (alpha != null) ctx.globalAlpha *= alpha;
+        ctx.drawImage(s.c, x - s.ax * k, y - s.ay * k, s.w * k, s.h * k);
+        ctx.restore();
+    }
+
+    /* ---- gấu trúc ----
+     * Tạo hình theo bản thiết kế: đầu to, hai tai đen tròn, hai mảng mắt đen,
+     * khăn quàng đỏ bay ngược chiều chạy, ba lô xanh sau lưng. Toàn thân cao
+     * đúng 1,58 u để khớp với khung va chạm 1,55 u — vẽ to hơn khung thì bé
+     * thấy mình bị đụng oan, vẽ nhỏ hơn thì thấy game ăn gian.
+     */
+    const PANDA = {
+        white: '#fbfcfe', shade: '#dfe6f0', black: '#23262e', ink: '#14161b',
+        scarf: '#e8443c', scarfDark: '#b32a25', pack: '#4c8f3f', packDark: '#356d2b',
+        cheek: 'rgba(255,120,150,0.5)'
+    };
+
+    function paintPanda(g, u, pose, k) {
+        const H = 2.0 * u;             // chiều cao tấm ảnh
+        const cx = 1.35 * u;           // trục thân, lệch phải để chừa chỗ khăn bay
+        const foot = 1.86 * u;         // chân chạm đất ở đây
+
+        const a = k * TAU;
+        const run = pose === 'run';
+        const bob = run ? Math.abs(Math.sin(a)) * 0.05 * u : 0;
+        const slide = pose === 'slide';
+        const jump = pose === 'jump';
+
+        /* Trượt thì cả người nằm rạp xuống và ngả về trước. */
+        const bodyCY = slide ? foot - 0.32 * u : foot - 0.58 * u - bob;
+        const headCY = slide ? foot - 0.60 * u : foot - 1.14 * u - bob;
+        const headR = 0.42 * u;
+        const bodyRX = slide ? 0.50 * u : 0.42 * u;
+        const bodyRY = slide ? 0.26 * u : 0.34 * u;
+
+        /* --- ba lô: vẽ trước thân để nằm hẳn ra sau lưng, và nhô hẳn ra ngoài
+         * viền thân, không thì thân trắng nuốt mất nó --- */
+        g.fillStyle = PANDA.pack;
+        rr(g, cx - bodyRX - 0.24 * u, bodyCY - 0.34 * u, 0.42 * u, 0.60 * u, 0.16 * u);
+        g.fill();
+        g.fillStyle = PANDA.packDark;
+        rr(g, cx - bodyRX - 0.24 * u, bodyCY - 0.04 * u, 0.42 * u, 0.13 * u, 0.05 * u);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.28)';
+        rr(g, cx - bodyRX - 0.19 * u, bodyCY - 0.28 * u, 0.13 * u, 0.2 * u, 0.05 * u);
+        g.fill();
+
+        /* --- đuôi khăn: vẽ TRƯỚC thân để bay ra sau lưng ---
+         * Vẽ sau thân thì dải đỏ nằm đè lên bụng trắng, con panda thành ra
+         * đeo yếm. Dải cũng phải thon dần và lượn sóng, không thì nhìn như
+         * một tấm ván sơn đỏ đóng ngang người. */
+        const neckY0 = (slide ? headCY + 0.26 * u : headCY + 0.34 * u);
+        const flut = run ? Math.sin(a * 2) * 0.09 * u : 0;
+        g.fillStyle = PANDA.scarfDark;
+        g.beginPath();
+        g.moveTo(cx - 0.10 * u, neckY0 - 0.02 * u);
+        g.quadraticCurveTo(cx - 0.52 * u, neckY0 - 0.26 * u + flut,
+            cx - 0.94 * u, neckY0 - 0.06 * u + flut * 1.6);
+        g.quadraticCurveTo(cx - 0.60 * u, neckY0 + 0.04 * u, cx - 0.44 * u, neckY0 + 0.16 * u);
+        g.quadraticCurveTo(cx - 0.26 * u, neckY0 + 0.14 * u, cx - 0.08 * u, neckY0 + 0.12 * u);
+        g.closePath();
+        g.fill();
+
+        /* --- tay chân ---
+         * Vẽ bằng nét dày bo tròn rồi chấm thêm bàn chân ở đầu: chỉ có nét
+         * không thôi thì chân trông như que tăm cắm vào người. */
+        const limb = (x1, y1, x2, y2, w, col, paw) => {
+            g.strokeStyle = col;
+            g.lineWidth = w;
+            g.beginPath();
+            g.moveTo(x1, y1);
+            g.lineTo(x2, y2);
+            g.stroke();
+            if (paw) {
+                g.fillStyle = col;
+                g.beginPath();
+                g.ellipse(x2, y2, w * 0.62, w * 0.46, 0, 0, TAU);
+                g.fill();
+            }
+        };
+
+        const hipY = bodyCY + 0.20 * u;
+
+        if (slide) {
+            limb(cx - 0.10 * u, hipY - 0.06 * u, cx - 0.58 * u, foot - 0.05 * u, 0.24 * u, PANDA.ink, true);
+            limb(cx + 0.16 * u, hipY - 0.10 * u, cx + 0.50 * u, foot - 0.03 * u, 0.23 * u, PANDA.black, true);
+        } else if (jump) {
+            /* Nhảy thì co chân lại — duỗi thẳng nhìn như đang rơi chứ không bật. */
+            limb(cx - 0.14 * u, hipY, cx - 0.34 * u, foot - 0.26 * u, 0.24 * u, PANDA.ink, true);
+            limb(cx + 0.16 * u, hipY, cx + 0.36 * u, foot - 0.14 * u, 0.24 * u, PANDA.black, true);
+            limb(cx + 0.24 * u, bodyCY - 0.12 * u, cx + 0.58 * u, bodyCY - 0.46 * u, 0.20 * u, PANDA.black, true);
+        } else {
+            /* Chân sau lệch pha nửa vòng so với chân trước — đó là toàn bộ bí
+             * quyết để tám hình rời rạc nhìn ra một bước chạy. */
+            const bx = cx + Math.cos(a + Math.PI) * 0.26 * u;
+            const by = foot - Math.max(0, Math.sin(a + Math.PI)) * 0.17 * u;
+            limb(cx - 0.10 * u, hipY, bx, by, 0.23 * u, PANDA.ink, true);
+            /* tay sau vung ra trước ngực */
+            const hx = cx + Math.cos(a) * 0.22 * u;
+            limb(cx - 0.20 * u, bodyCY - 0.10 * u, hx - 0.20 * u, bodyCY + 0.14 * u, 0.18 * u, PANDA.ink, true);
+        }
+
+        /* --- thân trắng --- */
+        const bg = g.createLinearGradient(cx - bodyRX, bodyCY - bodyRY, cx + bodyRX, bodyCY + bodyRY);
+        bg.addColorStop(0, PANDA.white);
+        bg.addColorStop(1, PANDA.shade);
+        g.fillStyle = bg;
+        g.beginPath();
+        g.ellipse(cx, bodyCY, bodyRX, bodyRY, 0, 0, TAU);
+        g.fill();
+
+        /* --- chân trước --- */
+        if (!slide && !jump) {
+            const fx = cx + Math.cos(a) * 0.26 * u;
+            const fy = foot - Math.max(0, Math.sin(a)) * 0.17 * u;
+            limb(cx + 0.10 * u, hipY, fx, fy, 0.24 * u, PANDA.black, true);
+        } else if (slide) {
+            limb(cx + 0.20 * u, hipY - 0.08 * u, cx + 0.62 * u, foot - 0.03 * u, 0.24 * u, PANDA.black, true);
+        }
+
+        /* --- tay trước: đen, vung ngược pha với chân, vẽ đè lên thân trắng ---
+         * Thiếu cánh tay thì con panda thành cái bình có chân. */
+        if (!slide) {
+            const ax2 = cx + (jump ? 0.52 * u : Math.cos(a + Math.PI) * 0.26 * u + 0.30 * u);
+            const ay2 = (jump ? bodyCY - 0.40 * u
+                : bodyCY - 0.06 * u + Math.sin(a + Math.PI) * 0.10 * u);
+            limb(cx + 0.16 * u, bodyCY - 0.16 * u, ax2, ay2, 0.19 * u, PANDA.black, true);
+        } else {
+            limb(cx + 0.22 * u, bodyCY - 0.10 * u, cx + 0.68 * u, bodyCY + 0.06 * u,
+                0.19 * u, PANDA.black, true);
+        }
+
+        /* --- nút khăn quàng ở cổ, vẽ sau thân cho nằm trước ngực --- */
+        const neckY = neckY0;
+        g.fillStyle = PANDA.scarfDark;
+        rr(g, cx - 0.30 * u, neckY - 0.10 * u, 0.60 * u, 0.20 * u, 0.09 * u);
+        g.fill();
+        g.fillStyle = PANDA.scarf;
+        rr(g, cx - 0.27 * u, neckY - 0.14 * u, 0.55 * u, 0.18 * u, 0.08 * u);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.25)';
+        rr(g, cx - 0.22 * u, neckY - 0.12 * u, 0.42 * u, 0.05 * u, 0.02 * u);
+        g.fill();
+
+        /* --- tai --- */
+        g.fillStyle = PANDA.black;
+        g.beginPath();
+        g.arc(cx - 0.26 * u, headCY - 0.32 * u, 0.16 * u, 0, TAU);
+        g.arc(cx + 0.28 * u, headCY - 0.34 * u, 0.16 * u, 0, TAU);
+        g.fill();
+
+        /* --- đầu --- */
+        const hg = g.createRadialGradient(cx - 0.12 * u, headCY - 0.16 * u, 0.06 * u,
+            cx, headCY, headR);
+        hg.addColorStop(0, '#ffffff');
+        hg.addColorStop(1, PANDA.shade);
+        g.fillStyle = hg;
+        g.beginPath();
+        g.arc(cx, headCY, headR, 0, TAU);
+        g.fill();
+
+        /* --- hai mảng mắt đen, đặt hơi lệch phải cho ra góc ba phần tư --- */
+        g.fillStyle = PANDA.black;
+        g.beginPath();
+        g.ellipse(cx + 0.02 * u, headCY - 0.02 * u, 0.135 * u, 0.175 * u, -0.35, 0, TAU);
+        g.ellipse(cx + 0.29 * u, headCY - 0.04 * u, 0.125 * u, 0.165 * u, 0.35, 0, TAU);
+        g.fill();
+
+        /* mắt: tròng trắng + con ngươi, thêm chấm sáng cho có hồn */
+        const eye = (ex, ey, r) => {
+            g.fillStyle = '#ffffff';
+            g.beginPath(); g.arc(ex, ey, r, 0, TAU); g.fill();
+            g.fillStyle = PANDA.ink;
+            g.beginPath(); g.arc(ex + r * 0.18, ey + r * 0.05, r * 0.62, 0, TAU); g.fill();
+            g.fillStyle = '#ffffff';
+            g.beginPath(); g.arc(ex + r * 0.4, ey - r * 0.36, r * 0.26, 0, TAU); g.fill();
+        };
+        if (pose === 'cheer') {
+            /* Mắt nhắm hình vòng cung — dùng cho lúc vừa cứu được bạn. */
+            g.strokeStyle = '#ffffff';
+            g.lineWidth = 0.045 * u;
+            g.beginPath();
+            g.arc(cx + 0.03 * u, headCY + 0.02 * u, 0.075 * u, Math.PI, 0);
+            g.arc(cx + 0.29 * u, headCY, 0.07 * u, Math.PI, 0);
+            g.stroke();
+        } else {
+            eye(cx + 0.03 * u, headCY - 0.01 * u, 0.072 * u);
+            eye(cx + 0.29 * u, headCY - 0.03 * u, 0.066 * u);
+        }
+
+        /* --- mũi và miệng --- */
+        g.fillStyle = PANDA.ink;
+        g.beginPath();
+        g.ellipse(cx + 0.17 * u, headCY + 0.15 * u, 0.062 * u, 0.048 * u, 0, 0, TAU);
+        g.fill();
+        g.strokeStyle = PANDA.ink;
+        g.lineWidth = 0.036 * u;
+        g.beginPath();
+        if (pose === 'cheer' || run) {
+            /* Miệng cười mở — panda trong bản thiết kế lúc nào cũng đang vui. */
+            g.moveTo(cx + 0.09 * u, headCY + 0.21 * u);
+            g.quadraticCurveTo(cx + 0.17 * u, headCY + 0.32 * u, cx + 0.26 * u, headCY + 0.20 * u);
+        } else {
+            g.moveTo(cx + 0.10 * u, headCY + 0.22 * u);
+            g.quadraticCurveTo(cx + 0.17 * u, headCY + 0.28 * u, cx + 0.25 * u, headCY + 0.21 * u);
+        }
+        g.stroke();
+
+        /* --- má hồng --- */
+        g.fillStyle = PANDA.cheek;
+        g.beginPath();
+        g.ellipse(cx - 0.14 * u, headCY + 0.16 * u, 0.085 * u, 0.06 * u, 0, 0, TAU);
+        g.ellipse(cx + 0.40 * u, headCY + 0.13 * u, 0.075 * u, 0.055 * u, 0, 0, TAU);
+        g.fill();
+    }
+
+    /* ---- các bạn động vật ----
+     * Chung một khung thân tròn, khác nhau ở tai, mõm, đuôi — vừa đủ để nhận ra
+     * loài mà không phải vẽ sáu con từ đầu. */
+    function paintPal(g, u, sp, frame) {
+        const H = 1.15 * u;
+        const cx = 0.58 * u;
+        const foot = 1.06 * u;
+        const bodyCY = foot - 0.36 * u;
+        const r = 0.34 * u;
+        const step = frame ? 1 : -1;
+
+        /* chân */
+        g.strokeStyle = sp.dark;
+        g.lineWidth = 0.15 * u;
+        g.beginPath();
+        g.moveTo(cx - 0.12 * u, bodyCY + 0.22 * u);
+        g.lineTo(cx - 0.12 * u + step * 0.14 * u, foot);
+        g.moveTo(cx + 0.12 * u, bodyCY + 0.22 * u);
+        g.lineTo(cx + 0.12 * u - step * 0.14 * u, foot);
+        g.stroke();
+
+        /* đuôi: cáo xù, khỉ cong, còn lại chấm tròn */
+        if (sp.key === 'fox') {
+            g.fillStyle = sp.main;
+            g.beginPath();
+            g.moveTo(cx - r * 0.7, bodyCY);
+            g.quadraticCurveTo(cx - r * 2.0, bodyCY - r * 0.5, cx - r * 1.5, bodyCY + r * 0.7);
+            g.quadraticCurveTo(cx - r * 1.0, bodyCY + r * 0.5, cx - r * 0.7, bodyCY + r * 0.4);
+            g.closePath();
+            g.fill();
+            g.fillStyle = sp.soft;
+            g.beginPath();
+            g.arc(cx - r * 1.55, bodyCY + r * 0.2, r * 0.26, 0, TAU);
+            g.fill();
+        } else if (sp.key === 'monkey') {
+            /* Đuôi cong vống lên cao hẳn — dấu hiệu duy nhất tách khỉ khỏi gấu
+             * ở cỡ hình bé tí này, nên phải thấy rõ. */
+            g.strokeStyle = sp.dark;
+            g.lineWidth = 0.085 * u;
+            g.beginPath();
+            g.moveTo(cx - r * 0.75, bodyCY + r * 0.2);
+            g.quadraticCurveTo(cx - r * 2.1, bodyCY + r * 0.1, cx - r * 1.7, bodyCY - r * 1.25);
+            g.stroke();
+        } else if (sp.key === 'elephant') {
+            g.fillStyle = sp.dark;
+            g.beginPath();
+            g.arc(cx - r * 0.9, bodyCY + r * 0.2, r * 0.16, 0, TAU);
+            g.fill();
+        }
+
+        /* tai */
+        g.fillStyle = sp.main;
+        if (sp.key === 'rabbit') {
+            [-1, 1].forEach(s => {
+                g.beginPath();
+                g.ellipse(cx + s * r * 0.34, bodyCY - r * 1.15, r * 0.17, r * 0.6, s * 0.2, 0, TAU);
+                g.fill();
+            });
+            g.fillStyle = sp.soft;
+            [-1, 1].forEach(s => {
+                g.beginPath();
+                g.ellipse(cx + s * r * 0.34, bodyCY - r * 1.15, r * 0.08, r * 0.38, s * 0.2, 0, TAU);
+                g.fill();
+            });
+        } else if (sp.key === 'fox') {
+            [-1, 1].forEach(s => {
+                g.beginPath();
+                g.moveTo(cx + s * r * 0.28, bodyCY - r * 0.6);
+                g.lineTo(cx + s * r * 0.72, bodyCY - r * 1.3);
+                g.lineTo(cx + s * r * 0.86, bodyCY - r * 0.45);
+                g.closePath();
+                g.fill();
+            });
+        } else if (sp.key === 'elephant') {
+            [-1, 1].forEach(s => {
+                g.beginPath();
+                g.ellipse(cx + s * r * 0.92, bodyCY - r * 0.15, r * 0.42, r * 0.5, 0, 0, TAU);
+                g.fill();
+            });
+        } else if (sp.key === 'chick') {
+            /* gà con không có tai, thay bằng túm lông trên đầu */
+            g.strokeStyle = sp.dark;
+            g.lineWidth = 0.05 * u;
+            g.beginPath();
+            g.moveTo(cx, bodyCY - r * 0.9);
+            g.lineTo(cx - r * 0.1, bodyCY - r * 1.35);
+            g.moveTo(cx + r * 0.08, bodyCY - r * 0.9);
+            g.lineTo(cx + r * 0.26, bodyCY - r * 1.3);
+            g.stroke();
+        } else {
+            [-1, 1].forEach(s => {
+                g.beginPath();
+                g.arc(cx + s * r * 0.62, bodyCY - r * 0.72, r * 0.28, 0, TAU);
+                g.fill();
+            });
+            g.fillStyle = sp.soft;
+            [-1, 1].forEach(s => {
+                g.beginPath();
+                g.arc(cx + s * r * 0.62, bodyCY - r * 0.72, r * 0.14, 0, TAU);
+                g.fill();
+            });
+        }
+
+        /* thân */
+        const bg = g.createRadialGradient(cx - r * 0.3, bodyCY - r * 0.35, r * 0.1, cx, bodyCY, r);
+        bg.addColorStop(0, sp.soft);
+        bg.addColorStop(0.55, sp.main);
+        bg.addColorStop(1, sp.dark);
+        g.fillStyle = bg;
+        g.beginPath();
+        g.arc(cx, bodyCY, r, 0, TAU);
+        g.fill();
+
+        /* mõm sáng màu */
+        g.fillStyle = sp.soft;
+        g.beginPath();
+        g.ellipse(cx + r * 0.18, bodyCY + r * 0.28, r * 0.42, r * 0.3, 0, 0, TAU);
+        g.fill();
+
+        /* vòi voi */
+        if (sp.key === 'elephant') {
+            g.strokeStyle = sp.main;
+            g.lineWidth = 0.085 * u;
+            g.beginPath();
+            g.moveTo(cx + r * 0.2, bodyCY + r * 0.3);
+            g.quadraticCurveTo(cx + r * 0.75, bodyCY + r * 0.65, cx + r * 0.6, bodyCY + r * 0.95);
+            g.stroke();
+        }
+
+        /* mắt */
+        const eye = (ex, ey, rr2) => {
+            g.fillStyle = '#1b2430';
+            g.beginPath(); g.arc(ex, ey, rr2, 0, TAU); g.fill();
+            g.fillStyle = '#ffffff';
+            g.beginPath(); g.arc(ex + rr2 * 0.34, ey - rr2 * 0.36, rr2 * 0.38, 0, TAU); g.fill();
+        };
+        eye(cx - r * 0.24, bodyCY - r * 0.12, r * 0.13);
+        eye(cx + r * 0.34, bodyCY - r * 0.14, r * 0.13);
+
+        /* mũi / mỏ */
+        if (sp.key === 'chick') {
+            g.fillStyle = '#ff922b';
+            g.beginPath();
+            g.moveTo(cx + r * 0.06, bodyCY + r * 0.2);
+            g.lineTo(cx + r * 0.46, bodyCY + r * 0.3);
+            g.lineTo(cx + r * 0.08, bodyCY + r * 0.42);
+            g.closePath();
+            g.fill();
+        } else {
+            g.fillStyle = '#1b2430';
+            g.beginPath();
+            g.ellipse(cx + r * 0.1, bodyCY + r * 0.18, r * 0.1, r * 0.08, 0, 0, TAU);
+            g.fill();
+        }
+
+        /* má hồng */
+        g.fillStyle = 'rgba(255,120,150,0.4)';
+        g.beginPath();
+        g.ellipse(cx - r * 0.62, bodyCY + r * 0.16, r * 0.16, r * 0.12, 0, 0, TAU);
+        g.ellipse(cx + r * 0.72, bodyCY + r * 0.12, r * 0.14, r * 0.1, 0, 0, TAU);
+        g.fill();
+    }
+
+    /* ---- đồng xu, xoay tròn sáu hình ---- */
+    function paintCoin(g, u, frame) {
+        const cx = 0.4 * u, cy = 0.4 * u, r = 0.32 * u;
+        /* Bề ngang co lại rồi phình ra: xu đang quay quanh trục đứng. */
+        const w = Math.abs(Math.cos((frame / COIN_FRAMES) * Math.PI)) * 0.86 + 0.14;
+        g.save();
+        g.translate(cx, cy);
+        g.scale(w, 1);
+        const gg = g.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+        gg.addColorStop(0, '#fff6c8');
+        gg.addColorStop(0.55, '#ffc93b');
+        gg.addColorStop(1, '#d98c00');
+        g.fillStyle = gg;
+        g.beginPath(); g.arc(0, 0, r, 0, TAU); g.fill();
+        g.strokeStyle = '#b87400';
+        g.lineWidth = r * 0.12;
+        g.beginPath(); g.arc(0, 0, r * 0.98, 0, TAU); g.stroke();
+        g.strokeStyle = 'rgba(255,255,255,0.75)';
+        g.lineWidth = r * 0.1;
+        g.beginPath(); g.arc(0, 0, r * 0.62, -2.4, -0.9); g.stroke();
+        /* dấu chân trên mặt xu — chi tiết nhỏ nhưng buộc đồng xu vào chủ đề */
+        if (w > 0.55) {
+            g.fillStyle = 'rgba(180,110,0,0.55)';
+            g.beginPath();
+            g.ellipse(0, r * 0.12, r * 0.2, r * 0.16, 0, 0, TAU);
+            g.fill();
+            [-1, 0, 1].forEach(i => {
+                g.beginPath();
+                g.ellipse(i * r * 0.2, -r * 0.18, r * 0.07, r * 0.09, i * 0.4, 0, TAU);
+                g.fill();
+            });
+        }
+        g.restore();
+    }
+
+    /* ---- chuồng gỗ ---- */
+    function paintCage(g, u) {
+        const w = 1.5 * u, h = 1.6 * u;
+        const x = 0.1 * u, y = 0.1 * u;
+        g.fillStyle = '#8a5a2b';
+        rr(g, x, y, w, 0.16 * u, 0.06 * u); g.fill();          // mái
+        rr(g, x, y + h - 0.14 * u, w, 0.16 * u, 0.06 * u); g.fill();  // sàn
+        g.fillStyle = '#a86f36';
+        rr(g, x + 0.02 * u, y + 0.02 * u, w - 0.04 * u, 0.09 * u, 0.04 * u); g.fill();
+        g.strokeStyle = '#6b4423';
+        g.lineWidth = 0.09 * u;
+        for (let i = 0; i <= 4; i++) {
+            const bx = x + 0.1 * u + (i * (w - 0.2 * u)) / 4;
+            g.beginPath();
+            g.moveTo(bx, y + 0.14 * u);
+            g.lineTo(bx, y + h - 0.12 * u);
+            g.stroke();
+        }
+        /* ổ khoá vàng, đúng chi tiết trong bản thiết kế */
+        g.fillStyle = '#ffc93b';
+        rr(g, x + w * 0.5 - 0.11 * u, y + h * 0.52, 0.22 * u, 0.2 * u, 0.05 * u);
+        g.fill();
+        g.strokeStyle = '#e0a400';
+        g.lineWidth = 0.05 * u;
+        g.beginPath();
+        g.arc(x + w * 0.5, y + h * 0.52, 0.08 * u, Math.PI, 0);
+        g.stroke();
+    }
+
+    /* ---- khúc gỗ để trượt qua ----
+     * Cao đúng bằng khung va chạm (1,05 u tới 2,6 u) nên là một thân cây đổ to
+     * chứ không phải cành nhỏ. Vẽ đúng cỡ khung là chuyện sống còn: vẽ bé hơn
+     * thì bé thấy mình đâm vào không khí, vẽ to hơn thì thấy game ăn gian. */
+    function paintLog(g, u) {
+        const w = 1.7 * u, h = 1.5 * u;
+        const x = 0.06 * u, y = 0.06 * u;
+        g.fillStyle = '#7a4a22';
+        rr(g, x, y, w, h, h * 0.3); g.fill();
+        g.fillStyle = '#a86f36';
+        rr(g, x, y, w, h * 0.55, h * 0.28); g.fill();
+        g.fillStyle = '#8a5a2b';
+        rr(g, x + w * 0.06, y + h * 0.34, w * 0.88, h * 0.2, h * 0.1); g.fill();
+
+        /* mặt cắt có vân gỗ ở đầu bên phải — chi tiết làm nó ra "thân cây" */
+        const ex = x + w - h * 0.14, ey = y + h / 2;
+        g.fillStyle = '#c98a4b';
+        g.beginPath();
+        g.ellipse(ex, ey, h * 0.16, h * 0.47, 0, 0, TAU);
+        g.fill();
+        g.strokeStyle = '#8a5a2b';
+        g.lineWidth = 0.035 * u;
+        [0.62, 0.38, 0.16].forEach(k => {
+            g.beginPath();
+            g.ellipse(ex, ey, h * 0.16 * k, h * 0.47 * k, 0, 0, TAU);
+            g.stroke();
+        });
+
+        /* mấu cành và rêu, cho khúc gỗ đỡ trơn tuột */
+        g.fillStyle = '#5e3718';
+        g.beginPath();
+        g.ellipse(x + w * 0.34, y + h * 0.66, h * 0.09, h * 0.07, 0.3, 0, TAU);
+        g.fill();
+        g.fillStyle = '#4c8f3f';
+        g.beginPath();
+        g.ellipse(x + w * 0.28, y + h * 0.1, w * 0.22, h * 0.08, -0.06, 0, TAU);
+        g.ellipse(x + w * 0.62, y + h * 0.09, w * 0.14, h * 0.06, 0.04, 0, TAU);
+        g.fill();
+    }
+
+    function rr(g, x, y, w, h, r) {
+        g.beginPath();
+        g.moveTo(x + r, y);
+        g.arcTo(x + w, y, x + w, y + h, r);
+        g.arcTo(x + w, y + h, x, y + h, r);
+        g.arcTo(x, y + h, x, y, r);
+        g.arcTo(x, y, x + w, y, r);
+        g.closePath();
+    }
+
+    /* Nướng lại toàn bộ sprite. Gọi sau mỗi lần đổi cỡ màn hình — chỉ mất vài
+     * mili giây, mà nếu không nướng lại thì nhân vật bị kéo giãn mờ nhoè. */
+    function bakeSprites() {
+        const u = V.u;
+        if (!u || SPR.u === u) return;
+        SPR.u = u;
+
+        const PW = 2.6 * u, PH = 2.0 * u, PAX = 1.35 * u, PAY = 1.86 * u;
+        SPR.panda = {
+            run: [],
+            jump: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'jump', 0)),
+            slide: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'slide', 0)),
+            cheer: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'cheer', 0))
+        };
+        for (let i = 0; i < PANDA_FRAMES; i++) {
+            const k = i / PANDA_FRAMES;
+            SPR.panda.run.push(bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'run', k)));
+        }
+
+        SPR.pals = ANIMALS.map(sp => ({
+            run: [0, 1].map(f => bake(1.5 * u, 1.2 * u, 0.58 * u, 1.06 * u,
+                g => paintPal(g, u, sp, f)))
+        }));
+
+        SPR.coin = [];
+        for (let i = 0; i < COIN_FRAMES; i++) {
+            SPR.coin.push(bake(0.8 * u, 0.8 * u, 0.4 * u, 0.4 * u,
+                g => paintCoin(g, u, i)));
+        }
+
+        SPR.cage = bake(1.7 * u, 1.8 * u, 0.85 * u, 1.8 * u, g => paintCage(g, u));
+        SPR.log = bake(1.82 * u, 1.62 * u, 0.91 * u, 0.81 * u, g => paintLog(g, u));
+    }
+
+    /* ========================================================================
+     *  10b. VẼ
      * ======================================================================*/
 
     /* Hạt trang trí nền, mỗi vùng cảnh một kiểu (lá bay, cát, tinh thể, sao). */
@@ -1265,18 +1862,40 @@
         });
     }
 
+    /* Hình khối nền, mỗi cảnh một dáng riêng. Sáu cảnh mà dùng chung một quả
+     * đồi tròn thì đổi cảnh chỉ còn là đổi màu, chạy một lúc là bé thấy đâu
+     * cũng như đâu. */
     function hump(x, baseY, w, h, kind) {
         ctx.beginPath();
-        if (kind === 'cave') {
-            /* Hang thì vẽ măng đá nhọn hoắt thay cho đồi tròn. */
+        if (kind === 'ice' || kind === 'lava') {
+            /* Núi băng và núi lửa: đỉnh nhọn hoắt. */
             ctx.moveTo(x, baseY);
+            ctx.lineTo(x + w * 0.46, baseY - h);
+            ctx.lineTo(x + w * 0.68, baseY - h * 0.52);
+            ctx.lineTo(x + w, baseY);
+        } else if (kind === 'city') {
+            /* Nhà cao tầng: khối chữ nhật có mấy ô cửa sổ khoét bằng hình răng
+             * cưa ở nóc, đủ để nhận ra là phố. */
+            const bw = w * 0.62;
+            ctx.moveTo(x + w * 0.19, baseY);
+            ctx.lineTo(x + w * 0.19, baseY - h);
+            ctx.lineTo(x + w * 0.19 + bw * 0.45, baseY - h);
+            ctx.lineTo(x + w * 0.19 + bw * 0.45, baseY - h * 0.78);
+            ctx.lineTo(x + w * 0.19 + bw, baseY - h * 0.78);
+            ctx.lineTo(x + w * 0.19 + bw, baseY);
+        } else if (kind === 'fairy') {
+            /* Tháp lâu đài: thân vuông, chóp nhọn. */
+            ctx.moveTo(x + w * 0.24, baseY);
+            ctx.lineTo(x + w * 0.24, baseY - h * 0.62);
             ctx.lineTo(x + w * 0.5, baseY - h);
-            ctx.lineTo(x + w, baseY);
-        } else if (kind === 'night') {
+            ctx.lineTo(x + w * 0.76, baseY - h * 0.62);
+            ctx.lineTo(x + w * 0.76, baseY);
+        } else if (kind === 'desert') {
+            /* Cồn cát: một bên thoải, một bên dốc — gió thổi một chiều. */
             ctx.moveTo(x, baseY);
-            ctx.lineTo(x + w * 0.3, baseY - h);
-            ctx.lineTo(x + w * 0.62, baseY - h * 0.55);
-            ctx.lineTo(x + w, baseY);
+            ctx.bezierCurveTo(x + w * 0.45, baseY - h * 1.1,
+                x + w * 0.62, baseY - h, x + w * 0.78, baseY - h * 0.9);
+            ctx.quadraticCurveTo(x + w * 0.9, baseY - h * 0.5, x + w, baseY);
         } else {
             ctx.moveTo(x, baseY);
             ctx.quadraticCurveTo(x + w * 0.5, baseY - h * 2, x + w, baseY);
@@ -1336,23 +1955,16 @@
             if (it.x < G.x - 3 || it.x > G.x + V.cols + 2) return;
             const x = sx(it.x);
 
-            if (it.t === T.FRUIT) {
+            if (it.t === T.COIN) {
                 const y = sy(it.y) + Math.sin(G.time * 3 + it.bob) * V.u * 0.08;
+                /* Mỗi đồng lệch pha một chút theo vị trí, nên cả dãy xu xoay
+                 * gợn sóng chứ không quay rập khuôn như một khối. */
+                const f = Math.floor(G.time * 9 + it.x * 1.7) % COIN_FRAMES;
                 ctx.save();
-                ctx.shadowColor = 'rgba(255,212,59,0.8)';
-                ctx.shadowBlur = V.u * 0.35;
-                const g = ctx.createRadialGradient(x - V.u * 0.1, y - V.u * 0.1, V.u * 0.04, x, y, V.u * 0.34);
-                g.addColorStop(0, '#fff9db');
-                g.addColorStop(1, '#f59f00');
-                ctx.fillStyle = g;
-                ctx.beginPath();
-                ctx.arc(x, y, V.u * 0.3, 0, 6.283);
-                ctx.fill();
+                ctx.shadowColor = 'rgba(255,201,59,0.75)';
+                ctx.shadowBlur = V.u * 0.3;
+                blit(SPR.coin[f], x, y);
                 ctx.restore();
-                ctx.fillStyle = 'rgba(255,255,255,0.85)';
-                ctx.beginPath();
-                ctx.arc(x - V.u * 0.1, y - V.u * 0.11, V.u * 0.07, 0, 6.283);
-                ctx.fill();
                 return;
             }
 
@@ -1375,7 +1987,7 @@
                 return;
             }
             if (it.t === T.BRANCH) {
-                drawBranch(x, sy(3.2), Z);
+                drawLog(x, it);
                 return;
             }
         });
@@ -1429,30 +2041,30 @@
         ctx.fill();
     }
 
-    function drawBranch(x, topY, Z) {
-        /* Cành chìa từ trên xuống, khoảng hở dưới nó vừa đủ cho tư thế trượt. */
-        const y0 = sy(3.2), y1 = sy(1.05);
-        ctx.fillStyle = '#6b4423';
-        roundRect(x - V.u * 0.7, y0 - V.u * 0.6, V.u * 1.4, (y1 - y0) + V.u * 0.6, V.u * 0.2);
+    /* Khúc gỗ nằm ngang chắn ngang đường, khoảng hở phía dưới vừa đủ cho tư
+     * thế trượt — thay cho cành cây chìa xuống của bản trước, bám theo hình
+     * trong bản thiết kế. */
+    function drawLog(x, it) {
+        const y = sy(1.83);          // đúng tâm khung va chạm 1,05 – 2,6
+        ctx.save();
+        ctx.translate(x, y);
+        /* Nghiêng nhẹ: khúc gỗ nằm ngay ngắn quá trông như dán vào nền. */
+        ctx.rotate(-0.045);
+        blit(SPR.log, 0, 0);
+        ctx.restore();
+        /* Bóng đổ xuống mặt đất cho khúc gỗ dính vào cảnh. */
+        ctx.fillStyle = 'rgba(0,0,0,0.22)';
+        ctx.beginPath();
+        ctx.ellipse(x, sy(0), V.u * 0.85, V.u * 0.13, 0, 0, 6.283);
         ctx.fill();
-        ctx.fillStyle = Z.key === 'cave' ? '#8ed0ff' : '#2f9e44';
-        for (let i = 0; i < 3; i++) {
-            const yy = y0 + (y1 - y0) * (0.2 + i * 0.3);
-            ctx.beginPath();
-            ctx.ellipse(x + (i % 2 ? 1 : -1) * V.u * 0.55, yy, V.u * 0.45, V.u * 0.22,
-                (i % 2 ? -0.5 : 0.5), 0, 6.283);
-            ctx.fill();
-        }
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.fillRect(x - V.u * 0.7, y1 - V.u * 0.08, V.u * 1.4, V.u * 0.08);
     }
 
     function drawCage(x, gy, it) {
-        const w = V.u * 1.3, h = V.u * 1.5;
+        const h = V.u * 1.6;
         const bob = Math.sin(G.time * 4 + it.bob) * V.u * 0.05;
-        const pal = PALS[it.pal];
+        const sp = SPR.pals[it.pal];
 
-        /* Lồng treo lơ lửng thì phải có dây, không thì nhìn như cái hộp bay. */
+        /* Chuồng treo lơ lửng thì phải có dây, không thì nhìn như cái hộp bay. */
         if (it.y > 0.3) {
             ctx.strokeStyle = 'rgba(255,255,255,0.35)';
             ctx.lineWidth = Math.max(1, V.u * 0.05);
@@ -1462,22 +2074,12 @@
             ctx.stroke();
         }
 
-        /* Bạn nhỏ ngồi trong lồng, ngoáy tai cho ra vẻ đang sốt ruột chờ. */
-        drawPal(x, gy - h * 0.18 + bob, V.u * 0.5, pal, G.time * 6 + it.bob, false);
-
-        ctx.strokeStyle = '#c9d1d9';
-        ctx.lineWidth = Math.max(1.5, V.u * 0.09);
-        ctx.beginPath();
-        for (let i = 0; i <= 4; i++) {
-            const bx = x - w / 2 + (i * w) / 4;
-            ctx.moveTo(bx, gy);
-            ctx.lineTo(bx, gy - h);
+        /* Bạn nhỏ ngồi trong chuồng, nhấp nhổm cho ra vẻ đang sốt ruột chờ. */
+        if (sp) {
+            const f = Math.floor(G.time * 4 + it.bob) % 2;
+            blit(sp.run[f], x, gy - V.u * 0.22 + bob, 0.92);
         }
-        ctx.moveTo(x - w / 2, gy - h);
-        ctx.lineTo(x + w / 2, gy - h);
-        ctx.moveTo(x - w / 2, gy);
-        ctx.lineTo(x + w / 2, gy);
-        ctx.stroke();
+        blit(SPR.cage, x, gy + bob);
 
         /* Quầng sáng nhấp nháy để mắt bắt được từ xa. */
         ctx.save();
@@ -1566,111 +2168,59 @@
     }
 
     function drawTail() {
+        /* Vẽ từ cuối đoàn về đầu để bạn đứng trước che bạn đứng sau, cả đoàn
+         * xếp lớp có chiều sâu chứ không phẳng lì. */
         for (let i = G.tail.length - 1; i >= 0; i--) {
             const wx = G.x - (i + 1) * TAIL_GAP;
             const wy = trailAt(wx);
-            const pal = PALS[G.tail[i]];
-            const hop = Math.abs(Math.sin(G.runCycle * 0.5 - i * 0.6)) * 0.18;
-            drawPal(sx(wx), sy(wy + hop), V.u * 0.42, pal, G.runCycle - i * 0.6, true);
+            const sp = SPR.pals[G.tail[i]];
+            if (!sp) continue;
+            const ph = G.runCycle - i * 0.6;
+            const hop = Math.abs(Math.sin(ph)) * 0.16;
+            palShadow(sx(wx), sy(wy));
+            blit(sp.run[Math.sin(ph) > 0 ? 1 : 0], sx(wx), sy(wy + hop));
         }
 
         if (G.escapees) {
             G.escapees.forEach(e => {
                 const k = Math.min(1, (G.time - e.born) / 1.4);
+                const sp = SPR.pals[e.pal];
+                if (!sp) return;
                 ctx.save();
-                ctx.globalAlpha = 1 - k;
-                drawPal(sx(e.x), sy(e.y), V.u * 0.42, PALS[e.pal], G.time * 14, true);
+                ctx.rotate(0);
+                blit(sp.run[Math.floor(G.time * 14) % 2], sx(e.x), sy(e.y), 1, 1 - k);
                 ctx.restore();
             });
         }
     }
 
-    /* Một bạn nhỏ: thân tròn, hai tai, mặt. Vẽ bằng hình cơ bản chứ không dùng
-     * ảnh — nhờ vậy đổi cỡ màn hình bao nhiêu cũng nét. */
-    function drawPal(x, y, r, pal, phase, running) {
-        const bounce = running ? Math.abs(Math.sin(phase)) * r * 0.18 : 0;
-        const cy = y - r - bounce;
-
-        /* bóng đổ */
+    function palShadow(x, y) {
         ctx.fillStyle = 'rgba(0,0,0,0.22)';
         ctx.beginPath();
-        ctx.ellipse(x, y + r * 0.06, r * 0.7, r * 0.2, 0, 0, 6.283);
-        ctx.fill();
-
-        /* chân */
-        if (running) {
-            ctx.strokeStyle = pal.dark;
-            ctx.lineWidth = r * 0.26;
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(x - r * 0.25, cy + r * 0.6);
-            ctx.lineTo(x - r * 0.25 + Math.cos(phase) * r * 0.45, y);
-            ctx.moveTo(x + r * 0.25, cy + r * 0.6);
-            ctx.lineTo(x + r * 0.25 + Math.cos(phase + Math.PI) * r * 0.45, y);
-            ctx.stroke();
-        }
-
-        /* tai */
-        ctx.fillStyle = pal.main;
-        [-1, 1].forEach(s => {
-            ctx.beginPath();
-            ctx.ellipse(x + s * r * 0.5, cy - r * 0.72, r * 0.24, r * 0.42,
-                s * 0.35, 0, 6.283);
-            ctx.fill();
-        });
-        ctx.fillStyle = pal.ear;
-        [-1, 1].forEach(s => {
-            ctx.beginPath();
-            ctx.ellipse(x + s * r * 0.5, cy - r * 0.7, r * 0.12, r * 0.24,
-                s * 0.35, 0, 6.283);
-            ctx.fill();
-        });
-
-        /* thân */
-        const g = ctx.createRadialGradient(x - r * 0.3, cy - r * 0.35, r * 0.1, x, cy, r);
-        g.addColorStop(0, pal.ear);
-        g.addColorStop(0.6, pal.main);
-        g.addColorStop(1, pal.dark);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(x, cy, r * 0.92, 0, 6.283);
-        ctx.fill();
-
-        /* mặt */
-        ctx.fillStyle = '#1b2430';
-        ctx.beginPath();
-        ctx.arc(x - r * 0.3, cy - r * 0.1, r * 0.13, 0, 6.283);
-        ctx.arc(x + r * 0.3, cy - r * 0.1, r * 0.13, 0, 6.283);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(x - r * 0.26, cy - r * 0.15, r * 0.05, 0, 6.283);
-        ctx.arc(x + r * 0.34, cy - r * 0.15, r * 0.05, 0, 6.283);
-        ctx.fill();
-        ctx.strokeStyle = '#1b2430';
-        ctx.lineWidth = r * 0.09;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(x, cy + r * 0.12, r * 0.24, 0.25, Math.PI - 0.25);
-        ctx.stroke();
-        /* má hồng */
-        ctx.fillStyle = 'rgba(255,120,150,0.45)';
-        ctx.beginPath();
-        ctx.arc(x - r * 0.55, cy + r * 0.14, r * 0.13, 0, 6.283);
-        ctx.arc(x + r * 0.55, cy + r * 0.14, r * 0.13, 0, 6.283);
+        ctx.ellipse(x, y, V.u * 0.3, V.u * 0.08, 0, 0, 6.283);
         ctx.fill();
     }
 
     function drawPlayer() {
         const x = sx(G.x);
         const y = sy(G.y);
-        const h = playerH();
         const hurt = G.time < G.hurtUntil;
+
+        /* Bóng đổ vẽ trước, và vẽ cả lúc đang nhấp nháy: mất luôn cái bóng thì
+         * lúc bất tử bé không còn manh mối nào để biết mình đang ở đâu. */
+        const sup = supportAt(G.x, G.y, 1, G.y);
+        if (sup != null) {
+            const shY = sy(sup);
+            const k = Math.max(0.25, 1 - (shY - y) / (V.u * 5));
+            ctx.fillStyle = 'rgba(0,0,0,' + (0.28 * k) + ')';
+            ctx.beginPath();
+            ctx.ellipse(x, shY, V.u * 0.55 * k, V.u * 0.16 * k, 0, 0, 6.283);
+            ctx.fill();
+        }
+
         /* Nhấp nháy lúc bất tử — không có dấu hiệu này thì bé không hiểu vì sao
          * vừa đâm vào đá mà lần này không sao. */
         if (hurt && Math.floor(G.time * 14) % 2 === 0) return;
-
-        ctx.save();
 
         /* khiên */
         if (G.shield > 0) {
@@ -1680,25 +2230,9 @@
             ctx.strokeStyle = '#8ed0ff';
             ctx.lineWidth = V.u * 0.12;
             ctx.beginPath();
-            ctx.arc(x, y - h * V.u * 0.5, V.u * 1.25, 0, 6.283);
+            ctx.arc(x, y - V.u * 0.8, V.u * 1.25, 0, 6.283);
             ctx.stroke();
             ctx.restore();
-        }
-
-        const bodyR = V.u * 0.52;
-        const sliding = G.sliding > 0;
-        const cy = sliding ? y - bodyR * 0.75 : y - h * V.u + bodyR;
-        const phase = G.runCycle;
-
-        /* bóng đổ trên mặt đất ngay dưới chân */
-        const sup = supportAt(G.x, G.y, 1, G.y);
-        if (sup != null) {
-            const shY = sy(sup);
-            const k = Math.max(0.25, 1 - (shY - y) / (V.u * 5));
-            ctx.fillStyle = 'rgba(0,0,0,' + (0.28 * k) + ')';
-            ctx.beginPath();
-            ctx.ellipse(x, shY, V.u * 0.55 * k, V.u * 0.16 * k, 0, 0, 6.283);
-            ctx.fill();
         }
 
         /* tên lửa dưới chân */
@@ -1719,61 +2253,28 @@
             ctx.restore();
         }
 
-        /* chân tay */
-        ctx.strokeStyle = '#1f6f4a';
-        ctx.lineWidth = V.u * 0.2;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        if (sliding) {
-            ctx.moveTo(x - bodyR * 0.2, cy + bodyR * 0.5);
-            ctx.lineTo(x + bodyR * 1.1, cy + bodyR * 0.7);
-        } else if (!G.onGround) {
-            ctx.moveTo(x - bodyR * 0.3, cy + bodyR * 0.7);
-            ctx.lineTo(x - bodyR * 0.7, cy + bodyR * 1.35);
-            ctx.moveTo(x + bodyR * 0.3, cy + bodyR * 0.7);
-            ctx.lineTo(x + bodyR * 0.8, cy + bodyR * 1.1);
-        } else {
-            ctx.moveTo(x - bodyR * 0.25, cy + bodyR * 0.7);
-            ctx.lineTo(x - bodyR * 0.25 + Math.cos(phase) * bodyR * 0.7, y);
-            ctx.moveTo(x + bodyR * 0.25, cy + bodyR * 0.7);
-            ctx.lineTo(x + bodyR * 0.25 + Math.cos(phase + Math.PI) * bodyR * 0.7, y);
+        if (!SPR.panda) return;
+
+        /* Chọn tấm sprite theo tư thế. Chu kỳ chạy chia tám hình, chạy nhanh
+         * thì lật hình nhanh theo — chân panda bước đúng nhịp mặt đất trôi chứ
+         * không trượt băng. */
+        let s;
+        if (G.sliding > 0) s = SPR.panda.slide;
+        else if (!G.onGround || G.rocketT > 0) s = SPR.panda.jump;
+        else if (G.time - G.cheerAt < 0.45) s = SPR.panda.cheer;
+        else {
+            const f = Math.floor((G.runCycle / TAU) * PANDA_FRAMES) % PANDA_FRAMES;
+            s = SPR.panda.run[(f + PANDA_FRAMES) % PANDA_FRAMES];
         }
-        ctx.stroke();
 
-        /* thân: quả bóng xanh lá có mũ phi hành, cho khác hẳn đám bạn tròn */
-        const g2 = ctx.createRadialGradient(x - bodyR * 0.3, cy - bodyR * 0.35, bodyR * 0.1, x, cy, bodyR);
-        g2.addColorStop(0, '#b2f2bb');
-        g2.addColorStop(0.6, '#51cf66');
-        g2.addColorStop(1, '#2b8a3e');
-        ctx.fillStyle = g2;
-        ctx.beginPath();
-        ctx.arc(x, cy, bodyR, 0, 6.283);
-        ctx.fill();
-
-        /* khăn quàng bay ngược chiều chạy — chi tiết rẻ tiền nhất mà thêm được
-           nhiều cảm giác tốc độ nhất. */
-        ctx.fillStyle = '#ff6b6b';
-        ctx.beginPath();
-        ctx.moveTo(x - bodyR * 0.2, cy - bodyR * 0.1);
-        ctx.quadraticCurveTo(
-            x - bodyR * 1.6, cy - bodyR * (0.5 + 0.25 * Math.sin(G.time * 12)),
-            x - bodyR * 2.1, cy + bodyR * (0.1 + 0.2 * Math.sin(G.time * 9)));
-        ctx.quadraticCurveTo(x - bodyR * 1.4, cy + bodyR * 0.3, x - bodyR * 0.2, cy + bodyR * 0.32);
-        ctx.closePath();
-        ctx.fill();
-
-        /* mặt */
-        ctx.fillStyle = '#1b2430';
-        ctx.beginPath();
-        ctx.arc(x + bodyR * 0.02, cy - bodyR * 0.12, bodyR * 0.13, 0, 6.283);
-        ctx.arc(x + bodyR * 0.55, cy - bodyR * 0.12, bodyR * 0.13, 0, 6.283);
-        ctx.fill();
-        ctx.strokeStyle = '#1b2430';
-        ctx.lineWidth = bodyR * 0.11;
-        ctx.beginPath();
-        ctx.arc(x + bodyR * 0.28, cy + bodyR * 0.18, bodyR * 0.26, 0.2, Math.PI - 0.2);
-        ctx.stroke();
-
+        ctx.save();
+        /* Nghiêng người theo đà rơi: lên thì ưỡn ra sau, xuống thì chúi tới. */
+        if (!G.onGround && G.rocketT <= 0) {
+            ctx.translate(x, y);
+            ctx.rotate(Math.max(-0.18, Math.min(0.2, G.vy * 0.012)));
+            ctx.translate(-x, -y);
+        }
+        blit(s, x, y);
         ctx.restore();
     }
 
@@ -1878,14 +2379,14 @@
     const el = id => document.getElementById(id);
     const ui = {
         hud: el('hud'),
-        dist: el('hud-dist'), pals: el('hud-pals'), fruit: el('hud-fruit'),
+        dist: el('hud-dist'), pals: el('hud-pals'), coins: el('hud-coins'),
         score: el('hud-score'), combo: el('hud-combo'), comboWrap: el('combo-wrap'),
         zone: el('hud-zone'),
         powers: el('power-strip'),
         menu: el('menu-overlay'), over: el('over-overlay'), pause: el('pause-overlay'),
-        pauseDist: el('pause-dist'), pausePals: el('pause-pals'), pauseFruit: el('pause-fruit'),
+        pauseDist: el('pause-dist'), pausePals: el('pause-pals'), pauseCoins: el('pause-coins'),
         pauseIcon: el('pause-icon'), pauseText: el('pause-text'), countdown: el('countdown'),
-        overDist: el('over-dist'), overPals: el('over-pals'), overFruit: el('over-fruit'),
+        overDist: el('over-dist'), overPals: el('over-pals'), overCoins: el('over-coins'),
         overScore: el('over-score'), overBest: el('over-best'), overNew: el('over-new'),
         overMissions: el('over-missions'),
         menuBest: el('menu-best'), menuPals: el('menu-pals'),
@@ -1899,7 +2400,7 @@
         if (!ui.dist) return;
         ui.dist.textContent = G.metres;
         ui.pals.textContent = G.tail.length;
-        ui.fruit.textContent = G.fruit;
+        ui.coins.textContent = G.coins;
         ui.score.textContent = G.score;
         ui.zone.textContent = zone().name;
 
@@ -1947,7 +2448,7 @@
     function showOver(newBest) {
         ui.overDist.textContent = G.metres;
         ui.overPals.textContent = G.pals;
-        ui.overFruit.textContent = G.fruit;
+        ui.overCoins.textContent = G.coins;
         ui.overScore.textContent = G.score;
         ui.overBest.textContent = store.data.best;
         ui.overNew.hidden = !newBest;
@@ -1975,7 +2476,7 @@
         G.mode = 'paused';
         ui.pauseDist.textContent = G.metres;
         ui.pausePals.textContent = G.tail.length;
-        ui.pauseFruit.textContent = G.fruit;
+        ui.pauseCoins.textContent = G.coins;
         show(ui.pause);
         paintPauseBtn();
     }
@@ -2154,12 +2655,12 @@
         window.addEventListener('orientationchange', () => setTimeout(resize, 200));
 
         /* Cửa sau để thử: gọi thẳng từ console hoặc từ script kiểm thử. */
-        window.rescueRun = {
-            G, V, ZONES, CHUNKS, store,
+        window.pandaRun = {
+            G, V, SPR, ANIMALS, ZONES, CHUNKS, store,
             play, jump, slide, releaseJump, pause, resume,
             state: () => ({
                 mode: G.mode, m: G.metres, pals: G.tail.length, rescued: G.pals,
-                fruit: G.fruit, score: G.score, combo: G.combo, speed: +G.speed.toFixed(2),
+                coins: G.coins, score: G.score, combo: G.combo, speed: +G.speed.toFixed(2),
                 zone: zone().key, shield: G.shield
             })
         };

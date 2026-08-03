@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rescue Run - Free Endless Runner Game for Kids | KIBU Games</title>
+    <title>Panda Run - Free Endless Runner Game for Kids | KIBU Games</title>
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Play Rescue Run free on KIBU Games! Jump, slide and free trapped animal friends who join your running line. Bump into something and you only lose a friend, never the whole run. English & Vietnamese, no download.">
-    <meta name="keywords" content="Rescue Run, endless runner, game chay vo tan, tro choi chay, running game for kids, jump and slide, free online kids games, KIBU Games">
+    <meta name="description" content="Play Panda Run free on KIBU Games! Help the brave little panda jump and slide through six worlds to free caged animal friends, who then run right behind you. Bump into something and you only lose a friend, never the whole run. English & Vietnamese, no download.">
+    <meta name="keywords" content="Panda Run, panda game, endless runner, game chay vo tan, panda giai cuu ban, tro choi chay, running game for kids, jump and slide, free online kids games, KIBU Games">
     <meta name="author" content="KIBU Games">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://kibugames.com/rescue-run/">
-    <link rel="alternate" hreflang="en" href="https://kibugames.com/rescue-run/">
-    <link rel="alternate" hreflang="vi" href="https://kibugames.com/rescue-run/">
-    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/rescue-run/">
+    <link rel="canonical" href="https://kibugames.com/panda-run/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/panda-run/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/panda-run/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/panda-run/">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://kibugames.com/rescue-run/">
-    <meta property="og:title" content="Rescue Run - Free Endless Runner | KIBU Games">
-    <meta property="og:description" content="Run, jump and slide through jungle, beach, cave and starry fields. Free your friends and they run right behind you. 100% free on KIBU Games.">
-    <meta property="og:image" content="https://kibugames.com/rescue-run/og-image.png">
+    <meta property="og:url" content="https://kibugames.com/panda-run/">
+    <meta property="og:title" content="Panda Run - Free Endless Runner | KIBU Games">
+    <meta property="og:description" content="Run, jump and slide through forest, desert, ice, city, lava and a fairy castle. Free the caged animals and they run right behind you. 100% free on KIBU Games.">
+    <meta property="og:image" content="https://kibugames.com/panda-run/og-image.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:type" content="image/png">
@@ -29,20 +29,20 @@
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://kibugames.com/rescue-run/">
-    <meta name="twitter:title" content="Rescue Run - Free Endless Runner">
-    <meta name="twitter:description" content="Jump, slide, rescue friends. A running game where a bump costs you a friend, not the whole run.">
-    <meta name="twitter:image" content="https://kibugames.com/rescue-run/og-image.png">
+    <meta name="twitter:url" content="https://kibugames.com/panda-run/">
+    <meta name="twitter:title" content="Panda Run - Free Endless Runner">
+    <meta name="twitter:description" content="A little panda on a rescue run. Bump into something and it costs you a friend, not the whole run.">
+    <meta name="twitter:image" content="https://kibugames.com/panda-run/og-image.png">
 
     <!-- Structured Data (JSON-LD) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "Rescue Run",
+      "name": "Panda Run",
       "applicationCategory": "GameApplication",
       "operatingSystem": "Web Browser",
-      "url": "https://kibugames.com/rescue-run/",
+      "url": "https://kibugames.com/panda-run/",
       "genre": "Arcade",
       "offers": {
         "@type": "Offer",
@@ -57,7 +57,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/rescue-run/style.css">
+    <link rel="stylesheet" href="/panda-run/style.css">
     <link rel="stylesheet" href="/site-chrome.css">
     <script src="/routes.js"></script>
     <script src="/i18n.js"></script>
@@ -77,9 +77,9 @@
                 <img src="/logo.svg" alt="KIBU Games">
             </a>
             <div class="brand">
-                <img src="/rescue-run/icon.png" alt="" class="brand-img"
+                <img src="/panda-run/icon.png" alt="" class="brand-img"
                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><i class="fa-solid fa-person-running brand-icon"></i>
-                <h1 class="brand-title">RESCUE RUN</h1>
+                <h1 class="brand-title">PANDA RUN</h1>
             </div>
         </div>
         <div class="nav-actions">
@@ -110,7 +110,7 @@
             </div>
             <div class="hud-box">
                 <span class="hud-ico">🐾</span><span class="hud-num" id="hud-pals">0</span>
-                <span class="hud-ico">🍊</span><span class="hud-num hud-fruit" id="hud-fruit">0</span>
+                <span class="hud-ico">🪙</span><span class="hud-num hud-coins" id="hud-coins">0</span>
             </div>
             <div class="hud-box">
                 <span class="hud-tag">Score</span>
@@ -138,7 +138,7 @@
                 <div class="stat-grid">
                     <div class="stat"><b><span id="pause-dist">0</span> m</b><span>Distance</span></div>
                     <div class="stat"><b id="pause-pals">0</b><span>Friends</span></div>
-                    <div class="stat"><b id="pause-fruit">0</b><span>Fruit</span></div>
+                    <div class="stat"><b id="pause-coins">0</b><span>Coins</span></div>
                 </div>
                 <div class="row-buttons">
                     <button id="btn-resume" class="btn btn-primary btn-big">KEEP RUNNING</button>
@@ -150,8 +150,8 @@
         <!-- ---------- Màn chào ---------- -->
         <div id="menu-overlay" class="overlay">
             <div class="card pop-in">
-                <h1 class="title">RESCUE RUN</h1>
-                <p class="subtitle">Run, jump and free your friends. They run right behind you.</p>
+                <h1 class="title">PANDA RUN</h1>
+                <p class="subtitle">A brave little panda is off to free his animal friends!</p>
 
                 <div class="how-row">
                     <div class="how-item">
@@ -162,12 +162,12 @@
                     <div class="how-item">
                         <span class="how-emoji">👇</span>
                         <b>Tap down low to slide</b>
-                        <span>Slide under the low branches.</span>
+                        <span>Slide under the fallen logs.</span>
                     </div>
                     <div class="how-item">
-                        <span class="how-emoji">🐾</span>
-                        <b>Free your friends</b>
-                        <span>Every friend you free doubles down your score.</span>
+                        <span class="how-emoji">🐼</span>
+                        <b>Free the animals</b>
+                        <span>Open a cage and that friend runs behind you.</span>
                     </div>
                 </div>
 
@@ -199,7 +199,7 @@
                 <div class="stat-grid">
                     <div class="stat"><b><span id="over-dist">0</span> m</b><span>Distance</span></div>
                     <div class="stat"><b id="over-pals">0</b><span>Friends rescued</span></div>
-                    <div class="stat"><b id="over-fruit">0</b><span>Fruit</span></div>
+                    <div class="stat"><b id="over-coins">0</b><span>Coins</span></div>
                 </div>
                 <div class="score-row big"><span>Score</span><span id="over-score">0</span></div>
                 <p class="best-line">Best run <b><span id="over-best">0</span> m</b></p>
@@ -222,6 +222,6 @@
         </div>
     </footer>
 
-    <script src="/rescue-run/game.js"></script>
+    <script src="/panda-run/game.js"></script>
 </body>
 </html>
