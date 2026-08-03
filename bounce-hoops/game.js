@@ -383,6 +383,8 @@
         keyMode: false,      // bé đang chơi bằng bàn phím
         aimAngle: -Math.PI / 4,
         aimPower: 0.7,
+        charging: false,     // đang giữ dấu cách để lấy đà
+        pwDir: 1,            // thanh lực đang chạy lên hay chạy xuống
 
         parts: [],
         rings: [],
@@ -683,16 +685,27 @@
     }
 
     /* ---- ngắm bằng bàn phím ----
-     * Bàn phím đi theo từng nấc: mũi tên xoay 2°, dấu cách đổi lực từng nấc
-     * một phần mười. Cố ý KHÔNG làm thanh lực chạy qua chạy lại rồi bấm cho
-     * trúng: cả game này không có chỗ nào bắt bé nhanh tay, thêm một cái đồng
-     * hồ bấm giờ trá hình vào đây thì hỏng mất cái nết của nó.
+     * Mũi tên xoay 2° một nhịp. Lực thì GIỮ DẤU CÁCH cho thanh lực chạy, NHẢ
+     * TAY là ném — y như bên game bóng rổ, và cũng y như cách bé kéo ngón tay
+     * trên màn cảm ứng: nhấn, giữ, buông.
      *
-     * Hai nấc này chọn đúng bằng lưới mà máy dò dùng để kiểm 24 màn (2° và
-     * một phần mười lực), nên màn nào máy bảo giải được thì bấm phím cũng
-     * giải được — không có màn nào chỉ chuột mới với tới. */
+     * Trước đây phải bấm dấu cách nhiều lần cho lực nhảy từng nấc rồi bấm
+     * Enter mới ném — muốn lực gần đầy phải gõ tám chín lần cho một cú, mà
+     * mỗi màn bé ném hàng chục cú. Đổi sang giữ-và-nhả thì một cú chỉ còn một
+     * thao tác.
+     *
+     * Nói thẳng cái mất: bản cũ cố ý không cho thanh lực chạy, để không chỗ
+     * nào trong game bắt bé nhanh tay. Giữ-và-nhả thì có đòi tay một chút.
+     * Nên thanh lực chạy CHẬM (hết một lượt lên hoặc xuống mất hơn một giây
+     * rưỡi), và phím Enter vẫn ném ngay ở mức lực đang có — bé nào không kịp
+     * canh tay thì vẫn còn đường chơi không cần phản xạ.
+     *
+     * Bước xoay 2° giữ đúng bằng lưới mà máy dò dùng để kiểm 24 màn; lực giờ
+     * chạy liền mạch nên phủ trọn lưới một phần mười của máy dò — màn nào máy
+     * bảo giải được thì bấm phím vẫn tới được. */
     const KEY_TURN = 2 * Math.PI / 180;
-    const KEY_PW_STEP = 0.1, KEY_PW_MIN = 0.2, KEY_PW_MAX = 1;
+    const KEY_PW_MIN = 0.2, KEY_PW_MAX = 1;
+    const KEY_PW_RATE = 0.5;     // phần lực mỗi giây khi đang giữ dấu cách
 
     function keyAimVector() {
         return {
@@ -725,11 +738,38 @@
         refreshKeyPreview();
     }
 
-    function stepPower() {
-        G.aimPower += KEY_PW_STEP;
-        if (G.aimPower > KEY_PW_MAX + 1e-6) G.aimPower = KEY_PW_MIN;
-        G.aimPower = Math.round(G.aimPower * 20) / 20;
+    /* Bắt đầu lấy đà. Luôn khởi động từ mức nhẹ nhất và chạy lên, để nhả tay
+     * sớm là cú nhẹ, giữ lâu là cú mạnh — đúng cái bé đoán được. */
+    function startCharge() {
+        if (G.mode !== 'aim' || G.charging) return;
+        G.charging = true;
+        G.pwDir = 1;
+        G.aimPower = KEY_PW_MIN;
         refreshKeyPreview();
+    }
+
+    /* Thanh lực chạy lên tới đỉnh thì quay đầu chạy xuống rồi lại lên, để bé
+     * giữ hụt mất mức mình muốn thì chờ một nhịp là nó vòng lại, khỏi phải nhả
+     * ra bấm lại từ đầu. */
+    function stepCharge(dt) {
+        if (!G.charging || G.mode !== 'aim') return;
+        G.aimPower += G.pwDir * KEY_PW_RATE * dt;
+        if (G.aimPower >= KEY_PW_MAX) { G.aimPower = KEY_PW_MAX; G.pwDir = -1; }
+        if (G.aimPower <= KEY_PW_MIN) { G.aimPower = KEY_PW_MIN; G.pwDir = 1; }
+        refreshKeyPreview();
+    }
+
+    function releaseCharge() {
+        if (!G.charging) return;
+        G.charging = false;
+        if (G.mode !== 'aim') return;
+        const a = keyAimVector();
+        launch(a.vx, a.vy);
+    }
+
+    function cancelCharge() {
+        G.charging = false;
+        G.pwDir = 1;
     }
 
     function stepBall(dt) {
@@ -1153,19 +1193,27 @@
             if (!pass) ctx.stroke();
         }
 
-        /* thanh lực, treo ngay trên đầu quả bóng */
-        const notches = Math.round((KEY_PW_MAX - KEY_PW_MIN) / KEY_PW_STEP) + 1;
-        const on = Math.round((G.aimPower - KEY_PW_MIN) / KEY_PW_STEP) + 1;
+        /* Thanh lực, treo ngay trên đầu quả bóng. Vẽ LIỀN MẠCH chứ không chia
+         * nấc nữa: lực giờ chạy trơn theo tay giữ, kẻ nấc ra chỉ tổ hứa hẹn
+         * một độ chính xác mà cách chơi này không có thật.
+         *
+         * Lúc chưa giữ phím thì thanh mờ đi, để bé phân biệt được "đang chờ
+         * mình" với "đang chạy, nhả tay là bắn". */
+        const k = (G.aimPower - KEY_PW_MIN) / (KEY_PW_MAX - KEY_PW_MIN);
         const bw = V.u * 1.9, bh = V.u * 0.26;
         const px = x - bw / 2, py = y - V.u * 1.25;
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
         roundRect(px - V.u * 0.05, py - V.u * 0.05, bw + V.u * 0.1, bh + V.u * 0.1, bh * 0.7);
         ctx.fill();
-        const gap = V.u * 0.035, cw = (bw - gap * (notches - 1)) / notches;
-        for (let i = 0; i < notches; i++) {
-            ctx.fillStyle = i < on ? (i < notches * 0.6 ? '#8ce99a' : '#ffd43b') : 'rgba(255,255,255,0.22)';
-            ctx.fillRect(px + i * (cw + gap), py, cw, bh);
-        }
+        ctx.fillStyle = 'rgba(255,255,255,0.22)';
+        roundRect(px, py, bw, bh, bh * 0.5);
+        ctx.fill();
+        const fw = Math.max(bh, bw * k);
+        ctx.fillStyle = k < 0.5 ? '#8ce99a' : (k < 0.8 ? '#ffd43b' : '#ff922b');
+        ctx.globalAlpha = G.charging ? 1 : 0.55;
+        roundRect(px, py, fw, bh, bh * 0.5);
+        ctx.fill();
+        ctx.globalAlpha = 1;
         ctx.restore();
     }
 
@@ -1292,6 +1340,10 @@
     }
 
     function startLevel(i) {
+        /* Vào màn mới thì bỏ luôn cú lấy đà đang dở. Bấm R để chơi lại ngay
+         * giữa lúc đang giữ dấu cách là chuyện thường, mà nếu nhịp nhả phím bị
+         * nuốt mất thì thanh lực cứ thế chạy hoài không ai tắt. */
+        cancelCharge();
         buildLevel(i);
         hideAll();
         show(ui.hud);
@@ -1457,21 +1509,40 @@
                 turnAim(t[0], t[1]);
                 return;
             }
+            /* Giữ phím thì trình duyệt bắn keydown liên tục; chỉ nhịp ĐẦU mới
+             * tính là bắt đầu lấy đà, mấy nhịp lặp về sau bỏ qua hết. Thiếu
+             * chốt này thì mỗi nhịp lặp lại kéo lực về mức nhẹ nhất, giữ mãi
+             * mà thanh lực không nhúc nhích. */
             if (ev.key === ' ' || ev.key === 'Spacebar') {
                 ev.preventDefault();
+                if (ev.repeat) return;
                 sfx.wake();
                 G.keyMode = true;
                 G.aiming = false;
-                stepPower();
+                startCharge();
                 sfx.rim();
                 return;
             }
             if (ev.key === 'Enter' && G.keyMode) {
                 ev.preventDefault();
+                cancelCharge();
                 const a = keyAimVector();
                 launch(a.vx, a.vy);
             }
         });
+
+        /* Nhả dấu cách là ném. Bắt ở window chứ không ở sân chơi, vì lúc giữ
+         * phím bé có thể đã lỡ tay bấm ra chỗ khác trên trang. */
+        window.addEventListener('keyup', ev => {
+            if (ev.key === ' ' || ev.key === 'Spacebar') {
+                ev.preventDefault();
+                releaseCharge();
+            }
+        });
+
+        /* Chuyển cửa sổ giữa lúc đang giữ phím thì keyup không bao giờ tới,
+         * bé quay lại thấy thanh lực treo cứng. Bỏ dở cú lấy đà cho gọn. */
+        window.addEventListener('blur', cancelCharge);
     }
 
     function wireButtons() {
@@ -1516,6 +1587,7 @@
         G.time += dt;
 
         if (G.mode === 'fly') stepBall(dt);
+        stepCharge(dt);
         stepFx(dt);
         draw();
         requestAnimationFrame(frame);

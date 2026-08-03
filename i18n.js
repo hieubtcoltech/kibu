@@ -412,8 +412,8 @@
         ['Ném Lại', 'Retry'],
         /* nhắc phím cho máy tính — để nguyên cụm cho khỏi lẫn vào câu khác */
         ['Mũi tên: ngắm', 'Arrows: aim', 'x'],
-        ['Dấu cách: đổi lực', 'Space: power', 'x'],
-        ['Enter: ném', 'Enter: throw', 'x'],
+        ['Giữ dấu cách: lấy đà', 'Hold Space: power', 'x'],
+        ['Nhả tay: ném', 'Let go: throw', 'x'],
         ['VÀO RỔ RỒI!', 'NICE SHOT!'],
         ['Số lần ném', 'Throws'],
         ['MÀN TIẾP', 'NEXT LEVEL'],
