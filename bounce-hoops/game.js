@@ -757,12 +757,40 @@
         ctx.restore();
     }
 
+    /* Trời chỉ tô trong đúng khung 20×12 ô, phần thừa hai bên để tối và có
+     * viền bo. Trên máy để bàn khung game rộng gấp rưỡi sân chơi, tô trời ra
+     * hết mép thì bé không biết đâu là bờ tường vô hình mà bóng sẽ nảy vào. */
     function drawSky(W) {
-        const g = ctx.createLinearGradient(0, 0, 0, V.h);
+        ctx.fillStyle = '#150e07';
+        ctx.fillRect(0, 0, V.w, V.h);
+
+        const x0 = sx(0), y0 = sy(0), fw = COLS * V.u, fh = ROWS * V.u;
+        ctx.save();
+        roundRect(x0, y0, fw, fh, V.u * 0.35);
+        ctx.clip();
+
+        const g = ctx.createLinearGradient(0, y0, 0, y0 + fh);
         g.addColorStop(0, W.sky[0]);
         g.addColorStop(1, W.sky[1]);
         ctx.fillStyle = g;
-        ctx.fillRect(0, 0, V.w, V.h);
+        ctx.fillRect(x0, y0, fw, fh);
+
+        /* Mấy vòng tròn to mờ cho nền đỡ phẳng. Vị trí tính từ số màn nên mỗi
+         * màn một khác, mà vẫn đứng yên chứ không nhấp nháy theo khung hình. */
+        ctx.fillStyle = 'rgba(255,255,255,0.10)';
+        for (let i = 0; i < 5; i++) {
+            const k = (G.levelIndex * 7 + i * 13) % 20;
+            const cx = sx(1 + k), cy = sy(1.5 + ((i * 5 + G.levelIndex) % 7));
+            ctx.beginPath();
+            ctx.arc(cx, cy, V.u * (1.1 + (i % 3) * 0.6), 0, 6.283);
+            ctx.fill();
+        }
+        ctx.restore();
+
+        ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+        ctx.lineWidth = Math.max(2, V.u * 0.06);
+        roundRect(x0, y0, fw, fh, V.u * 0.35);
+        ctx.stroke();
     }
 
     /* Lưới ô mờ phía sau — bé đếm ô mà ước lượng đường bóng, đó là công cụ suy
@@ -835,6 +863,17 @@
         const x = sx(h.x), y = sy(h.y);
         const half = 0.95 * V.u;
 
+        /* Bảng rổ quay ra phía bờ sân gần nhất, đúng như cái rổ thật treo trên
+         * cột. Không có nó thì cái vành trông như đang lơ lửng giữa trời. */
+        const side = h.x > COLS / 2 ? 1 : -1;
+        const bx = x + side * (half + V.u * 0.42);
+        ctx.fillStyle = '#fff3c4';
+        roundRect(bx - V.u * 0.13, y - V.u * 1.15, V.u * 0.26, V.u * 1.7, V.u * 0.1);
+        ctx.fill();
+        ctx.strokeStyle = W.ink;
+        ctx.lineWidth = Math.max(2, V.u * 0.07);
+        ctx.stroke();
+
         /* Lưới rổ */
         ctx.strokeStyle = 'rgba(255,255,255,0.9)';
         ctx.lineWidth = Math.max(1.5, V.u * 0.05);
@@ -895,12 +934,17 @@
     function drawPreview() {
         if (G.mode !== 'aim' || !G.preview.length) return;
         ctx.save();
+        /* Chấm to dần rồi nhỏ lại thì khó nhìn; ở đây chấm đều nhau, có viền
+         * tối, mờ dần về cuối để bé biết đâu là đầu đâu là đuôi đường bay. */
         G.preview.forEach((p, i) => {
-            ctx.globalAlpha = Math.max(0.15, 1 - i / G.preview.length);
+            ctx.globalAlpha = Math.max(0.2, 1 - i / G.preview.length);
             ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+            ctx.lineWidth = Math.max(1, V.u * 0.03);
             ctx.beginPath();
-            ctx.arc(sx(p.x), sy(p.y), V.u * 0.07, 0, 6.283);
+            ctx.arc(sx(p.x), sy(p.y), V.u * 0.11, 0, 6.283);
             ctx.fill();
+            ctx.stroke();
         });
         ctx.restore();
     }
