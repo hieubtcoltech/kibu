@@ -433,82 +433,121 @@
 
     const NOTES = [523, 587, 659, 784, 880, 1046, 1174, 1318, 1568, 1760, 2093];
 
+    const BGM_VOL = 0.09;   // nhạc nền, xem chú thích ở playBgm
+
     const sfx = {
         on: true,
         ctx: null,
-        bgm: null,
-        bgmSource: null,
+
+        /* Nhạc nền đi qua Web Audio, KHÔNG dùng thẻ <audio>.
+         *
+         * Vì sao phải đổi: iOS chỉ dựng bảng điều khiển nhạc ở màn hình khoá
+         * khi có một thẻ audio hoặc video đang phát. Máy hiểu "trang này đang
+         * mở nhạc" nên đưa nút tạm dừng ra ngoài màn khoá, đúng như với Spotify
+         * hay YouTube. Mười tám game còn lại của nhà mình không dính vì chúng
+         * chỉ tổng hợp tiếng bằng Web Audio, không hề có thẻ audio nào — và
+         * Web Audio thì máy coi là hiệu ứng của trang, không phải nhạc.
+         *
+         * Nên chỉ cần phát bản nhạc bằng đúng đường ấy: tải tệp về, giải mã ra
+         * rồi cho chạy vòng lặp qua Web Audio. Nhạc vẫn y nguyên, mà máy không
+         * còn thấy có "phiên phát nhạc" nào để đưa lên màn khoá. */
+        bgmBuf: null,       // bản nhạc đã giải mã
+        bgmSrc: null,       // nguồn đang phát
+        bgmGain: null,
+        bgmAt: 0,           // mốc đồng hồ lúc bắt đầu phát
+        bgmOffset: 0,       // đã phát tới giây thứ mấy của bản nhạc
+        bgmWant: false,     // game có muốn nhạc chạy không
+        bgmLoading: false,
 
         init() {
             try { this.on = localStorage.getItem(SOUND_KEY) !== '0'; } catch (e) { }
-            /* Đường dẫn phải viết đầy đủ từ gốc, không được viết tương đối.
-             *
-             * Trang game có hai kiểu địa chỉ: /panda-run/ và /vi/g/panda-run.
-             * Viết 'music.mp3' thì ở kiểu thứ nhất nó tìm đúng chỗ, nhưng ở
-             * kiểu thứ hai — chính là địa chỉ bé bấm vào từ trang chủ — nó đi
-             * tìm /vi/g/music.mp3 và nhận 404. Nhạc im ru mà chẳng báo lỗi gì
-             * ra màn hình. Mọi tài nguyên khác trong trang đều viết đầy đủ
-             * (/panda-run/style.css, /panda-run/icon.jpg), chỗ này sót lại. */
-            this.bgm = new Audio('/panda-run/music.mp3');
-            this.bgm.loop = true;
-            /* Nhạc nền phải nhường chỗ cho tiếng động. Để 0,35 thì cả bản phối
-             * đè lên mấy sóng đơn mỏng manh của tiếng ăn xu, tiếng va chạm —
-             * nghe như game mất tiếng, trong khi tiếng vẫn phát ra đều.
-             *
-             * Nhạc chỉ là phông nền, còn tiếng động mới là thứ NÓI CHO BÉ BIẾT
-             * vừa có chuyện gì xảy ra: ăn được xu, cứu được bạn, hay vừa đâm
-             * phải. Mất phông nền thì game vẫn chơi được; mất lời báo thì bé
-             * không biết mình vừa làm đúng hay sai. Nên khi hai bên tranh nhau,
-             * nhạc là bên phải lùi. */
-            this.bgm.volume = 0.09;
-            this.bgm.preload = 'auto';
-            this.bgm.addEventListener('error', () => {
-                console.warn('Không tải được /panda-run/music.mp3');
-            });
         },
+
         /* AudioContext chỉ dựng sau cú chạm đầu tiên — trình duyệt chặn âm tự
          * phát, dựng sớm thì nó nằm im ở trạng thái suspended. */
         wake() {
             if (!this.ctx) {
                 const AC = window.AudioContext || window.webkitAudioContext;
-                if (AC) {
-                    this.ctx = new AC();
-                    // Kết nối BGM qua AudioContext để tránh chiếm quyền âm thanh trên macOS/iOS
-                    if (this.bgm && !this.bgmSource) {
-                        try {
-                            this.bgmSource = this.ctx.createMediaElementSource(this.bgm);
-                            this.bgmSource.connect(this.ctx.destination);
-                        } catch (e) {
-                            console.warn("createMediaElementSource failed:", e);
-                        }
-                    }
-                }
+                if (AC) this.ctx = new AC();
             }
             if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
-            if (this.on && this.bgm && this.bgm.paused && G.mode !== 'paused') {
-                this.bgm.play().catch(e => console.log("BGM play failed or blocked:", e));
-            }
+            this.loadBgm();
+            if (this.bgmWant) this.playBgm();
         },
+
+        /* Đường dẫn viết đầy đủ từ gốc, không được viết tương đối: trang game
+         * có hai kiểu địa chỉ (/panda-run/ và /vi/g/panda-run), viết tương đối
+         * thì ở kiểu thứ hai nó đi tìm /vi/g/music.mp3 và nhận 404. */
+        loadBgm() {
+            if (!this.ctx || this.bgmBuf || this.bgmLoading) return;
+            this.bgmLoading = true;
+            fetch('/panda-run/music.mp3')
+                .then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status))
+                .then(b => this.ctx.decodeAudioData(b))
+                .then(buf => {
+                    this.bgmBuf = buf;
+                    this.bgmLoading = false;
+                    if (this.bgmWant) this.playBgm();
+                })
+                .catch(e => {
+                    this.bgmLoading = false;
+                    console.warn('Không tải được nhạc nền /panda-run/music.mp3:', e);
+                });
+        },
+
         toggle() {
             this.on = !this.on;
             try { localStorage.setItem(SOUND_KEY, this.on ? '1' : '0'); } catch (e) { }
-            if (this.on) {
-                if (this.bgm && G.mode !== 'paused') this.bgm.play().catch(e => console.log("BGM play failed or blocked:", e));
-            } else {
-                if (this.bgm) this.bgm.pause();
-            }
+            if (this.on) { if (this.bgmWant) this.startBgm(); }
+            else this.stopBgm();
             return this.on;
         },
+
+        /* Nhạc phải nhường chỗ cho tiếng động. Nhạc chỉ là phông nền, còn tiếng
+         * động mới là thứ nói cho bé biết vừa có chuyện gì xảy ra: ăn được xu,
+         * cứu được bạn, hay vừa đâm phải. Mất phông nền thì game vẫn chơi được;
+         * mất lời báo thì bé không biết mình vừa làm đúng hay sai. */
+        startBgm() {
+            if (!this.on || !this.ctx || !this.bgmBuf || this.bgmSrc) return;
+            if (!this.bgmGain) {
+                this.bgmGain = this.ctx.createGain();
+                this.bgmGain.gain.value = BGM_VOL;
+                this.bgmGain.connect(this.ctx.destination);
+            }
+            const s = this.ctx.createBufferSource();
+            s.buffer = this.bgmBuf;
+            s.loop = true;
+            s.connect(this.bgmGain);
+            /* Nguồn kiểu này không tạm dừng được, chỉ dừng hẳn rồi tạo lại —
+             * nên phải tự nhớ đang phát dở tới đâu mà nối tiếp cho đúng chỗ. */
+            s.start(0, this.bgmOffset % this.bgmBuf.duration);
+            this.bgmAt = this.ctx.currentTime;
+            this.bgmSrc = s;
+        },
+
+        stopBgm() {
+            if (!this.bgmSrc) return;
+            if (this.bgmBuf) {
+                this.bgmOffset = (this.bgmOffset + (this.ctx.currentTime - this.bgmAt))
+                    % this.bgmBuf.duration;
+            }
+            try { this.bgmSrc.stop(); } catch (e) { }
+            try { this.bgmSrc.disconnect(); } catch (e) { }
+            this.bgmSrc = null;
+        },
+
         playBgm() {
-            if (this.on && this.bgm && this.bgm.paused) {
-                this.bgm.play().catch(e => console.log("BGM play failed or blocked:", e));
-            }
+            this.bgmWant = true;
+            if (!this.ctx) return;
+            if (!this.bgmBuf) { this.loadBgm(); return; }
+            this.startBgm();
         },
+
         pauseBgm() {
-            if (this.bgm) {
-                this.bgm.pause();
-            }
+            this.bgmWant = false;
+            this.stopBgm();
         },
+
         tone(freq, dur, type, vol, slideTo) {
             if (!this.on || !this.ctx) return;
             const t = this.ctx.currentTime;
