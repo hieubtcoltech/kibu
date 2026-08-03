@@ -128,13 +128,13 @@
         /* ---------- Thế giới 2: Blue Lagoon — bàn nhún ---------- */
         {
             name: 'Springboard', tip: 'The orange pad throws the ball high.',
-            ball: [2, 11], hoop: { x: 17, y: 4.66 }, par: 2,
-            walls: [[0, 11, 20, 1], [13, 5, 7, 1]], pads: [[9, 10.6, 3]]
+            ball: [2, 11], hoop: { x: 17, y: 5 }, par: 2,
+            walls: [[0, 11, 20, 1]], pads: [[9, 10.6, 3]]
         },
         {
             name: 'Double Bounce', tip: 'Use both pads to climb.',
-            ball: [2, 11], hoop: { x: 18, y: 2.66 }, par: 3,
-            walls: [[0, 11, 20, 1], [11, 6, 3, 1], [15, 3, 5, 1]],
+            ball: [2, 11], hoop: { x: 17, y: 3 }, par: 3,
+            walls: [[0, 11, 20, 1], [11, 6, 3, 1]],
             pads: [[7, 10.6, 2], [12, 5.6, 2]]
         },
         {
@@ -155,8 +155,8 @@
         },
         {
             name: 'Pinball', tip: 'Let it rattle around the shelves.',
-            ball: [2, 11], hoop: { x: 17, y: 5.66 }, par: 3,
-            walls: [[0, 11, 20, 1], [6, 8, 4, 1], [11, 4, 4, 1], [15, 6, 5, 1]]
+            ball: [2, 11], hoop: { x: 17, y: 4.5 }, par: 3,
+            walls: [[0, 11, 20, 1], [6, 8, 4, 1], [11, 4, 4, 1], [15, 7, 5, 1]]
         },
 
         /* ---------- Thế giới 3: Purple Peak — khối trượt và gai ---------- */
@@ -183,13 +183,13 @@
         },
         {
             name: 'Bounce Gate', tip: 'Pad up, then through the gate.',
-            ball: [2, 11], hoop: { x: 17, y: 2.66 }, par: 3,
-            walls: [[0, 11, 20, 1], [13, 3, 7, 1]],
+            ball: [2, 11], hoop: { x: 17, y: 1.5 }, par: 3,
+            walls: [[0, 11, 20, 1], [13, 4, 7, 1]],
             pads: [[6, 10.6, 3]], movers: [[11, 0, 1, 3, 1.4, 3]]
         },
         {
             name: 'The Tunnel', tip: 'Fly flat through the tunnel.',
-            ball: [2, 11], hoop: { x: 18, y: 9 }, par: 2,
+            ball: [2, 11], hoop: { x: 18, y: 9.5 }, par: 2,
             walls: [[0, 11, 20, 1], [6, 0, 1, 8], [11, 0, 1, 8]],
             spikes: [[7, 10.58, 4]]
         },
@@ -197,13 +197,13 @@
         /* ---------- Thế giới 4: Night Court — tổng hợp ---------- */
         {
             name: 'High Climb', tip: 'Climb the ledges to the top shelf.',
-            ball: [2, 11], hoop: { x: 17, y: 1.66 }, par: 3,
-            walls: [[0, 11, 20, 1], [6, 8, 3, 1], [11, 5, 3, 1], [15, 2, 5, 1]],
+            ball: [2, 11], hoop: { x: 17, y: 2.5 }, par: 3,
+            walls: [[0, 11, 20, 1], [6, 8, 3, 1], [11, 5, 3, 1]],
             pads: [[4, 10.6, 2], [12, 4.6, 2]]
         },
         {
             name: 'Crossfire', tip: 'Two movers, one window.',
-            ball: [2, 11], hoop: { x: 17, y: 6.66 }, par: 4,
+            ball: [2, 11], hoop: { x: 17, y: 5 }, par: 4,
             walls: [[0, 11, 20, 1], [14, 7, 6, 1]],
             movers: [[8, 3, 1, 4, 2.2, 2.8], [11, 7, 1, 4, 2, 3.6]]
         },
@@ -214,7 +214,7 @@
         },
         {
             name: 'Rooftop', tip: 'Up to the roof, past the hanging block.',
-            ball: [2, 11], hoop: { x: 16, y: 3.66 }, par: 3,
+            ball: [2, 11], hoop: { x: 16, y: 2.5 }, par: 3,
             walls: [[0, 11, 20, 1], [13, 4, 7, 1], [11, 0, 1, 3]],
             pads: [[9, 10.6, 2]]
         },
@@ -225,8 +225,8 @@
         },
         {
             name: 'Grand Finale', tip: 'Everything at once. Good luck!',
-            ball: [2, 11], hoop: { x: 18, y: 2.66 }, par: 4,
-            walls: [[0, 11, 20, 1], [7, 5, 3, 1], [15, 3, 5, 1], [12, 0, 1, 4]],
+            ball: [2, 11], hoop: { x: 18, y: 1.8 }, par: 4,
+            walls: [[0, 11, 20, 1], [7, 5, 3, 1], [15, 4, 5, 1], [12, 0, 1, 4]],
             pads: [[5, 10.6, 2], [8, 4.6, 2]], movers: [[13, 6, 1, 5, 1.8, 3]],
             spikes: [[10, 10.58, 3]]
         }
