@@ -492,6 +492,13 @@
         ['Cổng Trời', 'Sky Gate'],
         ['Luồn quả bóng qua đúng cái khe giữa hai khối.', 'Thread the ball through the gap.'],
 
+        /* ---------- Kênh liên hệ ---------- */
+        ['Nhắn qua Telegram', 'Chat on Telegram'],
+        ['Nhắn qua WhatsApp', 'Chat on WhatsApp'],
+        ['Nhắn cho nhà mình', 'Talk to us'],
+        ['Thấy lỗi, có ý tưởng game mới, hay chỉ muốn chào một câu? Nhắn thẳng cho nhà mình — tin nào nhà mình cũng đọc.',
+            "Found a bug, have an idea for a new game, or just want to say hi? Message us directly - we read every one."],
+
         /* ---------- Hàng lọc chủ đề và số lượt chơi ở trang chủ ----------
          * Mấy chữ này ngắn và trùng với từ thông thường (Action, Board, Sports)
          * nên đánh dấu 'x' — chỉ dịch khi cả ô chữ đúng y hệt, không dịch khi

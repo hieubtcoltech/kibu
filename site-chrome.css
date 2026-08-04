@@ -232,6 +232,49 @@ body > .site-footer {
     gap: 12px;
 }
 
+/* ---------- Kênh liên hệ ----------
+ * Hai nút nhỏ ở chân mọi trang, để người dùng nhắn thẳng cho chủ web.
+ *
+ * VÌ SAO KHÔNG IN SỐ ĐIỆN THOẠI RA THÀNH CHỮ
+ * Số nằm trong đường dẫn wa.me nên vẫn bấm được, nhưng không hiện thành chữ
+ * trên trang. Con bọ quét web đi lùng số điện thoại để bán quảng cáo thường
+ * chỉ đọc chữ hiện ra; để nguyên số giữa trang là mời spam vào nhà. Ai muốn
+ * nhắn thì bấm một cái là mở đúng cửa sổ chat.
+ *
+ * Vùng chạm 44px như mọi nút khác — chân trang là chỗ ngón tay hay bấm trượt
+ * nhất vì nó sát mép dưới màn hình. */
+.footer-contact {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+    color: #cfd7ff;
+    font-size: 1.05rem;
+    text-decoration: none;
+    transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.footer-contact:hover {
+    transform: translateY(-2px);
+    color: #fff;
+}
+
+/* Trang chủ và trang Về chúng tôi có luật riêng ".poki-footer i { color: hồng }"
+   cho cái trái tim ở chân trang, và luật ấy tô hồng luôn hai biểu tượng liên
+   hệ — nhìn ra hai nút trái tim. Ghi đè lại cho chúng theo màu chữ của nút. */
+.footer-contact i { color: inherit; }
+
+.footer-contact.is-telegram:hover { background: rgba(42, 171, 238, 0.28); border-color: #2aabee; }
+.footer-contact.is-whatsapp:hover { background: rgba(37, 211, 102, 0.28); border-color: #25d366; }
+
+@media (max-width: 560px) {
+    .footer-contact { width: 40px; height: 40px; font-size: 0.98rem; }
+}
+
 /* ---------- Live player count ---------- */
 /* Chỉ con số bên cạnh chấm xanh — chấm nhấp nháy đã đủ nói "đang trực tuyến",
    câu chữ đầy đủ nằm ở tooltip. */

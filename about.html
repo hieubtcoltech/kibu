@@ -317,7 +317,36 @@
         .poki-footer i {
             color: #ff007f;
         }
+
+        /* ---------- Hai nút liên hệ ---------- */
+        .contact-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 48px;
+            padding: 0 22px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.07);
+            color: #e8edff;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 0.12s ease, background 0.12s ease;
+        }
+
+        .contact-btn:hover { transform: translateY(-2px); }
+        .contact-btn.is-telegram:hover { background: rgba(42, 171, 238, 0.3); border-color: #2aabee; }
+        .contact-btn.is-whatsapp:hover { background: rgba(37, 211, 102, 0.3); border-color: #25d366; }
+        .contact-btn i { font-size: 1.2rem; }
     </style>
+
     <link rel="stylesheet" href="/site-chrome.css">
     <script src="/routes.js"></script>
     <script src="/i18n.js"></script>
@@ -420,11 +449,37 @@
                 Whether it's matching fruits, racing sports cars, learning English, or playing 2-player sports duels, every game on KIBU is built with pure love for kids everywhere.
             </p>
         </section>
+
+        <!-- Kênh liên hệ: chỗ duy nhất trên web viết rõ ràng, chân trang chỉ có
+             hai cái nút nhỏ. Ai cần góp ý hay báo lỗi thì tìm được ngay. -->
+        <section class="story-section">
+            <h2 class="story-title">Talk to us</h2>
+            <p class="story-text">
+                Found a bug, have an idea for a new game, or just want to say hi?
+                Message us directly - we read every one.
+            </p>
+            <div class="contact-row">
+                <a class="contact-btn is-telegram" href="https://t.me/coolkitty007" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-telegram"></i> Chat on Telegram
+                </a>
+                <a class="contact-btn is-whatsapp" href="https://wa.me/84988100942" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-whatsapp"></i> Chat on WhatsApp
+                </a>
+            </div>
+        </section>
     </main>
 
     <footer class="poki-footer">
         <p class="footer-credit"><i class="fa-solid fa-heart"></i> KIBU Games - 100% Free games built by Bon &amp; Tin with love for kids.</p>
         <div class="footer-tools">
+            <a class="footer-contact is-telegram" href="https://t.me/coolkitty007"
+                target="_blank" rel="noopener" title="Chat on Telegram" aria-label="Chat on Telegram">
+                <i class="fa-brands fa-telegram"></i>
+            </a>
+            <a class="footer-contact is-whatsapp" href="https://wa.me/84988100942"
+                target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+                <i class="fa-brands fa-whatsapp"></i>
+            </a>
             <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
             <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
                 <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">

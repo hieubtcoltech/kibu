@@ -103,6 +103,21 @@ for (const g of K.GAMES) {
     }
 }
 
+/* ---- 7. kênh liên hệ phải có mặt ở MỌI trang ----
+ * Hai cái nút liên hệ nằm ở chân trang, mà chân trang thì chép tay trên 27
+ * tệp. Thêm game mới bằng cách chép một trang cũ thì có, nhưng chép nhầm bản
+ * chưa có nút thì mất — và mất im lặng, chẳng ai để ý chân trang thiếu gì. */
+const pages = K.GAMES.map(g => path.join(g.dir, 'index.html'))
+    .concat(['index.html', 'about.html']);
+for (const f of pages) {
+    const p = path.join(ROOT, f);
+    if (!fs.existsSync(p)) continue;
+    const html = fs.readFileSync(p, 'utf8');
+    if (html.indexOf('t.me/coolkitty007') < 0 || html.indexOf('wa.me/') < 0) {
+        fails.push(`${f}: chân trang thiếu kênh liên hệ (Telegram / WhatsApp)`);
+    }
+}
+
 /* ---- kết quả ---- */
 const byTopic = K.TOPICS.map(t => `${t.vi} ${K.inTopic(t.key).length}`).join(' · ');
 console.log('  chủ đề: ' + byTopic);
