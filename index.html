@@ -666,19 +666,24 @@
         }
 
         /* ---------- Hàng lọc theo chủ đề ----------
-           Cuộn ngang được trên máy hẹp: tám nút không đời nào vừa một hàng
-           trên điện thoại, mà xuống dòng thì đẩy hết lưới game xuống dưới nếp
-           gấp — mở trang ra không thấy game nào là hỏng. */
+           XUỐNG DÒNG chứ không cuộn ngang.
+
+           Bản đầu em cho cuộn ngang, nghĩ là gọn. Chụp thử màn 390px mới thấy
+           hỏng: chỉ hiện được hai nút rưỡi, nút thứ ba bị cắt ngang chữ, và vì
+           thanh cuộn đã ẩn nên KHÔNG CÓ DẤU HIỆU GÌ cho biết còn sáu nút nữa ở
+           bên phải. Bé (và bố mẹ bé) sẽ không bao giờ biết là có nhóm Vật lý
+           hay Học tập. Danh sách chủ đề mà giấu mất hai phần ba thì thà không
+           có còn hơn.
+
+           Xuống dòng thì tốn thêm một hàng, đổi lại nhìn một cái là thấy hết
+           tám nhóm. Cỡ chữ và khoảng đệm co lại theo bề ngang máy để số hàng
+           không vượt quá hai. */
         .topic-row {
             display: flex;
+            flex-wrap: wrap;
             gap: 8px;
             padding: 4px 2px 14px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -webkit-overflow-scrolling: touch;
         }
-
-        .topic-row::-webkit-scrollbar { display: none; }
 
         .topic-chip {
             flex: 0 0 auto;
@@ -699,6 +704,26 @@
             white-space: nowrap;
             cursor: pointer;
             transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+        }
+
+        /* Máy hẹp: co nút lại vừa đủ để tám nhóm nằm gọn trong hai hàng, mà
+           vùng chạm vẫn giữ 40px — dưới mức ấy ngón tay trẻ con bấm trượt. */
+        @media (max-width: 700px) {
+            .topic-row { gap: 6px; padding-bottom: 10px; }
+            .topic-chip { min-height: 40px; padding: 0 12px; font-size: 0.82rem; gap: 6px; }
+            .topic-chip i { font-size: 0.78rem; }
+        }
+
+        /* Dưới 460px thì BỎ BIỂU TƯỢNG trên nút. Biểu tượng giúp bé chưa đọc
+           thạo nhận ra nhóm, nhưng mỗi cái ngốn chừng 20px, nhân chín nút là
+           gần một hàng rưỡi. Đo thật: có biểu tượng thì máy 390px tốn ba hàng,
+           máy 320px tốn tận NĂM hàng — đẩy hết lưới game xuống dưới nếp gấp,
+           mở trang ra không thấy game nào. Bỏ biểu tượng thì cả hai đều gọn
+           trong hai hàng. Nhìn thấy đủ tám nhóm quan trọng hơn. */
+        @media (max-width: 460px) {
+            .topic-row { gap: 5px; }
+            .topic-chip { padding: 0 11px; font-size: 0.79rem; }
+            .topic-chip i { display: none; }
         }
 
         .topic-chip:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.12); }
