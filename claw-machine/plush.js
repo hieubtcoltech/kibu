@@ -85,10 +85,17 @@
         var sp = SPECIES[si % SPECIES.length];
         var p = paletteFor(si % SPECIES.length, vi % 3);
 
-        var headR = r * 0.78;
-        var headY = -r * 0.62;
-        var bodyR = r;
-        var bodyY = r * 0.42;
+        /* TỈ LỆ LÀ TẤT CẢ. Đầu to gần bằng thân, đặt cao, thân thu nhỏ lại —
+         * đúng dáng thú nhồi bông cho trẻ con. Bản trước đầu chỉ bằng 0,78 thân
+         * nên nhìn ra con vật trưởng thành, mà con vật trưởng thành thu nhỏ thì
+         * không dễ thương, chỉ thấy lạ. */
+        var headR = r * 0.95;
+        var headY = -r * 0.66;
+        var bodyR = r * 0.88;
+        var bodyY = r * 0.60;
+
+        /* Viền: chính màu thân pha thêm 45% màu đậm, và mảnh thôi. */
+        var rim = mix(p.body, p.edge, 0.45);
 
         /* ---- tai / bờm / sừng: vẽ TRƯỚC để nằm sau đầu ---- */
         if (sp.mane) {
@@ -122,15 +129,14 @@
          * chồng lên thân nên đường viền chạy XUYÊN QUA MẶT con thú — phóng to
          * ra thấy rõ một vòng nâu cắt ngang mõm, trông như con thú đeo cái
          * vòng. Đắp bóng dưới thì chỉ còn đúng đường bao ngoài. */
-        var lw = r * 0.11;
-        var furN = (sp.key === 'frog' || sp.key === 'penguin') ? -1 : 15;
-        fluff(g, 0, bodyY, bodyR + lw, p.edge, furN);
-        g.fillStyle(p.edge, 1);
+        var lw = r * 0.055;
+        fluff(g, 0, bodyY, bodyR + lw, rim);
+        g.fillStyle(rim, 1);
         g.fillCircle(-bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33 + lw);
         g.fillCircle(bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33 + lw);
         g.fillCircle(-bodyR * 0.92, bodyY - bodyR * 0.05, bodyR * 0.3 + lw);
         g.fillCircle(bodyR * 0.92, bodyY - bodyR * 0.05, bodyR * 0.3 + lw);
-        fluff(g, 0, bodyY, bodyR, p.body, furN);
+        fluff(g, 0, bodyY, bodyR, p.body);
         g.fillStyle(p.body, 1);
         /* chân: hai cục tròn thò ra dưới thân */
         g.fillCircle(-bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33);
@@ -149,9 +155,9 @@
 
         /* ---- đầu ---- */
         volume(g, 0, bodyY, bodyR, p);
-        fluff(g, 0, headY, headR + lw, p.edge, furN < 0 ? -1 : 13);
-        if (sp.wide) { g.fillStyle(p.edge, 1); g.fillEllipse(0, headY, headR * 2.3 + lw * 2, headR * 1.85 + lw * 2); }
-        fluff(g, 0, headY, headR, p.body, furN < 0 ? -1 : 13);
+        fluff(g, 0, headY, headR + lw, rim);
+        if (sp.wide) { g.fillStyle(rim, 1); g.fillEllipse(0, headY, headR * 2.3 + lw * 2, headR * 1.85 + lw * 2); }
+        fluff(g, 0, headY, headR, p.body);
         if (sp.wide) { g.fillStyle(p.body, 1); g.fillEllipse(0, headY, headR * 2.3, headR * 1.85); }
         volume(g, 0, headY, headR, p);
 
@@ -181,23 +187,26 @@
 
         if (sp.muzzle) {
             g.fillStyle(p.belly, 1);
-            g.fillEllipse(0, headY + headR * 0.34, headR * 1.02, headR * 0.72);
+            g.fillEllipse(0, headY + headR * 0.44, headR * 0.86, headR * 0.58);
         }
         if (sp.snout) {           /* lợn: cái mũi to có hai lỗ */
             g.fillStyle(p.dark, 1);
-            g.fillEllipse(0, headY + headR * 0.32, headR * 0.86, headR * 0.6);
+            g.fillEllipse(0, headY + headR * 0.50, headR * 0.72, headR * 0.50);
             g.fillStyle(p.ink, 1);
-            g.fillEllipse(-headR * 0.18, headY + headR * 0.32, headR * 0.16, headR * 0.24);
-            g.fillEllipse(headR * 0.18, headY + headR * 0.32, headR * 0.16, headR * 0.24);
+            g.fillEllipse(-headR * 0.15, headY + headR * 0.50, headR * 0.14, headR * 0.20);
+            g.fillEllipse(headR * 0.15, headY + headR * 0.50, headR * 0.14, headR * 0.20);
         }
         if (sp.beak) {
             g.fillStyle(0xffb020, 1);
-            tri(g, 0, headY + headR * 0.62, headR * 0.34, headR * 0.42);
+            tri(g, 0, headY + headR * 0.68, headR * 0.30, headR * 0.36);
         }
 
         /* ---- mặt ---- */
-        var eyeY = headY - headR * 0.02;
-        var eyeX = headR * 0.4;
+        /* Mắt là chỗ quyết định "đáng yêu" hay "doạ ma": phải TO, đặt THẤP
+         * hơn giữa mặt và cách xa nhau. Mắt nhỏ đặt cao là ra ngay ánh nhìn
+         * xoi mói của người lớn. */
+        var eyeY = headY + headR * 0.10;
+        var eyeX = headR * 0.44;
         if (sp.ear === 'eyestalk') { eyeY = headY - headR * 0.72; eyeX = headR * 0.55; }
 
         g.fillStyle(sp.patch ? 0xffffff : p.ink, 1);
@@ -209,51 +218,48 @@
             g.fillCircle(eyeX, eyeY + headR * 0.03, headR * 0.12);
         } else {
             /* tròng mắt có viền sáng quanh cho nổi khỏi lông */
-            g.fillStyle(0xffffff, 0.55);
-            g.fillEllipse(-eyeX, eyeY, headR * 0.40, headR * 0.46);
-            g.fillEllipse(eyeX, eyeY, headR * 0.40, headR * 0.46);
             g.fillStyle(p.ink, 1);
-            g.fillEllipse(-eyeX, eyeY, headR * 0.32, headR * 0.38);
-            g.fillEllipse(eyeX, eyeY, headR * 0.32, headR * 0.38);
+            g.fillEllipse(-eyeX, eyeY, headR * 0.42, headR * 0.50);
+            g.fillEllipse(eyeX, eyeY, headR * 0.42, headR * 0.50);
         }
         /* HAI đốm sáng trong mắt: một to trên trái, một nhỏ dưới phải. Một đốm
          * thì mắt mới chỉ "không đờ"; hai đốm mới ra mắt thuỷ tinh long lanh —
          * và đây là chi tiết bé nhìn đầu tiên. */
-        g.fillStyle(0xffffff, 0.98);
-        g.fillCircle(-eyeX + headR * 0.10, eyeY - headR * 0.12, headR * 0.10);
-        g.fillCircle(eyeX + headR * 0.10, eyeY - headR * 0.12, headR * 0.10);
-        g.fillStyle(0xffffff, 0.7);
-        g.fillCircle(-eyeX - headR * 0.09, eyeY + headR * 0.10, headR * 0.05);
-        g.fillCircle(eyeX - headR * 0.09, eyeY + headR * 0.10, headR * 0.05);
+        g.fillStyle(0xffffff, 1);
+        g.fillCircle(-eyeX + headR * 0.11, eyeY - headR * 0.14, headR * 0.14);
+        g.fillCircle(eyeX + headR * 0.11, eyeY - headR * 0.14, headR * 0.14);
+        g.fillStyle(0xffffff, 0.85);
+        g.fillCircle(-eyeX - headR * 0.11, eyeY + headR * 0.13, headR * 0.07);
+        g.fillCircle(eyeX - headR * 0.11, eyeY + headR * 0.13, headR * 0.07);
 
         /* mũi và miệng */
         if (!sp.beak && !sp.snout) {
             g.fillStyle(p.ink, 1);
-            tri(g, 0, headY + headR * 0.24, headR * 0.15, headR * 0.16);
+            tri(g, 0, headY + headR * 0.46, headR * 0.13, headR * 0.14);
             g.lineStyle(Math.max(1.2, r * 0.055), p.ink, 1);
             g.beginPath();
-            g.moveTo(0, headY + headR * 0.3);
-            g.lineTo(0, headY + headR * 0.42);
+            g.moveTo(0, headY + headR * 0.52);
+            g.lineTo(0, headY + headR * 0.60);
             g.strokePath();
-            arcSmile(g, -headR * 0.17, headY + headR * 0.44, headR * 0.17);
-            arcSmile(g, headR * 0.17, headY + headR * 0.44, headR * 0.17);
+            arcSmile(g, -headR * 0.15, headY + headR * 0.62, headR * 0.15);
+            arcSmile(g, headR * 0.15, headY + headR * 0.62, headR * 0.15);
         }
         if (sp.whisker) {
             g.lineStyle(Math.max(1, r * 0.04), p.ink, 0.7);
             for (var s = -1; s <= 1; s += 2) {
                 for (var w = 0; w < 2; w++) {
                     g.beginPath();
-                    g.moveTo(s * headR * 0.42, headY + headR * (0.3 + w * 0.14));
-                    g.lineTo(s * headR * 1.15, headY + headR * (0.16 + w * 0.24));
+                    g.moveTo(s * headR * 0.44, headY + headR * (0.46 + w * 0.14));
+                    g.lineTo(s * headR * 1.12, headY + headR * (0.34 + w * 0.22));
                     g.strokePath();
                 }
             }
         }
 
         /* má hồng */
-        g.fillStyle(0xff7aa0, 0.72);
-        g.fillEllipse(-headR * 0.72, headY + headR * 0.26, headR * 0.34, headR * 0.22);
-        g.fillEllipse(headR * 0.72, headY + headR * 0.26, headR * 0.34, headR * 0.22);
+        g.fillStyle(0xff8fb0, 0.6);
+        g.fillEllipse(-headR * 0.68, headY + headR * 0.40, headR * 0.42, headR * 0.26);
+        g.fillEllipse(headR * 0.68, headY + headR * 0.40, headR * 0.42, headR * 0.26);
 
         /* đường chỉ khâu giữa mặt */
         g.lineStyle(Math.max(1, r * 0.035), p.dark, 0.5);
@@ -270,29 +276,39 @@
 
     /* ---- mấy nét dùng lại ---- */
 
+    /* Trộn hai màu. Dùng để pha VIỀN: viền phải là chính màu thân đậm hơn một
+     * chút, không phải một màu lạ. Em từng lấy hẳn màu edge làm viền, nét lại
+     * dày — con thú trắng viền xám đậm nhìn ra con ma, anh Hiếu bảo "vẽ thú gì
+     * mà doạ ma trẻ con". Viền mềm thì con thú vẫn tách khỏi nền mà không bị
+     * đóng khung. */
+    function mix(a, b, t) {
+        var ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+        var br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+        return ((ar + (br - ar) * t) << 16 | (ag + (bg - ag) * t) << 8 | (ab + (bb - ab) * t)) & 0xffffff;
+    }
+
+
     /* Một khối tròn có VỎ BÔNG: mép lượn sóng chứ không tròn vo, có vùng khuất
      * bên dưới phải và vệt sáng trên trái. Ba thứ ấy là toàn bộ khác biệt giữa
      * "hình tròn tô màu" với "cục bông". */
-    function fluff(g, x, y, r, col, bumps) {
-        var n = bumps || 11;
-        if (n < 0) { g.fillStyle(col, 1); g.fillCircle(x, y, r); return; }   /* loài da trơn */
+    /* Khối tròn TRƠN. Bản trước em viền quanh bằng một vòng cục bông nhỏ cho
+     * "xù như đồ bông" — hoá ra nhìn thành con cừu, con nào cũng giống con nào,
+     * và mất hẳn dáng loài. Đồ bông dễ thương ngoài đời cũng nhẵn: cái đáng
+     * yêu nằm ở TỈ LỆ (đầu to, mắt to) chứ không nằm ở mép xù. */
+    function fluff(g, x, y, r, col) {
         g.fillStyle(col, 1);
-        for (var i = 0; i < n; i++) {
-            var a = (Math.PI * 2 * i) / n;
-            g.fillCircle(x + Math.cos(a) * r * 0.95, y + Math.sin(a) * r * 0.95, r * 0.12);
-        }
         g.fillCircle(x, y, r);
     }
 
     /* Vùng khuất + vệt sáng, đánh lên một khối đã vẽ xong */
     function volume(g, x, y, r, p) {
-        g.fillStyle(p.dark, 0.38);
+        g.fillStyle(p.dark, 0.26);
         g.beginPath();
         g.arc(x, y, r, -0.30, 2.20, false);
         g.arc(x - r * 0.26, y - r * 0.20, r * 1.02, 2.20, -0.30, true);
         g.closePath();
         g.fillPath();
-        g.fillStyle(0xffffff, 0.26);
+        g.fillStyle(0xffffff, 0.30);
         g.fillEllipse(x - r * 0.36, y - r * 0.42, r * 0.72, r * 0.46);
     }
 
