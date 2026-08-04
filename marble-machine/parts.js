@@ -111,7 +111,7 @@
      * máng. Dung sai từ vài ô nhảy lên hơn trăm ô, và tám trò tự nhiên chạy
      * được cả tám mà không cần trò nào biết mặt trò nào. */
     function outfeed() {
-        return { shape: 'box', x: 460, y: 152, w: 120, h: 14, angle: 0.06, fric: 0.10, role: 'shelf' };
+        return { shape: 'box', x: 450, y: 152, w: 140, h: 14, angle: 0.06, fric: 0.10, role: 'shelf' };
     }
 
     /* Máng hứng ở chỗ vào: một tấm nghiêng rộng, bắt viên bi rơi lệch trong
@@ -150,7 +150,7 @@
      * Bản đồ một tầng, đọc từ trái sang:
      *     10…190   máng hứng          (bắt bi rơi lệch, dồn về mép 190)
      *    190…520   chỗ của trò riêng
-     *    400…520   máng ra            (hứng bi từ trò, dắt ra cửa rơi)
+     *    380…520   máng ra            (hứng bi từ trò, dắt ra cửa rơi)
      *    520…591   CỬA RƠI            (khoảng trống bắt buộc, rộng 71 ô)
      *    591       mặt trong gờ chặn */
     function frame(extra) {
@@ -164,19 +164,23 @@
             enter: { x: ENTRY, y: 0 },
             exit: { x: EXIT, y: BAY_H },
             fixed: frame(),
-            slot: { kind: 'ramp', x: 347, y: 104, w: 309, h: 18, angle: 0.156 }
+            slot: { kind: 'ramp', x: 347, y: 104, w: 309, h: 18, angle: 0.20 }
         };
     }
 
     /* Băng chuyền: mặt băng cuốn đều, chở viên bi chạy ngang hết tầng. Chắc ăn
-     * nhất trong cả thư viện — để dành cho những màn đã nhiều tầng. */
+     * nhất trong cả thư viện — để dành cho những màn đã nhiều tầng.
+     *
+     * speed tính bằng Ô/GIÂY, giống mọi con số vận tốc khác trong tệp này.
+     * Trước đó em ghi nó bằng đơn vị nội bộ của Matter, và khi đổi nhịp vật lý
+     * thì con số ấy âm thầm sai gấp ba — băng chuyền bắn bi xuyên qua tường. */
     function bayBelt() {
         return {
             kind: 'belt',
             enter: { x: ENTRY, y: 0 },
             exit: { x: EXIT, y: BAY_H },
             fixed: frame(),
-            slot: { kind: 'belt', x: 350, y: 120, w: 320, h: 20, angle: 0, speed: 6.0 }
+            slot: { kind: 'belt', x: 350, y: 120, w: 320, h: 20, angle: 0, speed: 560 }
         };
     }
 
@@ -239,7 +243,7 @@
             fixed: frame([
                 { shape: 'box', x: 360, y: 130, w: 16, h: 92, angle: 0, role: 'wall' }
             ]),
-            slot: { kind: 'spring', x: 220, y: 168, w: 150, h: 20, angle: 0.28, kick: { vx: 390, vy: -520 } }
+            slot: { kind: 'spring', x: 220, y: 168, w: 150, h: 20, angle: 0.28, /* vận tốc hất, ô/giây */ kick: { vx: 1700, vy: -2280 } }
         };
     }
 
@@ -251,10 +255,18 @@
             kind: 'fan',
             enter: { x: ENTRY, y: 0 },
             exit: { x: EXIT, y: BAY_H },
-            fixed: frame(),
+            fixed: frame([
+                /* Kệ hứng giữa tầng. Bi bị gió thổi bạt sang rơi tới quãng
+                 * x≈340, mà máng ra bắt đầu ở 380 — hụt 40 ô, và đúng chỗ hụt
+                 * ấy có một cái hốc giữa sàn tầng với mép máng ra, bi rơi vào
+                 * là kẹt cứng. Vặn to lực gió không cứu được: thổi mạnh thì bi
+                 * đập vào gờ chặn rồi dội ngược lại chính cái hốc ấy. Chữa
+                 * bằng hình học thì xong ngay — bắc thêm một kệ đón. */
+                { shape: 'box', x: 330, y: 150, w: 140, h: 14, angle: 0.09, role: 'shelf' }
+            ]),
             slot: {
                 kind: 'fan', x: 44, y: 118, w: 64, h: 76, angle: 0,
-                wind: { w: 470, h: 130, force: 0.0092 }
+                wind: { w: 470, h: 130, force: 0.0125 }
             }
         };
     }
@@ -267,7 +279,7 @@
             enter: { x: ENTRY, y: 0 },
             exit: { x: EXIT, y: BAY_H },
             fixed: frame(),
-            slot: { kind: 'bumper', x: 200, y: 140, w: 68, h: 68, angle: 0, kick: { speed: 675 } }
+            slot: { kind: 'bumper', x: 200, y: 140, w: 68, h: 68, angle: 0, /* vận tốc bắn ra, ô/giây */ kick: { speed: 2600 } }
         };
     }
 
@@ -284,7 +296,7 @@
             ]),
             slot: {
                 kind: 'magnet', x: 592, y: 74, w: 60, h: 60, angle: 0,
-                pull: { r: 360, force: 0.0026 }
+                pull: { r: 360, force: 0.0052 }
             }
         };
     }

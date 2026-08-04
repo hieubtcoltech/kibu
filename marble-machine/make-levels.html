@@ -120,10 +120,12 @@
                 /* Ép mỗi màn thế giới sau có ít nhất một trò LẠ (đệm nảy hoặc
                  * nam châm). Bốc thuần ngẫu nhiên thì hai trò ấy gần như không
                  * bao giờ ra — soát xong thấy đệm nảy xuất hiện đúng 2 lần trên
-                 * 40 màn, tức là bé chơi hết game vẫn chưa kịp gặp nó. */
+                 * 40 màn, tức là bé chơi hết game vẫn chưa kịp gặp nó. Bốc
+                 * ngẫu nhiên trong hai trò ấy cũng chưa đủ — có lần nam châm
+                 * chỉ ra đúng MỘT màn trên bốn mươi. Nay xen kẽ đều tay. */
                 if (spec.rare) {
                     var at = Math.floor(rnd() * spec.bays);
-                    b = b.substring(0, at) + pick(['u', 'm']) + b.substring(at + 1);
+                    b = b.substring(0, at) + (made % 2 ? 'm' : 'u') + b.substring(at + 1);
                 }
                 /* chọn ngẫu nhiên những tầng bị tháo mảnh */
                 var idx = [];

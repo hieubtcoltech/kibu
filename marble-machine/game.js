@@ -81,6 +81,18 @@
      * Nay để 46 đơn vị ≈ 25 điểm ảnh ngón tay — rộng hơn cả cỡ rung tay của
      * trẻ con, mà vẫn nhỏ hơn nhiều so với quãng kéo thật. */
     var TAP_SLOP = 46;
+
+    /* Nhịp vật lý: mỗi khung hình chia làm SUB nhịp nhỏ, nên một "đơn vị vận
+     * tốc" của Matter là quãng đi trong 1/(60·SUB) giây.
+     *
+     * Mọi chỗ ĐẶT THẲNG vận tốc cho viên bi (băng chuyền, bàn nhún, đệm nảy)
+     * phải quy đổi qua PHYS_HZ, không được chia 60. Em quên đúng chỗ này lúc
+     * thêm chia nhịp, thế là ba mảnh ấy mạnh gấp ba: băng chuyền bắn viên bi
+     * đi 1.500 ô/giây, mỗi nhịp nhảy 25 ô — xuyên thẳng qua gờ chặn rồi bay ra
+     * khỏi thế giới. Anh Hiếu gặp ở màn 11 và tả đúng y: "bi lăn bị biến mất
+     * luôn". Bi không biến mất, nó xuyên tường. */
+    var SUB = 3;
+    var PHYS_HZ = 60 * SUB;
     var RUN_CAP = 22 * 60;         // chạy quá 22 giây thì coi như hỏng
     var STALL_T = 1.4;             // bi nằm im ngần này giây thì coi như tắc
 
@@ -207,7 +219,7 @@
             initialize: function PlayScene() { Phaser.Scene.call(this, { key: 'play' }); },
 
             create: function () {
-                this.matter.world.setGravity(0, 1.7);
+                this.matter.world.setGravity(0, 3.4);
 
                 /* MỘT đường quay bánh duy nhất — xem ghi chú đầu tệp. */
                 this.matter.world.autoUpdate = false;
@@ -513,19 +525,35 @@
 
                 var bay0 = this.level.bays[0];
                 var bx = BOARD.x + bay0.enter.x;
-                /* Hòn bi thật thì NẶNG và TRƠN.
+                /* HÒN BI THẬT: tính theo tỉ lệ chứ không chỉnh theo cảm giác.
                  *
-                 * Bản đầu em để trọng lực 1,0 với ma sát không khí 0,004: đo ra
-                 * viên bi lăn chừng 100 ô/giây, tức là bò như dưới nước — anh
-                 * Hiếu xem xong nói ngay "tốc độ lăn không như thực tế". Nay
-                 * trọng lực 1,7 và ma sát không khí 0,0012, bi lăn nhanh gấp
-                 * hơn hai lần và có quán tính rõ rệt. Đổi trọng lực thì mọi
-                 * mảnh CÓ LỰC (bàn nhún, đệm nảy, quạt, nam châm, băng chuyền)
-                 * đều phải nhân theo — xem ghi chú ở từng chỗ. */
+                 * Viên bi bán kính 15 ô ứng với hòn bi thật đường kính 25 mm,
+                 * tức 1 mét ≈ 1200 ô. Trọng lực thật 9,8 m/s² quy ra là 11.760
+                 * ô/giây². Bản đầu em để 1.000 ô/giây², bản sau 1.700 — tức chỉ
+                 * bằng một phần bảy trọng lực thật. Anh Hiếu nhìn cái dốc rồi
+                 * nói ngay "độ nghiêng như vậy thì bi phải lăn nhanh hơn", và
+                 * đúng: không phải cảm giác, mà là sai tỉ lệ.
+                 *
+                 * Nay để 3.400 ô/giây². Vì sao không lấy đủ 11.760: ở tốc độ ấy
+                 * viên bi đi hơn 15 ô mỗi khung hình, tức nhảy qua hết bề dày
+                 * một tấm ván (14–16 ô) trong một nhịp — nó sẽ xuyên thẳng qua
+                 * sàn mà không va chạm gì. 3.400 giữ bước nhảy dưới nửa bán
+                 * kính, an toàn tuyệt đối, mà bi đã nhanh gấp đôi bản trước.
+                 *
+                 * Ma sát cũng phải đúng chất: mặt gỗ nhẵn có bám nhẹ (0,08) —
+                 * đủ để viên bi XOAY khi lăn chứ không trượt phăng như trên
+                 * băng, mà vẫn không ghì lại. Ma sát không khí hạ xuống một
+                 * nửa: hòn bi thuỷ tinh 25 mm gần như không chịu sức cản gió. */
                 this.ball = M.Bodies.circle(bx, BOARD.y - 40, BALL_R, {
-                    friction: 0.02, frictionAir: 0.0012, restitution: 0.24,
+                    friction: 0.08, frictionAir: 0.0006, restitution: 0.24,
                     density: 0.0028, label: 'ball'
                 });
+                /* Quán tính quay: Matter dựng viên bi như cái ĐĨA đặc (I = mr²/2),
+                 * mà đĩa thì tốn nhiều năng lượng để quay hơn hòn bi cầu thật
+                 * (I = 0,4mr²) — lăn xuống dốc chỉ đạt hai phần ba gia tốc lẽ
+                 * ra phải có. Hạ quán tính xuống một nửa thì tỉ lệ ấy lên 0,8,
+                 * sát hòn bi thật, và cái cảm giác "ì ạch" mất hẳn. */
+                M.Body.setInertia(this.ball, this.ball.inertia * 0.5);
                 this.matter.world.add(this.ball);
 
                 G.running = true;
@@ -587,12 +615,29 @@
 
             /* MỘT nhịp máy trọn vẹn — mọi nơi cần quay bánh đều gọi hàm này */
             stepAll: function (dt) {
+                /* Chia mỗi khung hình thành BA nhịp vật lý nhỏ.
+                 *
+                 * Bi nhanh lên thì sinh ra một mối nguy mới: ở 780–1270 ô/giây
+                 * nó đi 13–21 ô trong một khung hình, mà tấm ván chỉ dày 14–16
+                 * ô. Tức là trong một nhịp viên bi nhảy từ phía trên tấm ván
+                 * sang hẳn phía dưới — Matter không thấy có va chạm nào cả và
+                 * bi XUYÊN THẲNG qua sàn. Lỗi này không báo gì hết, chỉ thấy
+                 * viên bi biến mất.
+                 *
+                 * Chia ba thì bước nhảy còn 4–7 ô, nhỏ hơn nửa bán kính, không
+                 * đường nào lọt qua được. Tốn gấp ba phép tính vật lý, nhưng
+                 * một màn chỉ có vài chục vật thể nên không hề hấn gì. */
+                var sdt = dt / SUB;
                 if (G.running) {
-                    this.applyForces();
-                    M.Engine.update(this.matter.world.engine, dt * 1000);
+                    for (var k = 0; k < SUB; k++) {
+                        this.applyForces();
+                        M.Engine.update(this.matter.world.engine, sdt * 1000);
+                    }
                     this.checkBall(dt);
                 } else {
-                    M.Engine.update(this.matter.world.engine, dt * 1000);
+                    for (var k2 = 0; k2 < SUB; k2++) {
+                        M.Engine.update(this.matter.world.engine, sdt * 1000);
+                    }
                 }
                 this.beltPhase += dt;
                 this.stepPuffs(dt);
@@ -647,7 +692,7 @@
                             Math.abs(b.position.y - m.at.y) < m.h / 2 + BALL_R + 6 &&
                             b.velocity.y > -0.5) {
                             m.fired = true;
-                            M.Body.setVelocity(b, { x: m.kick.vx / 60, y: m.kick.vy / 60 });
+                            M.Body.setVelocity(b, { x: m.kick.vx / PHYS_HZ, y: m.kick.vy / PHYS_HZ });
                             this.puff(m.at.x, m.at.y - 14, 0);
                             sfx.bounce();
                         }
@@ -658,8 +703,8 @@
                             m.fired = true;
                             m.flash = 1;
                             M.Body.setVelocity(b, {
-                                x: (m.speed / 60) * bdx / bd,
-                                y: (m.speed / 60) * bdy / bd
+                                x: (m.speed / PHYS_HZ) * bdx / bd,
+                                y: (m.speed / PHYS_HZ) * bdy / bd
                             });
                             this.puff(m.at.x + bdx, m.at.y + bdy, bdx > 0 ? 1 : -1);
                             sfx.bounce();
@@ -671,7 +716,7 @@
                         var onTop = Math.abs(b.position.x - body.position.x) < body.plugin.paint.w / 2 + BALL_R &&
                             b.position.y < body.position.y &&
                             b.position.y > body.position.y - body.plugin.paint.h / 2 - BALL_R * 2.4;
-                        if (onTop) M.Body.setVelocity(b, { x: m.speed, y: b.velocity.y });
+                        if (onTop) M.Body.setVelocity(b, { x: m.speed / PHYS_HZ, y: b.velocity.y });
                     }
                 }
             },
@@ -1418,7 +1463,7 @@
                 width: W, height: H,
                 transparent: true,
                 scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.NO_CENTER },
-                physics: { default: 'matter', matter: { gravity: { y: 1.7 }, debug: false } },
+                physics: { default: 'matter', matter: { gravity: { y: 3.4 }, debug: false } },
                 scene: [PlayScene],
                 banner: false
             });
@@ -1553,10 +1598,26 @@
             if (UI.scene) UI.scene.startRun();
             UI.paintHud();
         });
+        /* Nút LÀM LẠI trả cả màn về lúc mới vào: mọi mảnh về khay, cỗ máy về
+         * đúng hình dạng ban đầu.
+         *
+         * Trước đó nó chỉ thu viên bi về chỗ cũ, còn mảnh thì vẫn nằm nguyên
+         * chỗ bé đã đặt. Anh Hiếu báo: "nhiều lúc anh không kéo được thanh gỗ
+         * với băng chuyền về chỗ đặt ban đầu để ghép lại" — đúng, vì muốn xếp
+         * lại từ đầu thì phải gỡ từng mảnh một bằng tay, mà gỡ mảnh là một cú
+         * kéo khó chịu. Một nút xoá sạch làm lại là xong. */
         el('btn-retry').addEventListener('click', function () {
-            if (UI.scene) { UI.scene.rebuildFromPlacement(); UI.scene.paintAll(); }
+            sfx.wake();
+            if (!UI.scene) return;
             G.running = false;
+            G.result = '';
+            G.placed = {};
+            G.tray.forEach(function (t) { t.used = false; });
+            UI.scene.grab = null;
+            UI.scene.rebuildFromPlacement();
+            UI.scene.paintAll();
             UI.paintHud();
+            showTip('Cleared - build it again!', 1400);
         });
 
         var soundBtn = el('btn-sound'), soundIcon = el('sound-icon');
