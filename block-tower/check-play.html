@@ -24,6 +24,7 @@
       5. Ân huệ khi chạm đáy: xoay được sau khi đã chạm, và không kéo dài vô hạn
       6. Đủ ảnh khối cho cả năm màu, nướng ở gấp ba, và năm màu phân biệt được
       7. Điểm và số hàng trên bảng khớp với trạng thái thật
+      7a. Tiếng chạm đáy phát ĐÚNG nhịp khối chạm, không đợi tới lúc gắn
       8. Bảng điểm không tràn ra ngoài trên màn điện thoại hẹp 390px
 -->
 <style>
@@ -253,6 +254,58 @@ function run(win) {
     if (shown.score !== G.score) fail('bảng ghi ' + shown.score + ' điểm mà thật ra là ' + G.score);
     if (shown.lines !== G.lines) fail('bảng ghi ' + shown.lines + ' hàng mà thật ra là ' + G.lines);
     if (shown.level !== G.level) fail('bảng ghi bàn ' + shown.level + ' mà thật ra là bàn ' + G.level);
+
+    /* ---- 7a: TIẾNG CHẠM ĐÁY PHẢI ĐÚNG LÚC KHỐI CHẠM ĐÁY ----
+     *
+     * Anh Hiếu nghe ra: "khối hình đã rơi xuống đáy rồi nhưng một lúc sau mới
+     * nghe thấy âm thanh". Đúng: em chỉ có một tiếng và đặt nó ở chỗ quân GẮN
+     * vào giếng, mà giữa lúc chạm với lúc gắn còn 0,45 giây ân huệ cho bé xoay
+     * nốt. Mắt thấy khối nằm im rồi, nửa giây sau tai mới nghe.
+     *
+     * Máy này đếm bằng NHỊP MÁY chứ không bằng tai: bước tới lúc quân vừa hết
+     * chỗ rơi, rồi xem tiếng "chạm" có được ghi ngay nhịp ấy không, và tiếng
+     * "gắn" có tới muộn hơn không. Hai tiếng, hai thời điểm, mỗi tiếng đúng
+     * việc của nó.
+     */
+    say('');
+    say('· tiếng chạm đáy có đúng lúc không', 'dim');
+    win.blockTower.UI.start();
+    sc.frozen = true;
+    sc.startGame(2024);
+    var S2 = win.blockTower.sfx;
+    S2.trace = true; S2.log = [];
+
+    var stepsToRest = 0, restedAt = -1, touchAt = -1, lockAt = -1;
+    for (var st = 0; st < 60 * 30; st++) {
+        var wasResting = !R.fits(G.board, R.moved(G.piece, 0, 1));
+        var before = S2.log.length;
+        sc.stepAll(1 / 60);
+        for (var q4 = before; q4 < S2.log.length; q4++) {
+            if (S2.log[q4].name === 'touch' && touchAt < 0) touchAt = st;
+            if (S2.log[q4].name === 'lock' && lockAt < 0) lockAt = st;
+        }
+        if (wasResting && restedAt < 0) restedAt = st;
+        if (lockAt >= 0) break;
+    }
+    var gapTouch = (touchAt - restedAt) / 60, gapLock = (lockAt - restedAt) / 60;
+    say('    quân hết chỗ rơi ở nhịp ' + restedAt +
+        ' · tiếng chạm ở nhịp ' + touchAt + ' (' + gapTouch.toFixed(2) + 's sau)' +
+        ' · tiếng gắn ở nhịp ' + lockAt + ' (' + gapLock.toFixed(2) + 's sau)',
+        (touchAt >= 0 && Math.abs(gapTouch) < 0.05 && lockAt > touchAt) ? 'ok' : 'bad');
+    if (touchAt < 0) fail('không có tiếng nào lúc quân chạm đáy');
+    if (Math.abs(gapTouch) > 0.05)
+        fail('tiếng chạm đáy trễ ' + gapTouch.toFixed(2) + ' giây so với lúc khối thật sự chạm — tai và mắt lệch nhau');
+    if (lockAt <= touchAt) fail('tiếng gắn phải tới SAU tiếng chạm, không phải cùng lúc');
+
+    /* Mọi tiếng "phản hồi tức thì" phải phát ngay, không được hẹn giờ. */
+    S2.log = [];
+    sc.tryMove(1); sc.tryRotate(1);
+    var immediate = S2.log.map(function (e) { return e.name; }).join(' ');
+    say('    bấm một cái là nghe ngay: ' + (immediate || 'KHÔNG CÓ TIẾNG NÀO'),
+        (immediate.indexOf('move') >= 0 && immediate.indexOf('turn') >= 0) ? 'ok' : 'bad');
+    if (immediate.indexOf('move') < 0) fail('đẩy ngang không có tiếng');
+    if (immediate.indexOf('turn') < 0) fail('xoay không có tiếng');
+    S2.trace = false;
 
     /* ---- 7b: NĂM MÀU KHỐI PHẢI KHÁC NHAU RÕ ----
      *

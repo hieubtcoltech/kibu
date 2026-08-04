@@ -60,58 +60,160 @@
 
     /* ========================================================================
      *  3. ÂM THANH — dựng bằng WebAudio, không tải tệp nào
+     *
+     * ĐẶT LỊCH THEO ĐỒNG HỒ CỦA CARD ÂM THANH, KHÔNG DÙNG setTimeout.
+     *
+     * Bản đầu em rải mấy nốt của một hợp âm bằng setTimeout. Chạy thì nghe
+     * cũng được, nhưng setTimeout là đồng hồ của trình duyệt: máy bận một nhịp
+     * là nó trễ hàng chục mili-giây, và mấy nốt lệch nhau nghe rõ. Đặt lịch
+     * bằng ctx.currentTime + delay thì card âm thanh tự lo, đúng từng mẫu.
+     *
+     * CÓ MỘT KHỐI TRỘN CHUNG (master) và một bộ nén: lúc ăn bốn hàng thì năm
+     * sáu tiếng chồng lên nhau, không nén thì vỡ tiếng.
      * ======================================================================*/
 
     var sfx = {
-        ctx: null, on: true,
+        ctx: null, master: null, noiseBuf: null, on: true,
+        /* máy soát bật cờ này để ghi lại từng tiếng phát ra lúc nào */
+        trace: false, log: [],
+
         init: function () { try { this.on = localStorage.getItem(KEY + '_sound') !== 'off'; } catch (e) { } },
+
         wake: function () {
-            if (!this.ctx) { var C = window.AudioContext || window.webkitAudioContext; if (C) this.ctx = new C(); }
-            if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            if (!this.ctx) {
+                var C = window.AudioContext || window.webkitAudioContext;
+                if (!C) return;
+                this.ctx = new C({ latencyHint: 'interactive' });
+                var comp = this.ctx.createDynamicsCompressor();
+                comp.threshold.setValueAtTime(-16, this.ctx.currentTime);
+                comp.ratio.setValueAtTime(6, this.ctx.currentTime);
+                this.master = this.ctx.createGain();
+                this.master.gain.setValueAtTime(0.9, this.ctx.currentTime);
+                this.master.connect(comp);
+                comp.connect(this.ctx.destination);
+                this.makeNoise();
+            }
+            if (this.ctx.state === 'suspended') this.ctx.resume();
         },
+
         toggle: function () {
             this.on = !this.on;
             try { localStorage.setItem(KEY + '_sound', this.on ? 'on' : 'off'); } catch (e) { }
         },
-        tone: function (f0, f1, dur, type, vol) {
+
+        /* Một giây tiếng ồn trắng, dựng sẵn một lần. Tiếng va chạm phải có ồn
+         * mới ra "cộp"; chỉ dùng sóng thuần thì nghe như tiếng đàn, không ra
+         * tiếng khối gạch đặt xuống. */
+        makeNoise: function () {
+            var n = this.ctx.sampleRate;
+            var buf = this.ctx.createBuffer(1, n, n);
+            var d = buf.getChannelData(0);
+            for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+            this.noiseBuf = buf;
+        },
+
+        mark: function (name) { if (this.trace) this.log.push({ name: name, t: Date.now() }); },
+
+        /* delay tính bằng GIÂY, đặt lịch trên đồng hồ âm thanh */
+        tone: function (f0, f1, dur, type, vol, delay) {
             if (!this.on || !this.ctx) return;
-            var t = this.ctx.currentTime;
+            var t = this.ctx.currentTime + (delay || 0);
             var o = this.ctx.createOscillator(), g = this.ctx.createGain();
             o.type = type || 'sine';
             o.frequency.setValueAtTime(f0, t);
             if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
-            g.gain.setValueAtTime(vol || 0.05, t);
+            /* vào nhanh ra chậm: đánh thẳng vào biên độ thì nghe "tạch" ở đầu */
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(vol || 0.05, t + 0.006);
             g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-            o.connect(g); g.connect(this.ctx.destination);
+            o.connect(g); g.connect(this.master);
             o.start(t); o.stop(t + dur + 0.02);
         },
-        move: function () { this.tone(320, 300, 0.04, 'square', 0.025); },
-        turn: function () { this.tone(520, 640, 0.06, 'triangle', 0.035); },
-        land: function () { this.tone(180, 90, 0.12, 'square', 0.05); },
-        drop: function () { this.tone(240, 70, 0.16, 'sawtooth', 0.05); },
+
+        /* tiếng ồn đã lọc — dùng cho va chạm và tiếng gió */
+        hit: function (dur, vol, freq, type, delay) {
+            if (!this.on || !this.ctx || !this.noiseBuf) return;
+            var t = this.ctx.currentTime + (delay || 0);
+            var src = this.ctx.createBufferSource();
+            src.buffer = this.noiseBuf;
+            var f = this.ctx.createBiquadFilter();
+            f.type = type || 'lowpass';
+            f.frequency.setValueAtTime(freq, t);
+            var g = this.ctx.createGain();
+            g.gain.setValueAtTime(vol, t);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            src.connect(f); f.connect(g); g.connect(this.master);
+            src.start(t); src.stop(t + dur + 0.02);
+        },
+
+        /* ---- những tiếng của trò chơi ---- */
+
+        move: function () { this.mark('move'); this.tone(760, 700, 0.035, 'triangle', 0.030); },
+
+        turn: function () {
+            this.mark('turn');
+            this.tone(520, 880, 0.055, 'triangle', 0.038);
+        },
+
+        /* CHẠM ĐÁY — phát ngay lúc quân vừa đặt chân lên đống, KHÔNG đợi tới
+         * lúc nó gắn vào giếng.
+         *
+         * Đây đúng là lỗi anh Hiếu nghe ra: em chỉ có một tiếng và đặt nó ở chỗ
+         * gắn, mà giữa lúc chạm với lúc gắn còn 0,45 giây ân huệ cho bé xoay
+         * nốt. Mắt thấy khối nằm im rồi, tai nửa giây sau mới nghe. Tách làm
+         * hai tiếng thì cả hai đều đúng lúc: "cộp" khi chạm, "cạch" khi gắn. */
+        touch: function () {
+            this.mark('touch');
+            this.tone(190, 96, 0.09, 'square', 0.055);
+            this.hit(0.07, 0.11, 900, 'lowpass');
+        },
+
+        /* GẮN VÀO GIẾNG — tiếng nhẹ hơn, chỉ để đóng lại một nhịp */
+        lock: function () {
+            this.mark('lock');
+            this.tone(320, 240, 0.05, 'square', 0.028);
+            this.hit(0.04, 0.05, 2200, 'highpass');
+        },
+
+        /* THẢ NHANH — tiếng gió rơi rồi mới tới cú va */
+        drop: function () {
+            this.mark('drop');
+            this.hit(0.13, 0.09, 1400, 'lowpass');
+            this.tone(420, 90, 0.13, 'sawtooth', 0.045);
+        },
+
+        /* ĂN HÀNG — càng nhiều hàng càng lên cao và càng dài. Bốn hàng một lúc
+         * được thêm một nốt chót vót, để bé nghe là biết mình vừa làm được cái
+         * khó nhất. */
         line: function (n) {
-            var s = this, base = [0, 523, 659, 784, 1047];
-            for (var i = 0; i < n; i++) {
-                (function (k) { setTimeout(function () { s.tone(base[Math.min(n, 4)] * (1 + k * 0.16), 0, 0.16, 'triangle', 0.06); }, k * 80); })(i);
+            this.mark('line' + n);
+            var scale = [523, 659, 784, 1047, 1319];
+            var k = Math.min(n, 4);
+            for (var i = 0; i < k + 1; i++) {
+                this.tone(scale[i] * (1 + (k - 1) * 0.06), 0, 0.16, 'triangle', 0.055, i * 0.055);
             }
+            this.hit(0.10, 0.07, 3000, 'highpass');
+            if (k >= 4) this.tone(2093, 2093, 0.30, 'triangle', 0.05, 0.24);
         },
+
+        /* HÀNG TOÀN VÀNG — tiếng lấp lánh, khác hẳn tiếng ăn hàng thường */
         gold: function () {
-            var s = this;
-            [880, 1174, 1568, 2093].forEach(function (f, i) {
-                setTimeout(function () { s.tone(f, f, 0.13, 'triangle', 0.055); }, i * 65);
-            });
+            this.mark('gold');
+            var f = [1047, 1319, 1568, 2093, 2637];
+            for (var i = 0; i < f.length; i++) this.tone(f[i], f[i], 0.13, 'triangle', 0.042, i * 0.05);
         },
+
         level: function () {
-            var s = this;
-            [523, 659, 784, 1047].forEach(function (f, i) {
-                setTimeout(function () { s.tone(f, f, 0.18, 'triangle', 0.06); }, i * 110);
-            });
+            this.mark('level');
+            var f = [392, 523, 659, 784, 1047];
+            for (var i = 0; i < f.length; i++) this.tone(f[i], f[i], 0.20, 'triangle', 0.05, i * 0.09);
         },
+
         over: function () {
-            var s = this;
-            [392, 330, 262, 196].forEach(function (f, i) {
-                setTimeout(function () { s.tone(f, f * 0.9, 0.3, 'sawtooth', 0.05); }, i * 160);
-            });
+            this.mark('over');
+            var f = [523, 440, 349, 262];
+            for (var i = 0; i < f.length; i++) this.tone(f[i], f[i] * 0.94, 0.34, 'sawtooth', 0.05, i * 0.17);
+            this.hit(0.5, 0.05, 500, 'lowpass', 0.5);
         }
     };
 
@@ -281,6 +383,7 @@
                 G.piece = land;
                 G.score += dist * 2;
                 sfx.drop();
+                sfx.touch();
                 this.shake = Math.min(0.28, 0.06 + dist * 0.012);
                 this.lockPiece();
             },
@@ -325,7 +428,7 @@
 
             lockPiece: function () {
                 var over = R.lock(G.board, G.piece);
-                sfx.land();
+                sfx.lock();
                 var rows = R.fullRows(G.board);
                 if (rows.length) {
                     G.clearRows = rows;
@@ -385,7 +488,7 @@
                     /* MẤY NHỊP ÂN HUỆ: chạm đáy rồi vẫn còn nửa giây để xoay
                      * hay đẩy ngang. Thiếu nó thì mỗi lần bé chậm tay một chút
                      * là hỏng cả cột, mà bé thì chưa quen tay. */
-                    if (G.grace === 0) G.grace = LOCK_GRACE;
+                    if (G.grace === 0) { G.grace = LOCK_GRACE; sfx.touch(); }
                     G.grace -= dt;
                     if (G.grace <= 0) { this.lockPiece(); return; }
                 } else {
@@ -941,7 +1044,8 @@
             },
             state: function () {
                 return { mode: G.mode, score: G.score, lines: G.lines, level: G.level };
-            }
+            },
+            sfx: sfx
         };
     }
 
