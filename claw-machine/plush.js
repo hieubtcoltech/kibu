@@ -41,15 +41,26 @@
         { key: 'unicorn', ear: 'point', horn: 1, mane2: 1, name: 'Unicorn' }
     ];
 
-    /* Ba bộ màu cho mỗi loài. Bộ nào cũng phải nổi trên nền kính xanh nhạt của
-     * tủ, nên không có màu nào quá nhạt. */
+    /* Ba bộ màu cho mỗi loài.
+     *
+     * Anh Hiếu chơi thử rồi nói "mấy con thú sao mờ quá". Đúng: bộ màu cũ toàn
+     * pastel nhạt đặt trên nền kính xanh nhạt, con trắng thì gần như tan vào
+     * nền. Nay mỗi bộ có bốn nấc chứ không phải hai:
+     *   body   màu vải chính, đã đậm hẳn lên
+     *   dark   vùng khuất, dùng để đánh khối cho ra hình cầu
+     *   belly  miếng bụng và trong tai, sáng hơn thân
+     *   edge   VIỀN NGOÀI, đậm hẳn — đây là thứ tách con thú khỏi nền kính và
+     *          khỏi mấy con chồng phía sau. Thiếu nó thì cả tủ trông như một
+     *          đống bột màu nhoè vào nhau.
+     *   ink    mắt mũi
+     */
     var PALETTES = [
-        { body: 0xffb4a2, dark: 0xe08b7a, belly: 0xfff0e6, ink: 0x5b3a34 },
-        { body: 0x9ad9ea, dark: 0x63b2c9, belly: 0xeafaff, ink: 0x24505c },
-        { body: 0xffd97d, dark: 0xe0b155, belly: 0xfff6e0, ink: 0x6b4a13 },
-        { body: 0xc3b1e1, dark: 0x9b86c4, belly: 0xf4eeff, ink: 0x453263 },
-        { body: 0xa8e6a3, dark: 0x7cc077, belly: 0xf0ffee, ink: 0x2f5c2c },
-        { body: 0xffffff, dark: 0xd9d9e3, belly: 0xffffff, ink: 0x3a3a48 }
+        { body: 0xff9d86, dark: 0xe0705c, belly: 0xffe8dc, ink: 0x4a2a24, edge: 0xb04a3a },
+        { body: 0x6ec9e8, dark: 0x3f9fc4, belly: 0xe0f7ff, ink: 0x143f4c, edge: 0x276f8c },
+        { body: 0xffc94d, dark: 0xe0a02a, belly: 0xfff2cc, ink: 0x5b3a08, edge: 0xb87a0e },
+        { body: 0xab93e0, dark: 0x8168c0, belly: 0xeee6ff, ink: 0x35245a, edge: 0x63489f },
+        { body: 0x86dd80, dark: 0x5cb356, belly: 0xe8ffe4, ink: 0x224a20, edge: 0x3a8535 },
+        { body: 0xf4f4fa, dark: 0xd2d2e0, belly: 0xffffff, ink: 0x2e2e3c, edge: 0x8f8fa8 }
     ];
 
     /* Con nào cũng phải có một bộ màu "đúng loài" ở biến thể đầu — gấu trúc mà
@@ -82,28 +93,68 @@
         /* ---- tai / bờm / sừng: vẽ TRƯỚC để nằm sau đầu ---- */
         if (sp.mane) {
             g.fillStyle(p.dark, 1);
-            for (var m = 0; m < 12; m++) {
-                var a = (Math.PI * 2 * m) / 12;
-                g.fillCircle(Math.cos(a) * headR * 0.95, headY + Math.sin(a) * headR * 0.95, headR * 0.34);
+            for (var m = 0; m < 14; m++) {
+                var a = (Math.PI * 2 * m) / 14;
+                g.fillCircle(Math.cos(a) * headR * 1.06, headY + Math.sin(a) * headR * 1.06, headR * 0.42);
             }
         }
         if (sp.ear === 'round') {
-            ear(g, p, -headR * 0.72, headY - headR * 0.66, headR * 0.42, 0);
-            ear(g, p, headR * 0.72, headY - headR * 0.66, headR * 0.42, 0);
+            ear(g, p, -headR * 0.80, headY - headR * 0.74, headR * 0.50, 0);
+            ear(g, p, headR * 0.80, headY - headR * 0.74, headR * 0.50, 0);
         } else if (sp.ear === 'long') {
-            longEar(g, p, -headR * 0.42, headY - headR * 0.75, headR * 0.3, headR * 1.15, -0.18);
-            longEar(g, p, headR * 0.42, headY - headR * 0.75, headR * 0.3, headR * 1.15, 0.18);
+            longEar(g, p, -headR * 0.44, headY - headR * 0.86, headR * 0.34, headR * 1.30, -0.18);
+            longEar(g, p, headR * 0.44, headY - headR * 0.86, headR * 0.34, headR * 1.30, 0.18);
         } else if (sp.ear === 'point') {
-            pointEar(g, p, -headR * 0.66, headY - headR * 0.5, headR * 0.5, -1);
-            pointEar(g, p, headR * 0.66, headY - headR * 0.5, headR * 0.5, 1);
+            pointEar(g, p, -headR * 0.78, headY - headR * 0.58, headR * 0.60, -1);
+            pointEar(g, p, headR * 0.78, headY - headR * 0.58, headR * 0.60, 1);
         } else if (sp.ear === 'flop') {
-            flopEar(g, p, -headR * 0.86, headY - headR * 0.18, headR * 0.36, headR * 0.86, -0.35);
-            flopEar(g, p, headR * 0.86, headY - headR * 0.18, headR * 0.36, headR * 0.86, 0.35);
+            flopEar(g, p, -headR * 0.98, headY - headR * 0.14, headR * 0.42, headR * 0.98, -0.35);
+            flopEar(g, p, headR * 0.98, headY - headR * 0.14, headR * 0.42, headR * 0.98, 0.35);
         } else if (sp.ear === 'eyestalk') {
             g.fillStyle(p.body, 1);
             g.fillCircle(-headR * 0.55, headY - headR * 0.72, headR * 0.38);
             g.fillCircle(headR * 0.55, headY - headR * 0.72, headR * 0.38);
         }
+        /* ---- thân ----
+         *
+         * VIỀN VẼ BẰNG CÁCH ĐẮP MỘT LỚP ĐẬM TO HƠN Ở DƯỚI, không phải stroke
+         * từng hình tròn. Bản trước em stroke vòng đầu và vòng thân, và vì đầu
+         * chồng lên thân nên đường viền chạy XUYÊN QUA MẶT con thú — phóng to
+         * ra thấy rõ một vòng nâu cắt ngang mõm, trông như con thú đeo cái
+         * vòng. Đắp bóng dưới thì chỉ còn đúng đường bao ngoài. */
+        var lw = r * 0.11;
+        var furN = (sp.key === 'frog' || sp.key === 'penguin') ? -1 : 15;
+        fluff(g, 0, bodyY, bodyR + lw, p.edge, furN);
+        g.fillStyle(p.edge, 1);
+        g.fillCircle(-bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33 + lw);
+        g.fillCircle(bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33 + lw);
+        g.fillCircle(-bodyR * 0.92, bodyY - bodyR * 0.05, bodyR * 0.3 + lw);
+        g.fillCircle(bodyR * 0.92, bodyY - bodyR * 0.05, bodyR * 0.3 + lw);
+        fluff(g, 0, bodyY, bodyR, p.body, furN);
+        g.fillStyle(p.body, 1);
+        /* chân: hai cục tròn thò ra dưới thân */
+        g.fillCircle(-bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33);
+        g.fillCircle(bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33);
+        /* tay ôm phía trước */
+        g.fillCircle(-bodyR * 0.92, bodyY - bodyR * 0.05, bodyR * 0.3);
+        g.fillCircle(bodyR * 0.92, bodyY - bodyR * 0.05, bodyR * 0.3);
+
+        /* bụng sáng màu — thứ làm nó ra dáng đồ bông may bằng hai loại vải */
+        g.fillStyle(p.belly, 1);
+        g.fillEllipse(0, bodyY + bodyR * 0.18, bodyR * 1.06, bodyR * 1.12);
+        if (sp.key === 'penguin') {
+            g.fillStyle(p.belly, 1);
+            g.fillEllipse(0, bodyY + bodyR * 0.1, bodyR * 1.2, bodyR * 1.4);
+        }
+
+        /* ---- đầu ---- */
+        volume(g, 0, bodyY, bodyR, p);
+        fluff(g, 0, headY, headR + lw, p.edge, furN < 0 ? -1 : 13);
+        if (sp.wide) { g.fillStyle(p.edge, 1); g.fillEllipse(0, headY, headR * 2.3 + lw * 2, headR * 1.85 + lw * 2); }
+        fluff(g, 0, headY, headR, p.body, furN < 0 ? -1 : 13);
+        if (sp.wide) { g.fillStyle(p.body, 1); g.fillEllipse(0, headY, headR * 2.3, headR * 1.85); }
+        volume(g, 0, headY, headR, p);
+
         if (sp.horn) {
             g.fillStyle(0xffe08a, 1);
             tri(g, 0, headY - headR * 1.5, headR * 0.26, headR * 0.72);
@@ -121,28 +172,6 @@
             g.fillCircle(headR * 0.02, headY - headR * 1.12, headR * 0.24);
         }
 
-        /* ---- thân ---- */
-        g.fillStyle(p.body, 1);
-        g.fillCircle(0, bodyY, bodyR);
-        /* chân: hai cục tròn thò ra dưới thân */
-        g.fillCircle(-bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33);
-        g.fillCircle(bodyR * 0.58, bodyY + bodyR * 0.72, bodyR * 0.33);
-        /* tay ôm phía trước */
-        g.fillCircle(-bodyR * 0.92, bodyY - bodyR * 0.05, bodyR * 0.3);
-        g.fillCircle(bodyR * 0.92, bodyY - bodyR * 0.05, bodyR * 0.3);
-
-        /* bụng sáng màu — thứ làm nó ra dáng đồ bông may bằng hai loại vải */
-        g.fillStyle(p.belly, 1);
-        g.fillEllipse(0, bodyY + bodyR * 0.18, bodyR * 1.06, bodyR * 1.12);
-        if (sp.key === 'penguin') {
-            g.fillStyle(p.belly, 1);
-            g.fillEllipse(0, bodyY + bodyR * 0.1, bodyR * 1.2, bodyR * 1.4);
-        }
-
-        /* ---- đầu ---- */
-        g.fillStyle(p.body, 1);
-        g.fillCircle(0, headY, headR);
-        if (sp.wide) g.fillEllipse(0, headY, headR * 2.3, headR * 1.85);
 
         if (sp.patch) {           /* gấu trúc: hai vòng đen quanh mắt */
             g.fillStyle(0x3a3a48, 1);
@@ -179,14 +208,23 @@
             g.fillCircle(-eyeX, eyeY + headR * 0.03, headR * 0.12);
             g.fillCircle(eyeX, eyeY + headR * 0.03, headR * 0.12);
         } else {
+            /* tròng mắt có viền sáng quanh cho nổi khỏi lông */
+            g.fillStyle(0xffffff, 0.55);
+            g.fillEllipse(-eyeX, eyeY, headR * 0.40, headR * 0.46);
+            g.fillEllipse(eyeX, eyeY, headR * 0.40, headR * 0.46);
             g.fillStyle(p.ink, 1);
-            g.fillEllipse(-eyeX, eyeY, headR * 0.26, headR * 0.32);
-            g.fillEllipse(eyeX, eyeY, headR * 0.26, headR * 0.32);
+            g.fillEllipse(-eyeX, eyeY, headR * 0.32, headR * 0.38);
+            g.fillEllipse(eyeX, eyeY, headR * 0.32, headR * 0.38);
         }
-        /* đốm sáng trong mắt — bỏ cái này là mắt đờ ra ngay */
-        g.fillStyle(0xffffff, 0.95);
-        g.fillCircle(-eyeX + headR * 0.09, eyeY - headR * 0.1, headR * 0.075);
-        g.fillCircle(eyeX + headR * 0.09, eyeY - headR * 0.1, headR * 0.075);
+        /* HAI đốm sáng trong mắt: một to trên trái, một nhỏ dưới phải. Một đốm
+         * thì mắt mới chỉ "không đờ"; hai đốm mới ra mắt thuỷ tinh long lanh —
+         * và đây là chi tiết bé nhìn đầu tiên. */
+        g.fillStyle(0xffffff, 0.98);
+        g.fillCircle(-eyeX + headR * 0.10, eyeY - headR * 0.12, headR * 0.10);
+        g.fillCircle(eyeX + headR * 0.10, eyeY - headR * 0.12, headR * 0.10);
+        g.fillStyle(0xffffff, 0.7);
+        g.fillCircle(-eyeX - headR * 0.09, eyeY + headR * 0.10, headR * 0.05);
+        g.fillCircle(eyeX - headR * 0.09, eyeY + headR * 0.10, headR * 0.05);
 
         /* mũi và miệng */
         if (!sp.beak && !sp.snout) {
@@ -213,7 +251,7 @@
         }
 
         /* má hồng */
-        g.fillStyle(0xff8fae, 0.5);
+        g.fillStyle(0xff7aa0, 0.72);
         g.fillEllipse(-headR * 0.72, headY + headR * 0.26, headR * 0.34, headR * 0.22);
         g.fillEllipse(headR * 0.72, headY + headR * 0.26, headR * 0.34, headR * 0.22);
 
@@ -228,17 +266,42 @@
             g.strokePath();
         }
 
-        /* viền ngoài để con thú tách khỏi nền và khỏi mấy con phía sau */
-        g.lineStyle(Math.max(1.5, r * 0.075), p.dark, 0.85);
-        g.strokeCircle(0, headY, headR);
-        g.strokeCircle(0, bodyY, bodyR);
     }
 
     /* ---- mấy nét dùng lại ---- */
 
+    /* Một khối tròn có VỎ BÔNG: mép lượn sóng chứ không tròn vo, có vùng khuất
+     * bên dưới phải và vệt sáng trên trái. Ba thứ ấy là toàn bộ khác biệt giữa
+     * "hình tròn tô màu" với "cục bông". */
+    function fluff(g, x, y, r, col, bumps) {
+        var n = bumps || 11;
+        if (n < 0) { g.fillStyle(col, 1); g.fillCircle(x, y, r); return; }   /* loài da trơn */
+        g.fillStyle(col, 1);
+        for (var i = 0; i < n; i++) {
+            var a = (Math.PI * 2 * i) / n;
+            g.fillCircle(x + Math.cos(a) * r * 0.95, y + Math.sin(a) * r * 0.95, r * 0.12);
+        }
+        g.fillCircle(x, y, r);
+    }
+
+    /* Vùng khuất + vệt sáng, đánh lên một khối đã vẽ xong */
+    function volume(g, x, y, r, p) {
+        g.fillStyle(p.dark, 0.38);
+        g.beginPath();
+        g.arc(x, y, r, -0.30, 2.20, false);
+        g.arc(x - r * 0.26, y - r * 0.20, r * 1.02, 2.20, -0.30, true);
+        g.closePath();
+        g.fillPath();
+        g.fillStyle(0xffffff, 0.26);
+        g.fillEllipse(x - r * 0.36, y - r * 0.42, r * 0.72, r * 0.46);
+    }
+
+
     function ear(g, p, x, y, r2) {
         g.fillStyle(p.body, 1);
         g.fillCircle(x, y, r2);
+        g.lineStyle(Math.max(1.5, r2 * 0.2), p.edge, 1);
+        g.strokeCircle(x, y, r2);
         g.fillStyle(p.belly, 1);
         g.fillCircle(x, y, r2 * 0.52);
     }
@@ -301,7 +364,11 @@
      * Bên game cần hai số này để đặt ảnh sao cho CHÂN CON THÚ trùng với đáy
      * khối vật lý. Không có nó thì con thú nằm trên sàn mà chân thò xuyên qua
      * đáy tủ — nhìn là thấy sai ngay. */
-    var FEET = 1.48, TOP = -2.15;
+    /* Đổi từ 1,48 lên 1,61 khi thêm viền lông xù: mép bông giờ phình ra thêm
+     * chừng một phần tám bán kính so với hình tròn trơn, nên nếu vẫn lấy 1,48
+     * thì cả đàn thú bị vẽ thấp hơn khối vật lý — ảnh chụp thấy rõ một hàng
+     * chân lún xuống dưới mặt sàn tủ. */
+    var FEET = 1.61, TOP = -2.32;
 
     return {
         FEET: FEET,

@@ -123,6 +123,7 @@
     var PLUSH_R = 40;                      // nửa bề ngang con thú
     var DRAW_R = PLUSH_R * 0.86;           // cỡ vẽ (hình vẽ nhỏ hơn khối vật lý một chút)
     var TEX_W = PLUSH_R * 3.4, TEX_H = PLUSH_R * 3.6;
+    var TEX_SCALE = 3;                     // nướng texture gấp ba cho khỏi nhoè
     var DRAW_Y = PLUSH_R * 2.05;           // gốc vẽ nằm đâu trong tấm texture
     var PILE_COUNT = 12;                   /* Số thú trong tủ — đây là nút vặn ĐỘ KHÓ
                                             mạnh nhất, không phải chuyện trang trí.
@@ -294,11 +295,23 @@
                         var key = 'plush_' + si + '_' + vi;
                         if (this.textures.exists(key)) continue;
                         g.clear();
-                        /* vẽ với gốc ở giữa khung, chừa lề cho tai và bờm */
+                        /* Nướng texture ở độ phân giải GẤP BA rồi mới thu nhỏ
+                         * lại lúc dán lên tủ.
+                         *
+                         * Con thú vẽ ra chỉ 136×144 điểm ảnh, mà màn hình bé
+                         * thường là màn nét đôi (2 điểm ảnh thật cho 1 điểm
+                         * ảnh CSS) — thế là ảnh bị phóng to gấp đôi, viền răng
+                         * cưa và mặt mũi nhoè hết. Anh Hiếu nhìn ra ngay: "mấy
+                         * con thú sao mờ quá". Vẽ ở gấp ba rồi thu lại thì nét
+                         * nào cũng sắc, kể cả trên màn nét đôi. Tốn thêm chút
+                         * bộ nhớ lúc vào game, đổi lại nhìn ra hẳn đồ bông. */
+                        var S = TEX_SCALE;
+                        g.scaleCanvas(S, S);
                         g.translateCanvas(TEX_W / 2, DRAW_Y);
                         P.draw(g, si, vi, DRAW_R);
                         g.translateCanvas(-TEX_W / 2, -DRAW_Y);
-                        g.generateTexture(key, TEX_W, TEX_H);
+                        g.scaleCanvas(1 / S, 1 / S);
+                        g.generateTexture(key, TEX_W * S, TEX_H * S);
                     }
                 }
                 g.destroy();
@@ -603,25 +616,55 @@
                 g.fillStyle(0xffd43b, 1);
                 g.fillCircle(c.x, c.y - 17, 7);
 
-                /* hai gọng, vẽ theo đúng chỗ Matter đang để chúng */
+                /* Hai gọng, vẽ theo đúng chỗ Matter đang để chúng.
+                 *
+                 * Anh Hiếu nhận xét đồ hoạ "toàn hình khối cơ bản", và cái càng
+                 * đúng là nặng nhất: hai thanh xám tô một màu phẳng. Nay mỗi
+                 * đốt gọng vẽ ba lớp — bóng đổ, thân thép, gờ sáng chạy dọc —
+                 * cộng một miếng cao su đỏ ở mũi móc như càng thật, để bé nhìn
+                 * ra ngay chỗ nào là chỗ quắp. */
+                function poly(vs, dx, dy) {
+                    g.beginPath();
+                    g.moveTo(vs[0].x + dx, vs[0].y + dy);
+                    for (var q = 1; q < vs.length; q++) g.lineTo(vs[q].x + dx, vs[q].y + dy);
+                    g.closePath();
+                }
                 for (var i = 0; i < this.arms.length; i++) {
                     var arm = this.arms[i];
-                    g.fillStyle(0xc9d1e6, 1);
-                    g.lineStyle(3, 0x5a6480, 1);
+                    var lastPart = null;
                     for (var k = 0; k < arm.parts.length; k++) {
                         var part = arm.parts[k];
                         if (part === arm && arm.parts.length > 1) continue;
                         var v = part.vertices;
+                        lastPart = part;
+
+                        g.fillStyle(0x0e0a24, 0.4);          // bóng đổ
+                        poly(v, 3, 4); g.fillPath();
+                        g.fillStyle(0x8a94ad, 1);            // thân thép
+                        poly(v, 0, 0); g.fillPath();
+                        g.lineStyle(3, 0x39405a, 1);         // viền tối
+                        poly(v, 0, 0); g.strokePath();
+                        /* gờ sáng chạy dọc một bên — thứ làm nó ra "thép" */
+                        g.lineStyle(3, 0xe6ecf7, 0.75);
                         g.beginPath();
-                        g.moveTo(v[0].x, v[0].y);
-                        for (var q = 1; q < v.length; q++) g.lineTo(v[q].x, v[q].y);
-                        g.closePath();
-                        g.fillPath();
+                        g.moveTo(v[0].x * 0.72 + v[1].x * 0.28, v[0].y * 0.72 + v[1].y * 0.28);
+                        g.lineTo(v[3].x * 0.72 + v[2].x * 0.28, v[3].y * 0.72 + v[2].y * 0.28);
                         g.strokePath();
                     }
+                    /* miếng cao su đỏ ở mũi móc — chỗ quắp vào con thú */
+                    if (lastPart) {
+                        var tip = lastPart.vertices[2];
+                        var tip2 = lastPart.vertices[3];
+                        g.fillStyle(0xe6317a, 1);
+                        g.fillCircle((tip.x + tip2.x) / 2, (tip.y + tip2.y) / 2, 7);
+                        g.fillStyle(0xff9ec4, 0.9);
+                        g.fillCircle((tip.x + tip2.x) / 2 - 2, (tip.y + tip2.y) / 2 - 2, 3);
+                    }
                     /* khớp nối ở gốc gọng */
-                    g.fillStyle(0x5a6480, 1);
-                    g.fillCircle(c.x + arm.plugin.side * 6, c.y, 7);
+                    g.fillStyle(0x39405a, 1);
+                    g.fillCircle(c.x + arm.plugin.side * 6, c.y, 8);
+                    g.fillStyle(0xb9c2d6, 1);
+                    g.fillCircle(c.x + arm.plugin.side * 6, c.y, 4.5);
                 }
             },
 
