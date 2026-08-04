@@ -70,14 +70,17 @@
         armW: 15,
         /* Độ há của càng, đo bằng máy chứ không ước lượng bằng mắt (xem hàm
          * dựng gọng bên dưới — chỗ dời trọng tâm):
-         *   há 0,62  → hai mũi cách nhau 157 ô, gấp 2,2 lần con thú (70 ô);
+         *   há 0,42  → hai mũi cách nhau 138 ô, gấp 1,97 lần con thú (70 ô);
          *   khép −0,16 → còn 76 ô, vừa đúng ôm quanh mình con thú.
+         * Lúc đầu em để há 0,62 (157 ô, gấp 2,25 lần) thì anh Hiếu bảo rộng
+         * quá, nên khép bớt về 0,42 — vẫn há hơn con thú gần gấp đôi, đủ ra
+         * dáng cái càng đang chờ chụp mà không thành cái gầu xúc.
          * Lúc hạ xuống phải há rộng hơn hẳn con thú thì mới ra dáng cái càng
          * đang chờ chụp; há bằng đúng con thú thì nhìn như cái kẹp quần áo.
          * Khép phải âm góc, tức là chúi hai mũi vào trong quá phương thẳng
          * đứng, thì mới thành thế ôm; để 0 thì móc đứng song song, hở ra hai
          * bên, trông như đang thả chứ không phải đang giữ. */
-        openAngle: 0.62,                   // radian, lúc há
+        openAngle: 0.42,                   // radian, lúc há
         closeAngle: -0.16,                 // radian, lúc khép hết
         closeTime: 0.42
     };
@@ -687,19 +690,21 @@
                         var pit = this.plushGroup[pi];
                         if (pit.taken) continue;
                         if (Math.abs(pit.body.position.x - c.x) > 58) continue;
-                        /* Dừng cao hơn đỉnh con thú 1,85 lần bán kính. Con số
+                        /* Dừng cao hơn đỉnh con thú 1,70 lần bán kính. Con số
                          * này BUỘC vào chiều dài gọng: gọng đang há thò xuống
-                         * dưới khớp treo 84 ô, nên dừng ở đây thì hai mũi móc
+                         * dưới khớp treo 103 ô, nên dừng ở đây thì hai mũi móc
                          * dừng ngang tầm giữa mình con thú — đủ sâu để lát nữa
                          * khép vào là lùa được xuống dưới, mà chưa sâu tới mức
                          * cày nát cả đống thú trên đường xuống. Ai đổi chiều
                          * dài gọng thì phải đo lại con số này.
                          *
-                         * Đo bằng trang check-grab (48 lượt, thế đống thú gieo
-                         * hạt nên so được): dừng 1,35 → 29% gắp được, 1,85 →
-                         * 44%, 2,30 → 21%. Nông quá thì móc chỉ bấu vào hông,
-                         * sâu quá thì con thú bị ủi văng trước khi càng khép. */
-                        var want = pit.body.position.y - PLUSH_R * 1.85;
+                         * Đo bằng trang check-grab (80 lượt, thế đống thú gieo
+                         * hạt nên so được): với độ há 0,42 thì dừng 1,70 → 46%
+                         * gắp được, 1,85 → 44%, 2,00 → 31%. Nông quá thì móc
+                         * chỉ bấu vào hông con thú, mà hông thì không đỡ được
+                         * gì; sâu quá thì con thú bị ủi văng trước khi càng
+                         * kịp khép lại. */
+                        var want = pit.body.position.y - PLUSH_R * 1.70;
                         if (want < stop) stop = want;
                     }
                     if (c.y >= stop) { c.y = stop; this.setPhase('close'); }
