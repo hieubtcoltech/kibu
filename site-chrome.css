@@ -260,11 +260,12 @@ body > .site-footer {
  * Vùng chạm 44px như mọi nút khác — chân trang là chỗ ngón tay hay bấm trượt
  * nhất vì nó sát mép dưới màn hình. */
 .footer-contact {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 999px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     background: rgba(255, 255, 255, 0.07);
@@ -289,32 +290,45 @@ body > .site-footer {
 .footer-contact.is-whatsapp:hover { background: rgba(37, 211, 102, 0.28); border-color: #25d366; }
 
 @media (max-width: 560px) {
-    .footer-contact { width: 40px; height: 40px; font-size: 0.98rem; }
+    .footer-contact,
+    .lang-flag-btn { width: 40px; height: 40px; }
+    .online-badge { min-width: 40px; height: 40px; }
+    .footer-contact { font-size: 0.98rem; }
+    .online-badge { font-size: 0.74rem; }
+    .lang-flag-btn img { width: 23px; height: 23px; }
 }
 
 /* ---------- Live player count ---------- */
 /* Chỉ con số bên cạnh chấm xanh — chấm nhấp nháy đã đủ nói "đang trực tuyến",
    câu chữ đầy đủ nằm ở tooltip. */
+/* Cùng khuôn với ba nút mạng xã hội bên cạnh: tròn 44px, cùng nền, cùng viền.
+   Trước đó mỗi cái một hình — hai viên thuốc dẹt nằm cạnh ba hình tròn — nhìn
+   như thể chúng thuộc hai bộ nút khác nhau bị xếp nhầm vào một hàng. */
 .online-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    min-width: 52px;
-    padding: 4px 11px;
-    border-radius: 20px;
+    box-sizing: border-box;
+    gap: 4px;
+    /* min-width chứ không phải width: một hai chữ số thì nó vẫn tròn đúng bằng
+       bốn nút kia, còn lúc đông người (ba chữ số trở lên) thì nó tự giãn thành
+       viên thuốc thay vì để con số tràn ra ngoài viền. */
+    min-width: 46px;
+    height: 46px;
+    padding: 0 5px;
+    border-radius: 999px;
     background: rgba(57, 255, 20, 0.10);
     border: 1px solid rgba(57, 255, 20, 0.35);
     color: #7ef29a;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 700;
     white-space: nowrap;
-    line-height: 1.4;
+    line-height: 1;
 }
 
 .online-badge .online-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: #39ff14;
     box-shadow: 0 0 8px rgba(57, 255, 20, 0.9);
@@ -352,15 +366,18 @@ body > .site-footer {
 
 /* ---------- Language switcher ---------- */
 .lang-flag-btn {
+    box-sizing: border-box;
     flex-shrink: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 5px 10px;
-    border-radius: 20px;
-    background: rgba(255, 255, 255, 0.10);
-    border: 1px solid rgba(255, 255, 255, 0.25);
+    gap: 0;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.16);
     color: inherit;
     font: inherit;
     cursor: pointer;
@@ -377,11 +394,13 @@ body > .site-footer {
 
 .lang-flag-btn:active { transform: translateY(0); }
 
+/* Lá cờ cắt tròn cho khớp cái nút tròn. Để nguyên hình chữ nhật trong nút tròn
+   thì bốn góc cờ chạm sát viền, nhìn chật và lệch tâm. */
 .lang-flag-btn img {
-    width: 24px;
-    height: 16px;
+    width: 26px;
+    height: 26px;
     object-fit: cover;
-    border-radius: 3px;
+    border-radius: 50%;
     display: block;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
