@@ -1387,7 +1387,9 @@
         const cheer = pose === 'cheer';
 
         const bob = run ? Math.abs(Math.sin(a)) * 0.05 * u : 0;
-        const lean = run ? 0.09 : (jump ? 0.05 : 0);
+        /* Ngả người rất nhẹ thôi. Mấy bạn thú chạy sau đều đứng thẳng, ngả
+         * nhiều là panda lạc kiểu khỏi cả bầy. */
+        const lean = run ? 0.045 : (jump ? 0.04 : 0);
         if (lean) {
             g.save();
             g.translate(cx, foot);
@@ -1431,39 +1433,36 @@
 
         function footAt(p) {
             const t = p * TAU;
-            /* Sải chân RỘNG: trong ảnh mẫu hai bàn chân cách nhau gần bằng
-             * cả bề ngang con vật, và chính khoảng hở giữa hai chân mới để lộ
-             * cái thân trắng. Sải hẹp thì tay chân dồn cả vào giữa, nhìn ra
-             * một cục đen dưới cái đầu. */
-            return { x: Math.cos(t) * 0.46 * u, y: Math.max(0, Math.sin(t)) * 0.30 * u };
+            /* Sải NGẮN, đúng bằng nhịp chân của mấy bạn thú chạy sau lưng.
+             *
+             * Anh Hiếu: "bỏ tay panda đi, rút ngắn chân để panda chạy giống
+             * như các nhân vật đi sau nó, anh cần chạy đơn giản như vậy thôi".
+             * Em đã đi quá xa theo hướng "vẽ cho ra dáng vận động viên": chân
+             * dài, sải rộng, tay vung — càng thêm càng rối, mà cả bầy sau lưng
+             * thì chỉ có hai cái chân ngắn ngủn nhấp nhô. Cùng một màn hình mà
+             * hai lối vẽ khác nhau thì con nào cũng lạc lõng. */
+            return { x: Math.cos(t) * 0.17 * u, y: Math.max(0, Math.sin(t)) * 0.11 * u };
         }
 
         const pNear = k, pFar = (k + 0.5) % 1;
-        let fN, fF, armN, armF;
+        let fN, fF;
         if (run) {
             fN = footAt(pNear); fF = footAt(pFar);
-            armN = Math.cos(pFar * TAU);
-            armF = Math.cos(pNear * TAU);
         } else if (jump) {
             fN = { x: 0.24 * u, y: 0.26 * u }; fF = { x: -0.16 * u, y: 0.20 * u };
-            armN = -0.9; armF = -0.5;
         } else if (slide) {
             fN = { x: 0.36 * u, y: 0.02 * u }; fF = { x: 0.22 * u, y: 0.02 * u };
-            armN = 0.9; armF = 0.6;
         } else {
             fN = { x: 0.12 * u, y: 0 }; fF = { x: -0.12 * u, y: 0 };
-            armN = -1.4; armF = -1.3;
         }
 
         const hipY = bodyCY + bodyRY * 0.5;
-        const shoY = bodyCY - bodyRY * 0.55;
-        const legW = 0.30 * u;
-        const armW = 0.17 * u;
+        const legW = 0.21 * u;
 
-        /* --- chi BÊN XA --- */
-        limb(bodyCX - 0.12 * u, hipY, cx + fF.x - 0.14 * u, foot - fF.y, legW, PANDA.limbFar, 0.52);
-        limb(bodyCX - 0.20 * u, shoY, bodyCX - 0.20 * u + armF * 0.34 * u,
-            shoY + 0.28 * u - armF * 0.10 * u, armW, PANDA.limbFar, 0.80);
+        /* --- chân BÊN XA. KHÔNG VẼ TAY: mấy bạn thú chạy sau cũng không có
+         * tay, chỉ hai chân nhấp nhô, và nhìn vẫn ra đang chạy. Thêm tay vào
+         * chỉ tổ rối phần dưới cái đầu. --- */
+        limb(bodyCX - 0.11 * u, hipY, bodyCX - 0.11 * u + fF.x, foot - fF.y, legW, PANDA.limbFar, 0.52);
 
         /* --- KHĂN QUÀNG: rộng gần bằng bề ngang cái đầu, đuôi nhọn hất ngược
          * ra sau. Trong ảnh mẫu đây là mảng lớn thứ nhất, lớn hơn cả cái chân —
@@ -1494,10 +1493,8 @@
         g.ellipse(bodyCX - bodyRX * 0.12, bodyCY - bodyRY * 0.14, bodyRX * 0.82, bodyRY * 0.74, 0, 0, TAU);
         g.fill();
 
-        /* --- chi BÊN GẦN --- */
-        limb(bodyCX + 0.12 * u, hipY, cx + fN.x + 0.10 * u, foot - fN.y, legW, PANDA.black, 0.55);
-        limb(bodyCX + 0.22 * u, shoY, bodyCX + 0.22 * u + armN * 0.36 * u,
-            shoY + 0.28 * u - armN * 0.10 * u, armW, PANDA.black, 0.88);
+        /* --- chân BÊN GẦN --- */
+        limb(bodyCX + 0.11 * u, hipY, bodyCX + 0.11 * u + fN.x, foot - fN.y, legW, PANDA.black, 0.55);
 
         /* --- vành khăn quanh cổ --- */
         g.fillStyle = PANDA.scarf;
