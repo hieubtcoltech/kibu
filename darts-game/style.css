@@ -718,6 +718,9 @@ body {
     display: grid;
     gap: 12px;
     margin-bottom: 20px;
+    /* Chừa chỗ cho thẻ thắng phóng to 1.04. Không chừa thì mép nó thò ra
+       ngoài lưới — máy đo bắt được, mắt thì phải nhìn kỹ mới thấy. */
+    padding: 10px 8px;
 }
 
 .final-grid.cols-1 { grid-template-columns: 1fr; max-width: 380px; margin-inline: auto; }
@@ -735,6 +738,7 @@ body {
     border: 1px solid var(--card-border);
     border-radius: 20px;
     padding: 14px;
+    transition: transform 0.25s ease;
 }
 
 .final-p1 { border-color: rgba(255, 138, 26, 0.45); }
@@ -744,6 +748,9 @@ body {
     box-shadow: 0 0 34px rgba(255, 215, 0, 0.45);
     border-color: var(--neon-yellow);
     background: rgba(255, 215, 0, 0.08);
+    /* Thẻ thắng to hơn hẳn. Cùng cỡ mà chỉ khác viền thì phải nhìn kỹ mới
+       thấy; to lên một chút là mắt bắt được ngay từ xa. */
+    transform: scale(1.04);
 }
 
 .final-avatar { font-size: 2rem; }
@@ -765,23 +772,80 @@ body {
 .final-p1 .final-score { color: var(--p1); }
 .final-p2 .final-score { color: var(--p2); }
 
-.final-stats {
-    display: grid;
-    gap: 4px;
-    margin-top: 8px;
-    font-size: 0.85rem;
+/* ---------- Thẻ kết quả: nhìn là ra, không phải đọc ----------
+   Anh Hiếu bảo màn kết quả rối mắt vì nhiều chữ quá. Bốn dòng chữ mỗi thẻ,
+   ba bé là mười hai dòng — nên giờ mỗi chỉ số chỉ còn một biểu tượng và một
+   con số, còn tỉ lệ trúng thì vẽ thành thanh. */
+
+.final-medal {
+    font-size: 1.5rem;
+    line-height: 1;
+    height: 1.6rem;
 }
 
-.final-stats div {
+/* THANH ĐỘ CHÍNH XÁC — mắt đọc độ dài nhanh hơn đọc "37/43" rất nhiều. */
+.final-acc {
     display: flex;
-    justify-content: space-between;
-    color: #94a3b8;
-    padding: 3px 6px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.04);
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
 }
 
-.final-stats b { color: #f1f5f9; }
+.acc-icon { font-size: 0.95rem; line-height: 1; }
+
+.acc-bar {
+    flex: 1;
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.10);
+    overflow: hidden;
+}
+
+.acc-bar i {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--neon-green), var(--neon-yellow));
+    transition: width 0.6s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.acc-pct {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #e2e8f0;
+    min-width: 3ch;
+    text-align: right;
+}
+
+/* BỐN CHỈ SỐ CÒN LẠI: biểu tượng + số, xếp hai hàng hai cột.
+   Bỏ hẳn nhãn chữ — 🎈 với 🔥 thì bé nhìn là hiểu, mà lại đọc được ở mọi thứ
+   tiếng, không cần dịch. */
+.final-chips {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 6px 4px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+}
+
+.chip b {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: #f1f5f9;
+}
 
 .over-actions {
     display: flex;

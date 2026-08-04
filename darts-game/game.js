@@ -1522,22 +1522,47 @@
             this.accEls = this.booths.map((_, i) => q('acc', i));
 
             this.el.finals.className = 'final-grid cols-' + Math.min(n, 4);
+            /* THẺ KẾT QUẢ: BỐN CON SỐ CÓ BIỂU TƯỢNG, KHÔNG PHẢI BỐN CÂU CHỮ.
+             *
+             * Anh Hiếu gửi ảnh màn kết quả và nói rối mắt vì nhiều chữ quá. Đếm
+             * lại thì đúng: mỗi thẻ có bốn dòng chữ, ba bé là mười hai dòng, cộng
+             * thêm một câu tóm tắt phía trên nhắc lại y hệt mấy con số ấy. Bé
+             * bảy tuổi nhìn vào không biết đọc từ đâu.
+             *
+             * Giờ mỗi chỉ số là MỘT biểu tượng và MỘT con số:
+             *     🎈 bóng nổ   🔥 chuỗi dài nhất   🥇 bóng vàng   💣 bom
+             * Riêng độ chính xác vẽ thành THANH — tỉ lệ thì mắt đọc bằng độ dài
+             * nhanh hơn nhiều so với đọc "37/43".
+             *
+             * Thêm huy chương và xếp lại theo thứ hạng: nhìn một cái là biết ai
+             * nhất, không phải so ba con số với nhau. */
             this.el.finals.innerHTML = this.booths.map((b, i) => `
                 <div class="final-box final-p${i + 1}" data-final="${i}">
+                    <div class="final-medal" data-fmedal="${i}"></div>
                     <div class="final-avatar">${b.cfg.emoji}</div>
                     <div class="final-name">${b.cfg.name}</div>
                     <div class="final-score" data-fscore="${i}">0</div>
-                    <div class="final-stats">
-                        <div><span data-fhit="${i}">0/0</span> darts on target</div>
-                        <div><span data-fpop="${i}">0</span> balloons popped</div>
-                        <div>Longest streak: <span data-fstreak="${i}">0</span> in a row</div>
-                        <div>Golden: <span data-fgold="${i}">0</span> · Bom: <span data-fbomb="${i}">0</span></div>
+                    <div class="final-acc">
+                        <!-- 🎯 để bé biết cái thanh này đo cái gì. Chỉ mỗi con số
+                             phần trăm thì bé đoán đủ thứ: phần trăm bóng nổ? phần
+                             trăm thời gian? Một biểu tượng là hết thắc mắc. -->
+                        <span class="acc-icon">🎯</span>
+                        <div class="acc-bar"><i data-facc="${i}"></i></div>
+                        <span class="acc-pct" data-faccpct="${i}">0%</span>
+                    </div>
+                    <div class="final-chips">
+                        <span class="chip" title="Balloons popped">🎈<b data-fpop="${i}">0</b></span>
+                        <span class="chip" title="Longest streak">🔥<b data-fstreak="${i}">0</b></span>
+                        <span class="chip" title="Golden balloons">🥇<b data-fgold="${i}">0</b></span>
+                        <span class="chip" title="Bombs hit">💣<b data-fbomb="${i}">0</b></span>
                     </div>
                 </div>`).join('');
             this.finalEls = this.booths.map((_, i) => ({
                 box: this.el.finals.querySelector(`[data-final="${i}"]`),
+                medal: this.el.finals.querySelector(`[data-fmedal="${i}"]`),
                 score: this.el.finals.querySelector(`[data-fscore="${i}"]`),
-                hit: this.el.finals.querySelector(`[data-fhit="${i}"]`),
+                acc: this.el.finals.querySelector(`[data-facc="${i}"]`),
+                accPct: this.el.finals.querySelector(`[data-faccpct="${i}"]`),
                 pop: this.el.finals.querySelector(`[data-fpop="${i}"]`),
                 streak: this.el.finals.querySelector(`[data-fstreak="${i}"]`),
                 gold: this.el.finals.querySelector(`[data-fgold="${i}"]`),
@@ -1750,10 +1775,12 @@
             this.el.overEmoji.textContent = isRecord ? '🏅' : stars >= 2 ? '🎯' : '🎈';
             this.el.overTitle.textContent = isRecord ? 'NEW RECORD!' : `${b.score} POINTS!`;
 
-            const parts = [`popped ${b.pops} balloons`, `${b.hits}/${b.throws} darts on target`];
-            if (b.bestStreak >= 3) parts.push(`a streak of ${b.bestStreak} in a row`);
-            if (prev > 0) parts.push(isRecord ? `previous best ${prev} points` : `your record: ${prev} points`);
-            this.el.overDesc.textContent = parts.join(' · ');
+            /* Màn một bé cũng mắc đúng bệnh của màn nhiều bé: câu này liệt kê
+             * lại số bóng nổ và số mũi trúng, mà cái thẻ ngay bên dưới đã có
+             * đủ. Chỉ giữ thứ mà cái thẻ KHÔNG nói được — kỷ lục cũ của bé. */
+            this.el.overDesc.textContent = prev > 0
+                ? (isRecord ? `Previous best: ${prev} points` : `Your record: ${prev} points`)
+                : '';
             this.el.overStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
             this.el.overStars.hidden = false;
 
@@ -1847,14 +1874,38 @@
         finish() {
             this.state = 'over';
 
+            /* Xếp hạng trước, rồi mới điền. Thẻ được sắp lại theo thứ hạng
+             * bằng thuộc tính order của CSS — bé nhìn từ trái sang là đọc được
+             * ngay ai nhất, không phải so ba con số với nhau. */
+            const ranked = this.booths
+                .map((b, i) => ({ i, score: b.score }))
+                .sort((a2, b2) => b2.score - a2.score);
+            const rankOf = {};
+            let place = 0, prev = null;
+            ranked.forEach((r, idx) => {
+                if (r.score !== prev) { place = idx; prev = r.score; }
+                rankOf[r.i] = place;                 // đồng điểm thì đồng hạng
+            });
+            const MEDALS = ['🥇', '🥈', '🥉'];
+
             this.finalEls.forEach((e, i) => {
                 const b = this.booths[i];
                 e.score.textContent = b.score;
-                e.hit.textContent = `${b.hits}/${b.throws}`;
                 e.pop.textContent = b.pops;
                 e.streak.textContent = b.bestStreak;
                 e.gold.textContent = b.golds;
                 e.bomb.textContent = b.bombs;
+
+                /* Độ chính xác vẽ thành thanh: mắt đọc độ dài nhanh hơn đọc
+                 * phân số. Ném không phát nào thì để thanh trống thay vì chia
+                 * cho 0 rồi hiện NaN. */
+                const pct = b.throws > 0 ? Math.round(100 * b.hits / b.throws) : 0;
+                e.acc.style.width = pct + '%';
+                e.accPct.textContent = pct + '%';
+
+                const r = rankOf[i];
+                e.medal.textContent = this.playerCount > 1 ? (MEDALS[r] || '') : '';
+                e.box.style.order = r;
             });
 
             // Một bé thì không có kẻ thắng người thua — chỉ có thành tích để khoe
@@ -1875,13 +1926,13 @@
                 this.el.overTitle.textContent = 'IT\'S A DRAW!';
                 this.el.overDesc.textContent = `Everyone finished on ${best} points — time for another round!`;
             } else {
+                /* Câu tóm tắt cũ liệt kê lại đúng những con số đã có trong
+                 * thẻ ngay bên dưới — đọc hai lần một thứ thì lần nào cũng
+                 * thừa. Giữ đúng MỘT câu ngắn khen bé thắng. */
                 const w = winners[0];
-                const parts = [`${w.score} points`, `popped ${w.pops} balloons`, `${w.hits}/${w.throws} darts on target`];
-                if (w.bestStreak >= 3) parts.push(`a streak of ${w.bestStreak} in a row`);
-                if (w.golds > 0) parts.push(`${w.golds} golden balloons`);
                 this.el.overEmoji.textContent = '🏆';
                 this.el.overTitle.textContent = `${w.cfg.emoji} ${w.cfg.name} WINS!`;
-                this.el.overDesc.textContent = parts.join(' · ') + '— the sharpest dart thrower at the fair!';
+                this.el.overDesc.textContent = 'The sharpest dart thrower at the fair!';
             }
             this.el.over.classList.remove('hidden');
             Sfx.win();
@@ -2047,6 +2098,23 @@
             return this;
         };
     }
+
+    /* Cửa cho MÁY SOÁT và máy chụp ảnh: dựng sẵn một màn kết quả mà không phải
+       ngồi chơi hết 90 giây. Cùng lối với duck-shoot và block-tower — không có
+       cửa này thì mọi thay đổi ở màn kết quả chỉ kiểm được bằng mắt. */
+    window.dartsGame = {
+        game: Game,
+        fakeFinish(rows) {
+            Game.build(rows.length);
+            rows.forEach((t, i) => {
+                const b = Game.booths[i];
+                if (!b) return;
+                b.score = t.score; b.hits = t.hits; b.throws = t.throws;
+                b.pops = t.pops; b.bestStreak = t.streak; b.golds = t.golds; b.bombs = t.bombs;
+            });
+            Game.finish();
+        }
+    };
 
     window.addEventListener('DOMContentLoaded', () => Game.init());
 })();
