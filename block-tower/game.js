@@ -438,6 +438,13 @@
                 this.gFx = this.add.graphics().setDepth(8);
 
                 this.sparks = [];
+                /* Nhịp sinh hoạt của chú mèo: phần lớn thời gian nằm im, thỉnh
+                 * thoảng ngóc dậy liếm lông vài giây rồi nằm xuống. Đếm bằng
+                 * đồng hồ riêng chứ không theo nhịp ván chơi — con mèo sống
+                 * đời của nó, không liên quan tới việc bé xếp khối. */
+                this.catT = 0;
+                this.catLick = 0;
+                this.catNext = 6;
                 this.shake = 0;
                 this.acc = 0;
                 this.frozen = false;
@@ -488,22 +495,13 @@
                 /* MỘT ảnh cho mỗi màu. Khối phẳng thì không còn mặt nào bị ô
                  * bên cạnh che, nên cũng không cần tám biến thể theo hàng xóm
                  * như hồi làm khối lập phương. Đơn giản đi hẳn một tầng. */
-                /* LƯỚI NỀN nướng thành MỘT tấm ảnh cho cả cái giếng.
-                 *
-                 * Vẽ 180 cái hốc bằng nét mỗi khung hình thì máy của bé tụt
-                 * khung ngay — mà lưới thì đứng yên suốt ván, nướng một lần là
-                 * đủ. Cùng bài học với khối: thứ gì không đổi thì đừng vẽ lại. */
+                /* LƯỚI NỀN nướng thành MỘT tấm ảnh cho cả cái giếng — lưới
+                 * đứng yên suốt ván thì nướng một lần là đủ. */
                 var gridKey = 'well_grid_' + CELL;
                 if (!this.textures.exists(gridKey)) {
                     g.clear();
                     g.scaleCanvas(S, S);
-                    for (var gy = 0; gy < R.ROWS; gy++) {
-                        for (var gx = 0; gx < R.COLS; gx++) {
-                            g.translateCanvas(gx * CELL, gy * CELL);
-                            A.drawSlot(g, CELL);
-                            g.translateCanvas(-gx * CELL, -gy * CELL);
-                        }
-                    }
+                    A.drawGrid(g, CELL, R.COLS, R.ROWS);
                     g.scaleCanvas(1 / S, 1 / S);
                     g.generateTexture(gridKey, CELL * R.COLS * S, CELL * R.ROWS * S);
                 }
@@ -690,6 +688,18 @@
              * -------------------------------------------------------------*/
             stepAll: function (dt) {
                 if (this.shake > 0) this.shake -= dt;
+
+                /* mèo: cứ 6–14 giây lại liếm lông chừng 2,5 giây */
+                this.catT += dt;
+                if (this.catLick > 0) {
+                    this.catLick -= dt / 2.5;
+                    if (this.catLick <= 0) {
+                        this.catLick = 0;
+                        this.catNext = this.catT + 6 + Math.random() * 8;
+                    }
+                } else if (this.catT > this.catNext) {
+                    this.catLick = 1;
+                }
 
                 for (var i = this.sparks.length - 1; i >= 0; i--) {
                     var s = this.sparks[i];
@@ -885,6 +895,23 @@
                 g.fillStyle(0x000000, 0.16);
                 g.fillRoundedRect(W * 0.045, sofaY - H * 0.070, W * 0.085, H * 0.030, H * 0.008);
                 g.fillRoundedRect(W * 0.150, sofaY - H * 0.070, W * 0.085, H * 0.030, H * 0.008);
+
+                /* --- CHÚ MÈO nằm trên lưng ghế ---
+                 * Ngồi hẳn trên ghế chứ không lơ lửng cạnh ghế: bé nhìn một
+                 * cái phải hiểu ngay là con mèo đang nằm ở đâu. */
+                g.save();
+                g.translateCanvas(W * 0.135, sofaY - H * 0.088);
+                A.drawCat(g, H * 0.026, room,
+                    this.catT || 0,
+                    /* nhô lên rồi hạ xuống thành một nhịp liếm trọn vẹn */
+                    this.catLick ? Math.sin((1 - this.catLick) * Math.PI) : 0);
+                g.restore();
+
+                /* --- ĐỒNG HỒ TREO TƯỜNG góc phải, chạy giờ thật --- */
+                g.save();
+                g.translateCanvas(W * 0.90, H * 0.115);
+                A.drawClock(g, W * 0.052, room, new Date());
+                g.restore();
 
                 /* --- cây cảnh góc phải --- */
                 var tx = W * 0.90, ty = floorY;

@@ -307,34 +307,125 @@ function run(win) {
     if (immediate.indexOf('turn') < 0) fail('xoay không có tiếng');
     S2.trace = false;
 
-    /* ---- 7a1: LƯỚI NỀN PHẢI KHỚP ĐÚNG Ô KHỐI ----
+    /* ---- 7a1: NÉT LƯỚI PHẢI RƠI ĐÚNG RANH GIỚI Ô ----
      *
-     * Anh Hiếu: "background của trò chơi để dạng grid để khớp với khối vuông".
-     * Chữ "khớp" mới là phần khó — vẽ được cái lưới thì dễ, nhưng lệch nửa ô
-     * hay sai bo góc là nhìn ra hai hệ thống chồng lên nhau.
+     * Anh Hiếu bảo vẽ lưới ô vuông, bỏ hốc bo góc. Vẽ được lưới thì dễ; khó là
+     * nó có KHỚP không — lệch nửa ô là khối đáp xuống nằm chồm lên nét kẻ, nhìn
+     * lệch mà không nói được lệch ở đâu.
      *
-     * Nên máy soát hỏi đúng câu ấy: lưới có nướng đủ cả cái giếng không, và ô
-     * lưới có DÙNG CHUNG kích thước với viên khối không. Hai bên cùng gọi
-     * A.slot() nên nếu ai đó sau này sửa một bên mà quên bên kia, phép soát
-     * này bắt ngay. */
+     * Máy này ĐỌC ĐIỂM ẢNH của chính tấm lưới đã nướng: quét một hàng ngang,
+     * tìm các cột sáng, rồi xem khoảng cách giữa chúng có đúng bằng cạnh ô
+     * không. Đo trên hình chứ không đọc mã, nên có sửa cách vẽ kiểu gì cũng
+     * không lừa được nó.
+     */
     say('');
-    say('· lưới nền có khớp ô khối không', 'dim');
+    say('· nét lưới có rơi đúng ranh giới ô không', 'dim');
     var CELL2 = win.blockTower.size().CELL;
+    var TS = win.TowerArt.TEX_SCALE;
     var gk = 'well_grid_' + CELL2;
     var hasGrid = sc.textures.exists(gk);
-    var gw = hasGrid ? sc.textures.get(gk).getSourceImage().width : 0;
-    var gh2 = hasGrid ? sc.textures.get(gk).getSourceImage().height : 0;
-    var wantW2 = CELL2 * R.COLS * win.TowerArt.TEX_SCALE;
-    var wantH2 = CELL2 * R.ROWS * win.TowerArt.TEX_SCALE;
-    var slot = win.TowerArt.slot(CELL2);
-    say('    ảnh lưới ' + gw + '×' + gh2 + ' (cần ' + wantW2 + '×' + wantH2 + ')' +
-        ' · ô lưới rộng ' + slot.w.toFixed(1) + 'px, bo góc ' + slot.r.toFixed(1) + 'px',
-        (hasGrid && gw === wantW2 && gh2 === wantH2) ? 'ok' : 'bad');
-    if (!hasGrid) fail('không có ảnh lưới nền');
-    if (hasGrid && (gw !== wantW2 || gh2 !== wantH2))
-        fail('ảnh lưới ' + gw + '×' + gh2 + ' không đúng khổ cái giếng ' + wantW2 + '×' + wantH2 + ' — lưới sẽ lệch khỏi ô khối');
-    if (slot.w >= CELL2) fail('ô lưới rộng bằng cả ô, không còn khe hở nào giữa hai viên');
-    if (slot.r < slot.w * 0.15) fail('ô lưới bo góc quá ít so với viên khối, nhìn ra hai hệ thống khác nhau');
+    if (!hasGrid) {
+        say('    KHÔNG CÓ ảnh lưới', 'bad');
+        fail('không có ảnh lưới nền');
+    } else {
+        var img = sc.textures.get(gk).getSourceImage();
+        var cvg = win.document.createElement('canvas');
+        cvg.width = img.width; cvg.height = img.height;
+        cvg.getContext('2d').drawImage(img, 0, 0);
+        /* Lấy mẫu ở GIỮA một hàng ô, không lấy ở chính giữa ảnh.
+         *
+         * Lần đầu em lấy hàng giữa ảnh — mà giữa ảnh đúng là một nét kẻ NGANG,
+         * nên cả hàng sáng đều và máy đếm được đúng một "nét dọc" chạy suốt.
+         * Lại là cái thước sai chứ không phải cái lưới. */
+        var sampleY = Math.round((4 + 0.5) * CELL2 * TS);
+        var px = cvg.getContext('2d').getImageData(0, sampleY, img.width, 1).data;
+
+        /* Cột nào có nét. Ngưỡng lấy THEO chính hàng ảnh này chứ không gõ tay
+         * một con số: nét lưới cố ý rất mờ (alpha ~0,085 nên chỉ chừng 22/255),
+         * và lần đầu em gõ ngưỡng 40 thì máy đếm được 0 nét rồi báo hỏng oan —
+         * lưới thì đúng, cái thước mới sai. */
+        var peak = 0;
+        for (var xp = 0; xp < img.width; xp++) peak = Math.max(peak, px[xp * 4 + 3]);
+        var thr = Math.max(4, peak * 0.5);
+        var cols2 = [], run = -1;
+        for (var x3 = 0; x3 < img.width; x3++) {
+            var on2 = px[x3 * 4 + 3] >= thr;
+            if (on2 && run < 0) run = x3;
+            if ((!on2 || x3 === img.width - 1) && run >= 0) { cols2.push((run + x3 - 1) / 2); run = -1; }
+        }
+        var gaps = [];
+        for (var i3 = 1; i3 < cols2.length; i3++) gaps.push(cols2[i3] - cols2[i3 - 1]);
+        var want = CELL2 * TS;
+        var worst = 0;
+        for (var i4 = 0; i4 < gaps.length; i4++) worst = Math.max(worst, Math.abs(gaps[i4] - want));
+
+        say('    ảnh lưới ' + img.width + '×' + img.height + ' (cần ' +
+            (CELL2 * R.COLS * TS) + '×' + (CELL2 * R.ROWS * TS) + ')');
+        say('    đỉnh alpha ' + peak + ', ngưỡng ' + thr.toFixed(0));
+        say('    tìm được ' + cols2.length + ' nét dọc, khoảng cách ' +
+            (gaps.length ? gaps[0].toFixed(1) : '—') + 'px, cạnh ô là ' + want +
+            'px, lệch nhiều nhất ' + worst.toFixed(1) + 'px',
+            (cols2.length === R.COLS - 1 && worst < 2) ? 'ok' : 'bad');
+
+        if (img.width !== CELL2 * R.COLS * TS || img.height !== CELL2 * R.ROWS * TS)
+            fail('ảnh lưới không đúng khổ cái giếng — lưới sẽ lệch khỏi ô khối');
+        if (cols2.length !== R.COLS - 1)
+            fail('đếm được ' + cols2.length + ' nét dọc, đáng lẽ ' + (R.COLS - 1) + ' (mười cột thì chín vạch ngăn)');
+        if (worst >= 2)
+            fail('khoảng cách giữa các nét lệch tới ' + worst.toFixed(1) + 'px so với cạnh ô — khối sẽ nằm chồm lên nét kẻ');
+    }
+
+    /* ---- 7a1b: CHÚ MÈO VÀ CÁI ĐỒNG HỒ ----
+     *
+     * Anh Hiếu: "trang trí thêm 1 chú mèo ở ghế sofa thỉnh thoảng vẫy đuôi,
+     * liếm lông... ở góc phải treo đồng hồ thể hiện thời gian thực".
+     *
+     * Đồng hồ dễ làm sai một cách lặng lẽ: đảo kim giờ với kim phút, hay quên
+     * cho kim giờ nhích theo phút, thì nhìn vẫn ra cái đồng hồ nhưng chỉ sai
+     * giờ. Nên máy hỏi thẳng bằng số ở mấy mốc dễ kiểm.
+     */
+    say('');
+    say('· chú mèo và cái đồng hồ', 'dim');
+    var CH = win.TowerArt.clockHands;
+    var D = function (h, m, s2) { return new Date(2026, 0, 1, h, m, s2 || 0); };
+    var deg = function (rad) { var d2 = (rad * 180 / Math.PI + 90 + 360) % 360; return d2; };
+    var cases = [
+        { t: D(12, 0, 0), h: 0, m: 0, s: 0, vi: '12:00' },
+        { t: D(3, 0, 0), h: 90, m: 0, s: 0, vi: '3:00' },
+        { t: D(6, 30, 15), h: 195, m: 180, s: 90, vi: '6:30:15' },
+        { t: D(23, 15, 45), h: 337.5, m: 90, s: 270, vi: '23:15:45' }
+    ];
+    var badClock = [];
+    cases.forEach(function (c) {
+        var a3 = CH(c.t);
+        if (Math.abs(deg(a3.h) - c.h) > 0.6) badClock.push(c.vi + ': kim giờ ' + deg(a3.h).toFixed(1) + '° đáng lẽ ' + c.h + '°');
+        if (Math.abs(deg(a3.m) - c.m) > 0.6) badClock.push(c.vi + ': kim phút ' + deg(a3.m).toFixed(1) + '° đáng lẽ ' + c.m + '°');
+        if (Math.abs(deg(a3.s) - c.s) > 0.6) badClock.push(c.vi + ': kim giây ' + deg(a3.s).toFixed(1) + '° đáng lẽ ' + c.s + '°');
+    });
+    /* kim giờ phải NHÍCH theo phút, không đứng im cả tiếng rồi nhảy cóc */
+    var creep = deg(CH(D(4, 30, 0)).h) - deg(CH(D(4, 0, 0)).h);
+    say('    đồng hồ: ' + (badClock.length ? badClock.join(' · ') : 'bốn mốc giờ đều đúng') +
+        ' · nửa tiếng kim giờ nhích ' + creep.toFixed(1) + '°',
+        (!badClock.length && Math.abs(creep - 15) < 0.6) ? 'ok' : 'bad');
+    badClock.forEach(function (b2) { fail('đồng hồ ' + b2); });
+    if (Math.abs(creep - 15) > 0.6)
+        fail('nửa tiếng mà kim giờ nhích ' + creep.toFixed(1) + '°, đáng lẽ 15° — kim giờ đang nhảy cóc từng giờ');
+
+    /* mèo: phải có lúc nằm im, có lúc liếm lông, và tự quay vòng */
+    win.blockTower.UI.start();
+    sc.frozen = true;
+    sc.startGame(31);
+    var sawIdle = false, sawLick = false, licks = 0, wasLick = false;
+    for (var s4 = 0; s4 < 60 * 60; s4++) {
+        sc.stepAll(1 / 60);
+        if (sc.catLick > 0.05) { sawLick = true; if (!wasLick) licks++; wasLick = true; }
+        else { sawIdle = true; wasLick = false; }
+    }
+    say('    mèo trong 60 giây: ' + (sawIdle ? 'có lúc nằm im' : 'KHÔNG BAO GIỜ nằm im') +
+        ', liếm lông ' + licks + ' lần',
+        (sawIdle && licks >= 2) ? 'ok' : 'bad');
+    if (!sawIdle) fail('con mèo liếm lông liên tục không nghỉ');
+    if (licks < 2) fail('trong 60 giây con mèo chỉ liếm lông ' + licks + ' lần — quá thưa, bé không kịp thấy');
 
     /* ---- 7a2: NHẠC NỀN VÀ TIẾNG TÍCH ----
      *
