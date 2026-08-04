@@ -20,14 +20,21 @@
     làn mình rồi gọi ĐÚNG hàm fire() mà cú chạm gọi. Bắn được thì bé cũng bắn
     được.
 
-    Bảy phép soát:
+    Các phép soát:
       1. Đủ sáu vòng, vòng nào cũng tự đóng lại — không vòng nào treo
       2. Con vịt nào cũng phải thoát được, không con nào kẹt lại vô hạn
       3. Rô-bốt bắn giỏi phải ăn điểm; bàn 1, 2, 3, 4 bé đều chạy trọn ván
-      4. Bốn bé chơi giỏi ngang nhau thì điểm phải xấp xỉ nhau
-      5. Bắn sang làn bạn KHÔNG được tính điểm
-      6. Chuỗi bắn trúng nhân điểm đúng bảng, và bắn trượt là mất chuỗi
-      7. Ảnh vịt nướng đủ ba loài × ba tư thế cánh, và nướng ở gấp ba
+      4. Bốn bé chơi giỏi ngang nhau thì số vịt hạ được phải xấp xỉ nhau
+      5. Bảng chữ báo vòng phải tự dọn đi khi vào trận, hiện lại khi hết vòng
+      6. Chim lạ: bắn nhầm trừ đúng 3 điểm, xoá chuỗi, và điểm KHÔNG tụt âm;
+         bé bắn loạn phải thua bé biết tránh
+      7. Bắn sang làn bạn KHÔNG được tính điểm
+      8. Chuỗi bắn trúng nhân điểm đúng bảng, và bắn trượt là mất chuỗi
+      9. Ảnh nướng đủ mọi loài × ba tư thế cánh, và nướng ở gấp ba
+     10. Thẻ điểm bàn 1–4 bé phải vừa màn điện thoại hẹp 390px
+
+    Ba phép soát 5, 6, 10 sinh ra từ ba lỗi anh Hiếu bắt được bằng mắt mà máy
+    này không thấy — cả ba đều ở phần MẶT chứ không phải phần ruột.
 -->
 <style>
     body { font-family: ui-monospace, Menlo, monospace; background: #0b1220; color: #e2e8f0;
@@ -49,6 +56,7 @@
 'use strict';
 
 var out = document.getElementById('out');
+var win0 = null;                      // cửa sổ của game, đặt khi nạp xong
 var fails = [];
 function say(s, cls) {
     out.innerHTML += '<span class="' + (cls || '') + '">' + s + '</span>\n';
@@ -83,6 +91,9 @@ function robot(sc, G, opt) {
             if (d.dead) continue;
             if (G.t - d.born < react) continue;
             if (sc.laneOfX(d.x) !== lane) continue;
+            /* rô-bốt "bắn chuẩn" phải BIẾT TRÁNH chim lạ — bắn nhầm là trừ
+               điểm, mà đây là con chơi giỏi nhất có thể */
+            if (!opt.reckless && win0.DuckRules.isDecoy(d.kind)) continue;
             target = d; break;
         }
         if (!target) continue;
@@ -120,6 +131,7 @@ function playGame(win, kids, opt) {
 
 window.addEventListener('load', function () {
     var win = document.getElementById('frame').contentWindow;
+    win0 = win;
     ready(win, function () { setTimeout(function () { run(win); }, 300); });
 });
 
@@ -180,7 +192,17 @@ function run(win) {
     say('    số vịt hạ được: ' + sumHit.join('  ') + '   lệch ' + (sh * 100).toFixed(1) + '%');
     say('    điểm (chỉ để tham khảo — con vàng làm nhiễu): ' + sumPts.join('  ') +
         '   lệch ' + (sp * 100).toFixed(1) + '%', 'dim');
-    if (sh > 0.10) fail('bốn bé bắn giỏi như nhau mà số vịt hạ được lệch ' + (sh * 100).toFixed(1) + '%');
+    /* Ngưỡng 12% chứ không phải 6% như check-fair.js, và đây là con số tính
+     * ra chứ không phải đoán: 60 ván × ~57 con vịt chia bốn làn là chừng 850
+     * con mỗi làn, độ lệch chuẩn √(850×0,75) ≈ 25, nên riêng may rủi đã cho
+     * chênh lệch cỡ 3σ/850 ≈ 8,5%. Đặt ngưỡng dưới mức ấy thì máy soát thỉnh
+     * thoảng lại báo hỏng oan — mà một cái máy soát hay báo oan thì rồi cũng
+     * bị bỏ qua, tệ hơn là không có.
+     *
+     * Phép đo chính xác nằm ở check-fair.js: nó tính bằng hình học chứ không
+     * qua rô-bốt nên không có nhiễu, và ngưỡng ở đó mới là 6%. Chỗ này chỉ là
+     * tấm lưới thô: bắt trường hợp phần chơi làm hỏng hẳn sự công bằng. */
+    if (sh > 0.12) fail('bốn bé bắn giỏi như nhau mà số vịt hạ được lệch ' + (sh * 100).toFixed(1) + '%');
     if (sp > 0.25) fail('điểm lệch tới ' + (sp * 100).toFixed(1) + '%, quá mức may rủi con vàng gây ra được');
 
     /* ---- 4b: bảng chữ báo vòng phải biến đi khi vào trận ----
@@ -215,6 +237,73 @@ function run(win) {
     if (!shownIntro) fail('vào vòng mới mà không báo tên vòng');
     if (!askedToHide) fail('vào trận rồi mà bảng chữ báo vòng vẫn nằm giữa màn, che mất đàn vịt');
     if (!shownTally) fail('hết vòng mà không hiện bảng tổng kết điểm');
+
+    /* ---- 4c: chim lạ — bắn nhầm phải bị trừ ----
+     *
+     * Ý của anh Hiếu. Ba chuyện phải đúng, và chuyện thứ ba mới là chuyện
+     * dễ làm hỏng nhất: điểm KHÔNG được tụt xuống âm. Bé nhìn thấy số âm là
+     * nghĩ mình thua hẳn rồi và buông tay, trong khi ý của cái phạt chỉ là bắt
+     * nhìn cho kỹ. */
+    say('');
+    say('· bắn nhầm chim lạ', 'dim');
+    sc.frozen = true;
+    sc.laneOfX = win.duckShoot.laneOf;
+
+    /* dựng một con chim lạ đúng bằng đường của game rồi bắn nó */
+    function spawnCrow(sc, G, lane) {
+        var mid = (lane + 0.5) * (win.duckShoot.size().W / G.kids);
+        var spec = { t: 0, kind: 'crow', x0: Math.round(mid), speed: 0, dir: 1, rise: 0, amp: 0, phase: 0 };
+        var d = { spec: spec, kind: 'crow', born: G.t, x: mid, y: win.duckShoot.size().GROUND - 200,
+                  dead: false, fallV: 0, wing: 0, wingT: 0, face: 1, gone: false };
+        G.ducks.push(d);
+        return d;
+    }
+
+    sc.startGame(2, 1234);
+    G.mode = 'play';
+    G.scores[0] = 10; G.streaks[0] = 4; G.cool[0] = 0;
+    var crow = spawnCrow(sc, G, 0);
+    sc.fire(0, crow.x, crow.y);
+    var after1 = G.scores[0], streak1 = G.streaks[0], wrong1 = G.wrong[0];
+    say('    đang 10 điểm, chuỗi 4 → bắn nhầm → ' + after1 + ' điểm, chuỗi ' + streak1 +
+        ', đếm nhầm ' + wrong1, (after1 === 7 && streak1 === 0 && wrong1 === 1) ? 'ok' : 'bad');
+    if (after1 !== 7) fail('bắn nhầm chim lạ phải trừ đúng 3 điểm, đang thành ' + after1);
+    if (streak1 !== 0) fail('bắn nhầm chim lạ mà chuỗi không bị xoá');
+    if (wrong1 !== 1) fail('không đếm lại số phát bắn nhầm');
+    if (!crow.dead) fail('bắn trúng chim lạ mà nó không rơi');
+
+    /* điểm đang thấp: phải chặn ở 0, không được âm */
+    G.scores[1] = 1; G.streaks[1] = 0; G.cool[1] = 0;
+    var crow2 = spawnCrow(sc, G, 1);
+    sc.fire(1, crow2.x, crow2.y);
+    say('    đang 1 điểm → bắn nhầm → ' + G.scores[1] + ' điểm',
+        G.scores[1] === 0 ? 'ok' : 'bad');
+    if (G.scores[1] < 0) fail('điểm tụt xuống âm (' + G.scores[1] + '), bé sẽ nản mà bỏ chơi');
+    if (G.scores[1] !== 0) fail('1 điểm trừ 3 phải dừng ở 0, đang là ' + G.scores[1]);
+
+    /* chim lạ phải thật sự xuất hiện trong ván, và không có ở vòng đầu */
+    var crowsInRound = [];
+    for (var rr = 0; rr < R.ROUNDS.length; rr++) {
+        var n = 0;
+        R.flock(rr, 4242, win.duckShoot.size().W, win.duckShoot.size().H).forEach(function (d) {
+            if (R.isDecoy(d.kind)) n++;
+        });
+        crowsInRound.push(n);
+    }
+    say('    số chim lạ mỗi vòng: ' + crowsInRound.join(' '));
+    if (crowsInRound[0] !== 0) fail('vòng 1 là vòng làm quen, không nên có chim lạ');
+    if (crowsInRound.reduce(function (a, b) { return a + b; }, 0) < 3)
+        fail('cả ván chỉ có ' + crowsInRound.reduce(function (a, b) { return a + b; }, 0) + ' con chim lạ, quá ít để bé phải nhìn kỹ');
+
+    /* Rô-bốt bắn loạn (không tránh chim lạ) phải ăn ÍT điểm hơn rô-bốt biết
+     * tránh. Nếu hai bên bằng nhau thì cái phạt chẳng có tác dụng gì. */
+    var careful = playGame(win, 1, { react: 0.5, seed: 5150 });
+    var reckless = playGame(win, 1, { react: 0.5, seed: 5150, reckless: true });
+    say('    một bé, cùng một hạt: biết tránh ' + careful.scores[0] +
+        ' điểm · bắn loạn ' + reckless.scores[0] + ' điểm',
+        reckless.scores[0] < careful.scores[0] ? 'ok' : 'bad');
+    if (reckless.scores[0] >= careful.scores[0])
+        fail('bắn loạn cũng được điểm bằng bé biết tránh — cái phạt không có tác dụng');
 
     /* ---- 5: bắn sang làn bạn không được tính ---- */
     say('');
@@ -270,7 +359,10 @@ function run(win) {
     say('');
     say('· ảnh vịt nướng sẵn', 'dim');
     var miss = [], small = [];
-    ['big', 'small', 'gold'].forEach(function (kind) {
+    /* Duyệt HẾT bảng loài chứ không gõ tay ba cái tên. Em thêm con chim lạ mà
+     * quên sửa danh sách gõ tay thì ảnh của nó không ai soát — đúng kiểu lỗi
+     * lặng lẽ nhất. */
+    Object.keys(win.DuckRules.KINDS).forEach(function (kind) {
         for (var w = 0; w < 3; w++) {
             var key = 'duck_' + kind + '_' + w;
             if (!sc.textures.exists(key)) { miss.push(key); continue; }
@@ -280,7 +372,8 @@ function run(win) {
             if (src.width < win.DuckRules.KINDS[kind].r * 4.2 * 2) small.push(key + ' rộng ' + src.width);
         }
     });
-    say('    ' + (9 - miss.length) + '/9 ảnh, cỡ ảnh con to: ' +
+    var wantTex = Object.keys(win.DuckRules.KINDS).length * 3;
+    say('    ' + (wantTex - miss.length) + '/' + wantTex + ' ảnh, cỡ ảnh con to: ' +
         (sc.textures.exists('duck_big_0') ? sc.textures.get('duck_big_0').getSourceImage().width + 'px' : '—'));
     if (miss.length) fail('thiếu ảnh vịt: ' + miss.join(', '));
     if (small.length) fail('ảnh nướng nhỏ quá, lên màn nét đôi sẽ nhoè: ' + small.join(', '));

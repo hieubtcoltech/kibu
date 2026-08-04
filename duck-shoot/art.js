@@ -31,12 +31,18 @@
         gold: { body: 0xffc93c, belly: 0xfff3c4, head: 0xe89b12, wing: 0xffb020, beak: 0xff7a1a, eye: 0x4a2f06, edge: 0x6b3d05 }
     };
 
+    /* Chim lạ: thân đen tuyền, ức đỏ cam, mỏ nhọn dài, cánh nhọn xuôi về sau.
+     * Đỏ ở ức là chỗ cố ý — trời đêm mà cho nó đen thui thì bé không phân biệt
+     * nổi, thành cái bẫy bẩn chứ không phải thử thách. */
+    var CROW = { body: 0x2b2f45, belly: 0x3a3f5c, head: 0x1b1e30, wing: 0x22263a, beak: 0xffb020, eye: 0xff3b30, edge: 0xf05a3c, mark: 0xff5a36 };
+
     /* ------------------------------------------------------------------ *
      * MỘT CON VỊT
      * Ba tư thế cánh: giơ cao, ngang, hạ thấp. Ba hình luân phiên là đủ cho
      * mắt đọc ra nhịp vỗ cánh; nhiều hơn cũng không thấy khác, mà tốn bộ nhớ.
      * ------------------------------------------------------------------ */
     function drawDuck(g, kind, wing, r) {
+        if (kind === 'crow') return drawCrow(g, wing, r);
         var c = SKIN[kind];
 
         /* VIỀN LÓT: vẽ trước một cái bóng đậm to hơn con vịt một chút.
@@ -117,6 +123,93 @@
         g.fillCircle(r * 1.18, -r * 0.70, r * 0.13);
         g.fillStyle(0xffffff, 1);
         g.fillCircle(r * 1.14, -r * 0.75, r * 0.055);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * CON CHIM LẠ — bắn nhầm là trừ điểm
+     *
+     * Phải khác con vịt ngay từ cái BÓNG, không chỉ khác màu. Bé không có thì
+     * giờ soi chi tiết: con vịt đang lao tới, tay đã giơ lên rồi. Nên em đổi
+     * hẳn dáng chứ không tô đen con vịt:
+     *   · thân thon và nhỏ hơn, không phải khối bầu tròn
+     *   · mỏ nhọn dài và thẳng, không phải cái mỏ bẹt
+     *   · cánh nhọn xuôi hẳn về sau như chim ưng, không phải cánh lá tròn
+     *   · đuôi xoè ba nan
+     *   · viền đỏ cam và mảng ức đỏ, khác hẳn viền tối của vịt
+     * ------------------------------------------------------------------ */
+    function drawCrow(g, wing, r) {
+        var c = CROW;
+
+        g.save();
+        g.scaleCanvas(1.13, 1.13);
+        crowShapes(g, c, r, wing, c.edge);
+        g.restore();
+
+        crowShapes(g, c, r, wing, null);
+
+        /* mắt đỏ, tròn, nhỏ — con vịt mắt đen tròng to hiền lành, con này thì
+         * không */
+        g.fillStyle(0xffe9c8, 1);
+        g.fillCircle(r * 1.02, -r * 0.52, r * 0.17);
+        g.fillStyle(c.eye, 1);
+        g.fillCircle(r * 1.05, -r * 0.52, r * 0.11);
+    }
+
+    function crowShapes(g, c, r, wing, flat) {
+        var col = function (x) { return flat === null ? x : flat; };
+        var bodyRX = r * 0.94, bodyRY = r * 0.52;
+
+        /* cánh xa */
+        crowWing(g, col(c.head), -r * 0.06, -r * 0.14, r, wing, 0.88);
+
+        /* thân thon */
+        g.fillStyle(col(c.body), 1);
+        g.fillEllipse(0, 0, bodyRX * 2, bodyRY * 2);
+        /* mảng ức đỏ — dấu nhận biết ở mọi cảnh trời, kể cả vòng đêm */
+        g.fillStyle(col(c.mark), 1);
+        g.fillEllipse(r * 0.34, r * 0.06, r * 0.80, r * 0.52);
+
+        /* đuôi xoè ba nan */
+        g.fillStyle(col(c.body), 1);
+        for (var f = -1; f <= 1; f++) {
+            g.beginPath();
+            g.moveTo(-bodyRX * 0.72, -r * 0.04);
+            g.lineTo(-bodyRX * 1.86, -r * 0.30 + f * r * 0.30);
+            g.lineTo(-bodyRX * 1.72, -r * 0.10 + f * r * 0.30);
+            g.closePath();
+            g.fillPath();
+        }
+
+        /* cổ ngắn và đầu nhỏ */
+        g.fillStyle(col(c.head), 1);
+        g.fillEllipse(r * 0.60, -r * 0.22, r * 0.60, r * 0.52);
+        g.fillEllipse(r * 0.88, -r * 0.44, r * 0.68, r * 0.62);
+
+        /* mỏ nhọn dài, thẳng */
+        g.fillStyle(col(c.beak), 1);
+        g.beginPath();
+        g.moveTo(r * 1.14, -r * 0.56);
+        g.lineTo(r * 2.16, -r * 0.40);
+        g.lineTo(r * 1.14, -r * 0.28);
+        g.closePath();
+        g.fillPath();
+
+        /* cánh gần */
+        crowWing(g, col(c.wing), r * 0.06, -r * 0.04, r, wing, 1);
+    }
+
+    /* Cánh chim: một mũi nhọn xuôi về sau, khác hẳn cái lá tròn của vịt. */
+    function crowWing(g, col, ox, oy, r, wing, scale) {
+        var lift = [-1.05, -0.20, 0.72][wing];
+        var L = r * 1.65 * scale, Wd = r * 0.42 * scale;
+        g.fillStyle(col, 1);
+        g.beginPath();
+        g.moveTo(ox, oy);
+        g.lineTo(ox - L * 0.24, oy + L * lift);
+        g.lineTo(ox - L * 1.10, oy + L * lift * 0.30 + Wd * 0.5);
+        g.lineTo(ox - L * 0.30, oy + Wd * 0.5);
+        g.closePath();
+        g.fillPath();
     }
 
     /* Cánh: một cái lá cong, ba tư thế khác nhau ở góc ngẩng và độ cong. */

@@ -42,37 +42,37 @@
     var ROUNDS = [
         {
             key: 'dawn', vi: 'Bình minh đồng cỏ', en: 'Dawn Meadow',
-            fly: 'straight', ducks: 9, speed: [150, 190], gap: 1.25,
+            fly: 'straight', ducks: 9, speed: [150, 190], gap: 1.25, crowRate: 0,
             hint_vi: 'Vịt bay thẳng và chậm — quen tay đã.',
             hint_en: 'Ducks fly straight and slow. Warm up.'
         },
         {
             key: 'lake', vi: 'Hoàng hôn mặt hồ', en: 'Sunset Lake',
-            fly: 'wave', ducks: 10, speed: [175, 215], gap: 1.15,
+            fly: 'wave', ducks: 10, speed: [175, 215], gap: 1.15, crowRate: 0.14,
             hint_vi: 'Vịt lượn lên xuống như sóng.',
             hint_en: 'Ducks ride the wind up and down.'
         },
         {
             key: 'night', vi: 'Đêm đom đóm', en: 'Firefly Night',
-            fly: 'straight', ducks: 10, speed: [195, 240], gap: 1.05, dark: true,
+            fly: 'straight', ducks: 10, speed: [195, 240], gap: 1.05, dark: true, crowRate: 0.12,
             hint_vi: 'Trời tối. Chỉ thấy vịt khi nó lướt qua vệt trăng.',
             hint_en: 'Dark out. You only see ducks in the moonbeams.'
         },
         {
             key: 'storm', vi: 'Trời nổi bão', en: 'Storm Front',
-            fly: 'gust', ducks: 11, speed: [205, 255], gap: 1.0, wind: true,
+            fly: 'gust', ducks: 11, speed: [205, 255], gap: 1.0, wind: true, crowRate: 0.18,
             hint_vi: 'Gió giật từng cơn, vịt chao đảo.',
             hint_en: 'Gusts throw the ducks off course.'
         },
         {
             key: 'flock', vi: 'Đàn vịt kéo về', en: 'The Big Flock',
-            fly: 'vform', ducks: 14, speed: [215, 260], gap: 0.72,
+            fly: 'vform', ducks: 14, speed: [215, 260], gap: 0.72, crowRate: 0.20,
             hint_vi: 'Cả đàn kéo về một lúc. Bắn nhanh tay!',
             hint_en: 'The whole flock at once. Fire fast!'
         },
         {
             key: 'golden', vi: 'Vòng vàng', en: 'Golden Round',
-            fly: 'wave', ducks: 12, speed: [255, 310], gap: 0.85, goldRate: 0.55,
+            fly: 'wave', ducks: 12, speed: [255, 310], gap: 0.85, goldRate: 0.55, crowRate: 0.12,
             hint_vi: 'Vịt vàng bay rất nhanh, điểm gấp ba.',
             hint_en: 'Golden ducks, fast and worth triple.'
         }
@@ -83,7 +83,18 @@
     var KINDS = {
         big: { pts: 1, r: 30, vs: 0.88 },
         small: { pts: 2, r: 22, vs: 1.18 },
-        gold: { pts: 5, r: 24, vs: 1.35 }
+        gold: { pts: 5, r: 24, vs: 1.35 },
+        /* CHIM LẠ — bắn nhầm là trừ điểm.
+         *
+         * Ý của anh Hiếu, và nó chữa đúng chỗ yếu nhất của trò chơi: không có
+         * nó thì bé chỉ việc bấm liên tục vào chỗ nào có động là ăn điểm, mắt
+         * không cần làm gì. Có nó thì mỗi phát bắn là một quyết định.
+         *
+         * Trừ 3 điểm — nặng hơn con vịt to (1 điểm) nhưng nhẹ hơn con vàng
+         * (5 điểm), nên bé nhỡ tay không mất trắng cả vòng, mà cũng đủ xót để
+         * lần sau nhìn cho kỹ. Điểm không bao giờ tụt xuống dưới 0, phần này
+         * game lo — bé mà thấy điểm âm là nản, bỏ chơi luôn. */
+        crow: { pts: -3, r: 26, vs: 1.02, decoy: true }
     };
 
     /* Chuỗi bắn trúng liên tiếp: nhân điểm dần, chặn trần ở 3 để một bé đang
@@ -93,9 +104,16 @@
         return COMBO_STEP[Math.min(streak, COMBO_STEP.length - 1)];
     }
 
+    /* Chim lạ bị trừ ĐÚNG 3 điểm, không nhân theo chuỗi. Nhân theo chuỗi thì
+     * bé đang bắn hay nhất lại bị phạt nặng nhất — đúng ngược với ý muốn, vì
+     * chuỗi dài là phần thưởng chứ không phải cái bẫy. */
     function score(kind, streak) {
-        return Math.round(KINDS[kind].pts * comboMult(streak));
+        var k = KINDS[kind];
+        if (k.decoy) return k.pts;
+        return Math.round(k.pts * comboMult(streak));
     }
+
+    function isDecoy(kind) { return !!(KINDS[kind] && KINDS[kind].decoy); }
 
     /* Số ngẫu nhiên GIEO HẠT. Cùng một hạt thì cả ván y hệt nhau, nhờ vậy máy
      * soát đo được và hai bé chơi cùng một vòng gặp cùng một đàn vịt. */
@@ -134,9 +152,14 @@
          * như nhau", và số giây một vòng gần như không đổi. */
         var sx = W / 1280, sy = H / 720;
         for (var i = 0; i < R.ducks; i++) {
-            var gold = R.goldRate ? rnd() < R.goldRate : rnd() < 0.08;
-            var small = !gold && rnd() < 0.42;
-            var kind = gold ? 'gold' : (small ? 'small' : 'big');
+            /* Bốc loại: chim lạ trước, rồi mới tới ba loại vịt. Bốc riêng một
+             * lần rút cho chim lạ chứ không nhét chung vào bảng xác suất vịt —
+             * như vậy chỉnh mật độ chim lạ của một vòng không làm xê dịch tỉ lệ
+             * vịt vàng của vòng ấy. */
+            var crow = R.crowRate ? rnd() < R.crowRate : false;
+            var gold = !crow && (R.goldRate ? rnd() < R.goldRate : rnd() < 0.08);
+            var small = !crow && !gold && rnd() < 0.42;
+            var kind = crow ? 'crow' : (gold ? 'gold' : (small ? 'small' : 'big'));
             var sp = R.speed[0] + rnd() * (R.speed[1] - R.speed[0]);
 
             /* Chỗ bật lên rải đều trên TOÀN BỀ NGANG, không chừa mép.
@@ -234,6 +257,7 @@
         KINDS: KINDS,
         comboMult: comboMult,
         score: score,
+        isDecoy: isDecoy,
         rng: rng,
         flock: flock,
         duckAt: duckAt,

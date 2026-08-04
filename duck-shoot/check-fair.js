@@ -75,28 +75,40 @@ for (const kids of [2, 3, 4]) {
     const first = new Array(kids).fill(0);   // số lần được gặp vịt đầu tiên
     const aim = new Array(kids).fill(0);     // tổng giây vịt nằm trong tầm
     const pts = new Array(kids).fill(0);     // Σ(điểm × giây nằm trong làn)
-    let ducks = 0, escaped = 0;
+    const trap = new Array(kids).fill(0);    // Σ(giây CHIM LẠ nằm trong làn)
+    let ducks = 0, crows = 0;
 
     for (let g = 0; g < GAMES; g++) {
         const seed = 1000 + g * 37;
         for (let r = 0; r < R.ROUNDS.length; r++) {
             for (const d of R.flock(r, seed, W, H)) {
-                ducks++;
-                /* con vịt bật lên ở làn nào thì làn ấy gặp trước */
-                first[laneOf(d.x0, kids)]++;
+                const decoy = R.isDecoy(d.kind);
+                if (decoy) crows++; else ducks++;
+                /* con vịt bật lên ở làn nào thì làn ấy gặp trước. Chim lạ không
+                 * tính vào đây: nó không phải cơ hội, gặp trước cũng chẳng hơn. */
+                if (!decoy) first[laneOf(d.x0, kids)]++;
 
-                /* bay thử con vịt, mỗi bước cộng thời gian cho làn nó đang ở */
+                /* bay thử, mỗi bước cộng thời gian cho làn nó đang ở */
                 const val = R.KINDS[d.kind].pts;
-                let t = 0, alive = true;
-                while (alive && t < 12) {
+                let t = 0;
+                while (t < 12) {
                     const p = R.duckAt(d, t, GROUND, W);
-                    if (!R.inView(p, W, TOP)) { alive = false; break; }
+                    if (!R.inView(p, W, TOP)) break;
                     const ln = laneOf(p.x, kids);
-                    aim[ln] += STEP;
-                    pts[ln] += val * STEP;
+                    if (decoy) {
+                        /* Chim lạ đo RIÊNG. Nhét chung vào "cơ hội ăn điểm" là
+                         * hỏng phép đo: điểm của nó âm nên làn nào gặp nhiều
+                         * chim lạ lại hiện ra như làn ÍT cơ hội, trong khi thật
+                         * ra hai chuyện khác hẳn nhau — một bên là cơ hội, một
+                         * bên là cái bẫy. Cả hai đều phải rải đều, nhưng phải
+                         * đếm tách. */
+                        trap[ln] += STEP;
+                    } else {
+                        aim[ln] += STEP;
+                        pts[ln] += val * STEP;
+                    }
                     t += STEP;
                 }
-                if (t >= 12) escaped++;
             }
         }
     }
@@ -107,7 +119,7 @@ for (const kids of [2, 3, 4]) {
         return avg > 0 ? (hi - lo) / avg : 0;
     };
 
-    const sf = spread(first), sa = spread(aim), sp = spread(pts);
+    const sf = spread(first), sa = spread(aim), sp = spread(pts), st = spread(trap);
     const tag = world.name + ', ' + kids + ' bé';
     console.log('     ' + kids + ' bé:');
     console.log('     gặp trước      ' + first.map(n => Math.round(n)).join('  ') +
@@ -116,10 +128,16 @@ for (const kids of [2, 3, 4]) {
         '   lệch ' + (sa * 100).toFixed(1) + '%');
     console.log('     cơ hội ăn điểm ' + pts.map(n => Math.round(n)).join('  ') +
         '   lệch ' + (sp * 100).toFixed(1) + '%');
+    console.log('     bẫy chim lạ    ' + trap.map(n => Math.round(n)).join('  ') +
+        '   lệch ' + (st * 100).toFixed(1) + '%');
 
     if (sf > 0.06) fails.push(tag + ': số lần gặp vịt trước lệch ' + (sf * 100).toFixed(1) + '% giữa các làn');
     if (sa > 0.06) fails.push(tag + ': thời gian được ngắm lệch ' + (sa * 100).toFixed(1) + '% giữa các làn');
     if (sp > 0.06) fails.push(tag + ': cơ hội ăn điểm lệch ' + (sp * 100).toFixed(1) + '% giữa các làn');
+    /* Bẫy cũng phải chia đều. Làn nào hứng nhiều chim lạ hơn thì bé ngồi đó bị
+     * phạt nhiều hơn chỉ vì chỗ ngồi — hệt như chuyện cơ hội, chỉ ngược dấu. */
+    if (st > 0.06) fails.push(tag + ': số giây chim lạ bay trong làn lệch ' + (st * 100).toFixed(1) + '%');
+    if (crows === 0) fails.push(tag + ': cả ' + GAMES + ' ván không có lấy một con chim lạ nào');
 
     /* Không làn nào được phép TRẮNG cơ hội gặp trước — đây đúng là lỗi bản đầu:
      * bé ở giữa không bao giờ thấy vịt trước. */

@@ -7,6 +7,12 @@
  * lên ở làn bé 2 mà bé 2 trượt thì nó dạt sang làn bé 3, rồi bé 4. Cả bàn cùng
  * nín thở nhìn một con vịt trôi dần sang phía mình.
  *
+ * KHÔNG PHẢI CON NÀO BAY QUA CŨNG NÊN BẮN
+ * Thỉnh thoảng có con chim lạ — thân đen, ức đỏ, mỏ nhọn — bay lẫn vào đàn.
+ * Bắn nhầm là trừ 3 điểm và mất chuỗi. Đây là ý anh Hiếu, và nó chữa đúng chỗ
+ * yếu nhất: không có nó thì bé chỉ việc bấm liên tục vào chỗ nào có động,
+ * mắt không cần làm gì. Có nó thì mỗi phát bắn là một quyết định.
+ *
  * SÁU VÒNG, MỖI VÒNG MỘT CẢNH KHÁC HẲN
  * Bình minh đồng cỏ → hoàng hôn mặt hồ → đêm đom đóm → trời nổi bão → đàn vịt
  * kéo về → vòng vàng. Không chỉ đổi màu nền: vịt bay kiểu khác, nhanh chậm
@@ -147,7 +153,14 @@
             [880, 1174, 1568].forEach(function (f, i) { setTimeout(function () { s.tone(f, f, 0.12, 'triangle', 0.07); }, i * 70); });
         },
         miss: function () { this.tone(200, 130, 0.11, 'sawtooth', 0.035); },
+        /* bắn nhầm chim lạ: hai nốt tụt xuống, nghe là biết mình vừa làm hỏng */
+        wrong: function () {
+            var s = this;
+            this.tone(330, 240, 0.16, 'square', 0.055);
+            setTimeout(function () { s.tone(190, 120, 0.24, 'square', 0.05); }, 110);
+        },
         quack: function () { this.tone(340, 250, 0.14, 'sawtooth', 0.05); },
+        caw: function () { this.tone(720, 430, 0.18, 'square', 0.045); },
         away: function () { this.tone(300, 180, 0.28, 'sine', 0.045); },
         round: function () {
             var s = this;
@@ -168,7 +181,7 @@
         kids: 2,
         seed: 1,
         round: 0,
-        scores: [], streaks: [], hits: [], shots: [],
+        scores: [], streaks: [], hits: [], shots: [], wrong: [],
         roundScores: [],
         ducks: [],           // con đang bay
         queue: [],           // con chưa tới lượt bật lên
@@ -240,25 +253,33 @@
             bakeDucks: function () {
                 var S = A.TEX_SCALE, g = this.add.graphics();
                 for (var kind in R.KINDS) {
+                    var box = this.texBox(kind);
                     var r = R.KINDS[kind].r;
-                    var tw = r * 4.2, th = r * 3.4;
+                    var tw = box.w, th = box.h;
                     for (var w = 0; w < 3; w++) {
                         var key = 'duck_' + kind + '_' + w;
                         if (this.textures.exists(key)) continue;
                         g.clear();
                         g.scaleCanvas(S, S);
-                        g.translateCanvas(tw * 0.42, th * 0.58);
+                        g.translateCanvas(tw * box.ax, th * box.ay);
                         A.drawDuck(g, kind, w, r);
-                        g.translateCanvas(-tw * 0.42, -th * 0.58);
+                        g.translateCanvas(-tw * box.ax, -th * box.ay);
                         g.scaleCanvas(1 / S, 1 / S);
                         g.generateTexture(key, tw * S, th * S);
                     }
                 }
                 g.destroy();
                 this.duckTex = {};
-                for (var kd in R.KINDS) {
-                    this.duckTex[kd] = { w: R.KINDS[kd].r * 4.2, h: R.KINDS[kd].r * 3.4, ax: 0.42, ay: 0.58 };
-                }
+                for (var kd in R.KINDS) this.duckTex[kd] = this.texBox(kd);
+            },
+
+            /* Khổ tấm ảnh và chỗ đặt tâm, tính theo bán kính từng loài.
+             * Chim lạ cần khổ rộng hơn: mỏ nhọn vươn xa và đuôi xoè ba nan
+             * đều thò ra ngoài khổ của con vịt, nướng vừa khổ vịt là cụt mỏ. */
+            texBox: function (kind) {
+                var r = R.KINDS[kind].r;
+                if (kind === 'crow') return { w: r * 4.9, h: r * 3.7, ax: 0.45, ay: 0.55 };
+                return { w: r * 4.2, h: r * 3.4, ax: 0.42, ay: 0.58 };
             },
 
             buildKeys: function () {
@@ -284,8 +305,8 @@
                 G.kids = kids;
                 G.seed = (seed === undefined) ? ((Date.now() % 100000) | 0) : (seed | 0);
                 G.round = 0;
-                G.scores = []; G.streaks = []; G.hits = []; G.shots = []; G.cool = [];
-                for (var i = 0; i < kids; i++) { G.scores.push(0); G.streaks.push(0); G.hits.push(0); G.shots.push(0); G.cool.push(0); }
+                G.scores = []; G.streaks = []; G.hits = []; G.shots = []; G.wrong = []; G.cool = [];
+                for (var i = 0; i < kids; i++) { G.scores.push(0); G.streaks.push(0); G.hits.push(0); G.shots.push(0); G.wrong.push(0); G.cool.push(0); }
                 G.roundScores = [];
                 this.startRound(0);
             },
@@ -339,6 +360,10 @@
                 for (var i = 0; i < G.ducks.length; i++) {
                     var d = G.ducks[i];
                     if (d.dead || laneOf(d.x) !== lane) continue;
+                    /* Bé chơi bằng phím thì máy ngắm hộ, nên máy KHÔNG được
+                     * ngắm vào chim lạ — bắt bé chịu phạt vì cái máy ngắm hộ
+                     * bắn nhầm thì oan quá. Bé chạm bằng tay vẫn tự chịu. */
+                    if (R.isDecoy(d.kind)) continue;
                     var dist = Math.abs(d.x - cx);
                     if (dist < bd) { bd = dist; best = d; }
                 }
@@ -372,11 +397,28 @@
 
                 hit.dead = true;
                 hit.fallV = 0;
+                hit.by = lane;
+
+                /* BẮN NHẦM CHIM LẠ */
+                if (R.isDecoy(hit.kind)) {
+                    var pen = R.score(hit.kind, 0);            // −3, không nhân chuỗi
+                    /* Không cho điểm tụt xuống âm. Bé nhìn thấy số âm là nghĩ
+                     * mình thua hẳn rồi và buông tay, trong khi ý của cái phạt
+                     * chỉ là bắt nhìn cho kỹ. */
+                    G.scores[lane] = Math.max(0, G.scores[lane] + pen);
+                    G.streaks[lane] = 0;
+                    G.wrong[lane]++;
+                    this.pops.push({ x: hit.x, y: hit.y, t: 0, pts: pen, lane: lane, bad: true });
+                    sfx.wrong();
+                    this.dogSay('tease', lane);
+                    UI.paintHud();
+                    return;
+                }
+
                 G.hits[lane]++;
                 G.streaks[lane]++;
                 var pts = R.score(hit.kind, G.streaks[lane]);
                 G.scores[lane] += pts;
-                hit.by = lane;
                 this.pops.push({ x: hit.x, y: hit.y, t: 0, pts: pts, lane: lane, gold: hit.kind === 'gold' });
                 if (hit.kind === 'gold') sfx.gold(); else sfx.hit();
                 if (G.streaks[lane] >= 3) this.dogSay('proud', lane, hit.kind);
@@ -424,7 +466,9 @@
                         spec: d, kind: d.kind, born: G.t, x: d.x0, y: GROUND,
                         dead: false, fallV: 0, wing: 0, wingT: 0, face: d.dir, gone: false
                     });
-                    sfx.quack();
+                    /* chim lạ kêu khác hẳn — thêm một manh mối nữa cho bé, vì
+                     * nó bật lên từ bụi cỏ trước khi bé kịp nhìn rõ hình */
+                    if (R.isDecoy(d.kind)) sfx.caw(); else sfx.quack();
                 }
 
                 /* bay */
@@ -439,7 +483,7 @@
                         k.y += k.fallV * dt;
                         if (k.y > GROUND + 40) {
                             G.ducks.splice(i, 1);
-                            this.dogSay('proud', k.by, k.kind);
+                            if (!R.isDecoy(k.kind)) this.dogSay('proud', k.by, k.kind);
                         }
                         continue;
                     }
@@ -452,8 +496,13 @@
                         /* thoát mất — không ai được điểm, chó ra trêu */
                         G.ducks.splice(i, 1);
                         k.gone = true;
-                        sfx.away();
-                        this.dogSay('tease', laneOf(k.x));
+                        /* Chim lạ bay thoát là chuyện ĐÚNG, không ai làm hỏng
+                         * việc gì cả — cho chó ra trêu thì hoá ra dạy bé rằng
+                         * đáng lẽ phải bắn nó. */
+                        if (!R.isDecoy(k.kind)) {
+                            sfx.away();
+                            this.dogSay('tease', laneOf(k.x));
+                        }
                     }
                 }
 
@@ -647,8 +696,12 @@
                     img.setFlipX(d.face < 0);
                     img.setAngle(d.dead ? 180 : (d.spec.amp ? Math.sin((G.t - d.born) * 3.1 + d.spec.phase) * 8 : 0));
                     img.setVisible(true);
-                    /* đêm tối: vịt chỉ rõ khi nằm trong vệt trăng */
-                    img.setAlpha(sc.dark ? 0.34 + 0.66 * this.moonLit(d.x) : 1);
+                    /* Đêm tối: vịt chỉ rõ khi nằm trong vệt trăng — nhưng CHIM
+                     * LẠ thì luôn hiện rõ. Bắn nhầm nó là mất điểm, mà bắt bé
+                     * chịu phạt vì một con em cố tình vẽ mờ đi thì là chơi
+                     * xấu. Khó ở chỗ tìm ra con vịt, không phải ở chỗ giấu cái
+                     * bẫy. */
+                    img.setAlpha(sc.dark && !R.isDecoy(d.kind) ? 0.34 + 0.66 * this.moonLit(d.x) : 1);
 
                     /* bóng trên cỏ — cho thấy con vịt đang ở đâu theo bề ngang */
                     g.fillStyle(0x000000, 0.13);
@@ -679,10 +732,22 @@
                 }
                 for (i = 0; i < this.pops.length; i++) {
                     var q = this.pops[i], t = q.t / 1.1;
-                    g.fillStyle(q.gold ? 0xffd43b : KIDS[q.lane].color, (1 - t) * 0.9);
+                    var col = q.bad ? 0xff3b30 : (q.gold ? 0xffd43b : KIDS[q.lane].color);
+                    g.fillStyle(col, (1 - t) * 0.9);
                     for (var s = 0; s < 8; s++) {
                         var a = s / 8 * TAU + t * 2;
                         g.fillCircle(q.x + Math.cos(a) * (16 + t * 46), q.y + Math.sin(a) * (16 + t * 46), 4 * (1 - t) + 1);
+                    }
+                    /* Bắn nhầm thì vẽ thêm một chữ X đỏ to. Chỉ nghe tiếng thôi
+                     * không đủ: bé nào cũng tắt tiếng, mà bàn có bốn bé thì
+                     * phải thấy được PHÁT NÀO của AI vừa hỏng. */
+                    if (q.bad) {
+                        g.lineStyle(6, 0xff3b30, (1 - t));
+                        var d2 = 26 + t * 20;
+                        g.beginPath();
+                        g.moveTo(q.x - d2, q.y - d2); g.lineTo(q.x + d2, q.y + d2);
+                        g.moveTo(q.x + d2, q.y - d2); g.lineTo(q.x - d2, q.y + d2);
+                        g.strokePath();
                     }
                 }
             },
@@ -911,9 +976,10 @@
             var rows = '';
             for (var j = 0; j < G.kids; j++) {
                 var acc = G.shots[j] ? Math.round(100 * G.hits[j] / G.shots[j]) : 0;
+                var oops = G.wrong[j] ? ' · ' + (lang() === 'vi' ? 'nhầm ' : 'oops ') + G.wrong[j] : '';
                 rows += '<div class="score-row" style="--kid:' + KIDS[j].css + '">' +
                     '<span>' + KIDS[j].emoji + ' ' + (lang() === 'vi' ? KIDS[j].vi : KIDS[j].en) + '</span>' +
-                    '<span>' + G.scores[j] + ' · ' + G.hits[j] + '/' + G.shots[j] + ' (' + acc + '%)</span></div>';
+                    '<span>' + G.scores[j] + ' · ' + G.hits[j] + '/' + G.shots[j] + ' (' + acc + '%)' + oops + '</span></div>';
             }
             el('win-rows').innerHTML = rows;
 
