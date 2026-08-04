@@ -1486,11 +1486,15 @@
         g.ellipse(cx, headCY + 0.38 * u, 0.26 * u, 0.11 * u, 0, 0, TAU);
         g.fill();
 
-        /* --- TAI: hai cục tròn đen, vẽ trước đầu --- */
+        /* --- TAI: bên xa nhỏ hơn và lùi ra sau ---
+         * Hai tai bằng nhau là dấu hiệu của mặt CHÍNH DIỆN. Cho tai bên kia
+         * nhỏ đi và lùi lại thì cái đầu tự khắc quay nghiêng. */
         g.fillStyle = PANDA.black;
         g.beginPath();
-        g.arc(cx - headR * 0.72, headCY - headR * 0.74, headR * 0.34, 0, TAU);
-        g.arc(cx + headR * 0.72, headCY - headR * 0.74, headR * 0.34, 0, TAU);
+        g.arc(cx - headR * 0.80, headCY - headR * 0.68, headR * 0.28, 0, TAU);
+        g.fill();
+        g.beginPath();
+        g.arc(cx + headR * 0.66, headCY - headR * 0.78, headR * 0.35, 0, TAU);
         g.fill();
 
         /* --- ĐẦU --- */
@@ -1507,60 +1511,91 @@
         g.arc(cx - headR * 0.06, headCY - headR * 0.06, headR * 0.90, 0, TAU);
         g.fill();
 
-        /* --- MẢNG MẮT: nhỏ, nghiêng xuống ngoài ---
-         * Bản cũ để hai vòng đen to gần bằng nửa mặt, thành ra lúc nào cũng như
-         * đang trợn. Mảng nhỏ nghiêng xuống thì ra ánh mắt hiền. */
-        const ex = headR * 0.40, ey = headCY - headR * 0.02;
+        /* --- MẶT NHÌN VỀ PHÍA CHẠY ---
+         *
+         * Anh Hiếu hỏi "sao panda chạy mà lại nhìn về phía anh". Đúng: em vẽ
+         * mặt CHÍNH DIỆN — hai mắt cân nhau, mũi giữa mặt — nên nó nhìn thẳng
+         * vào người xem trong khi chân thì chạy sang phải. Nhân vật chạy phải
+         * nhìn nơi mình đang tới.
+         *
+         * Xoay sang góc ba phần tư bằng ba việc, không cần vẽ lại cái đầu:
+         *   · dồn cả cụm mặt sang phía trước một quãng
+         *   · mắt bên XA nhỏ lại và nép sát rìa đầu, mắt bên GẦN to hơn
+         *   · mũi và miệng đẩy hẳn về phía trước, thêm một ụ mõm nhô ra
+         * Ba thứ ấy là toàn bộ khác biệt giữa "nhìn vào ống kính" và "nhìn về
+         * đích". */
+        const fx = headR * 0.11;          // cả khuôn mặt dồn về phía trước
+
+        /* Ụ MÕM nhô ra phía trước. Phải có một nét viền mờ dưới đáy, không
+         * thì mõm trắng vẽ trên đầu trắng là tàng hình, và cái mũi nhìn ra như
+         * đang dán lơ lửng ở rìa mặt. */
+        g.fillStyle = PANDA.shade;
+        g.beginPath();
+        g.ellipse(cx + fx + headR * 0.30, headCY + headR * 0.27,
+            headR * 0.28, headR * 0.24, 0, 0, TAU);
+        g.fill();
+        g.fillStyle = PANDA.white;
+        g.beginPath();
+        g.ellipse(cx + fx + headR * 0.30, headCY + headR * 0.23,
+            headR * 0.27, headR * 0.23, 0, 0, TAU);
+        g.fill();
+
+        const eyeFar = { x: cx + fx - headR * 0.34, y: headCY - headR * 0.06, r: 0.235 };
+        const eyeNear = { x: cx + fx + headR * 0.26, y: headCY - headR * 0.04, r: 0.295 };
+
         g.fillStyle = PANDA.black;
-        for (const s of [-1, 1]) {
+        for (const e of [eyeFar, eyeNear]) {
+            const s2 = e === eyeFar ? -1 : 1;
             g.save();
-            g.translate(cx + s * ex, ey);
-            g.rotate(s * 0.42);
+            g.translate(e.x, e.y);
+            g.rotate(s2 * 0.40);
             g.beginPath();
-            g.ellipse(0, 0, headR * 0.30, headR * 0.23, 0, 0, TAU);
+            g.ellipse(0, 0, headR * e.r, headR * e.r * 0.78, 0, 0, TAU);
             g.fill();
             g.restore();
         }
 
-        /* --- MẮT: tròng đen to trên nền mảng, hai đốm sáng --- */
-        for (const s of [-1, 1]) {
-            const x = cx + s * ex + s * headR * 0.03;
+        for (const e of [eyeFar, eyeNear]) {
+            const rr2 = headR * (e === eyeFar ? 0.105 : 0.135);
             g.fillStyle = PANDA.ink;
             g.beginPath();
-            g.arc(x, ey - headR * 0.01, headR * 0.135, 0, TAU);
+            g.arc(e.x + headR * 0.03, e.y, rr2, 0, TAU);
             g.fill();
             g.fillStyle = '#ffffff';
             g.beginPath();
-            g.arc(x - headR * 0.045, ey - headR * 0.065, headR * 0.058, 0, TAU);
+            g.arc(e.x + headR * 0.005, e.y - rr2 * 0.5, rr2 * 0.46, 0, TAU);
             g.fill();
             g.beginPath();
-            g.arc(x + headR * 0.05, ey + headR * 0.05, headR * 0.028, 0, TAU);
+            g.arc(e.x + headR * 0.07, e.y + rr2 * 0.42, rr2 * 0.22, 0, TAU);
             g.fill();
         }
 
-        /* --- MŨI và MIỆNG: bé xíu, đặt sát nhau, hơi thấp --- */
+        /* --- MŨI ở mép trước ụ mõm, MIỆNG ngay dưới --- */
+        const nx = cx + fx + headR * 0.30;
         g.fillStyle = PANDA.ink;
         g.beginPath();
-        g.ellipse(cx, headCY + headR * 0.30, headR * 0.10, headR * 0.075, 0, 0, TAU);
+        g.ellipse(nx, headCY + headR * 0.11, headR * 0.095, headR * 0.072, 0, 0, TAU);
         g.fill();
         g.strokeStyle = PANDA.ink;
         g.lineWidth = 0.030 * u;
         g.lineCap = 'round';
         g.beginPath();
         if (cheer || run) {
-            g.moveTo(cx - headR * 0.16, headCY + headR * 0.44);
-            g.quadraticCurveTo(cx, headCY + headR * 0.62, cx + headR * 0.16, headCY + headR * 0.44);
+            g.moveTo(nx - headR * 0.19, headCY + headR * 0.28);
+            g.quadraticCurveTo(nx, headCY + headR * 0.45,
+                nx + headR * 0.19, headCY + headR * 0.28);
         } else {
-            g.moveTo(cx - headR * 0.13, headCY + headR * 0.44);
-            g.quadraticCurveTo(cx, headCY + headR * 0.54, cx + headR * 0.13, headCY + headR * 0.44);
+            g.moveTo(nx - headR * 0.16, headCY + headR * 0.28);
+            g.quadraticCurveTo(nx, headCY + headR * 0.38,
+                nx + headR * 0.16, headCY + headR * 0.28);
         }
         g.stroke();
 
-        /* --- MÁ HỒNG: to, thấp, dịu --- */
+        /* --- MÁ HỒNG: cũng lệch theo mặt --- */
         g.fillStyle = PANDA.cheek;
         g.beginPath();
-        g.ellipse(cx - headR * 0.62, headCY + headR * 0.28, headR * 0.17, headR * 0.115, 0, 0, TAU);
-        g.ellipse(cx + headR * 0.62, headCY + headR * 0.28, headR * 0.17, headR * 0.115, 0, 0, TAU);
+        g.ellipse(cx + fx - headR * 0.62, headCY + headR * 0.26, headR * 0.15, headR * 0.10, 0, 0, TAU);
+        g.ellipse(cx + fx + headR * 0.62, headCY + headR * 0.26, headR * 0.13, headR * 0.09, 0, 0, TAU);
         g.fill();
 
         if (lean) g.restore();
