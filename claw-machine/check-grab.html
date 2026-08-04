@@ -22,9 +22,11 @@
   càng — chứ không phải một bản chép để đo cho đẹp. Mở trang là nó tự chạy.
 </p>
 <p>
-  Đây là chỗ chứng minh câu “máy này không ăn gian”: lực càng là một hằng số, nên
-  tỉ lệ trúng chỉ phụ thuộc vào chỗ bé ngắm và đống thú đang nằm thế nào. Không có
-  bộ đếm nào rình cho bé trượt, không có lượt bị cố tình làm yếu đi.
+  Đây là chỗ chứng minh câu “máy này không ăn gian”. Càng giữ chặt hay lỏng chỉ
+  phụ thuộc vào MỘT thứ bé điều khiển được: ngắm lệch tâm con thú bao nhiêu. Cùng
+  một thế đống thú và cùng một chỗ ngắm thì kết quả y hệt nhau, lần nào cũng vậy —
+  không có số ngẫu nhiên, không có bộ đếm rình cho bé trượt, không có lượt bị cố
+  tình làm yếu đi.
 </p>
 <pre id="out">đang dựng tủ…</pre>
 <div id="stage"><div id="game-canvas"></div></div>
@@ -62,9 +64,10 @@
         var TRIES = +(new URLSearchParams(location.search).get('tries') || 10);
 
         lines = [];
-        line('lực càng: ma sát càng ' + cm.GRIP.friction +
-             ', ma sát thú ' + cm.GRIP.plushFriction +
-             '  (hằng số, không đổi theo lượt chơi)');
+        line('luật giữ: bám = 1 − (lệch tâm)/' + cm.GRIP.half +
+             ';  bám ≥ ' + cm.GRIP.keep + ' thì giữ tới cùng,  bám < ' + cm.GRIP.minCatch +
+             ' thì không bắt được');
+        line('(tất cả đều là hằng số — không có số ngẫu nhiên, không có bộ đếm lượt)');
         line('');
 
         var lo = cm.CLAW.minX, hi = cm.CLAW.maxX;

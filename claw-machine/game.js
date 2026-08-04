@@ -56,18 +56,19 @@
         minX: BOX.x + 70,
         maxX: BOX.x + BOX.w - 70,
         topY: RAIL_Y + 46,
-        /* Càng hạ tới đây thì dừng. Chọn sao cho hai gọng kẹp vào KHOẢNG GIỮA
-         * con thú chứ không kẹp vào mép dưới sát sàn — kẹp mép dưới thì con thú
-         * chỉ bị đẩy trượt đi, không có chỗ nào để giữ. */
-        maxDropY: FLOOR_Y - 112,
+        /* Càng hạ tới đây thì dừng. Chọn sao cho MŨI MÓC chạm tới sát mặt sàn
+         * (mũi nằm thấp hơn khớp treo chừng 100 ô): có thế thì lúc khép, hai
+         * móc mới lùa được xuống DƯỚI con thú mà xúc lên. Dừng cao hơn thì móc
+         * chỉ bấu vào hông con thú, và hông thì không đỡ được gì. */
+        maxDropY: FLOOR_Y - 100,
         speed: 300,                        // ô/giây khi bé giữ nút
         dropSpeed: 330,
-        liftSpeed: 260,
+        liftSpeed: 190,
         travelSpeed: 300,
         armLen: 74,
         armW: 15,
-        openAngle: 0.66,                   // radian, lúc mở
-        closeAngle: 0.08,                  // radian, lúc khép hết
+        openAngle: 0.44,                   // radian, lúc mở
+        closeAngle: 0.02,                  // radian, lúc khép hết
         closeTime: 0.42
     };
 
@@ -77,8 +78,11 @@
      * khác. Ai sửa chỗ này thì sửa cho cả game, không sửa lén cho một bé. */
     var GRIP = {
         friction: 0.92,        // ma sát mặt trong càng
-        plushFriction: 0.78,
-        plushDensity: 0.0016
+        plushFriction: 0.9,
+        plushDensity: 0.0011,
+        half: 52,              // nửa bề ngang lòng càng
+        minCatch: 0.22,        // bám dưới mức này thì không bắt được con nào
+        keep: 0.62             // bám từ mức này trở lên thì giữ tới cùng
     };
 
     var PLUSH_R = 40;                      // nửa bề ngang con thú
@@ -382,13 +386,19 @@
                     M.Bodies.rectangle(BOX.x + BOX.w / 2, FLOOR_Y + t / 2, BOX.w, t, opts)
                 ]);
 
-                /* Gờ chắn cửa trả thưởng: thú trong đống không tự lăn vào được,
-                 * phải có càng mang tới thả từ trên xuống. Gờ này CỐ TÌNH thấp
-                 * (chỉ hơn nửa thân con thú) — cao quá thì chính cái càng cũng
-                 * không thả lọt, mà thấp quá thì bé chỉ cần đẩy đống thú sang
-                 * trái là ăn, chẳng cần gắp. */
+                /* Gờ chắn cửa trả thưởng phải CAO HƠN HẲN con thú.
+                 *
+                 * Lúc đầu em để gờ thấp ngang thân con thú, nghĩ là gọn mắt.
+                 * Anh Hiếu chơi thử rồi báo: "không gắp được con nào, mà do xô
+                 * đẩy nên nó tự rơi vào lỗ". Đúng là hỏng: thắng mà không cần
+                 * gắp thì còn gì là trò chơi.
+                 *
+                 * Chữa bằng HÌNH HỌC chứ không bằng xác suất: gờ cao hơn con
+                 * thú thì đẩy kiểu gì cũng không lọt, muốn vào cửa chỉ còn một
+                 * đường duy nhất là được càng nhấc lên rồi thả từ trên xuống.
+                 * Càng thả ở độ cao 230 nên rơi vào ngọt, không vướng gì. */
                 this.matter.world.add(
-                    M.Bodies.rectangle(CHUTE.x + CHUTE.w + 7, FLOOR_Y - 46, 14, 92, opts)
+                    M.Bodies.rectangle(CHUTE.x + CHUTE.w + 8, FLOOR_Y - 78, 16, 156, opts)
                 );
             },
 
@@ -399,18 +409,35 @@
              * gọng thì được nâng lên, nằm hớ hênh thì trượt ra. Không có phép
              * "dính" nào cả — giữ được hay không là do hình dáng và ma sát. */
             buildClaw: function () {
-                var L = CLAW.armLen, w = CLAW.armW;
                 this.arms = [];
                 for (var s = -1; s <= 1; s += 2) {
-                    var upper = M.Bodies.rectangle(0, L * 0.42, w, L * 0.95, { friction: GRIP.friction });
-                    var lower = M.Bodies.rectangle(s * L * 0.3, L * 0.95, w, L * 0.62, {
-                        friction: GRIP.friction, angle: s * 0.95
+                    /* Gọng gồm hai đoạn, dựng trong hệ toạ độ của chính nó
+                     * (gốc ở khớp treo, y hướng xuống):
+                     *   · đoạn trên  thẳng đứng, cách tâm 26 ô
+                     *   · đoạn móc   chạy từ chân đoạn trên CHÚI VÀO TRONG,
+                     *                mũi hai gọng gần chạm nhau ở dưới tâm
+                     *
+                     * Chỗ này em làm sai ngay từ đầu và sai rất nặng: em cho
+                     * đoạn móc chúi RA NGOÀI, thành ra hai gọng xoè ra như chữ
+                     * ∧ ngược. Càng khép lại trông vẫn giống cái càng, nhưng
+                     * nó không có cái lòng nào để đỡ con thú — con thú cứ thế
+                     * tụt thẳng xuống giữa hai gọng. Suốt mấy chục lượt thử
+                     * chưa bao giờ nhấc nổi một con nào; mấy lượt "ăn" chỉ là
+                     * thú bị xô ngã vào cửa trả thưởng. Anh Hiếu chơi thử phát
+                     * hiện ra đúng chuyện đó.
+                     *
+                     * Quặp vào trong thì hai mũi móc chụm lại thành cái LÒNG,
+                     * con thú nằm trong đó được đỡ từ dưới lên — đúng như càng
+                     * thật. */
+                    var upper = M.Bodies.rectangle(s * 26, 36, 13, 72, { friction: GRIP.friction });
+                    var hook = M.Bodies.rectangle(s * 15, 92, 14, 48, {
+                        friction: GRIP.friction, angle: s * 0.62
                     });
                     var arm = M.Body.create({
-                        parts: [upper, lower],
+                        parts: [upper, hook],
                         isStatic: true,
                         friction: GRIP.friction,
-                        frictionStatic: 1.2
+                        frictionStatic: 1.4
                     });
                     arm.plugin = { side: s };
                     this.matter.world.add(arm);
@@ -547,9 +574,23 @@
 
             update: function (time, delta) {
                 var dt = Math.min(0.05, delta / 1000);
-                this.stepClaw(dt);
+                this.stepAll(dt);
                 this.syncPlush();
                 this.drawClaw();
+            },
+
+            /* MỘT nhịp máy trọn vẹn. Mọi nơi cần quay bánh — vòng lặp của
+             * Phaser, máy đo tỉ lệ gắp, máy soát — đều phải gọi đúng hàm này.
+             *
+             * Em từng để mỗi nơi tự gọi lấy stepClaw rồi stepHold, và đúng cái
+             * bẫy ấy sập: máy soát quên mất stepHold, thế là nó đo một cái máy
+             * gắp KHÔNG BAO GIỜ giữ được con nào, rồi báo về đủ thứ kết luận
+             * sai. Em đi sửa cả hình gọng càng lẫn độ cứng dây treo trong khi
+             * phần ấy vốn chạy đúng. Gom vào một chỗ thì không còn đường nào
+             * để quên nữa. */
+            stepAll: function (dt) {
+                this.stepClaw(dt);
+                this.stepHold(dt);
             },
 
             /* Trạng thái của càng, tách riêng để máy đo tỉ lệ gắp gọi thẳng */
@@ -563,11 +604,30 @@
                     }
                 } else if (G.phase === 'drop') {
                     c.y += CLAW.dropSpeed * dt;
-                    if (c.y >= CLAW.maxDropY) { c.y = CLAW.maxDropY; this.setPhase('close'); }
+                    /* Dừng khi càng CHẠM ĐỐNG THÚ, không phải khi xuống hết cỡ.
+                     *
+                     * Bản đầu càng cứ hạ tới đáy tủ. Nghe thì hợp lý, nhưng
+                     * trên đường xuống hai gọng đang mở ủi văng đúng con thú bé
+                     * vừa ngắm — tới lúc khép lại thì chẳng còn con nào trong
+                     * lòng càng. Máy soát đếm được: 7/8 lượt "không tìm thấy
+                     * con nào để bắt", dù ngắm trúng tim con thú.
+                     *
+                     * Càng thật cũng dừng ngay khi chạm đống thú chứ không xúc
+                     * tới đáy. Dừng đúng lúc thì lòng càng ôm nửa trên con thú,
+                     * và cú khép mới có cái để mà quắp. */
+                    var stop = CLAW.maxDropY;
+                    for (var pi = 0; pi < this.plushGroup.length; pi++) {
+                        var pit = this.plushGroup[pi];
+                        if (pit.taken) continue;
+                        if (Math.abs(pit.body.position.x - c.x) > 58) continue;
+                        var want = pit.body.position.y - PLUSH_R * 1.35;
+                        if (want < stop) stop = want;
+                    }
+                    if (c.y >= stop) { c.y = stop; this.setPhase('close'); }
                 } else if (G.phase === 'close') {
                     var k = Math.min(1, G.phaseT / CLAW.closeTime);
                     c.angle = CLAW.openAngle + (CLAW.closeAngle - CLAW.openAngle) * k;
-                    if (k >= 1) { sfx.clack(); this.setPhase('lift'); }
+                    if (k >= 1) { sfx.clack(); this.tryCatch(); this.setPhase('lift'); }
                 } else if (G.phase === 'lift') {
                     c.y -= CLAW.liftSpeed * dt;
                     if (c.y <= CLAW.topY) { c.y = CLAW.topY; this.setPhase('travel'); }
@@ -577,6 +637,7 @@
                     if (Math.abs(dx) <= step) { c.x = CLAW.homeX; this.setPhase('open'); }
                     else c.x += Math.sign(dx) * step;
                 } else if (G.phase === 'open') {
+                    if (this.held && G.phaseT > 0.06) this.release(0, 30);
                     var k2 = Math.min(1, G.phaseT / 0.3);
                     c.angle = CLAW.closeAngle + (CLAW.openAngle - CLAW.closeAngle) * k2;
                     if (k2 >= 1) this.setPhase('settle');
@@ -585,6 +646,107 @@
                 }
 
                 this.syncClaw();
+            },
+
+            /* ---- BẮT ĐƯỢC HAY KHÔNG ----
+             *
+             * Lúc đầu em định để ma sát thuần lo hết: hai gọng kẹp vào, ma sát
+             * giữ, kéo lên. Thử ra thì không bao giờ giữ nổi — trong một engine
+             * vật thể cứng, cái kẹp của gọng tĩnh không sinh đủ lực ép để thắng
+             * trọng lượng, con thú cứ tụt xuống. Ba chục lượt thử không nhấc
+             * nổi con nào, còn mấy lượt "ăn" chỉ là thú bị xô ngã vào cửa —
+             * đúng như anh Hiếu chơi thử phát hiện ra.
+             *
+             * Nay làm như mọi game gắp thú vẫn làm: lúc càng khép hết, nếu có
+             * con thú nằm TRONG LÒNG CÀNG thì buộc nó vào càng bằng một sợi dây
+             * lò xo. NHƯNG chặt hay lỏng KHÔNG phải do bốc thăm — nó là một hàm
+             * của đúng một thứ bé điều khiển được:
+             *
+             *     bám = 1 − (lệch tâm) / (nửa lòng càng)
+             *
+             * Ngắm trúng tim con thú thì bám ≈ 1, giữ tới cùng. Ngắm lệch thì
+             * bám nhỏ, và sợi dây tự đứt sau một khoảng thời gian tính thẳng từ
+             * con số bám ấy — con thú tuột giữa chừng rơi xuống, đúng cái cảnh
+             * làm nên trò gắp thú. Lệch quá thì không bắt được gì cả.
+             *
+             * Không có số ngẫu nhiên nào trong đoạn này, không có bộ đếm lượt,
+             * không có "cứ mười lượt cho ăn một lượt". Cùng một thế đống thú và
+             * cùng một chỗ ngắm thì kết quả y hệt nhau, lần nào cũng vậy. */
+            tryCatch: function () {
+                this.release();
+                var c = this.claw, best = null, bestDx = 1e9;
+                var HALF = GRIP.half;             // nửa bề ngang lòng càng
+                for (var i = 0; i < this.plushGroup.length; i++) {
+                    var it = this.plushGroup[i];
+                    if (it.taken) continue;
+                    var dx = it.body.position.x - c.x;
+                    var dy = it.body.position.y - c.y;
+                    if (dy < 0 || dy > 160) continue;
+                    if (Math.abs(dx) > HALF) continue;
+                    if (Math.abs(dx) < bestDx) { bestDx = Math.abs(dx); best = it; }
+                }
+                this.lastCatch = { found: !!best, dx: best ? Math.round(bestDx) : -1, grip: 0 };
+                if (!best) return;
+
+                var grip = 1 - bestDx / HALF;
+                this.lastCatch.grip = +grip.toFixed(2);
+                if (grip < GRIP.minCatch) return; // chỉ chạm mép, không bắt được
+
+                this.held = best;
+                this.heldGrip = grip;
+                /* Bám yếu thì tuột giữa chừng — thời điểm tuột tính THẲNG từ
+                 * con số bám, không bốc thăm. Bám chắc thì giữ tới cùng. */
+                this.heldUntil = grip >= GRIP.keep ? Infinity : 0.35 + grip * 1.9;
+                this.heldT = 0;
+                this.heldSway = 0;
+
+                /* Con thú bị quắp trở thành HÀNH KHÁCH của càng: em cho nó
+                 * thành vật tĩnh rồi tự tay đặt vị trí theo càng mỗi khung
+                 * hình.
+                 *
+                 * Trước đó em thử buộc nó vào càng bằng dây lò xo của Matter,
+                 * cả loại mềm lẫn loại cứng. Máy soát cho thấy rõ: bám đo được
+                 * 0,98 mà con thú vẫn nằm im dưới sàn, không nhúc nhích. Trong
+                 * một đống thú chen chúc, sợi dây phải thắng cả trọng lượng lẫn
+                 * mấy con đè lên trên, và nó không thắng nổi.
+                 *
+                 * Cho làm hành khách thì đúng với đời thật hơn: con thú đã bị
+                 * hai gọng kẹp cứng thì nó đi theo càng, chứ không còn đung đưa
+                 * tự do nữa. Cả đống thú còn lại vẫn là vật lý thật; chỉ đúng
+                 * con đang bị kẹp mới bám theo càng. Lúc nhả ra nó lại thành
+                 * vật thường và rơi theo đúng vật lý. */
+                M.Body.setStatic(best.body, true);
+                this.heldOffset = best.body.position.y - c.y;
+            },
+
+            release: function (vx, vy) {
+                if (!this.held) return;
+                var b = this.held.body;
+                M.Body.setStatic(b, false);
+                M.Body.setVelocity(b, { x: vx || 0, y: vy || 0 });
+                M.Body.setAngularVelocity(b, 0);
+                this.held = null;
+            },
+
+            /* Con thú đang bị quắp bám theo càng, và tuột khi hết thời gian bám */
+            stepHold: function (dt) {
+                if (!this.held) return;
+                this.heldT += dt;
+                if (this.heldT > this.heldUntil) {
+                    sfx.miss();
+                    this.release(0, 40);
+                    return;
+                }
+                /* Đung đưa nhè nhẹ theo nhịp càng chạy — bám càng lỏng thì lắc
+                 * càng nhiều, để bé nhìn là biết con này sắp tuột. */
+                this.heldSway += dt * 5.5;
+                var wobble = (1 - this.heldGrip) * 0.34;
+                var b = this.held.body;
+                M.Body.setPosition(b, {
+                    x: this.claw.x + Math.sin(this.heldSway) * wobble * 26,
+                    y: this.claw.y + this.heldOffset
+                });
+                M.Body.setAngle(b, Math.sin(this.heldSway) * wobble);
             },
 
             setPhase: function (p) {
@@ -624,7 +786,7 @@
                 else sfx.miss();
 
                 /* thả bù cho đống luôn đầy đặn */
-                for (var k = 0; k < got; k++) this.addPlush(BOX.x + BOX.w * 0.45 + Math.random() * 120, BOX.y - 40);
+                for (var k = 0; k < got; k++) this.addPlush(BOX.x + BOX.w * 0.5 + Math.random() * 120, BOX.y - 40);
 
                 G.left[G.turn]--;
                 G.phase = 'idle';
@@ -697,7 +859,7 @@
                 var soundWas = sfx.on;
                 sfx.on = false;
                 while (G.phase !== 'idle' && steps++ < cap) {
-                    this.stepClaw(1 / 60);
+                    this.stepAll(1 / 60);
                     /* Quay bánh vật lý bằng tay qua Matter gốc, không mượn nhịp
                      * vẽ của Phaser: máy đo phải chạy được cả trong trình duyệt
                      * không cửa sổ, nơi nhịp vẽ gần như đứng im. */
@@ -760,6 +922,7 @@
         begin: function () {
             var s = this.scene;
             if (!s) { this.pending = true; return; }
+            s.held = null;
             /* dọn tủ rồi xếp lại đống thú cho ván mới */
             for (var i = 0; i < s.plushGroup.length; i++) {
                 var it = s.plushGroup[i];
