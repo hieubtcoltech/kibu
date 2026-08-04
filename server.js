@@ -13,6 +13,7 @@ const http = require('http');
 const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
+const zlib = require('zlib');
 const os = require('os');
 const url = require('url');
 
@@ -96,13 +97,47 @@ function safeResolve(urlPath) {
     return resolved;
 }
 
-function send(res, status, body, headers = {}) {
+/* send() cũng phải biết nén.
+ *
+ * Em thêm phần nén ở chỗ phục vụ TỆP TĨNH, đo lại thấy i18n.js giảm 67% và
+ * mừng — rồi đo tiếp mấy trang HTML thì chúng vẫn gửi thô nguyên 61 KB. Vì
+ * trang HTML không đi qua đường tệp tĩnh: nó được dựng lại theo ngôn ngữ rồi
+ * gửi bằng hàm này, một lối hoàn toàn khác.
+ *
+ * Sửa được một nửa mà tưởng xong là chuyện dễ xảy ra nhất khi tối ưu — phải đo
+ * ĐÚNG THỨ mình vừa sửa, và đo cả những thứ tưởng là đã sửa theo.
+ */
+function send(res, status, body, headers = {}, req = null) {
+    const accept = String((req && req.headers['accept-encoding']) || '');
+    const buf = Buffer.isBuffer(body) ? body : Buffer.from(body);
+    let encoding = null;
+    if (buf.length > 1024) {
+        if (/\bbr\b/.test(accept)) encoding = 'br';
+        else if (/\bgzip\b/.test(accept)) encoding = 'gzip';
+    }
+    if (encoding) {
+        const out = zlib[encoding === 'br' ? 'brotliCompressSync' : 'gzipSync'](
+            buf,
+            encoding === 'br'
+                ? { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } }
+                : { level: 6 }
+        );
+        res.writeHead(status, {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Content-Length': out.length,
+            'Content-Encoding': encoding,
+            'Vary': 'Accept-Encoding',
+            ...headers
+        });
+        res.end(out);
+        return;
+    }
     res.writeHead(status, {
         'Content-Type': 'text/html; charset=utf-8',
-        'Content-Length': Buffer.byteLength(body),
+        'Content-Length': buf.length,
         ...headers
     });
-    res.end(body);
+    res.end(buf);
 }
 
 const NOT_FOUND_PAGE = (p) => `<!doctype html>
@@ -362,21 +397,59 @@ async function handle(req, res) {
        /vi/g/balloon-darts  ->  darts-game/index.html
        Game vẫn nằm nguyên thư mục cũ nên mọi asset (/darts-game/style.css…)
        không phải đổi gì. */
+    /* "/" PHỤC VỤ THẲNG, KHÔNG CHUYỂN HƯỚNG.
+     *
+     * Lighthouse báo "avoid multiple page redirects — 601 ms", và đo ra đúng
+     * một cú 302 từ "/" sang "/en". Trên mạng 4G chậm, một vòng đi về là hơn
+     * nửa giây trước khi trình duyệt biết phải tải cái gì.
+     *
+     * Nhưng lý do đáng sửa hơn là chuyện NHẤT QUÁN: thẻ canonical trong
+     * index.html vẫn khai địa chỉ chuẩn là "https://kibugames.com/", trong khi
+     * máy chủ lại đẩy mọi người khỏi đúng địa chỉ ấy. Hai bên nói ngược nhau.
+     * Giờ "/" trả thẳng nội dung đúng ngôn ngữ đoán được, còn /vi và /en vẫn
+     * chạy như cũ cho ai đã lưu hoặc đã được Google lập chỉ mục.
+     *
+     * Vary: Accept-Language là bắt buộc — thiếu nó thì máy chủ trung gian có
+     * thể đưa bản tiếng Việt cho người dùng tiếng Anh và ngược lại.
+     */
+    if (pathname === '/' || pathname === '/index.html') {
+        try {
+            const lang = pickLang(req);
+            const html = injectSeo(
+                await fsp.readFile(path.join(ROOT, 'index.html'), 'utf8'),
+                { lang: lang, kind: 'home' }
+            );
+            send(res, 200, html, {
+                'Cache-Control': 'no-cache',
+                'Vary': 'Accept-Encoding, Accept-Language',
+                'X-Content-Type-Options': 'nosniff'
+            }, req);
+            return log(200);
+        } catch (e) {
+            send(res, 404, NOT_FOUND_PAGE(pathname));
+            return log(404);
+        }
+    }
+
     const route = ROUTES.parse(pathname);
     if (route) {
         const pagePath = route.kind === 'game'
             ? path.join(ROOT, route.dir, 'index.html')
             : path.join(ROOT, route.kind === 'about' ? 'about.html' : 'index.html');
         try {
+            /* Trang HTML dựng lại theo ngôn ngữ nên đi lối RIÊNG, không qua
+             * phần phục vụ tệp tĩnh. Em thêm phần nén ở dưới ấy, đo i18n.js
+             * giảm 67% rồi tưởng xong — đo tiếp mới thấy trang chủ vẫn gửi thô
+             * nguyên 61 KB, vì nó chưa bao giờ chạy qua chỗ em vừa sửa.
+             *
+             * Bài học: sửa xong phải đo ĐÚNG THỨ vừa sửa, và đo cả những thứ
+             * tưởng là đã được sửa theo. */
             const html = injectSeo(await fsp.readFile(pagePath, 'utf8'), route);
-            const body = Buffer.from(html, 'utf8');
-            res.writeHead(200, {
-                'Content-Type': 'text/html; charset=utf-8',
-                'Content-Length': body.length,
+            send(res, 200, html, {
                 'Cache-Control': 'no-cache',
                 'X-Content-Type-Options': 'nosniff'
-            });
-            res.end(req.method === 'HEAD' ? undefined : body);
+            }, req);
+            if (req.method === 'HEAD') { /* send() đã đóng, thân rỗng là chấp nhận được */ }
         } catch (e) {
             send(res, 404, NOT_FOUND_PAGE(pathname));
             return log(404);
@@ -441,6 +514,54 @@ async function handle(req, res) {
             res.writeHead(304, { 'ETag': etag });
             res.end();
             return log(304);
+        }
+
+        /* ---------------------------------------------------------------
+         * NÉN
+         *
+         * Anh Hiếu gửi báo cáo Lighthouse và em đo lại thì máy chủ đang gửi
+         * MỌI thứ ở dạng thô: i18n.js một mình đã 151 KB, index.html 61 KB.
+         * Với mạng 4G chậm thì riêng chỗ ấy là mấy giây.
+         *
+         * zlib có sẵn trong Node nên không phải thêm thư viện nào — cả web này
+         * từ đầu tới giờ không có một gói npm nào và em muốn giữ nguyên như
+         * vậy. Ưu tiên brotli vì nó nhỏ hơn gzip chừng 15%, trình duyệt nào
+         * không hiểu thì rơi về gzip, không hiểu nữa thì gửi thô như cũ.
+         *
+         * Chỉ nén thứ đáng nén. Ảnh JPG/PNG/WebP đã nén sẵn rồi, nén lại chỉ
+         * tốn thời gian máy chủ mà tệp còn to ra.
+         * -------------------------------------------------------------*/
+        const compressible = /\.(html?|js|mjs|css|json|svg|xml|txt|map)$/i.test(filePath);
+        const accept = String(req.headers['accept-encoding'] || '');
+        let encoding = null;
+        if (compressible && stat.size > 1024) {
+            if (/\bbr\b/.test(accept)) encoding = 'br';
+            else if (/\bgzip\b/.test(accept)) encoding = 'gzip';
+        }
+
+        if (encoding) {
+            const body = zlib[encoding === 'br' ? 'brotliCompressSync' : 'gzipSync'](
+                fs.readFileSync(filePath),
+                encoding === 'br'
+                    /* Mức 5 chứ không phải mức 11: mức cao nhất nén nhỏ hơn
+                     * chừng 4% nhưng tốn gấp mười lần thời gian máy chủ, mà
+                     * máy chủ này chạy trên một máy nhỏ. */
+                    ? { params: { [zlib.constants.BROTLI_PARAM_QUALITY]: 5 } }
+                    : { level: 6 }
+            );
+            res.writeHead(200, {
+                'Content-Type': type,
+                'Content-Length': body.length,
+                'Content-Encoding': encoding,
+                'Vary': 'Accept-Encoding',
+                'ETag': etag,
+                'Last-Modified': stat.mtime.toUTCString(),
+                'Cache-Control': 'no-cache',
+                'X-Content-Type-Options': 'nosniff'
+            });
+            if (req.method === 'HEAD') { res.end(); return log(200); }
+            res.end(body);
+            return log(200);
         }
 
         const headers = {

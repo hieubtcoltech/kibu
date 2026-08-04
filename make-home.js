@@ -36,11 +36,34 @@ function tileHtml(g) {
     /* data-topics là thứ hàng nút lọc chủ đề đọc; data-keywords là ô tìm kiếm.
      * Cho luôn tên tiếng Việt vào từ khoá để bé gõ "co tuong" cũng ra. */
     const kw = (g.keywords + ' ' + g.vi.toLowerCase() + ' ' + g.en.toLowerCase()).trim();
+    /* ẢNH Ô GẠCH — chỗ nặng nhất của trang chủ, và cũng là chỗ dễ sửa nhất.
+     *
+     * Anh Hiếu gửi báo cáo Lighthouse: LCP 14,2 giây trên mạng 4G chậm. Đo ra
+     * thì 26 ảnh ô gạch cộng lại 3,5 MB — nhiều tệp còn để nguyên 1024×1024
+     * trong khi ô gạch chỉ hiện ở 164–189px. Và cả 26 cái đều mang
+     * fetchpriority="high" mà không cái nào lazy, nên trình duyệt tải hết 3,5
+     * MB trước khi vẽ xong màn hình đầu.
+     *
+     * Ba việc:
+     *   · thu ảnh về 400px (gấp đôi cỡ hiện lớn nhất, đủ cho màn nét đôi)
+     *   · thêm bản WebP, trình duyệt nào hiểu thì lấy, không thì rơi về JPG
+     *   · chỉ SÁU ô đầu ưu tiên cao, còn lại lazy — bé cuộn tới đâu tải tới đó
+     *
+     * width/height khai sẵn để trình duyệt chừa đúng chỗ, khỏi giật bố cục.
+     */
+    const eager = g.eager;
+    const prio = eager
+        ? 'fetchpriority="high"'
+        : 'loading="lazy"';
     return `            <a href="/g/${g.slug}" class="poki-tile ${g.tile}"
                 data-topics="${g.topics.join(' ')}"
                 data-keywords="${esc(kw)}">${badge}
-                <img src="/${g.dir}/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/${g.dir}/icon.webp" type="image/webp">
+                    <img src="/${g.dir}/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         ${prio} decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">${esc(g.en)}</div>
             </a>`;
 }
@@ -58,7 +81,7 @@ function build(src) {
     const j = src.indexOf(END, i);
     if (i < 0 || j < 0) throw new Error('không tìm thấy mốc lưới ô gạch trong index.html');
 
-    const grid = START + '\n\n' + K.GAMES.map(tileHtml).join('\n\n') + '\n\n';
+    const grid = START + '\n\n' + K.GAMES.map((g, i) => tileHtml(Object.assign({}, g, { eager: i < 6 }))).join('\n\n') + '\n\n';
     let out = src.slice(0, i) + grid + src.slice(j);
 
     /* Hàng nút lọc chủ đề nằm ngay trên lưới */

@@ -52,9 +52,11 @@
     }
     </script>
 
-    <link rel="preload" as="image" href="/fruit-crush/icon.jpg">
-    <link rel="preload" as="image" href="/basketball-game/icon.jpg">
-    <link rel="preload" as="image" href="/billiards-game/icon.jpg">
+    <!-- Chỉ nạp trước ảnh của ô gạch ĐẦU TIÊN, và nạp bản WebP đúng thứ trình
+         duyệt sẽ chọn. Ba dòng cũ trỏ vào ba game giờ nằm tận cuối danh sách —
+         nạp trước thứ bé không nhìn thấy là lấy mất băng thông của thứ bé
+         đang nhìn. -->
+    <link rel="preload" as="image" href="/block-tower/icon.webp" type="image/webp" fetchpriority="high">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,7 +64,15 @@
         href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap"
         rel="stylesheet">
     <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- FontAwesome nạp KHÔNG CHẶN hiển thị.
+         Lighthouse báo "render-blocking requests, ước tính tiết kiệm 3.780 ms"
+         và đây là phần lớn con số ấy: tệp CSS biểu tượng nặng gần 70 KB nằm
+         chắn ngang, trình duyệt phải tải xong mới vẽ được chữ đầu tiên. Mẹo
+         media="print" khiến trình duyệt coi nó là CSS cho máy in — tải song
+         song, không chặn — rồi onload đổi lại thành "all" để nó có hiệu lực. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
     <style>
         :root {
             --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
@@ -886,8 +896,12 @@
                 data-topics="puzzle action"
                 data-keywords="block tower thap khoi game xep hinh xep gach tetris falling blocks colour blocks puzzle gold blocks stacking colour blind friendly phaser tháp khối block tower">
                 <span class="tile-badge badge-new">NEW</span>
-                <img src="/block-tower/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/block-tower/icon.webp" type="image/webp">
+                    <img src="/block-tower/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         fetchpriority="high" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Block Tower</div>
             </a>
 
@@ -895,8 +909,12 @@
                 data-topics="action duo"
                 data-keywords="duck shoot duck hunt ban vit game ban vit shooting gallery carnival 4 player split lanes combo six scenes dawn lake night storm flock golden phaser bắn vịt duck shoot">
                 <span class="tile-badge badge-new">NEW</span>
-                <img src="/duck-shoot/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/duck-shoot/icon.webp" type="image/webp">
+                    <img src="/duck-shoot/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         fetchpriority="high" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Duck Shoot</div>
             </a>
 
@@ -904,200 +922,300 @@
                 data-topics="puzzle physics"
                 data-keywords="marble machine marble run chain reaction rube goldberg co may ky quac game vat ly domino ramp conveyor seesaw bouncer fan magnet bumper physics puzzle 40 levels phaser cỗ máy kỳ quặc marble machine">
                 <span class="tile-badge badge-new">NEW</span>
-                <img src="/marble-machine/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/marble-machine/icon.webp" type="image/webp">
+                    <img src="/marble-machine/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         fetchpriority="high" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Marble Machine</div>
             </a>
 
             <a href="/g/claw-machine" class="poki-tile tile-claw"
                 data-topics="physics duo"
                 data-keywords="claw machine plush grabber may gap thu game gap thu bong gap gau bong toy crane prize grabber physics phaser collect 30 plushies 4 player turns máy gắp thú claw machine">
-                <img src="/claw-machine/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/claw-machine/icon.webp" type="image/webp">
+                    <img src="/claw-machine/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         fetchpriority="high" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Claw Machine</div>
             </a>
 
             <a href="/g/screw-jam" class="poki-tile tile-screwjam"
                 data-topics="puzzle duo"
                 data-keywords="screw jam nuts and bolts puzzle unscrew bolts game van oc tro choi thao oc vit thao vit screw puzzle wooden plates 60 levels colour blind friendly 2 player race phaser vặn ốc screw jam">
-                <img src="/screw-jam/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/screw-jam/icon.webp" type="image/webp">
+                    <img src="/screw-jam/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         fetchpriority="high" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Screw Jam</div>
             </a>
 
             <a href="/g/water-sort" class="poki-tile tile-watersort"
                 data-topics="puzzle duo"
                 data-keywords="water sort color sort colour pouring puzzle game xep mau game rot mau tro choi xep mau nuoc sort puzzle 60 levels hint undo colour blind friendly 2 player race rót màu water sort">
-                <img src="/water-sort/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/water-sort/icon.webp" type="image/webp">
+                    <img src="/water-sort/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         fetchpriority="high" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Water Sort</div>
             </a>
 
             <a href="/g/melon-drop" class="poki-tile tile-melon"
                 data-topics="puzzle physics"
                 data-keywords="melon drop suika fruit merge game tha dua game ghep hoa qua watermelon merge physics puzzle drop fruit combine ghép dưa hấu melon drop">
-                <img src="/melon-drop/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/melon-drop/icon.webp" type="image/webp">
+                    <img src="/melon-drop/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Melon Drop</div>
             </a>
 
             <a href="/g/bounce-hoops" class="poki-tile tile-hoops"
                 data-topics="physics puzzle"
                 data-keywords="bounce hoops ball physics puzzle game bong nay vao ro tro choi nem bong aim bounce ricochet levels ném bóng vào rổ bounce hoops">
-                <img src="/bounce-hoops/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/bounce-hoops/icon.webp" type="image/webp">
+                    <img src="/bounce-hoops/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Bounce Hoops</div>
             </a>
 
             <a href="/g/panda-run" class="poki-tile tile-panda"
                 data-topics="action"
                 data-keywords="panda run endless runner game gau truc chay tro choi chay nhay jump slide obstacles panda giải cứu bạn panda run">
-                <img src="/panda-run/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/panda-run/icon.webp" type="image/webp">
+                    <img src="/panda-run/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Panda Run</div>
             </a>
 
             <a href="/g/bubble-pop" class="poki-tile tile-bubble"
                 data-topics="puzzle action"
                 data-keywords="bubble pop bubble shooter game ban bong tro choi ban bong mau match colours aim shoot bắn bóng nổ bubble pop">
-                <img src="/bubble-pop/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/bubble-pop/icon.webp" type="image/webp">
+                    <img src="/bubble-pop/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Bubble Pop</div>
             </a>
 
             <a href="/g/fruit-crush" class="poki-tile tile-fruit tile-hot"
                 data-topics="puzzle"
                 data-keywords="fruit crush match 3 game xep hoa qua tro choi ghep 3 candy match puzzle swap xếp hoa quả fruit crush">
-                <img src="/fruit-crush/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/fruit-crush/icon.webp" type="image/webp">
+                    <img src="/fruit-crush/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Fruit Crush</div>
             </a>
 
             <a href="/g/sling-blast" class="poki-tile tile-sling"
                 data-topics="physics action"
                 data-keywords="sling blast slingshot physics game ban na tro choi ban bi aim launch phaser bắn bi phá tháp sling blast">
-                <img src="/sling-blast/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/sling-blast/icon.webp" type="image/webp">
+                    <img src="/sling-blast/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Sling Blast</div>
             </a>
 
             <a href="/g/magic-coloring" class="poki-tile tile-coloring"
                 data-topics="creative"
                 data-keywords="magic coloring colouring book game to mau tro choi to mau paint draw kids art tô màu thần kỳ magic coloring">
-                <img src="/coloring-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/coloring-game/icon.webp" type="image/webp">
+                    <img src="/coloring-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Magic Coloring</div>
             </a>
 
             <a href="/g/basketball-duel" class="poki-tile tile-basket tile-hot"
                 data-topics="sports duo"
                 data-keywords="basketball duel game bong ro tro choi nem ro hoop shoot 2 player song đấu bóng rổ basketball duel">
-                <img src="/basketball-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/basketball-game/icon.webp" type="image/webp">
+                    <img src="/basketball-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Basketball Duel</div>
             </a>
 
             <a href="/g/strike-party" class="poki-tile tile-bowling"
                 data-topics="sports duo"
                 data-keywords="strike party bowling game bowling tro choi bowling pins strike spare 4 player ném bóng bowling strike party">
-                <img src="/bowling-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/bowling-game/icon.webp" type="image/webp">
+                    <img src="/bowling-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Strike Party</div>
             </a>
 
             <a href="/g/cyber-snake" class="poki-tile tile-snake"
                 data-topics="action"
                 data-keywords="cyber snake game ran san moi tro choi con ran neon snake grow eat phaser rắn săn mồi cyber snake">
-                <img src="/cyber-snake/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/cyber-snake/icon.webp" type="image/webp">
+                    <img src="/cyber-snake/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Cyber Snake</div>
             </a>
 
             <a href="/g/pool-masters" class="poki-tile tile-pool"
                 data-topics="sports physics duo"
                 data-keywords="pool masters billiards game bi a tro choi bi a 8 ball cue physics 2 player cao thủ bi-a pool masters">
-                <img src="/billiards-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/billiards-game/icon.webp" type="image/webp">
+                    <img src="/billiards-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Pool Masters</div>
             </a>
 
             <a href="/g/super-striker" class="poki-tile tile-soccer"
                 data-topics="sports duo"
                 data-keywords="super striker soccer football game sut bong tro choi da bong goal penalty 2 player sút bóng siêu đỉnh super striker">
-                <img src="/soccer-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/soccer-game/icon.webp" type="image/webp">
+                    <img src="/soccer-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Super Striker</div>
             </a>
 
             <a href="/g/balloon-darts" class="poki-tile tile-darts"
                 data-topics="sports action"
                 data-keywords="balloon darts game phi tieu tro choi nem phi tieu bong bay throw aim pop phi tiêu bong bóng balloon darts">
-                <img src="/darts-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/darts-game/icon.webp" type="image/webp">
+                    <img src="/darts-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Balloon Darts</div>
             </a>
 
             <a href="/g/co-tuong" class="poki-tile tile-xiangqi"
                 data-topics="board duo"
                 data-keywords="xiangqi chinese chess co tuong choi co tuong online board game 2 player cờ tướng xiangqi">
-                <img src="/xiangqi/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/xiangqi/icon.webp" type="image/webp">
+                    <img src="/xiangqi/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Xiangqi</div>
             </a>
 
             <a href="/g/tic-tac-toe" class="poki-tile tile-tictactoe"
                 data-topics="board duo"
                 data-keywords="tic tac toe game co caro tro choi caro noughts crosses 2 player cờ ca-rô tic tac toe">
-                <img src="/tictactoe-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/tictactoe-game/icon.webp" type="image/webp">
+                    <img src="/tictactoe-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Tic Tac Toe</div>
             </a>
 
             <a href="/g/ocean-party" class="poki-tile tile-ocean"
                 data-topics="action duo"
                 data-keywords="ocean party underwater treasure game tiec dai duong tro choi duoi bien 4 player family tiệc đại dương ocean party">
-                <img src="/ocean-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/ocean-game/icon.webp" type="image/webp">
+                    <img src="/ocean-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Ocean Party</div>
             </a>
 
             <a href="/g/aqua-dash" class="poki-tile tile-aqua"
                 data-topics="action duo"
                 data-keywords="aqua dash underwater race game dua duoi bien tro choi boi loi swim dash treasure 4 player đua dưới biển aqua dash">
-                <img src="/aqua-dash/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/aqua-dash/icon.webp" type="image/webp">
+                    <img src="/aqua-dash/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Aqua Dash</div>
             </a>
 
             <a href="/g/neon-racer" class="poki-tile tile-racer"
                 data-topics="action sports"
                 data-keywords="neon racer racing car game dua xe tro choi lai xe speed dodge đua xe neon neon racer">
-                <img src="/racer-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/racer-game/icon.webp" type="image/webp">
+                    <img src="/racer-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Neon Racer</div>
             </a>
 
             <a href="/g/neon-nebula" class="poki-tile tile-space"
                 data-topics="action"
                 data-keywords="neon nebula space shooter game phi thuyen tro choi ban may bay vu tru stars phi thuyền neon neon nebula">
-                <img src="/space-shooter/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/space-shooter/icon.webp" type="image/webp">
+                    <img src="/space-shooter/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Neon Nebula</div>
             </a>
 
             <a href="/g/bot-arena" class="poki-tile tile-shooter"
                 data-topics="action"
                 data-keywords="bot arena shooter game dau truong robot tro choi ban robot aim survive đấu trường rô-bốt bot arena">
-                <img src="/shooter-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/shooter-game/icon.webp" type="image/webp">
+                    <img src="/shooter-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">Bot Arena</div>
             </a>
 
             <a href="/g/english-quest" class="poki-tile tile-english"
                 data-topics="learning"
                 data-keywords="english quest learn english game hoc tieng anh tro choi hoc tu vung present perfect grammar kids học tiếng anh english quest">
-                <img src="/english-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
-                     onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                <picture>
+                    <source srcset="/english-game/icon.webp" type="image/webp">
+                    <img src="/english-game/icon.jpg" alt="" class="tile-img" width="400" height="400"
+                         loading="lazy" decoding="async"
+                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
+                </picture>
                 <div class="tile-label">English Quest</div>
             </a>
 

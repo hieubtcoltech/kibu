@@ -59,7 +59,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- FontAwesome nạp KHÔNG CHẶN hiển thị: media="print" khiến trình duyệt coi
+         nó là CSS cho máy in nên tải song song, xong mới đổi thành "all". Tệp này
+         gần 70 KB, để nó chắn ngang là trang chậm hẳn nửa giây trên mạng yếu. -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
     <link rel="stylesheet" href="/racer-game/style.css">
     <link rel="stylesheet" href="/site-chrome.css">
     <script src="/routes.js"></script>
