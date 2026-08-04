@@ -289,15 +289,6 @@ body > .site-footer {
 .footer-contact.is-telegram:hover { background: rgba(42, 171, 238, 0.28); border-color: #2aabee; }
 .footer-contact.is-whatsapp:hover { background: rgba(37, 211, 102, 0.28); border-color: #25d366; }
 
-@media (max-width: 560px) {
-    .footer-contact,
-    .lang-flag-btn { width: 40px; height: 40px; }
-    .online-badge { min-width: 40px; height: 40px; }
-    .footer-contact { font-size: 0.98rem; }
-    .online-badge { font-size: 0.74rem; }
-    .lang-flag-btn img { width: 23px; height: 23px; }
-}
-
 /* ---------- Live player count ---------- */
 /* Chỉ con số bên cạnh chấm xanh — chấm nhấp nháy đã đủ nói "đang trực tuyến",
    câu chữ đầy đủ nằm ở tooltip. */
@@ -403,6 +394,23 @@ body > .site-footer {
     border-radius: 50%;
     display: block;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- Màn hẹp: cả năm nút cùng co lại ----------
+ * Khối này PHẢI nằm sau ba luật gốc ở trên. Câu lệnh @media không làm tăng độ
+ * ưu tiên, mà cả năm luật đều chỉ dùng một lớp — nên luật nào viết SAU thì
+ * thắng. Lúc đầu em để khối này lên trên, kết quả là trên điện thoại ba nút
+ * mạng xã hội co xuống 40px còn nút cờ với ô online vẫn 46px: hàng nút so le
+ * hẳn. Trên máy tính thì không thấy gì vì khối này không chạy.
+ *
+ * Chỉ mỗi .online-badge dùng min-width, vì nó phải giãn được khi số người
+ * online lên ba chữ số. */
+@media (max-width: 560px) {
+    .footer-contact,
+    .lang-flag-btn { width: 40px; height: 40px; }
+    .online-badge { min-width: 40px; height: 40px; padding: 0 4px; font-size: 0.74rem; }
+    .footer-contact { font-size: 0.98rem; }
+    .lang-flag-btn img { width: 23px; height: 23px; }
 }
 
 /* ---------- Pages whose game box is pinned to the viewport ----------
