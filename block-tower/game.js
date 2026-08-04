@@ -445,6 +445,9 @@
 
                 this.layout();
                 this.bakeCubes();
+                /* nằm trên căn phòng, dưới khối — depth 1.5 */
+                this.gridImg = this.add.image(0, 0, 'well_grid_' + CELL)
+                    .setOrigin(0, 0).setDepth(1.5);
                 this.wireInput();
 
                 UI.sceneReady(this);
@@ -485,6 +488,26 @@
                 /* MỘT ảnh cho mỗi màu. Khối phẳng thì không còn mặt nào bị ô
                  * bên cạnh che, nên cũng không cần tám biến thể theo hàng xóm
                  * như hồi làm khối lập phương. Đơn giản đi hẳn một tầng. */
+                /* LƯỚI NỀN nướng thành MỘT tấm ảnh cho cả cái giếng.
+                 *
+                 * Vẽ 180 cái hốc bằng nét mỗi khung hình thì máy của bé tụt
+                 * khung ngay — mà lưới thì đứng yên suốt ván, nướng một lần là
+                 * đủ. Cùng bài học với khối: thứ gì không đổi thì đừng vẽ lại. */
+                var gridKey = 'well_grid_' + CELL;
+                if (!this.textures.exists(gridKey)) {
+                    g.clear();
+                    g.scaleCanvas(S, S);
+                    for (var gy = 0; gy < R.ROWS; gy++) {
+                        for (var gx = 0; gx < R.COLS; gx++) {
+                            g.translateCanvas(gx * CELL, gy * CELL);
+                            A.drawSlot(g, CELL);
+                            g.translateCanvas(-gx * CELL, -gy * CELL);
+                        }
+                    }
+                    g.scaleCanvas(1 / S, 1 / S);
+                    g.generateTexture(gridKey, CELL * R.COLS * S, CELL * R.ROWS * S);
+                }
+
                 for (var key in A.MATS) {
                     var tex = 'cube_' + key + '_' + CELL;
                     if (this.textures.exists(tex)) continue;
@@ -951,13 +974,11 @@
                 g.closePath();
                 g.fillPath();
 
-                /* lưới mờ trên mặt sau — giúp bé đếm cột mà không làm rối mắt */
-                g.lineStyle(1, room.dust, 0.07);
-                for (var c = 1; c < R.COLS; c++) {
-                    g.beginPath();
-                    g.moveTo(x0 + D + c * CELL, y0 - D);
-                    g.lineTo(x0 + D + c * CELL, y0 + bh - D);
-                    g.strokePath();
+                /* Lưới ô trống: đặt tấm ảnh đã nướng vào đúng miệng giếng, và
+                 * rung theo cùng cái rung của cả giếng khi ăn hàng. */
+                if (this.gridImg) {
+                    this.gridImg.setPosition(x0, y0);
+                    this.gridImg.setDisplaySize(bw, bh);
                 }
 
                 /* khung miệng giếng */

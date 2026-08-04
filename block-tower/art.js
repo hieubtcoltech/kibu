@@ -76,11 +76,33 @@
      * mình còn mấy ô. Có khe thì mỗi ô là một viên rõ ràng, mà cả hàng vẫn đọc
      * ra là một hàng.
      * ------------------------------------------------------------------ */
+    /* Kích thước một ô, dùng CHUNG cho viên khối và cho lưới nền.
+     *
+     * Anh Hiếu: "background của trò chơi để dạng grid để khớp với khối vuông".
+     * Chữ "khớp" là chỗ mấu chốt — ô lưới phải cùng khe hở, cùng bo góc, cùng
+     * cỡ với viên khối, không thì nhìn ra hai hệ thống chồng lên nhau. Nên hai
+     * bên hỏi chung một hàm này chứ không bên nào tự nhân lấy con số. */
+    function slot(S) {
+        var pad = Math.max(1, S * 0.035);
+        var w = S - pad * 2;
+        return { pad: pad, w: w, r: w * 0.24 };
+    }
+
+    /* Ô TRỐNG của lưới: một cái hốc rỗng đúng hình viên khối. Vẽ chìm hẳn
+     * xuống — nó là chỗ ĐỂ ĐẶT khối, không phải thứ để nhìn. Đậm lên một chút
+     * là cả cái giếng thành bàn cờ và mắt hết tập trung vào khối đang rơi. */
+    function drawSlot(g, S) {
+        var m = slot(S);
+        g.fillStyle(0xffffff, 0.055);
+        g.fillRoundedRect(m.pad, m.pad, m.w, m.w, m.r);
+        g.lineStyle(Math.max(1, m.w * 0.04), 0xffffff, 0.10);
+        g.strokeRoundedRect(m.pad, m.pad, m.w, m.w, m.r);
+    }
+
     function drawCube(g, matKey, S) {
         var c = matOf(matKey);
-        var pad = Math.max(1, S * 0.035);          // khe hở quanh ô
-        var w = S - pad * 2;
-        var r = w * 0.24;                          // bo góc
+        var m0 = slot(S);
+        var pad = m0.pad, w = m0.w, r = m0.r;
 
         /* bóng đổ nhẹ xuống dưới cho ô có chỗ đứng, không bồng bềnh */
         g.fillStyle(0x000000, 0.22);
@@ -158,6 +180,8 @@
         DEPTH: DEPTH,
         MATS: MATS,
         matOf: matOf,
+        slot: slot,
+        drawSlot: drawSlot,
         drawCube: drawCube,
         ROOMS: ROOMS,
         roomFor: roomFor

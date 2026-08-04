@@ -307,6 +307,35 @@ function run(win) {
     if (immediate.indexOf('turn') < 0) fail('xoay không có tiếng');
     S2.trace = false;
 
+    /* ---- 7a1: LƯỚI NỀN PHẢI KHỚP ĐÚNG Ô KHỐI ----
+     *
+     * Anh Hiếu: "background của trò chơi để dạng grid để khớp với khối vuông".
+     * Chữ "khớp" mới là phần khó — vẽ được cái lưới thì dễ, nhưng lệch nửa ô
+     * hay sai bo góc là nhìn ra hai hệ thống chồng lên nhau.
+     *
+     * Nên máy soát hỏi đúng câu ấy: lưới có nướng đủ cả cái giếng không, và ô
+     * lưới có DÙNG CHUNG kích thước với viên khối không. Hai bên cùng gọi
+     * A.slot() nên nếu ai đó sau này sửa một bên mà quên bên kia, phép soát
+     * này bắt ngay. */
+    say('');
+    say('· lưới nền có khớp ô khối không', 'dim');
+    var CELL2 = win.blockTower.size().CELL;
+    var gk = 'well_grid_' + CELL2;
+    var hasGrid = sc.textures.exists(gk);
+    var gw = hasGrid ? sc.textures.get(gk).getSourceImage().width : 0;
+    var gh2 = hasGrid ? sc.textures.get(gk).getSourceImage().height : 0;
+    var wantW2 = CELL2 * R.COLS * win.TowerArt.TEX_SCALE;
+    var wantH2 = CELL2 * R.ROWS * win.TowerArt.TEX_SCALE;
+    var slot = win.TowerArt.slot(CELL2);
+    say('    ảnh lưới ' + gw + '×' + gh2 + ' (cần ' + wantW2 + '×' + wantH2 + ')' +
+        ' · ô lưới rộng ' + slot.w.toFixed(1) + 'px, bo góc ' + slot.r.toFixed(1) + 'px',
+        (hasGrid && gw === wantW2 && gh2 === wantH2) ? 'ok' : 'bad');
+    if (!hasGrid) fail('không có ảnh lưới nền');
+    if (hasGrid && (gw !== wantW2 || gh2 !== wantH2))
+        fail('ảnh lưới ' + gw + '×' + gh2 + ' không đúng khổ cái giếng ' + wantW2 + '×' + wantH2 + ' — lưới sẽ lệch khỏi ô khối');
+    if (slot.w >= CELL2) fail('ô lưới rộng bằng cả ô, không còn khe hở nào giữa hai viên');
+    if (slot.r < slot.w * 0.15) fail('ô lưới bo góc quá ít so với viên khối, nhìn ra hai hệ thống khác nhau');
+
     /* ---- 7a2: NHẠC NỀN VÀ TIẾNG TÍCH ----
      *
      * Anh Hiếu: "game khi chơi buồn tẻ quá, các game kiểu này có nhạc nền vui
