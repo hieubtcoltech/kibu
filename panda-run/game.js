@@ -1387,11 +1387,11 @@
          * hoảng hốt, còn tay chân là mấy que đen mảnh khua loạn nên cả con
          * trông như con nhện đội đầu gấu. Nay chân tay đều là ống MẬP bo tròn,
          * mảng mắt nhỏ lại và xếch xuống cho hiền. */
-        const headR = slide ? 0.44 * u : 0.46 * u;
-        const bodyRX = slide ? 0.46 * u : 0.42 * u;
-        const bodyRY = slide ? 0.28 * u : 0.37 * u;
-        const bodyCY = slide ? foot - 0.30 * u : foot - 0.52 * u - bob;
-        const headCY = slide ? foot - 0.56 * u : foot - 1.10 * u - bob;
+        const headR = slide ? 0.40 * u : 0.42 * u;
+        const bodyRX = slide ? 0.50 * u : 0.46 * u;
+        const bodyRY = slide ? 0.30 * u : 0.41 * u;
+        const bodyCY = slide ? foot - 0.32 * u : foot - 0.62 * u - bob;
+        const headCY = slide ? foot - 0.58 * u : foot - 1.20 * u - bob;
 
         /* ---------- CHÂN ----------
          * Một ống mập từ hông xuống bàn chân, đầu dưới bo tròn thành luôn bàn
@@ -1410,8 +1410,8 @@
         function footAt(p) {
             const t = p * TAU;
             return {
-                x: Math.cos(t) * 0.30 * u,
-                y: Math.max(0, Math.sin(t)) * 0.30 * u
+                x: Math.cos(t) * 0.40 * u,
+                y: Math.max(0, Math.sin(t)) * 0.34 * u
             };
         }
 
@@ -1438,14 +1438,26 @@
         /* Vai đặt cao gần cổ và tay vung theo phương NGANG là chính. Bản
          * trước vai thấp, tay vung dọc xuống nên nó chồng vào chân, cả cụm
          * tay–thân–chân dính thành một mảng đen không đọc ra cái gì. */
-        const shoY = bodyCY - bodyRY * 0.62;
-        const legW = 0.21 * u;
-        const armW = 0.185 * u;
+        /* Vai đặt SÁT HAI MÉP THÂN, tay NGẮN và mập.
+         *
+         * Em chỉnh chỗ này hai lần mới đúng. Lần đầu tay quá ngắn lại mọc từ
+         * giữa thân nên lúc đưa ra sau nó lọt thỏm trong thân trắng, chỉ thấy
+         * một tay. Chữa bằng cách kéo tay dài ra thì hỏng kiểu khác: tay thành
+         * cái gậy quét ngang, có khung nhìn như xiên qua ngực. Trong ảnh anh
+         * Hiếu gửi, tay là hai cục ngắn mập thò ra hai bên sườn — mọc ở mép
+         * thân thì ngắn vẫn nhìn thấy. */
+        const shoY = bodyCY - bodyRY * 0.30;
+        /* Tay chân MẬP và sải bước RỘNG. Đây là khác biệt lớn nhất giữa bản
+         * em vẽ với ảnh anh Hiếu gửi: cùng một bố cục mà chi mảnh, sải hẹp thì
+         * nhìn ra con thú đang lon ton; chi mập, sải rộng thì mới ra dáng đang
+         * PHÓNG hết sức. */
+        const legW = 0.26 * u;
+        const armW = 0.23 * u;
 
         /* --- chi BÊN XA: vẽ trước thân, tô sẫm hơn một nấc để tách lớp --- */
-        limb(cx - 0.09 * u, hipY, cx + fF.x - 0.05 * u, foot - fF.y, legW, PANDA.limbFar);
-        limb(cx - 0.12 * u, shoY, cx - 0.12 * u + armF * 0.34 * u,
-            shoY + 0.20 * u - armF * 0.08 * u, armW, PANDA.limbFar);
+        limb(cx - 0.10 * u, hipY, cx + fF.x - 0.08 * u, foot - fF.y, legW, PANDA.limbFar);
+        limb(cx - 0.24 * u, shoY, cx - 0.24 * u + armF * 0.30 * u,
+            shoY + 0.30 * u - armF * 0.10 * u, armW, PANDA.limbFar);
 
         /* --- KHĂN QUÀNG bay ngược chiều chạy, vẽ sau thân ---
          * Giữ lại vì nó là thứ duy nhất cho thấy có GIÓ; bỏ luôn cái ba lô của
@@ -1453,11 +1465,11 @@
         const flap = run ? Math.sin(a * 2) * 0.05 * u : 0;
         g.fillStyle = PANDA.scarf;
         g.beginPath();
-        g.moveTo(cx - 0.22 * u, headCY + 0.30 * u);
-        g.quadraticCurveTo(cx - 0.66 * u, headCY + 0.26 * u + flap,
-            cx - 0.80 * u, headCY + 0.46 * u + flap);
-        g.quadraticCurveTo(cx - 0.62 * u, headCY + 0.52 * u,
-            cx - 0.20 * u, headCY + 0.50 * u);
+        g.moveTo(cx - 0.20 * u, headCY + 0.26 * u);
+        g.quadraticCurveTo(cx - 0.72 * u, headCY + 0.20 * u + flap,
+            cx - 0.92 * u, headCY + 0.44 * u + flap);
+        g.quadraticCurveTo(cx - 0.66 * u, headCY + 0.54 * u,
+            cx - 0.18 * u, headCY + 0.52 * u);
         g.closePath();
         g.fill();
 
@@ -1476,14 +1488,21 @@
         g.fill();
 
         /* --- chi BÊN GẦN, đen hẳn, vẽ đè lên thân --- */
-        limb(cx + 0.07 * u, hipY, cx + fN.x + 0.05 * u, foot - fN.y, legW, PANDA.black);
-        limb(cx + 0.12 * u, shoY, cx + 0.12 * u + armN * 0.36 * u,
-            shoY + 0.20 * u - armN * 0.08 * u, armW, PANDA.black);
+        limb(cx + 0.08 * u, hipY, cx + fN.x + 0.08 * u, foot - fN.y, legW, PANDA.black);
+        limb(cx + 0.24 * u, shoY, cx + 0.24 * u + armN * 0.32 * u,
+            shoY + 0.30 * u - armN * 0.10 * u, armW, PANDA.black);
 
         /* --- nút khăn ở cổ --- */
+        /* vòng khăn quanh cổ — trong ảnh anh gửi nó là một vành đỏ rõ ràng,
+         * chính nó nối cái khăn bay với thân, thiếu thì khăn nhìn như đang
+         * dán hờ vào lưng */
+        g.fillStyle = PANDA.scarf;
+        g.beginPath();
+        g.ellipse(cx, headCY + 0.40 * u, 0.30 * u, 0.115 * u, 0, 0, TAU);
+        g.fill();
         g.fillStyle = PANDA.scarfDark;
         g.beginPath();
-        g.ellipse(cx, headCY + 0.38 * u, 0.26 * u, 0.11 * u, 0, 0, TAU);
+        g.ellipse(cx, headCY + 0.45 * u, 0.28 * u, 0.075 * u, 0, 0, TAU);
         g.fill();
 
         /* --- TAI: bên xa nhỏ hơn và lùi ra sau ---
