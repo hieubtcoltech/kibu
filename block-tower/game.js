@@ -275,21 +275,26 @@
     var music = {
         playing: false, timer: null, step: 0, nextT: 0, bpm: 120, gain: null,
 
-        /* Giai điệu tám ô nhịp, mỗi ô tám nốt móc đơn. Số là cao độ MIDI,
-         * 0 là lặng. Vòng hoà thanh La thứ – Fa – Đô – Sol: nghe sáng và đi
-         * tới, hợp với việc xếp khối chứ không ru ngủ. */
+        /* KHÔNG PHẢI MỘT BÀI HÁT — chỉ là một vòng nền.
+         *
+         * Bản đầu em viết hẳn một giai điệu tám ô nhịp có câu có nhịp. Anh Hiếu
+         * nghe rồi bảo: nhạc nền không cần bài hát gì đâu, chỉ cần một đoạn lặp
+         * đi lặp lại nghe vui tươi là được. Anh đúng — giai điệu có câu thì tai
+         * bám theo nó, mà tai đang phải để dành cho tiếng khối chạm đáy và
+         * nhịp tích. Nhạc nền hay là nhạc nền mình quên mất là nó đang chạy.
+         *
+         * Nên giờ chỉ còn bốn ô nhịp RẢI HỢP ÂM lên xuống: gốc – ba – năm –
+         * tám – năm – ba – gốc – năm. Không câu, không cao trào, cứ thế quay
+         * vòng. Vòng hoà thanh La thứ – Fa – Đô – Sol giữ nguyên vì nó sáng và
+         * đi tới. */
         MELODY: [
-            76, 74, 72, 74, 76, 76, 76, 0,
-            74, 74, 74, 0, 76, 79, 79, 0,
-            77, 76, 74, 76, 77, 77, 77, 0,
-            76, 76, 74, 72, 74, 0, 0, 0,
-            72, 76, 79, 76, 72, 0, 76, 0,
-            74, 76, 77, 76, 74, 72, 0, 0,
-            79, 77, 76, 74, 72, 74, 76, 0,
-            74, 71, 74, 79, 0, 0, 0, 0
+            69, 72, 76, 81, 76, 72, 69, 76,
+            65, 69, 72, 77, 72, 69, 65, 72,
+            72, 76, 79, 84, 79, 76, 72, 79,
+            67, 71, 74, 79, 74, 71, 67, 74
         ],
-        /* nốt trầm của từng ô nhịp: La – Fa – Đô – Sol, mỗi hợp âm hai ô */
-        BASS: [45, 45, 41, 41, 48, 48, 43, 43],
+        /* nốt trầm mỗi ô nhịp: La – Fa – Đô – Sol */
+        BASS: [45, 41, 48, 43],
 
         freq: function (midi) { return 440 * Math.pow(2, (midi - 69) / 12); },
 
@@ -302,7 +307,7 @@
                 /* Nhạc nền phải NHỎ hơn hẳn tiếng game. Nó là nền, không được
                  * át tiếng khối chạm đáy — mà tiếng ấy mới là thứ bé cần nghe
                  * để biết chuyện gì vừa xảy ra. */
-                this.gain.gain.setValueAtTime(0.16, sfx.ctx.currentTime);
+                this.gain.gain.setValueAtTime(0.13, sfx.ctx.currentTime);
                 this.gain.connect(sfx.master);
             }
             this.playing = true;
@@ -347,7 +352,9 @@
             var c = sfx.ctx, m = this.MELODY[i];
 
             /* bè giai điệu */
-            if (m) this.note(this.freq(m), t, spb * 0.9, 'square', 0.055);
+            /* Sóng tam giác chứ không phải vuông: vuông nghe chói và nổi lên
+             * trước, mà đây là bè NỀN, nó phải chịu nằm dưới. */
+            if (m) this.note(this.freq(m), t, spb * 0.85, 'triangle', 0.045);
 
             /* bè trầm: gõ ở phách 1 và 3 của mỗi ô nhịp */
             var inBar = i % 8, bar = Math.floor(i / 8);
@@ -447,11 +454,26 @@
              * bề ngang, chừa hai bên cho căn phòng thở — cái giếng dán sát mép
              * thì mất hẳn cảm giác "lơ lửng giữa phòng". */
             layout: function () {
-                var wantW = W * 0.62, wantH = H * 0.70;
+                /* Giếng ăn 76% chiều cao chứ không phải 70%: đo lại thấy dưới
+                 * đáy còn thừa cả một dải trống, mà ô to thêm được vài pixel là
+                 * ngón tay bé chạm dễ hơn hẳn. Chừa 13% trên cho bảng điểm và
+                 * chừng 11% dưới cho hàng nút bấm. */
+                var wantW = W * 0.62, wantH = H * 0.76;
                 CELL = Math.floor(Math.min(wantW / R.COLS, wantH / R.ROWS));
                 var bw = CELL * R.COLS, bh = CELL * R.ROWS;
                 OX = Math.round((W - bw) / 2 - CELL * A.DEPTH * 0.5);
-                OY = Math.round(H * 0.16);
+                OY = Math.round(H * 0.13);
+
+                /* Báo cho phần HTML biết miệng giếng nằm ở đâu, tính theo phần
+                 * trăm mặt tranh. Nhờ vậy ô NEXT dán được sát ngay cạnh giếng
+                 * thay vì nằm chết ở góc — mà chỗ ấy thì đúng như anh Hiếu nói,
+                 * xa quá không ai để ý. */
+                var st = document.querySelector('.stage');
+                if (st) {
+                    st.style.setProperty('--well-right', (100 * (OX + bw) / W).toFixed(2) + '%');
+                    st.style.setProperty('--well-left', (100 * OX / W).toFixed(2) + '%');
+                    st.style.setProperty('--well-top', (100 * OY / H).toFixed(2) + '%');
+                }
             },
 
             /* Nướng năm chất liệu thành ảnh. Tấm ảnh rộng và cao hơn cạnh ô một

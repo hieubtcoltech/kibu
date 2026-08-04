@@ -226,13 +226,19 @@ body {
     color: #fff;
 }
 
+/* Ô NEXT dán SÁT ngay bên phải miệng giếng, không nằm ở góc màn.
+   game.js đo cái giếng rồi đặt --well-right / --well-top theo phần trăm mặt
+   tranh. Anh Hiếu nói đúng: để ở góc phải trên thì xa quá, mắt bé đang dán vào
+   cái giếng, liếc ra góc là mất nhịp. */
 .hud-next {
-    margin-left: auto;
+    position: absolute;
+    left: calc(var(--well-right, 78%) + 1.4%);
+    top: var(--well-top, 16%);
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     gap: 4px;
-    padding: 5px 10px;
+    padding: 6px 8px;
     border-radius: 12px;
     background: rgba(8, 12, 24, 0.66);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -246,15 +252,15 @@ body {
    sau — bé chỉ thật sự cần biết quân ngay sau, hai quân kia là để tính xa. */
 .next-piece {
     display: grid;
-    grid-template-columns: repeat(4, 11px);
-    grid-template-rows: repeat(2, 11px);
+    grid-template-columns: repeat(4, 9px);
+    grid-template-rows: repeat(2, 9px);
     gap: 2px;
-    opacity: 0.6;
+    opacity: 0.62;
 }
 
 .next-piece.up {
-    grid-template-columns: repeat(4, 16px);
-    grid-template-rows: repeat(2, 16px);
+    grid-template-columns: repeat(4, 13px);
+    grid-template-rows: repeat(2, 13px);
     opacity: 1;
 }
 
@@ -546,6 +552,9 @@ body.playing .touchpad { opacity: 1; pointer-events: auto; }
     .over-actions .big-btn { min-width: 0; }
     .hud-box { padding: 4px 9px; }
     .hud-box b { font-size: 1.05rem; }
+    .hud-next { padding: 4px 5px; }
+    .next-piece { grid-template-columns: repeat(4, 7px); grid-template-rows: repeat(2, 7px); }
+    .next-piece.up { grid-template-columns: repeat(4, 10px); grid-template-rows: repeat(2, 10px); }
     .pad-btn { width: 56px; height: 50px; font-size: 1.2rem; }
 }
 
