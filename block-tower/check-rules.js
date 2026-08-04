@@ -18,7 +18,7 @@
  *   4. Soát đá tường: quân dựng sát mép trái, mép phải phải xoay được
  *   5. Soát bảng tốc độ: bàn 1 phải chậm, và không bàn nào nhanh quá tay bé
  *   6. Soát túi bảy quân: bảy quân khác nhau mỗi lượt, không bỏ đói quân nào
- *   7. Soát đường bóng: chỗ bóng chỉ đúng là chỗ quân đáp xuống
+ *   7. Soát cú THẢ NHANH: chỗ quân dừng đúng là ô thấp nhất còn đặt được
  */
 'use strict';
 
@@ -84,7 +84,7 @@ function boardValid(board) {
         if (board[y].length !== R.COLS) return 'hàng ' + y + ' có ' + board[y].length + ' cột';
         for (let x = 0; x < R.COLS; x++) {
             const v = board[y][x];
-            if (v !== null && !R.MATS.some(m => m.key === v)) return 'ô ' + x + ',' + y + ' mang chất liệu lạ "' + v + '"';
+            if (v !== null && !R.MATS.some(m => m.key === v)) return 'ô ' + x + ',' + y + ' mang màu lạ "' + v + '"';
         }
     }
     return null;
@@ -140,7 +140,7 @@ function boardValid(board) {
         ' hàng, lên tới bàn ' + maxLevel + ', chất đầy ' + topOut + ' lần');
     const matLine = R.MATS.map(m => m.vi + ' ' + Math.round(100 * (matCount[m.key] || 0) /
         Object.values(matCount).reduce((a, b) => a + b, 0)) + '%').join(' · ');
-    console.log('    chất liệu bốc được: ' + matLine);
+    console.log('    màu bốc được: ' + matLine);
     if (pieces < GAMES * 20) fail('rô-bốt chỉ đặt được ' + pieces + ' quân trong ' + GAMES + ' ván — luật đang chặn nó ở đâu đó');
     if (!lines) fail('chơi cả ' + GAMES + ' ván mà không ăn nổi một hàng nào');
     /* Vàng phải hiếm nhưng không được tuyệt chủng */
@@ -154,7 +154,7 @@ function boardValid(board) {
         const b = R.newBoard();
         for (let i = 0; i < rows.length; i++) {
             const y = R.ROWS - rows.length + i;
-            for (let x = 0; x < R.COLS; x++) b[y][x] = rows[i][x] === '#' ? 'brick' : null;
+            for (let x = 0; x < R.COLS; x++) b[y][x] = rows[i][x] === '#' ? 'ruby' : null;
         }
         return b;
     }
@@ -175,7 +175,7 @@ function boardValid(board) {
     if (rows.length !== 4) fail('bốn hàng đầy mà tìm ra ' + rows.length);
     const mult = R.clearRows(b, rows);
     if (b[R.ROWS - 1].filter(Boolean).length !== 9) fail('ăn bốn hàng xong không dồn đúng');
-    if (Math.abs(mult - 1) > 0.001) fail('hàng toàn gạch mà hệ số chất liệu ra ' + mult);
+    if (Math.abs(mult - 1) > 0.001) fail('hàng toàn khối đỏ mà hệ số màu ra ' + mult);
 
     /* ăn hàng Ở GIỮA đống — chỗ này dễ sai nhất, vì phải dồn phần trên xuống
      * mà giữ nguyên phần dưới */
@@ -200,7 +200,7 @@ function boardValid(board) {
     for (const p of R.PIECES) {
         for (const x of [0, R.COLS - 4]) {
             const board = R.newBoard();
-            let piece = { type: p, mat: 'brick', x: x, y: R.ROWS - 4, rot: 0 };
+            let piece = { type: p, mat: 'ruby', x: x, y: R.ROWS - 4, rot: 0 };
             if (!R.fits(board, piece)) continue;
             for (let i = 0; i < 4; i++) {
                 const rot = R.rotated(board, piece, 1);
@@ -249,7 +249,13 @@ function boardValid(board) {
     if (worstGap > 13) fail('có lúc bé phải chờ ' + worstGap + ' quân mới gặp lại một loại — túi đang không xáo đúng');
 }
 
-/* ---- 7. đường bóng ---- */
+/* ---- 7. cú thả nhanh ----
+ *
+ * Trước đây phần này soát ĐƯỜNG BÓNG — cái khung mờ báo trước chỗ quân sắp
+ * đáp. Anh Hiếu bảo bỏ khung ấy đi, người chơi tự biết. Nhưng phép soát thì
+ * giữ nguyên giá trị, chỉ đổi tên: cùng một hàm dropTo() giờ lo cú thả nhanh
+ * khi bé vuốt xuống, và nó vẫn phải trả về đúng ô thấp nhất còn đặt được —
+ * sai một ô là quân cắm vào giữa đống hoặc lơ lửng trên không. */
 {
     const rnd = R.rng(4242);
     let bad = 0;
@@ -258,19 +264,19 @@ function boardValid(board) {
         /* rắc vài khối bừa cho cái giếng gồ ghề */
         for (let k = 0; k < 26; k++) {
             const x = Math.floor(rnd() * R.COLS), y = R.ROWS - 1 - Math.floor(rnd() * 6);
-            board[y][x] = 'brick';
+            board[y][x] = 'ruby';
         }
         const type = R.PIECES[Math.floor(rnd() * 7)];
-        let p = { type: type, mat: 'brick', x: Math.floor(rnd() * (R.COLS - 3)), y: 0, rot: Math.floor(rnd() * 4) };
+        let p = { type: type, mat: 'ruby', x: Math.floor(rnd() * (R.COLS - 3)), y: 0, rot: Math.floor(rnd() * 4) };
         if (!R.fits(board, p)) continue;
         const gh = R.dropTo(board, p);
-        /* chỗ bóng phải là chỗ THẤP NHẤT còn đặt được: đẩy thêm một hàng nữa
+        /* chỗ dừng phải là ô THẤP NHẤT còn đặt được: đẩy thêm một hàng nữa
          * là hỏng, mà chính nó thì phải hợp lệ */
         if (!R.fits(board, gh)) { bad++; continue; }
         if (R.fits(board, R.moved(gh, 0, 1))) bad++;
     }
-    console.log('  · đường bóng: 3000 lần thử, ' + (bad ? bad + ' lần chỉ sai chỗ' : 'lần nào cũng chỉ đúng chỗ quân đáp xuống'));
-    if (bad) fail('đường bóng chỉ sai chỗ ' + bad + ' lần — bé nhắm theo nó thì xếp trượt');
+    console.log('  · thả nhanh: 3000 lần thử, ' + (bad ? bad + ' lần dừng sai ô' : 'lần nào cũng dừng đúng ô thấp nhất còn đặt được'));
+    if (bad) fail('cú thả nhanh dừng sai ô ' + bad + ' lần — quân sẽ cắm vào giữa đống hoặc treo lơ lửng');
 }
 
 /* ---- kết ---- */
@@ -281,5 +287,5 @@ if (fails.length) {
     process.exit(1);
 }
 console.log('ĐẠT — bảy quân đúng hình, xoay được ở mọi mép, ăn hàng không sót ô nào,');
-console.log('      túi không bỏ đói quân nào, đường bóng chỉ đúng chỗ, và tốc độ rơi');
+console.log('      túi không bỏ đói quân nào, cú thả nhanh dừng đúng ô, và tốc độ rơi');
 console.log('      bàn nào cũng nằm trong tầm tay trẻ con.');

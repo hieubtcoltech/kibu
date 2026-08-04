@@ -12,16 +12,17 @@
  * bé không phá nổi màn 3. Bên Bắn Vịt, tách ra từ đầu nên thêm năm kiểu vịt bay
  * mà máy soát công bằng không phải sửa một dòng. Lần này tách ngay từ dòng đầu.
  *
- * HAI CHỖ EM CỐ Ý LÀM KHÁC XẾP HÌNH CỔ ĐIỂN, VÌ NGƯỜI CHƠI LÀ TRẺ CON
+ * MỘT CHỖ EM CỐ Ý LÀM KHÁC XẾP HÌNH CỔ ĐIỂN, VÌ NGƯỜI CHƠI LÀ TRẺ CON
  *
- * 1. CÓ ĐƯỜNG BÓNG chỉ sẵn chỗ quân sẽ rơi xuống. Xếp hình cổ điển không có,
- *    và người lớn quen tay thì không cần. Nhưng bé bảy tuổi nhìn cái giếng
- *    dựng nghiêng thì rất khó đoán quân sẽ đáp vào cột nào — không có đường
- *    bóng là bé xếp trượt liên tục rồi bỏ chơi. Đây là chỗ chiều sâu 2.5D lấy
- *    đi của bé, nên phải trả lại.
+ * CÓ MẤY NHỊP ÂN HUỆ: quân chạm đáy rồi vẫn còn nửa giây để xoay hay đẩy
+ * ngang. Không có thì mỗi lần bé chậm tay một chút là hỏng cả cột.
  *
- * 2. CÓ MẤY NHỊP ÂN HUỆ: quân chạm đáy rồi vẫn còn nửa giây để xoay hay đẩy
- *    ngang. Không có thì mỗi lần bé chậm tay một chút là hỏng cả cột.
+ * ĐƯỜNG BÓNG THÌ ĐÃ BỎ. Em từng thêm nó — một khung mờ chỉ sẵn chỗ quân sắp
+ * đáp — với lý do cái giếng dựng nghiêng 2.5D làm bé khó đoán quân rơi vào
+ * cột nào. Lý do ấy đúng hồi khối còn là hình lập phương. Từ khi anh Hiếu bảo
+ * đổi sang khối PHẲNG thì cột đọc thẳng tuột, không còn gì che tầm mắt nữa, và
+ * anh nói luôn: không cần báo trước, người chơi tự biết. Đúng — cái nạng ấy
+ * sinh ra để chống một vết thương mà chính bản mới đã chữa xong.
  *
  * Còn lại giữ đúng luật cổ điển, kể cả bảng đá tường khi xoay (wall kick) —
  * bỏ nó đi thì quân không xoay được ở sát mép, mà bé không hiểu vì sao.
@@ -116,7 +117,7 @@
             acc += MATS[i].weight;
             if (x < acc) return MATS[i].key;
         }
-        return 'brick';
+        return 'ruby';
     }
     function matOf(key) {
         for (var i = 0; i < MATS.length; i++) if (MATS[i].key === key) return MATS[i];

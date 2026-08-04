@@ -120,14 +120,6 @@
         g.strokeRoundedRect(pad, pad, w, w, r);
     }
 
-    /* Khung mờ chỉ chỗ quân sắp đáp xuống. */
-    function drawGhost(g, S, colour) {
-        var pad = Math.max(1, S * 0.035);
-        var w = S - pad * 2;
-        g.lineStyle(Math.max(1.6, w * 0.07), colour, 0.8);
-        g.strokeRoundedRect(pad, pad, w, w, w * 0.24);
-    }
-
     /* ------------------------------------------------------------------ *
      * CÁC CĂN PHÒNG
      *
@@ -167,7 +159,6 @@
         MATS: MATS,
         matOf: matOf,
         drawCube: drawCube,
-        drawGhost: drawGhost,
         ROOMS: ROOMS,
         roomFor: roomFor
     };

@@ -20,9 +20,9 @@
       1. Rô-bốt chơi trọn ván bằng hàm thật — ăn được hàng, lên được bàn
       2. Không bao giờ có quân nào nằm đè lên khối cũ (soát từng nhịp)
       3. Ăn hàng xong không sót ô lơ lửng
-      4. Đường bóng luôn chỉ đúng chỗ quân đáp xuống
+      4. Cú thả nhanh luôn dừng đúng ô thấp nhất còn đặt được
       5. Ân huệ khi chạm đáy: xoay được sau khi đã chạm, và không kéo dài vô hạn
-      6. Đủ ảnh khối cho cả năm chất liệu, và nướng ở gấp ba
+      6. Đủ ảnh khối cho cả năm màu, nướng ở gấp ba, và năm màu phân biệt được
       7. Điểm và số hàng trên bảng khớp với trạng thái thật
       8. Bảng điểm không tràn ra ngoài trên màn điện thoại hẹp 390px
 -->
@@ -79,11 +79,14 @@ function robotPlay(win, R, G, sc, opt) {
         }
     }
 
-    function ghostCheck() {
+    /* Cú thả nhanh phải dừng đúng ô thấp nhất còn đặt được. Trước đây phép
+     * soát này mang tên "đường bóng" vì cùng hàm dropTo() còn lo cái khung mờ
+     * báo trước; anh Hiếu bảo bỏ khung ấy, nhưng hàm thì vẫn phải đúng. */
+    function landCheck() {
         if (!G.piece) return;
         var gh = R.dropTo(G.board, G.piece);
         if (!R.fits(G.board, gh)) { badGhost++; return; }
-        if (R.fits(G.board, R.moved(G.board ? gh : gh, 0, 1))) badGhost++;
+        if (R.fits(G.board, R.moved(gh, 0, 1))) badGhost++;
     }
 
     /* ô trống bị khối nhốt bên trên — đếm để biết ăn hàng có sót gì không */
@@ -98,7 +101,7 @@ function robotPlay(win, R, G, sc, opt) {
     while (G.mode !== 'over' && steps++ < guard) {
         if (G.mode === 'play' && G.piece) {
             overlapCheck();
-            ghostCheck();
+            landCheck();
 
             /* quân mới thì tính lại chỗ muốn đặt */
             if (G.piece !== lastPiece && !target) {
@@ -175,11 +178,11 @@ function run(win) {
         say('    ván ' + (g + 1) + ': đặt ' + r.placed + ' quân · ăn ' + G.lines +
             ' hàng · bàn ' + G.level + ' · ' + G.score + ' điểm' +
             (r.badOverlap ? ' · ĐÈ NHAU ' + r.badOverlap : '') +
-            (r.badGhost ? ' · BÓNG SAI ' + r.badGhost : '') +
+            (r.badGhost ? ' · THẢ SAI Ô ' + r.badGhost : '') +
             (r.floaters ? ' · Ô LƠ LỬNG ' + r.floaters : ''),
             (r.badOverlap || r.badGhost || r.floaters) ? 'bad' : '');
         if (r.badOverlap) fail('ván ' + (g + 1) + ': quân đang rơi nằm đè lên khối cũ ' + r.badOverlap + ' nhịp');
-        if (r.badGhost) fail('ván ' + (g + 1) + ': đường bóng chỉ sai chỗ ' + r.badGhost + ' nhịp');
+        if (r.badGhost) fail('ván ' + (g + 1) + ': cú thả nhanh dừng sai ô ' + r.badGhost + ' nhịp');
         if (r.floaters) fail('ván ' + (g + 1) + ': ăn hàng xong sinh ra ô lơ lửng ' + r.floaters + ' lần');
         if (r.placed < 40) fail('ván ' + (g + 1) + ': rô-bốt chỉ đặt nổi ' + r.placed + ' quân — điều khiển đang kẹt ở đâu đó');
     }
@@ -326,7 +329,7 @@ function run(win) {
             fails.forEach(function (f) { say('  · ' + f, 'bad'); });
         } else {
             say('ĐẠT — rô-bốt chơi được bằng chính hàm của ngón tay, không quân nào đè', 'ok');
-            say('      lên khối cũ, đường bóng luôn đúng, ăn hàng không sinh ô lơ lửng,', 'ok');
+            say('      lên khối cũ, thả nhanh dừng đúng ô, ăn hàng không sinh ô lơ lửng,', 'ok');
             say('      ân huệ có hạn, ảnh khối đủ và đủ nét, bảng điểm khớp và vừa màn hẹp.', 'ok');
         }
         document.title = fails.length ? 'KHONG DAT ' + fails.length : 'DAT';

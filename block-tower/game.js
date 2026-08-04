@@ -731,28 +731,7 @@
             },
 
             paintFx: function (room, sx, sy) {
-                var g = this.gGhost;
-                g.clear();
-                if (!G.board) { this.gFx.clear(); return; }
-
-                /* ĐƯỜNG BÓNG: khung rỗng chỉ chỗ quân sẽ đáp xuống.
-                 * Xếp hình cổ điển không có, người lớn quen tay không cần —
-                 * nhưng cái giếng dựng nghiêng làm bé rất khó đoán quân rơi vào
-                 * cột nào. Chiều sâu lấy đi cái gì thì phải trả lại cái ấy. */
-                if (G.mode === 'play' && G.piece) {
-                    var gh = R.dropTo(G.board, G.piece);
-                    if (gh.y !== G.piece.y) {
-                        var cells = R.cellsOf(gh);
-                        for (var i = 0; i < cells.length; i++) {
-                            if (cells[i][1] < 0) continue;
-                            var p = this.cellXY(cells[i][0], cells[i][1], sx, sy);
-                            g.save();
-                            g.translateCanvas(p.x, p.y);
-                            A.drawGhost(g, CELL, room.accent);
-                            g.restore();
-                        }
-                    }
-                }
+                if (!G.board) { this.gGhost.clear(); this.gFx.clear(); return; }
 
                 var g2 = this.gFx;
                 g2.clear();

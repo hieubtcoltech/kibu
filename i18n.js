@@ -574,8 +574,6 @@
             'Fill a whole row and it bursts. Four rows at once is worth far more than one at a time.'],
         ['🥇 <b>Khối vàng đáng gấp ba điểm.</b> Dồn được cả một hàng toàn vàng là giỏi nhất rồi.',
             '🥇 <b>Gold blocks are worth triple.</b> A row made only of gold is the best you can do.'],
-        ['Cái khung mờ chỉ đúng chỗ khối sẽ rơi xuống — cứ nhắm theo nó.',
-            'The pale outline shows exactly where the block will land - aim with it.'],
 
         /* ---------- Duck Shoot (duck-shoot) ---------- */
         ['Bắn Vịt', 'Duck Shoot'],
