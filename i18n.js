@@ -514,6 +514,9 @@
         ['Học tập', 'Learning', 'x'],
         ['Vật lý', 'Physics', 'x'],
         ['Chơi cùng nhau', 'Play together', 'x'],
+        /* Đặt TRƯỚC cặp có {0}: "1 play" phải khớp luật riêng này chứ không
+         * rơi vào luật chung, và cờ 'x' bắt phải đúng nguyên cụm. */
+        ['1 lượt chơi', '1 play', 'x'],
         ['{0} lượt chơi', '{0} plays'],
         ['ĐANG HOT', 'HOT', 'x'],
 

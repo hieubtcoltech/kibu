@@ -1159,7 +1159,14 @@
                         if (n > 0 && !tile.querySelector('.tile-plays')) {
                             const pill = document.createElement('span');
                             pill.className = 'tile-plays';
-                            pill.textContent = (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n) + ' plays';
+                            /* "1 plays" sai ngữ pháp — anh Hiếu nhìn ra ngay.
+                               Tiếng Việt không chia số nhiều nên bản dịch nào
+                               cũng là "lượt chơi", nhưng bản tiếng Anh phải
+                               phân biệt. Từ 1000 trở lên rút gọn thành "1.2k"
+                               thì luôn là số nhiều. */
+                            pill.textContent = n >= 1000
+                                ? (n / 1000).toFixed(1) + 'k plays'
+                                : (n === 1 ? '1 play' : n + ' plays');
                             tile.appendChild(pill);
                         }
                         /* Nhãn HOT thay chỗ nhãn MỚI nếu game vừa mới ra lại
