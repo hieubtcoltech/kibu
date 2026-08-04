@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Duck Shoot - Free Online Kids Game | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Duck Shoot online for free on KIBU Games! 1 to 4 kids race for points on one screen across six surprise scenes. Family-friendly, English & Vietnamese.">
+    <meta name="keywords" content="Duck Shoot, duck hunt game, shooting game for kids, 4 player game, ban vit, tro choi ban vit, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/duck-shoot/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/duck-shoot/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/duck-shoot/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/duck-shoot/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/duck-shoot/">
+    <meta property="og:title" content="Duck Shoot - Free Online Game | KIBU Games">
+    <meta property="og:description" content="1 to 4 kids race for points on one screen. Six scenes that change with every round!">
+    <meta property="og:image" content="https://kibugames.com/duck-shoot/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/duck-shoot/">
+    <meta name="twitter:title" content="Duck Shoot - Free Online Game">
+    <meta name="twitter:description" content="Play Duck Shoot free on KIBU Games in English & Vietnamese.">
+    <meta name="twitter:image" content="https://kibugames.com/duck-shoot/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Duck Shoot",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/duck-shoot/",
+      "genre": "Casual Arcade",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/duck-shoot/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body>
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
+                    <img src="/logo.svg" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <img src="/duck-shoot/icon.jpg" alt="" class="brand-img"
+                        onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><span class="brand-icon">🦆</span>
+                    <h1 class="brand-title">DUCK SHOOT</h1>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button id="btn-help" class="btn">
+                    <i class="fa-solid fa-circle-question"></i> <span>How to play</span>
+                </button>
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+                </button>
+                <button id="btn-nav-menu" class="btn">
+                    <i class="fa-solid fa-list"></i> <span>Change players</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="game-viewport">
+            <!-- Khung sân giữ đúng tỉ lệ 16:9 của canvas, nhờ vậy bảng điểm và
+                 chữ báo vòng nằm khớp lên mặt tranh chứ không trôi ra vùng đen
+                 hai bên khi màn hình dài hơn. -->
+            <div class="stage">
+                <div id="game-canvas"></div>
+
+                <!-- Bảng điểm, mỗi bé một thẻ đặt đúng làn của mình -->
+                <div id="round-badge" class="round-badge" hidden></div>
+                <div id="cards" class="cards" hidden></div>
+
+                <!-- Chữ báo vòng mới / tổng kết vòng, bay vào rồi mờ đi -->
+                <div id="flash" class="flash hidden"></div>
+            </div>
+
+            <!-- Màn hình chọn số bé -->
+            <div id="menu-overlay" class="screen">
+                <div class="panel">
+                    <div class="panel-emoji">🦆🎯</div>
+                    <h2 class="panel-title">DUCK SHOOT</h2>
+                    <p class="panel-desc">
+                        <b>1 to 4 kids</b> on one screen. Each kid guards one slice of the sky —
+                        miss a duck and it drifts over to your friend!
+                    </p>
+
+                    <div class="setup-block">
+                        <div class="setup-label"><i class="fa-solid fa-users"></i> NUMBER OF PLAYERS</div>
+                        <div id="pick-row" class="opt-row cols-4">
+                            <button class="opt kid-btn" data-kids="1">
+                                <span class="opt-icon">🦆</span>
+                                <span class="opt-name">1 KID</span>
+                            </button>
+                            <button class="opt kid-btn is-on" data-kids="2">
+                                <span class="opt-icon">🦆🐤</span>
+                                <span class="opt-name">2 KIDS</span>
+                            </button>
+                            <button class="opt kid-btn" data-kids="3">
+                                <span class="opt-icon">🦆🐤🐣</span>
+                                <span class="opt-name">3 KIDS</span>
+                            </button>
+                            <button class="opt kid-btn" data-kids="4">
+                                <span class="opt-icon">🦆🐤🐣🦉</span>
+                                <span class="opt-name">4 KIDS</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="rounds-strip">
+                        <span>🌅 Dawn</span><span>🌇 Lake</span><span>🌙 Night</span>
+                        <span>⛈️ Storm</span><span>🕊️ Flock</span><span>🥇 Golden</span>
+                    </div>
+
+                    <!-- Chỉ hiện khi cầm điện thoại dựng đứng: bầu trời rộng
+                         1280×720, dựng đứng thì nó co thành một dải mỏng. -->
+                    <p class="rotate-hint">Turn your phone sideways for a much bigger sky.</p>
+
+                    <p class="best-line">Best score: <b id="menu-best">0</b></p>
+
+                    <button id="btn-play" class="big-btn"><i class="fa-solid fa-play"></i> START THE CONTEST</button>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn -->
+            <div id="help-overlay" class="screen hidden">
+                <div class="panel panel-small">
+                    <div class="panel-emoji">🎯</div>
+                    <h2 class="panel-title">HOW TO PLAY</h2>
+                    <ul class="help-list">
+                        <li><b>Tap your own slice of the sky</b> to shoot. You can only hit ducks flying inside your slice.</li>
+                        <li>On a keyboard each kid has one key — the key shoots at the duck nearest the middle of your slice.</li>
+                        <li>🦆 big duck <b>1 point</b> · 🐤 small fast duck <b>2 points</b> · 🥇 golden duck <b>5 points</b>.</li>
+                        <li>Hit ducks in a row and your points multiply, up to <b>×3</b>. One miss and the streak is gone.</li>
+                        <li>Six rounds, six different skies. The dog laughs at every duck that gets away!</li>
+                    </ul>
+                    <button id="btn-help-back" class="big-btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                </div>
+            </div>
+
+            <!-- Kết thúc -->
+            <div id="win-overlay" class="screen hidden">
+                <div class="panel">
+                    <div class="panel-emoji">🏆</div>
+                    <h2 id="win-title" class="panel-title">KID 1 WINS!</h2>
+                    <div id="win-rows" class="final-grid"></div>
+                    <p class="best-line">Best score: <b id="win-best">0</b>
+                        <span id="win-new" class="new-best" hidden>NEW BEST!</span></p>
+                    <div class="over-actions">
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> PLAY AGAIN</button>
+                        <button id="btn-win-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> CHANGE PLAYERS</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> <a href="/" class="footer-home">KIBU Games</a> - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <a class="footer-contact is-facebook" href="https://www.facebook.com/kibugames.official/"
+                    target="_blank" rel="noopener" title="Follow on Facebook" aria-label="Follow on Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a class="footer-contact is-telegram" href="https://t.me/coolkitty007"
+                    target="_blank" rel="noopener" title="Chat on Telegram" aria-label="Chat on Telegram">
+                    <i class="fa-brands fa-telegram"></i>
+                </a>
+                <a class="footer-contact is-whatsapp" href="https://wa.me/84988100942"
+                    target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- Phaser 3 lấy từ CDN: máy chủ chưa bật gzip cho .js nên tự host sẽ
+         bắt bé tải 1,2 MB thô, còn CDN trả về 253 KB đã nén brotli. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"
+            integrity="sha512-/tJYyDCrI7hnHWp45P189aOwPa6lTREosRhlxEIqx8skB4A3a3rD3iz4o335SJd4sORqjVHw5y1S2hq4hciwLw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/duck-shoot/rules.js"></script>
+    <script src="/duck-shoot/art.js"></script>
+    <script src="/duck-shoot/game.js"></script>
+</body>
+</html>

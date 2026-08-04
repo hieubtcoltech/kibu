@@ -48,6 +48,12 @@
      * chủ, để đổi sang sinh ô gạch từ tệp này mà mặt trang không xê dịch. */
     var GAMES = [
         {
+            dir: 'duck-shoot', slug: 'duck-shoot', tile: 'tile-duckshoot',
+            en: 'Duck Shoot', vi: 'Bắn Vịt',
+            topics: ['action', 'duo'], players: '1-4', added: '2026-08-04',
+            keywords: 'duck shoot duck hunt ban vit game ban vit shooting gallery carnival 4 player split lanes combo six scenes dawn lake night storm flock golden phaser'
+        },
+        {
             dir: 'marble-machine', slug: 'marble-machine', tile: 'tile-marble',
             en: 'Marble Machine', vi: 'Cỗ Máy Kỳ Quặc',
             topics: ['puzzle', 'physics'], players: '1', added: '2026-08-04',

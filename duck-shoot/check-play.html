@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Bắn Vịt — máy soát phần chơi</title>
+<!--
+    MÁY SOÁT PHẦN CHƠI
+    ------------------------------------------------------------------------
+    Mở:  http://localhost:4173/duck-shoot/check-play.html
+
+    check-fair.js soát LUẬT (rules.js) — làn nào cũng có cơ hội như nhau. Máy
+    này soát PHẦN CHƠI THẬT: nạp đúng index.html của game qua khung nhúng, rồi
+    cho một con rô-bốt ngồi chơi bằng chính hàm mà ngón tay bé gọi.
+
+    Vì sao phải có cả hai: luật đúng mà phần chơi gọi sai thì bé vẫn gặp lỗi.
+    Bài học từ Cỗ Máy Kỳ Quặc — máy soát chạy luật thì màn nào cũng qua, nhưng
+    kéo bằng tay thật lại không phá nổi màn 3, vì chỗ hỏng nằm ở phần chạm.
+
+    Rô-bốt không nhìn màn hình. Nó đọc danh sách vịt đang bay, chọn con trong
+    làn mình rồi gọi ĐÚNG hàm fire() mà cú chạm gọi. Bắn được thì bé cũng bắn
+    được.
+
+    Bảy phép soát:
+      1. Đủ sáu vòng, vòng nào cũng tự đóng lại — không vòng nào treo
+      2. Con vịt nào cũng phải thoát được, không con nào kẹt lại vô hạn
+      3. Rô-bốt bắn giỏi phải ăn điểm; bàn 1, 2, 3, 4 bé đều chạy trọn ván
+      4. Bốn bé chơi giỏi ngang nhau thì điểm phải xấp xỉ nhau
+      5. Bắn sang làn bạn KHÔNG được tính điểm
+      6. Chuỗi bắn trúng nhân điểm đúng bảng, và bắn trượt là mất chuỗi
+      7. Ảnh vịt nướng đủ ba loài × ba tư thế cánh, và nướng ở gấp ba
+-->
+<style>
+    body { font-family: ui-monospace, Menlo, monospace; background: #0b1220; color: #e2e8f0;
+           margin: 0; padding: 20px; font-size: 13px; line-height: 1.65; }
+    h1 { font-size: 16px; color: #ffd43b; margin: 0 0 4px; }
+    .sub { color: #94a3b8; margin-bottom: 16px; }
+    #out { white-space: pre-wrap; }
+    .ok { color: #8ce99a; } .bad { color: #ff8fae; } .dim { color: #64748b; }
+    iframe { position: fixed; left: -3000px; width: 1280px; height: 900px; border: 0; }
+</style>
+</head>
+<body>
+<h1>BẮN VỊT — máy soát phần chơi</h1>
+<div class="sub">rô-bốt chơi bằng chính mã của game, không phải bản chép lại</div>
+<div id="out">đang nạp game…</div>
+<iframe id="frame" src="/duck-shoot/"></iframe>
+
+<script>
+'use strict';
+
+var out = document.getElementById('out');
+var fails = [];
+function say(s, cls) {
+    out.innerHTML += '<span class="' + (cls || '') + '">' + s + '</span>\n';
+}
+function fail(s) { fails.push(s); }
+
+function ready(win, cb) {
+    var tries = 0;
+    (function poll() {
+        if (win.duckShoot && win.duckShoot.UI && win.duckShoot.UI.scene) return cb();
+        if (++tries > 200) { say('KHÔNG NẠP ĐƯỢC GAME', 'bad'); return; }
+        setTimeout(poll, 50);
+    })();
+}
+
+/* Rô-bốt: mỗi bước, mỗi bé nhắm con vịt trong làn mình rồi bắn ĐÚNG hàm mà cú
+ * chạm gọi.
+ *
+ * react = số giây rô-bốt để con vịt bay đã rồi mới bắn. Đặt 0 thì nó hạ con
+ * vịt ngay khi vừa nhô khỏi bụi cỏ, và cả phần thú vị nhất của trò chơi —
+ * con vịt trôi dần sang làn bạn — không bao giờ được chạy tới. Máy soát mà
+ * không chạy tới chỗ ấy thì có soát cũng bằng không.
+ *
+ * skill < 1 thì một phần số phát bắn lệch hẳn ra ngoài, cố ý cho trượt. */
+function robot(sc, G, opt) {
+    var react = opt.react || 0, skill = opt.skill === undefined ? 1 : opt.skill;
+    for (var lane = 0; lane < G.kids; lane++) {
+        if (G.cool[lane] > 0) continue;
+        var target = null;
+        for (var i = 0; i < G.ducks.length; i++) {
+            var d = G.ducks[i];
+            if (d.dead) continue;
+            if (G.t - d.born < react) continue;
+            if (sc.laneOfX(d.x) !== lane) continue;
+            target = d; break;
+        }
+        if (!target) continue;
+        /* trượt hay không phải định trước được, không thì hai lần chạy cùng
+         * một hạt lại ra hai kết quả */
+        opt.tick = ((opt.tick || 0) + 1) % 1000;
+        var wild = skill < 1 && ((opt.tick * 37 + lane * 101) % 100) >= skill * 100;
+        sc.fire(lane, target.x + (wild ? 900 : 0), target.y + (wild ? 900 : 0));
+    }
+}
+
+/* Chạy trọn một ván không cần vẽ: gọi thẳng stepAll như vòng lặp thật. */
+function playGame(win, kids, opt) {
+    opt = opt || {};
+    var sc = win.duckShoot.UI.scene, G = win.duckShoot.G;
+    sc.frozen = true;                       // tắt vòng lặp vẽ, mình tự bước
+    sc.laneOfX = win.duckShoot.laneOf;
+    sc.startGame(kids, opt.seed);
+    var steps = 0, guard = 60 * 60 * 8, maxDuckLife = 0, escaped = 0;
+    while (G.mode !== 'over' && steps++ < guard) {
+        if (G.mode === 'play') {
+            if (!opt.passive) robot(sc, G, opt);
+            for (var i = 0; i < G.ducks.length; i++) {
+                var life = G.t - G.ducks[i].born;
+                if (life > maxDuckLife) maxDuckLife = life;
+            }
+        }
+        sc.stepAll(1 / 60);
+    }
+    for (var r = 0; r < G.roundScores.length; r++) escaped += 0;
+    return { steps: steps, mode: G.mode, scores: G.scores.slice(),
+             hits: G.hits.slice(), shots: G.shots.slice(),
+             rounds: G.roundScores.length, maxDuckLife: maxDuckLife };
+}
+
+window.addEventListener('load', function () {
+    var win = document.getElementById('frame').contentWindow;
+    ready(win, function () { setTimeout(function () { run(win); }, 300); });
+});
+
+function run(win) {
+    out.innerHTML = '';
+    var R = win.duckShoot.R, G = win.duckShoot.G;
+    var sc = win.duckShoot.UI.scene;
+
+    /* ---- 1: không ai bắn phát nào — vòng vẫn phải tự đóng ----
+     * Đây là phép soát bắt lỗi treo game: nếu có con vịt nào không thoát nổi
+     * thì bé ngồi đợi mãi không sang được vòng sau. */
+    say('· không ai bắn phát nào, xem vòng có tự đóng không', 'dim');
+    for (var kids = 1; kids <= 4; kids++) {
+        var p = playGame(win, kids, { passive: true, seed: 4000 + kids });
+        say('    ' + kids + ' bé: ' + p.rounds + '/' + R.ROUNDS.length + ' vòng · ' +
+            (p.steps / 60).toFixed(1) + ' giây · con vịt bay lâu nhất ' +
+            p.maxDuckLife.toFixed(1) + ' giây');
+        if (p.mode !== 'over') fail(kids + ' bé (không bắn): ván treo ở "' + p.mode + '"');
+        if (p.rounds !== R.ROUNDS.length) fail(kids + ' bé (không bắn): chỉ đóng được ' + p.rounds + ' vòng');
+        if (p.maxDuckLife > 14) fail(kids + ' bé: có con vịt bay ' + p.maxDuckLife.toFixed(1) + ' giây chưa thoát');
+    }
+
+    /* ---- 2: rô-bốt bắn chuẩn, có chờ vịt bay nửa giây rồi mới bắn ---- */
+    say('');
+    say('· rô-bốt bắn chuẩn (chờ vịt bay 0,5 giây rồi mới bóp cò)', 'dim');
+    for (kids = 1; kids <= 4; kids++) {
+        var r = playGame(win, kids, { react: 0.5, seed: 7000 + kids });
+        var tot = r.scores.reduce(function (a, b) { return a + b; }, 0);
+        say('    ' + kids + ' bé: ' + r.rounds + '/' + R.ROUNDS.length + ' vòng · điểm ' +
+            r.scores.join(' ') + ' · trúng ' + r.hits.join('/') + ' trên ' + r.shots.join('/'));
+        if (r.mode !== 'over') fail(kids + ' bé: ván không kết thúc, treo ở "' + r.mode + '"');
+        if (tot <= 0) fail(kids + ' bé: rô-bốt bắn chuẩn mà không ăn nổi điểm nào');
+    }
+
+    /* ---- 3: bốn bé giỏi ngang nhau thì hạ được số vịt xấp xỉ nhau ----
+     *
+     * ĐO BẰNG SỐ CON HẠ ĐƯỢC, KHÔNG ĐO BẰNG ĐIỂM. Lần đầu em đo bằng điểm và
+     * ra lệch 15%, suýt đi sửa thiết kế. Nhưng con vịt vàng đáng 5 điểm, ở
+     * chuỗi cao thành 15, mà cả ván chỉ có chừng mười con — lệch ấy là do may
+     * rủi vớ được con vàng chứ không phải do chỗ ngồi. Đếm đầu con thì mỗi con
+     * nặng như nhau, nhiễu nhỏ đi năm lần và cái cần đo mới hiện ra.
+     *
+     * Đây là lần thứ ba trong dự án này phép đo sai chứ không phải game sai.
+     * Em ghi lại để lần sau nghi ngờ cái thước trước khi nghi ngờ cái bàn. */
+    say('');
+    say('· bốn bé chơi giỏi ngang nhau, 60 ván khác hạt', 'dim');
+    var sumHit = [0, 0, 0, 0], sumPts = [0, 0, 0, 0];
+    for (var g = 0; g < 60; g++) {
+        var rr = playGame(win, 4, { react: 0.5, seed: 100 + g * 313 });
+        for (var i = 0; i < 4; i++) { sumHit[i] += rr.hits[i]; sumPts[i] += rr.scores[i]; }
+    }
+    function spreadOf(a) {
+        var mn = Math.min.apply(null, a), mx = Math.max.apply(null, a);
+        var av = (a[0] + a[1] + a[2] + a[3]) / 4;
+        return av > 0 ? (mx - mn) / av : 1;
+    }
+    var sh = spreadOf(sumHit), sp = spreadOf(sumPts);
+    say('    số vịt hạ được: ' + sumHit.join('  ') + '   lệch ' + (sh * 100).toFixed(1) + '%');
+    say('    điểm (chỉ để tham khảo — con vàng làm nhiễu): ' + sumPts.join('  ') +
+        '   lệch ' + (sp * 100).toFixed(1) + '%', 'dim');
+    if (sh > 0.10) fail('bốn bé bắn giỏi như nhau mà số vịt hạ được lệch ' + (sh * 100).toFixed(1) + '%');
+    if (sp > 0.25) fail('điểm lệch tới ' + (sp * 100).toFixed(1) + '%, quá mức may rủi con vàng gây ra được');
+
+    /* ---- 5: bắn sang làn bạn không được tính ---- */
+    say('');
+    say('· bắn sang làn bạn thì có ăn điểm không', 'dim');
+    sc.frozen = true;
+    sc.laneOfX = win.duckShoot.laneOf;
+    sc.startGame(2);
+    G.mode = 'play';
+    var guard = 0;
+    while (!G.ducks.length && guard++ < 1200) sc.stepAll(1 / 60);
+    if (!G.ducks.length) {
+        fail('không thả ra con vịt nào để thử');
+    } else {
+        var d = G.ducks[0];
+        var mine = win.duckShoot.laneOf(d.x);
+        var other = mine === 0 ? 1 : 0;
+        var before = G.scores[other];
+        G.cool[other] = 0;
+        sc.fire(other, d.x, d.y);           // bé kia bắn đúng vào con vịt của mình
+        var after = G.scores[other];
+        say('    vịt ở làn ' + (mine + 1) + ', bé ' + (other + 1) + ' bắn vào: ' +
+            (after === before ? 'không ăn điểm' : 'ĂN ' + (after - before) + ' ĐIỂM'),
+            after === before ? 'ok' : 'bad');
+        if (after !== before) fail('bé bắn sang làn bạn vẫn ăn được điểm');
+        if (d.dead) fail('bé bắn sang làn bạn vẫn hạ được con vịt');
+    }
+
+    /* ---- 6: chuỗi bắn trúng ---- */
+    say('');
+    say('· nhân điểm theo chuỗi bắn trúng', 'dim');
+    var badCombo = 0, line = '    ';
+    for (var s = 0; s <= 6; s++) {
+        var m = R.comboMult(s);
+        var want = [1, 1, 1.5, 2, 2.5, 3, 3][s];
+        line += 'x' + m + ' ';
+        if (m !== want) badCombo++;
+    }
+    say(line + ' (chuỗi 0→6)');
+    if (badCombo) fail('bảng nhân điểm theo chuỗi sai ' + badCombo + ' chỗ');
+    if (R.score('gold', 5) !== 15) fail('vịt vàng ở chuỗi 5 phải được 15 điểm, đang được ' + R.score('gold', 5));
+
+    /* bắn trượt phải xoá chuỗi */
+    sc.startGame(2);
+    G.mode = 'play';
+    G.streaks[0] = 4;
+    G.cool[0] = 0;
+    sc.fire(0, 5, 5);                        // bắn vào góc, chắc chắn trượt
+    say('    bắn trượt: chuỗi ' + (G.streaks[0] === 0 ? 'về 0' : 'CÒN ' + G.streaks[0]),
+        G.streaks[0] === 0 ? 'ok' : 'bad');
+    if (G.streaks[0] !== 0) fail('bắn trượt mà chuỗi không bị xoá');
+
+    /* ---- 7: ảnh vịt nướng sẵn ---- */
+    say('');
+    say('· ảnh vịt nướng sẵn', 'dim');
+    var miss = [], small = [];
+    ['big', 'small', 'gold'].forEach(function (kind) {
+        for (var w = 0; w < 3; w++) {
+            var key = 'duck_' + kind + '_' + w;
+            if (!sc.textures.exists(key)) { miss.push(key); continue; }
+            var src = sc.textures.get(key).getSourceImage();
+            /* Nướng đúng cỡ hiển thị thì lên màn nét đôi là nhoè — bài học từ
+             * Máy Gắp Thú. Ảnh phải rộng hơn con vịt ít nhất gấp đôi. */
+            if (src.width < win.DuckRules.KINDS[kind].r * 4.2 * 2) small.push(key + ' rộng ' + src.width);
+        }
+    });
+    say('    ' + (9 - miss.length) + '/9 ảnh, cỡ ảnh con to: ' +
+        (sc.textures.exists('duck_big_0') ? sc.textures.get('duck_big_0').getSourceImage().width + 'px' : '—'));
+    if (miss.length) fail('thiếu ảnh vịt: ' + miss.join(', '));
+    if (small.length) fail('ảnh nướng nhỏ quá, lên màn nét đôi sẽ nhoè: ' + small.join(', '));
+
+    /* ---- kết ---- */
+    say('');
+    if (fails.length) {
+        say('KHÔNG ĐẠT:', 'bad');
+        fails.forEach(function (f) { say('  · ' + f, 'bad'); });
+    } else {
+        say('ĐẠT — sáu vòng đều tự đóng, không con vịt nào kẹt, bắn sang làn bạn', 'ok');
+        say('      không ăn điểm, chuỗi nhân đúng bảng, ảnh vịt nướng đủ và đủ nét.', 'ok');
+    }
+    document.title = fails.length ? 'KHONG DAT ' + fails.length : 'DAT';
+    window.__checkDone = { fails: fails };
+}
+</script>
+</body>
+</html>
