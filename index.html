@@ -678,16 +678,37 @@
            Xuống dòng thì tốn thêm một hàng, đổi lại nhìn một cái là thấy hết
            tám nhóm. Cỡ chữ và khoảng đệm co lại theo bề ngang máy để số hàng
            không vượt quá hai. */
+        /* Hàng chủ đề ẨN cho tới khi bé bắt đầu tìm.
+           Trang chủ mở ra là phải thấy game ngay — hàng nút lọc nằm chình ình
+           trên đầu chỉ đẩy lưới game xuống dưới nếp gấp, mà phần lớn bé vào là
+           bấm chơi luôn chứ không lọc. Ai cần lọc thì chạm vào ô tìm kiếm, nó
+           hiện ra ngay.
+           Dùng max-height + opacity chứ không dùng display:none, để nó trượt
+           xuống mượt thay vì nhảy giật một cái. */
         .topic-row {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            pointer-events: none;
+            transition: max-height 0.28s ease, opacity 0.22s ease, padding 0.28s ease;
+        }
+
+        .topic-row.is-open {
+            max-height: 260px;
+            opacity: 1;
+            pointer-events: auto;
+        }
             /* Chừa rộng phía dưới để hàng nút TÁCH HẲN khỏi lưới game. Trước
                chỉ có 14px, mà từ khi nút xuống dòng thì hàng cuối nằm sát ngay
                trên ô game đầu tiên — nhìn ra như thể mấy cái nút cũng là một
                phần của lưới, không biết đâu là chỗ lọc đâu là chỗ chơi. */
-            padding: 4px 2px 26px;
+            padding: 0 2px;
         }
+
+        .topic-row.is-open { padding: 4px 2px 26px; }
 
         .topic-chip {
             flex: 0 0 auto;
@@ -713,7 +734,8 @@
         /* Máy hẹp: co nút lại vừa đủ để tám nhóm nằm gọn trong hai hàng, mà
            vùng chạm vẫn giữ 40px — dưới mức ấy ngón tay trẻ con bấm trượt. */
         @media (max-width: 700px) {
-            .topic-row { gap: 6px; padding-bottom: 20px; }
+            .topic-row { gap: 6px; }
+            .topic-row.is-open { padding-bottom: 20px; }
             .topic-chip { min-height: 40px; padding: 0 12px; font-size: 0.82rem; gap: 6px; }
             .topic-chip i { font-size: 0.78rem; }
         }
@@ -1093,6 +1115,20 @@
         const topicRow = document.getElementById('topicRow');
         let activeTopic = '';
 
+        /* Hàng chủ đề hiện khi: đang gõ, HOẶC con trỏ đang ở ô tìm kiếm, HOẶC
+         * đang lọc một chủ đề.
+         *
+         * Hai vế sau quan trọng: chỉ xét "có chữ trong ô" thôi thì bé vừa chạm
+         * vào ô tìm kiếm, hàng nút chưa kịp hiện; còn khi bé đã chọn một chủ đề
+         * rồi xoá chữ đi thì hàng nút biến mất trong lúc lưới vẫn đang bị lọc —
+         * bé nhìn thấy thiếu game mà không còn nút nào để tắt lọc. */
+        function syncTopicRow() {
+            const open = searchInput.value.trim().length > 0 ||
+                document.activeElement === searchInput ||
+                activeTopic !== '';
+            topicRow.classList.toggle('is-open', open);
+        }
+
         function filterGames() {
             const query = searchInput.value.toLowerCase().trim();
 
@@ -1130,7 +1166,9 @@
             }
         }
 
-        searchInput.addEventListener('input', filterGames);
+        searchInput.addEventListener('input', () => { syncTopicRow(); filterGames(); });
+        searchInput.addEventListener('focus', syncTopicRow);
+        searchInput.addEventListener('blur', () => setTimeout(syncTopicRow, 150));
 
         /* ---------- Bơm số lượt chơi từ máy chủ ----------
            Gọi sau khi trang đã hiện xong, và hỏng thì im lặng bỏ qua: số lượt
@@ -1200,11 +1238,19 @@
             topicRow.querySelectorAll('.topic-chip').forEach(c => {
                 c.classList.toggle('is-on', (c.getAttribute('data-topic') || '') === activeTopic);
             });
+            syncTopicRow();
             filterGames();
         });
 
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';
+            /* Xoá chữ thì bỏ luôn lọc chủ đề: để nguyên thì lưới vẫn thiếu
+               game mà bé tưởng mình đã xoá sạch điều kiện tìm. */
+            activeTopic = '';
+            topicRow.querySelectorAll('.topic-chip').forEach(c => {
+                c.classList.toggle('is-on', !c.getAttribute('data-topic'));
+            });
+            syncTopicRow();
             filterGames();
             searchInput.focus();
         });
