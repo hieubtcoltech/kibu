@@ -231,6 +231,26 @@
                 this.duckImgs = [];
                 this.gFx = this.add.graphics().setDepth(9);
                 this.gDog = this.add.graphics().setDepth(10);
+                /* Cỏ tiền cảnh vẽ TRÊN chú chó, không vẽ chung với cảnh nền.
+                 *
+                 * Anh Hiếu chụp được: chú chó thụt xuống rồi mà cái mặt vẫn ló
+                 * ra dưới bụi cỏ. Nguyên do là em che nó bằng một hình bầu lơ
+                 * lửng — mà con chó tụt xuống thấp hơn mép dưới hình bầu ấy thì
+                 * che sao được. Cái che phải kéo tới tận đáy màn, mà kéo tới
+                 * đáy thì lại xoá mất cỏ. Tách lớp ra là hết cả hai chuyện: chó
+                 * lấp bằng mảng đặc kéo xuống đáy, rồi cỏ vẽ đè lên sau. */
+                this.gFore = this.add.graphics().setDepth(11);
+
+                /* MẶT NẠ CHO CHÚ CHÓ — cắt nó ở đường cỏ thay vì lấp bằng mảng
+                 * màu.
+                 *
+                 * Em thử lấp trước: vẽ một mảng cỏ đè lên phần thừa. Nhưng mảng
+                 * ấy xoá luôn cả bóng quả đồi bên dưới, để lại một vệt sáng
+                 * hình chữ nhật giữa bãi cỏ — chữa được lỗi này thì lòi ra lỗi
+                 * kia. Cắt bằng mặt nạ thì không vẽ thêm gì cả: phần dưới đường
+                 * cỏ đơn giản là không tồn tại, nền phía sau còn nguyên. */
+                this.dogMaskG = this.make.graphics();
+                this.gDog.setMask(this.dogMaskG.createGeometryMask());
 
                 this.puffs = [];
                 this.pops = [];
@@ -765,6 +785,15 @@
                     g.restore();
                 }
 
+                this.paintFore(sc, below);
+            },
+
+            /* Cỏ tiền cảnh và vệt tối dưới đáy. Vẽ ở lớp riêng, TRÊN chú chó. */
+            paintFore: function (sc, below) {
+                var g = this.gFore;
+                g.clear();
+                var tt = this.time.now / 1000;
+
                 /* CỎ TIỀN CẢNH BA LỚP — càng gần ống kính càng cao, càng thưa
                  * và càng tối. Đây là thứ làm dải đất dưới cùng có chiều sâu
                  * thay vì phẳng lì như một dải màu.
@@ -821,8 +850,6 @@
                     var mx = (tt * 90) % (W + 460) - 230;
                     g.fillTriangle(mx, TOP, mx + 260, TOP, mx - 120, GROUND);
                 }
-
-                void R0;
             },
 
             hillPath: function (g, baseY, amp, freq, off) {
@@ -1068,7 +1095,7 @@
                         fontFamily: '"Baloo 2", Nunito, system-ui, sans-serif',
                         fontSize: '46px', fontStyle: '800',
                         color: '#ffffff', stroke: '#0b1220', strokeThickness: 7
-                    }).setOrigin(0.5).setDepth(11));
+                    }).setOrigin(0.5).setDepth(13));
                 }
                 for (var i = 0; i < this.popTexts.length; i++) {
                     var tx = this.popTexts[i];
@@ -1093,10 +1120,20 @@
                 var R0 = R.ROUNDS[G.round] || R.ROUNDS[0];
                 var sc = A.SCENES[R0.key] || A.SCENES.dawn;
                 var k = this.dog.t / 1.6;
-                var up = Math.sin(Math.min(1, k * 1.6) * Math.PI) * 92;   // nhô lên rồi thụt xuống
+                /* Chỗ đứng nghỉ đặt hẳn dưới đường cắt (GROUND+96 với bán kính
+                 * 34 thì đỉnh đầu ở GROUND+62, còn đường cắt ở GROUND+24), nên
+                 * lúc thụt xuống không còn một sợi lông nào ở trên. */
+                var up = Math.sin(Math.min(1, k * 1.6) * Math.PI) * 108;
                 var x = (this.dog.lane + 0.5) * laneW();
+
+                /* mặt nạ: chỉ phần trên đường cỏ mới được vẽ */
+                var mg = this.dogMaskG;
+                mg.clear();
+                mg.fillStyle(0xffffff, 1);
+                mg.fillRect(0, 0, W, GROUND + 24);
+
                 g.save();
-                g.translateCanvas(x, GROUND + 54 - up);
+                g.translateCanvas(x, GROUND + 96 - up);
                 A.drawDog(g, 34, this.dog.mood, this.dog.kind);
                 g.restore();
 
@@ -1105,23 +1142,26 @@
                  * vẽ một bụi cỏ xanh giữa mặt ao thì thành mảng xanh lù lù
                  * trên nước, ảnh chụp thử lộ ngay. Chú chó lội nước đi nhặt vịt
                  * cũng đúng cảnh hơn. */
+                /* Đường cắt thẳng băng thì lộ, nên rắc một túm cỏ hoặc mấy gợn
+                 * nước ngay trên đó. Chỉ là nét mảnh, không phải mảng đặc, nên
+                 * không xoá mất gì của nền. */
+                /* Túm cỏ mờ dần theo chú chó, không hiện rồi tắt phựt.
+                 * Nó chỉ có mặt để giấu đường cắt, mà đường cắt chỉ lộ khi chó
+                 * đang nhô lên — chó xuống hết thì túm cỏ cũng phải biến, không
+                 * thì bé thấy một bụi cây tự dưng mọc lên rồi tự dưng mất. */
+                var ta = Math.min(1, up / 44);
+                if (ta <= 0.01) return;
                 if (sc.pond) {
                     for (var w2 = 0; w2 < 4; w2++) {
-                        g.lineStyle(3 - w2 * 0.5, sc.pond.foam, 0.42 - w2 * 0.09);
-                        g.strokeEllipse(x, GROUND + 34, 90 + w2 * 52, 20 + w2 * 12);
+                        g.lineStyle(3 - w2 * 0.5, sc.pond.foam, (0.40 - w2 * 0.09) * ta);
+                        g.strokeEllipse(x, GROUND + 20, 74 + w2 * 46, 14 + w2 * 9);
                     }
-                    g.fillStyle(sc.pond.deep, 1);
-                    g.fillEllipse(x, GROUND + 52, 150, 46);
                 } else {
-                    /* Bụi vẽ bằng hình bầu chứ không phải hình chữ nhật — hình
-                     * chữ nhật xoá mất đám cỏ nền và để lại một vệt vuông. */
-                    g.fillStyle(sc.grass, 1);
-                    g.fillEllipse(x, GROUND + 26, 210, 68);
-                    g.fillStyle(sc.tree, 0.6);
-                    for (var i = -5; i <= 5; i++) {
-                        var bx = x + i * 17 + (i % 2) * 5;
-                        var bh = 22 + ((i * 37) % 15);
-                        g.fillTriangle(bx - 7, GROUND + 14, bx, GROUND + 14 - bh, bx + 7, GROUND + 14);
+                    g.fillStyle(sc.tree, 0.75 * ta);
+                    for (var i = -6; i <= 6; i++) {
+                        var bx = x + i * 15 + (i % 2) * 5;
+                        var bh = 20 + ((i * 37) % 17);
+                        g.fillTriangle(bx - 6, GROUND + 26, bx, GROUND + 26 - bh, bx + 6, GROUND + 26);
                     }
                 }
             }

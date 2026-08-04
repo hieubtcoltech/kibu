@@ -480,7 +480,7 @@ function run(win) {
 
     var queue = [1, 2, 3, 4];
     (function nextKids() {
-        if (!queue.length) return finish();
+        if (!queue.length) return dogCheck(finish);
         var kids = queue.shift();
         win.duckShoot.UI.start(kids);
         win.duckShoot.UI.scene.frozen = true;
@@ -519,6 +519,109 @@ function run(win) {
             nextKids();
         }, 260);
     })();
+
+    /* ---- CHÚ CHÓ THỤT XUỐNG THÌ PHẢI KHUẤT HẲN ----
+     *
+     * Anh Hiếu chụp được: chó thụt xuống rồi mà cái mặt vẫn ló ra dưới bụi cỏ.
+     * Em che nó bằng một hình bầu lơ lửng, mà con chó tụt thấp hơn mép dưới
+     * hình bầu ấy thì che sao được.
+     *
+     * Phép soát này ĐỌC ĐIỂM ẢNH THẬT trên canvas chứ không đọc mã: chụp một
+     * ảnh lúc không có chó, một ảnh lúc chó nhô cao, một ảnh lúc chó đã thụt
+     * hẳn, rồi so từng điểm trong vùng có chó. Còn khác nghĩa là còn thấy nó.
+     *
+     * PHẢI CHỜ KHUNG HÌNH THẬT. Lần đầu em gọi paintAll() rồi đọc canvas ngay —
+     * ra 0% ở cả ba ảnh, vì Phaser mới chỉ GHI LẠI lệnh vẽ chứ chưa vẽ, phải
+     * sang khung hình sau nó mới đổ lên canvas. Suýt nữa em tưởng chó đã khuất
+     * hẳn trong khi thật ra máy soát đang chụp một tấm canvas cũ. */
+    function dogCheck(done) {
+        say('');
+        say('· chú chó thụt xuống có khuất hẳn không', 'dim');
+        frame.style.width = '1280px';
+        frame.style.height = '820px';
+
+        var S1, dogX;
+        var cv = null;
+
+        /* ĐẾM ĐIỂM ẢNH MÀU LÔNG CHÓ trên TOÀN vùng có thể thấy nó — cả phía
+         * trên lẫn phía dưới bụi cỏ.
+         *
+         * Hai lần trước em đo sai, và cả hai đều đáng ghi lại:
+         *
+         * Lần một: so ảnh "có chó" với ảnh "không chó" trên cả vùng. Ra 29%
+         * khác nhau ngay cả khi chó đã khuất — vì bản thân cái bụi cỏ che chó
+         * cũng là thứ mới xuất hiện. Máy soát khi ấy đang đo cái mảng che.
+         *
+         * Lần hai: em thu vùng lấy mẫu lên phía trên bụi cho khỏi dính cái mảng
+         * che. Sạch sẽ, ĐẠT ngay — nhưng vô dụng, vì lỗi anh Hiếu báo là chó ló
+         * ra Ở PHÍA DƯỚI bụi, đúng chỗ em vừa cắt khỏi tầm nhìn. Một phép soát
+         * đi vòng qua đúng cái lỗi cần bắt thì có chạy xanh cũng bằng không.
+         *
+         * Cách đúng: đừng so hai ảnh, mà TÌM MÀU. Lông chó là màu nâu ấm và
+         * kem — đỏ nhiều hơn lục, lục nhiều hơn lam. Cỏ thì lục trội, nước thì
+         * lam trội, trời bình minh thì lam trội hơn lục. Không thứ nào trong
+         * cảnh có màu ấy, nên đếm được bao nhiêu điểm nâu ấm là thấy bấy nhiêu
+         * phần con chó, dù nó ló ra ở đâu. */
+        function area() {
+            var sx = cv.width / S1.W, sy = cv.height / S1.H;
+            var x0 = Math.max(0, Math.round((dogX - 130) * sx));
+            var y0 = Math.max(0, Math.round((S1.GROUND - 150) * sy));
+            var w0 = Math.min(cv.width - x0, Math.round(260 * sx));
+            var h0 = Math.min(cv.height - y0, Math.round(300 * sy));
+            var tmp = win.document.createElement('canvas');
+            tmp.width = w0; tmp.height = h0;
+            tmp.getContext('2d').drawImage(cv, x0, y0, w0, h0, 0, 0, w0, h0);
+            return tmp.getContext('2d').getImageData(0, 0, w0, h0).data;
+        }
+        function furCount(px) {
+            var n = 0;
+            for (var i2 = 0; i2 < px.length; i2 += 4) {
+                var r2 = px[i2], g2 = px[i2 + 1], b2 = px[i2 + 2];
+                if (r2 > 90 && r2 > g2 + 12 && g2 > b2 + 12 && r2 - b2 > 45) n++;
+            }
+            return n;
+        }
+        /* chờ n khung hình THẬT của game rồi mới chụp */
+        function frames(n, cb) {
+            if (n <= 0) return cb();
+            win.requestAnimationFrame(function () { frames(n - 1, cb); });
+        }
+
+        setTimeout(function () {
+            S1 = win.duckShoot.size();
+            dogX = 0.5 * (S1.W / 2);
+            cv = win.document.querySelector('#game-canvas canvas');
+            sc.startGame(2, 4242);
+            /* mode 'over' thì stepAll không thả vịt nữa nhưng vòng vẽ vẫn chạy,
+               nên canvas được cập nhật thật mà cảnh thì đứng yên */
+            G.mode = 'over';
+            G.ducks = [];
+            sc.frozen = false;
+            sc.dog.t = 99;
+            frames(3, function () {
+                var noDog = furCount(area());
+                sc.dogSay('tease', 0);
+                sc.dog.t = 0.5;
+                frames(3, function () {
+                    var up = furCount(area());
+                    sc.dog.t = 1.55;          // đúng lúc thụt xuống hết
+                    frames(3, function () {
+                        var down = furCount(area());
+                        say('    điểm ảnh màu lông chó — không có chó: ' + noDog +
+                            ' · nhô cao: ' + up + ' · thụt hẳn: ' + down,
+                            (up > 400 && down <= noDog + 40) ? 'ok' : 'bad');
+                        if (noDog > 60)
+                            fail('nền cảnh đã có sẵn ' + noDog + ' điểm màu nâu — phép đo màu này không dùng được ở đây');
+                        if (up < 400)
+                            fail('chú chó nhô lên mà chỉ thấy ' + up + ' điểm ảnh — phép soát thành vô nghĩa');
+                        if (down > noDog + 40)
+                            fail('chú chó thụt xuống rồi mà còn ' + down + ' điểm ảnh lông ló ra');
+                        done();
+                    });
+                });
+            });
+        }, 500);
+    }
 
     /* ---- kết ---- */
     function finish() {
