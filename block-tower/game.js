@@ -84,13 +84,17 @@
                 var C = window.AudioContext || window.webkitAudioContext;
                 if (!C) return;
                 this.ctx = new C({ latencyHint: 'interactive' });
-                var comp = this.ctx.createDynamicsCompressor();
-                comp.threshold.setValueAtTime(-16, this.ctx.currentTime);
-                comp.ratio.setValueAtTime(6, this.ctx.currentTime);
+                /* KHÔNG dùng bộ nén.
+                 *
+                 * Em thêm nó để lúc ăn bốn hàng nhiều tiếng chồng nhau khỏi vỡ.
+                 * Nhưng bộ nén của trình duyệt có một quãng "nhìn trước" và nó
+                 * bào mòn đúng cái đầu tiếng — mà đầu tiếng mới là thứ tai dùng
+                 * để biết âm thanh xảy ra lúc nào. Tiếng vì thế nghe nhũn và
+                 * như tới muộn, dù đặt lịch đúng. Bỏ nén đi, hạ âm lượng từng
+                 * tiếng xuống cho khỏi vỡ là xong, mà đầu tiếng thì sắc lại. */
                 this.master = this.ctx.createGain();
-                this.master.gain.setValueAtTime(0.9, this.ctx.currentTime);
-                this.master.connect(comp);
-                comp.connect(this.ctx.destination);
+                this.master.gain.setValueAtTime(0.75, this.ctx.currentTime);
+                this.master.connect(this.ctx.destination);
                 this.makeNoise();
             }
             if (this.ctx.state === 'suspended') this.ctx.resume();
@@ -114,17 +118,34 @@
 
         mark: function (name) { if (this.trace) this.log.push({ name: name, t: Date.now() }); },
 
+        /* Máy âm thanh có đang CHẠY không. Đây là chỗ em suýt bỏ sót.
+         *
+         * Khi trình duyệt còn treo máy âm thanh — chưa có cú chạm nào, hoặc bé
+         * chuyển sang tab khác — thì ctx.currentTime ĐỨNG YÊN. Mọi tiếng đặt
+         * lịch trong lúc ấy đều rơi vào cùng một mốc trong quá khứ, và tới lúc
+         * máy chạy lại thì chúng nổ ra một loạt. Tai nghe thành "tiếng chạy sau
+         * hình", mà thật ra là tiếng của mấy giây trước dồn lại.
+         *
+         * Nên thà bỏ hẳn tiếng ấy còn hơn để nó kêu sai lúc. */
+        ready: function () {
+            if (!this.on || !this.ctx) return false;
+            if (this.ctx.state !== 'running') { this.ctx.resume(); return false; }
+            return true;
+        },
+
         /* delay tính bằng GIÂY, đặt lịch trên đồng hồ âm thanh */
         tone: function (f0, f1, dur, type, vol, delay) {
-            if (!this.on || !this.ctx) return;
+            if (!this.ready()) return;
             var t = this.ctx.currentTime + (delay || 0);
             var o = this.ctx.createOscillator(), g = this.ctx.createGain();
             o.type = type || 'sine';
             o.frequency.setValueAtTime(f0, t);
             if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
-            /* vào nhanh ra chậm: đánh thẳng vào biên độ thì nghe "tạch" ở đầu */
+            /* Vào trong 1,5 mili-giây rồi tắt dần. Bản trước em cho vào trong
+             * 6ms bằng đường cong mũ — đủ để đầu tiếng mềm đi và tai thấy nó
+             * "đến sau" cú bấm. 1,5ms thì vừa đủ không kêu "tạch", mà vẫn sắc. */
             g.gain.setValueAtTime(0.0001, t);
-            g.gain.exponentialRampToValueAtTime(vol || 0.05, t + 0.006);
+            g.gain.linearRampToValueAtTime(vol || 0.05, t + 0.0015);
             g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
             o.connect(g); g.connect(this.master);
             o.start(t); o.stop(t + dur + 0.02);
@@ -132,7 +153,7 @@
 
         /* tiếng ồn đã lọc — dùng cho va chạm và tiếng gió */
         hit: function (dur, vol, freq, type, delay) {
-            if (!this.on || !this.ctx || !this.noiseBuf) return;
+            if (!this.ready() || !this.noiseBuf) return;
             var t = this.ctx.currentTime + (delay || 0);
             var src = this.ctx.createBufferSource();
             src.buffer = this.noiseBuf;
@@ -311,10 +332,22 @@
             wireInput: function () {
                 var self = this;
 
+                /* Chạm thì LÀM NGAY lúc ngón tay đặt xuống, không đợi nhấc lên.
+                 *
+                 * Bản đầu em xử lý ở pointerup vì cần phân biệt "chạm" với
+                 * "vuốt". Nhưng như thế thì khối chỉ nhúc nhích lúc bé NHẤC
+                 * NGÓN TAY — mà khoảng cách giữa đặt xuống và nhấc lên của trẻ
+                 * con là một hai phần mười giây. Cả hình lẫn tiếng đều đến muộn
+                 * bằng đúng chừng ấy. Giờ đẩy và xoay làm ngay ở pointerdown,
+                 * còn vuốt xuống vẫn nhận ra được ở pointermove. */
                 this.input.on('pointerdown', function (p) {
                     if (G.mode !== 'play') return;
                     sfx.wake();
-                    self.touchX = p.x; self.touchY = p.y; self.touchT = 0; self.swiped = false;
+                    self.touchX = p.x; self.touchY = p.y; self.swiped = false;
+                    var bw = CELL * R.COLS;
+                    if (p.x < OX + bw * 0.28) self.tryMove(-1);
+                    else if (p.x > OX + bw * 0.72) self.tryMove(1);
+                    else self.tryRotate(1);
                 });
                 this.input.on('pointermove', function (p) {
                     if (G.mode !== 'play' || self.touchX === undefined || self.swiped) return;
@@ -324,24 +357,18 @@
                      * vuốt phải cho cùng một kết quả trên máy to lẫn máy nhỏ. */
                     if (dy > CELL * 1.8) { self.hardDrop(); self.swiped = true; }
                 });
-                this.input.on('pointerup', function (p) {
-                    if (G.mode !== 'play' || self.touchX === undefined) return;
-                    var moved = Math.abs(p.x - self.touchX) + Math.abs(p.y - self.touchY);
-                    if (!self.swiped && moved < CELL * 0.8) {
-                        /* Chạm nhanh: nửa trái đẩy trái, nửa phải đẩy phải,
-                         * khoảng giữa thì xoay. Vùng xoay rộng đúng bằng bề
-                         * ngang cái giếng, để bé nhắm vào giếng mà bấm là xoay
-                         * — đấy là chỗ mắt bé đang nhìn. */
-                        var bw = CELL * R.COLS;
-                        if (p.x < OX + bw * 0.28) self.tryMove(-1);
-                        else if (p.x > OX + bw * 0.72) self.tryMove(1);
-                        else self.tryRotate(1);
-                    }
-                    self.touchX = undefined;
-                });
+                this.input.on('pointerup', function () { self.touchX = undefined; });
 
                 window.addEventListener('keydown', function (ev) {
                     if (G.mode === 'play') {
+                        /* Bật máy âm thanh TRƯỚC khi làm gì.
+                         *
+                         * Trước đây dòng này nằm ở CUỐI, sau cả tryMove/tryRotate.
+                         * Nghĩa là ở lần bấm đầu tiên, hàm phát tiếng chạy lúc máy
+                         * âm thanh còn chưa dựng nên nó lặng thinh — bé bấm phát
+                         * đầu không nghe gì, và cảm giác "tiếng chạy sau tay" bắt
+                         * đầu từ đúng chỗ ấy. */
+                        sfx.wake();
                         var used = true;
                         if (ev.code === 'ArrowLeft' || ev.code === 'KeyA') self.tryMove(-1);
                         else if (ev.code === 'ArrowRight' || ev.code === 'KeyD') self.tryMove(1);
@@ -350,7 +377,7 @@
                         else if (ev.code === 'ArrowDown' || ev.code === 'KeyS') G.soft = true;
                         else if (ev.code === 'Space') self.hardDrop();
                         else used = false;
-                        if (used) { sfx.wake(); ev.preventDefault(); }
+                        if (used) ev.preventDefault();
                     }
                     if (ev.code === 'KeyP' || ev.code === 'Escape') UI.togglePause();
                 });
