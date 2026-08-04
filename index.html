@@ -682,7 +682,11 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            padding: 4px 2px 14px;
+            /* Chừa rộng phía dưới để hàng nút TÁCH HẲN khỏi lưới game. Trước
+               chỉ có 14px, mà từ khi nút xuống dòng thì hàng cuối nằm sát ngay
+               trên ô game đầu tiên — nhìn ra như thể mấy cái nút cũng là một
+               phần của lưới, không biết đâu là chỗ lọc đâu là chỗ chơi. */
+            padding: 4px 2px 26px;
         }
 
         .topic-chip {
@@ -709,7 +713,7 @@
         /* Máy hẹp: co nút lại vừa đủ để tám nhóm nằm gọn trong hai hàng, mà
            vùng chạm vẫn giữ 40px — dưới mức ấy ngón tay trẻ con bấm trượt. */
         @media (max-width: 700px) {
-            .topic-row { gap: 6px; padding-bottom: 10px; }
+            .topic-row { gap: 6px; padding-bottom: 20px; }
             .topic-chip { min-height: 40px; padding: 0 12px; font-size: 0.82rem; gap: 6px; }
             .topic-chip i { font-size: 0.78rem; }
         }
