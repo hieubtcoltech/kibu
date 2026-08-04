@@ -88,20 +88,24 @@
     var PIECES = ['I', 'J', 'L', 'O', 'S', 'T', 'Z'];
 
     /* ------------------------------------------------------------------ *
-     * CHẤT LIỆU KHỐI
+     * NĂM MÀU KHỐI
      *
-     * Anh Hiếu nói: viên gạch, khối kim loại, khối vàng trông thật giá trị.
-     * Nên chất liệu KHÔNG gắn cứng vào hình quân — cùng một quân chữ T có lần
-     * là gạch, có lần là vàng. Nhờ vậy bé thấy khối vàng rơi xuống là mắt sáng
-     * lên, chứ không phải "à lại quân T".
+     * Bản đầu em làm khối lập phương 2.5D với chất liệu gạch, đá, gỗ, kim
+     * loại, vàng. Anh Hiếu xem rồi bảo làm lại thành khối PHẲNG 2D nhưng màu
+     * bắt mắt hơn — nên giờ mỗi khối là một màu tươi rõ ràng.
      *
-     * weight là tần suất bốc. Vàng hiếm nhất và đáng điểm gấp ba.
+     * Năm màu chọn cách nhau xa cả về SẮC lẫn về ĐỘ SÁNG. Cách nhau về sắc thì
+     * mắt thường phân biệt được; cách nhau về độ sáng thì bé mù màu cũng phân
+     * biệt được — đỏ với lục nhìn qua kính mù màu đỏ-lục là một, nhưng sáng
+     * khác nhau thì vẫn tách ra được.
+     *
+     * Vàng vẫn là con đáng gấp ba, và vẫn hiếm nhất.
      * ------------------------------------------------------------------ */
     var MATS = [
-        { key: 'brick', vi: 'gạch nung', en: 'brick', weight: 34, mult: 1 },
-        { key: 'stone', vi: 'đá xám', en: 'stone', weight: 26, mult: 1 },
-        { key: 'wood', vi: 'gỗ', en: 'wood', weight: 18, mult: 1 },
-        { key: 'metal', vi: 'kim loại', en: 'metal', weight: 14, mult: 2 },
+        { key: 'ruby', vi: 'đỏ', en: 'ruby', weight: 26, mult: 1 },
+        { key: 'azure', vi: 'xanh biển', en: 'azure', weight: 24, mult: 1 },
+        { key: 'lime', vi: 'xanh lá', en: 'lime', weight: 22, mult: 1 },
+        { key: 'violet', vi: 'tím', en: 'violet', weight: 20, mult: 2 },
         { key: 'gold', vi: 'vàng', en: 'gold', weight: 8, mult: 3 }
     ];
     var MAT_TOTAL = MATS.reduce(function (a, m) { return a + m.weight; }, 0);

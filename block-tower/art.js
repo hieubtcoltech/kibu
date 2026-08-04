@@ -32,192 +32,100 @@
 
     var TEX_SCALE = 3;
 
-    /* Độ lùi của mặt sau, tính theo phần của cạnh ô. 0.34 là chỗ em dừng lại
-     * sau khi thử: nhỏ hơn thì khối trông như hình vuông có viền, lớn hơn thì
-     * mặt trên chiếm chỗ quá nhiều và cái giếng trông như nhìn từ trên xuống. */
-    var DEPTH = 0.34;
-
-    /* Mỗi chất liệu ba mặt: trước, trên, phải. Mặt trên sáng nhất vì đèn ở trên
-     * cao, mặt phải tối hơn mặt trước — quy ước ánh sáng phải nhất quán khắp
-     * màn hình, lệch một khối là mắt nhận ra ngay dù không nói được vì sao. */
-    var MATS = {
-        brick: { front: 0xb4553a, top: 0xd9704f, right: 0x8a3c28, edge: 0x5e2718, spec: 0xe89a7a },
-        stone: { front: 0x8d8f96, top: 0xb4b7bd, right: 0x686a70, edge: 0x44464b, spec: 0xd6d8dc },
-        wood: { front: 0xa9763f, top: 0xc9955a, right: 0x7d5529, edge: 0x53381a, spec: 0xdcb27e },
-        metal: { front: 0x8fa3b8, top: 0xc2d4e6, right: 0x63748a, edge: 0x3d4a5c, spec: 0xffffff },
-        gold: { front: 0xf0b429, top: 0xffe07a, right: 0xc08213, edge: 0x7a4f06, spec: 0xfffbe0 }
-    };
-
-    function matOf(key) { return MATS[key] || MATS.brick; }
+    /* Không còn chiều sâu: khối là ô PHẲNG. Giữ hằng số bằng 0 để chỗ nào còn
+     * cộng độ lùi thì vẫn chạy đúng. */
+    var DEPTH = 0;
 
     /* ------------------------------------------------------------------ *
-     * MỘT KHỐI LẬP PHƯƠNG
+     * NĂM MÀU KHỐI
      *
-     * Gốc toạ độ đặt ở góc trên-trái của MẶT TRƯỚC. Mặt trên và mặt phải mọc
-     * lên trên và sang phải, nên tấm ảnh nướng ra rộng và cao hơn cạnh ô một
-     * khoảng đúng bằng độ lùi.
+     * Anh Hiếu xem bản khối lập phương 2.5D rồi bảo: làm thành hình khối 2D
+     * nhưng màu sắc bắt mắt hơn. Nên bỏ hết mặt trên, mặt phải, đường bao —
+     * giờ mỗi ô là một hình vuông bo góc, một màu tươi, có dải sáng trên và
+     * dải tối dưới.
+     *
+     * Vì sao vẫn giữ dải sáng và dải tối dù là 2D: hoàn toàn phẳng một màu thì
+     * cả bức tường thành một mảng bẹt, mắt không tách được hàng nào với hàng
+     * nào. Hai dải mỏng ấy đủ cho mỗi ô có mép trên mép dưới, mà vẫn là hình
+     * phẳng chứ không phải khối lập phương.
+     *
+     * fill là màu chính, hi là dải trên, lo là dải dưới, edge là viền.
      * ------------------------------------------------------------------ */
-    /* mask: bit 0 = có khối NGAY TRÊN, bit 1 = có khối NGAY BÊN PHẢI,
-     *       bit 2 = có khối ở CHÉO TRÊN-PHẢI */
-    function drawCube(g, matKey, S, mask) {
+    /* Năm màu này KHÔNG chọn bằng mắt mà chọn bằng số. Máy soát đo hai thứ:
+     * khoảng cách màu giữa từng cặp, và chênh lệch ĐỘ SÁNG. Bản đầu em chọn
+     * theo cảm giác và máy bắt ngay: xanh biển với tím chênh độ sáng đúng 1 —
+     * nhìn thường thì khác hẳn, nhưng bé mù màu chỉ còn độ sáng để tách hai màu
+     * ra, mà độ sáng thì y hệt nhau. Giãn ra cho năm bậc sáng cách đều:
+     *     tím 99 · đỏ 121 · xanh biển 141 · xanh lá 178 · vàng 208
+     * Bậc nào cũng cách bậc kề nó ít nhất 20. */
+    var MATS = {
+        ruby: { fill: 0xff3b57, hi: 0xff8496, lo: 0xcf2140, edge: 0x7d0d22, spec: 0xffd3d8 },
+        azure: { fill: 0x2ea8ff, hi: 0x7cc9ff, lo: 0x1077c9, edge: 0x0a4880, spec: 0xd6ecff },
+        lime: { fill: 0x5ce68a, hi: 0xa5f5c0, lo: 0x2bb35e, edge: 0x14683a, spec: 0xd9ffe6 },
+        violet: { fill: 0x7c3fd6, hi: 0xac82f0, lo: 0x5a24a8, edge: 0x2f0f63, spec: 0xeadcff },
+        gold: { fill: 0xffd24a, hi: 0xfff0a8, lo: 0xe0a410, edge: 0x8a5f00, spec: 0xfffbe0 }
+    };
+
+    function matOf(key) { return MATS[key] || MATS.ruby; }
+
+    /* ------------------------------------------------------------------ *
+     * MỘT Ô KHỐI PHẲNG
+     *
+     * Bo góc và chừa một khe hở nhỏ quanh ô. Khe hở là chỗ quan trọng: không có
+     * nó thì hai ô cùng màu nằm sát nhau dính thành một mảng, bé không đếm được
+     * mình còn mấy ô. Có khe thì mỗi ô là một viên rõ ràng, mà cả hàng vẫn đọc
+     * ra là một hàng.
+     * ------------------------------------------------------------------ */
+    function drawCube(g, matKey, S) {
         var c = matOf(matKey);
-        var D = S * DEPTH;
-        mask = mask || 0;
-        var up = !!(mask & 1), right = !!(mask & 2), upRight = !!(mask & 4);
+        var pad = Math.max(1, S * 0.035);          // khe hở quanh ô
+        var w = S - pad * 2;
+        var r = w * 0.24;                          // bo góc
 
-        /* --- mặt trên: CHỈ vẽ khi phía trên trống ---
-         *
-         * Anh Hiếu bắt được lỗi này: "các hình khối vẽ nhưng không đúng lắm,
-         * nhìn rất khó". Bản đầu em vẽ mỗi ô thành một khối lập phương hoàn
-         * chỉnh, kể cả khi có ô khác nằm chồng ngay lên. Hậu quả: mặt trên của
-         * ô dưới bị vẽ ĐÈ LÊN mặt trước của ô trên, thành một vệt sáng cắt
-         * ngang giữa thân quân — và cả quân chữ J trông ra ba cái hộp rời rạc
-         * xếp cạnh nhau chứ không phải một khối liền.
-         *
-         * Trong một khối đặc, mặt trên chỉ thấy được ở những ô trên cùng, mặt
-         * phải chỉ thấy được ở những ô ngoài cùng bên phải. Đấy là chuyện hiển
-         * nhiên khi nhìn vật thật, mà em lại vẽ từng ô một cách độc lập nên
-         * không nhận ra cho tới khi anh chỉ. */
-        if (!up) {
-            g.fillStyle(c.top, 1);
+        /* bóng đổ nhẹ xuống dưới cho ô có chỗ đứng, không bồng bềnh */
+        g.fillStyle(0x000000, 0.22);
+        g.fillRoundedRect(pad, pad + w * 0.06, w, w, r);
+
+        /* thân ô */
+        g.fillStyle(c.fill, 1);
+        g.fillRoundedRect(pad, pad, w, w, r);
+
+        /* dải sáng trên và dải tối dưới */
+        g.fillStyle(c.hi, 0.85);
+        g.fillRoundedRect(pad + w * 0.10, pad + w * 0.09, w * 0.80, w * 0.20, r * 0.6);
+        g.fillStyle(c.lo, 0.75);
+        g.fillRoundedRect(pad + w * 0.10, pad + w * 0.72, w * 0.80, w * 0.18, r * 0.6);
+
+        /* đốm sáng góc trên-trái — cái làm màu trông "bóng" chứ không bệt */
+        g.fillStyle(c.spec, 0.55);
+        g.fillCircle(pad + w * 0.26, pad + w * 0.24, w * 0.09);
+
+        /* Khối vàng: thêm một vệt loé chéo và viền sáng. Đây là con đáng gấp ba,
+         * phải nhận ra ngay từ xa giữa cả một bức tường. */
+        if (matKey === 'gold') {
+            g.fillStyle(0xffffff, 0.34);
             g.beginPath();
-            g.moveTo(0, 0);
-            g.lineTo(D, -D);
-            g.lineTo(S + D, -D);
-            g.lineTo(S, 0);
+            g.moveTo(pad + w * 0.16, pad + w);
+            g.lineTo(pad + w * 0.52, pad);
+            g.lineTo(pad + w * 0.70, pad);
+            g.lineTo(pad + w * 0.34, pad + w);
             g.closePath();
             g.fillPath();
+            g.lineStyle(Math.max(1.4, w * 0.055), 0xfff3b0, 0.9);
+            g.strokeRoundedRect(pad, pad, w, w, r);
         }
 
-        /* --- mặt phải: chỉ vẽ khi bên phải trống --- */
-        if (!right) {
-            g.fillStyle(c.right, 1);
-            g.beginPath();
-            g.moveTo(S, 0);
-            g.lineTo(S + D, -D);
-            g.lineTo(S + D, S - D);
-            g.lineTo(S, S);
-            g.closePath();
-            g.fillPath();
-        }
-
-        /* --- miếng vá góc ---
-         * Trên có khối, phải có khối, mà CHÉO trên-phải thì trống: lúc ấy cái
-         * góc nhỏ trên-phải không ai che, thủng ra một mảnh nền. Ô bên phải đáng
-         * lẽ che chỗ ấy bằng mặt trên của nó, nhưng chính nó cũng bị khối phía
-         * trên bịt mất nên không vẽ mặt trên nữa. */
-        if (up && right && !upRight) {
-            g.fillStyle(c.top, 1);
-            g.beginPath();
-            g.moveTo(S, 0);
-            g.lineTo(S, -D);
-            g.lineTo(S + D, -D);
-            g.closePath();
-            g.fillPath();
-        }
-
-        /* --- mặt trước --- */
-        g.fillStyle(c.front, 1);
-        g.fillRect(0, 0, S, S);
-
-        /* --- vân từng chất liệu, vẽ trước khi kẻ cạnh --- */
-        detail(g, matKey, c, S, D);
-
-        /* --- cạnh khối. Nét quanh mặt trước để nhẹ hơn: nó chạy cả ở ranh
-         * giới giữa hai ô liền nhau, đậm quá thì lại thành mấy cái hộp rời. --- */
-        g.lineStyle(Math.max(1, S * 0.03), c.edge, 0.45);
-        g.strokeRect(0, 0, S, S);
-        g.lineStyle(Math.max(1, S * 0.035), c.edge, 0.85);
-        g.beginPath();
-        if (!up) { g.moveTo(0, 0); g.lineTo(D, -D); g.moveTo(D, -D); g.lineTo(S + D, -D); }
-        if (!right) { g.moveTo(S + D, -D); g.lineTo(S + D, S - D); g.moveTo(S, S); g.lineTo(S + D, S - D); }
-        if (!up && !right) { g.moveTo(S, 0); g.lineTo(S + D, -D); }
-        g.strokePath();
+        /* viền */
+        g.lineStyle(Math.max(1.2, w * 0.05), c.edge, 0.75);
+        g.strokeRoundedRect(pad, pad, w, w, r);
     }
 
-    function detail(g, key, c, S, D) {
-        var i;
-        if (key === 'brick') {
-            /* mạch vữa: hai hàng gạch so le — đủ để mắt đọc ra "gạch", nhiều
-             * hơn thì ở cỡ hiển thị thật chỉ thành mấy vệt rối */
-            g.lineStyle(Math.max(1, S * 0.045), c.edge, 0.42);
-            g.beginPath();
-            g.moveTo(0, S * 0.5); g.lineTo(S, S * 0.5);
-            g.moveTo(S * 0.5, 0); g.lineTo(S * 0.5, S * 0.5);
-            g.moveTo(S * 0.25, S * 0.5); g.lineTo(S * 0.25, S);
-            g.moveTo(S * 0.75, S * 0.5); g.lineTo(S * 0.75, S);
-            g.strokePath();
-        } else if (key === 'stone') {
-            /* lỗ rỗ, đặt tay chứ không ngẫu nhiên: ngẫu nhiên thì mỗi lần nướng
-             * lại ra một viên khác, mà khối đá phải giống nhau cả giếng */
-            var pits = [[0.24, 0.30, 0.10], [0.62, 0.22, 0.07], [0.42, 0.58, 0.12],
-                [0.74, 0.66, 0.08], [0.18, 0.74, 0.06]];
-            for (i = 0; i < pits.length; i++) {
-                g.fillStyle(c.edge, 0.22);
-                g.fillCircle(S * pits[i][0], S * pits[i][1], S * pits[i][2]);
-            }
-        } else if (key === 'wood') {
-            g.lineStyle(Math.max(1, S * 0.03), c.edge, 0.30);
-            for (i = 1; i <= 3; i++) {
-                g.beginPath();
-                g.moveTo(0, S * i * 0.25);
-                g.lineTo(S, S * i * 0.25 + (i % 2 ? S * 0.05 : -S * 0.04));
-                g.strokePath();
-            }
-        } else if (key === 'metal') {
-            /* vệt xước chéo + một dải loé — kim loại nhận ra bằng phản chiếu
-             * chứ không phải bằng màu */
-            g.fillStyle(c.spec, 0.22);
-            g.beginPath();
-            g.moveTo(S * 0.12, S); g.lineTo(S * 0.42, 0);
-            g.lineTo(S * 0.60, 0); g.lineTo(S * 0.30, S);
-            g.closePath();
-            g.fillPath();
-            g.lineStyle(Math.max(1, S * 0.02), c.edge, 0.25);
-            for (i = 0; i < 3; i++) {
-                g.beginPath();
-                g.moveTo(S * (0.55 + i * 0.12), S);
-                g.lineTo(S * (0.75 + i * 0.12), 0);
-                g.strokePath();
-            }
-        } else if (key === 'gold') {
-            /* Vàng phải trông ra TIỀN ngay từ xa: mặt trên chói thêm một lớp,
-             * mặt trước có vệt loé chạy chéo, và một chấm sáng ở góc. Bỏ vệt
-             * loé đi thì nó chỉ còn là ô màu vàng — mà anh Hiếu nói rõ là muốn
-             * "khối vàng trông thật giá trị". */
-            g.fillStyle(c.spec, 0.42);
-            g.beginPath();
-            g.moveTo(0, 0); g.lineTo(D, -D); g.lineTo(S * 0.55 + D, -D); g.lineTo(S * 0.55, 0);
-            g.closePath();
-            g.fillPath();
-
-            g.fillStyle(c.spec, 0.34);
-            g.beginPath();
-            g.moveTo(S * 0.06, S); g.lineTo(S * 0.40, 0);
-            g.lineTo(S * 0.56, 0); g.lineTo(S * 0.22, S);
-            g.closePath();
-            g.fillPath();
-
-            g.fillStyle(0xffffff, 0.55);
-            g.fillCircle(S * 0.74, S * 0.24, S * 0.07);
-            g.fillStyle(c.edge, 0.20);
-            g.fillRect(0, S * 0.82, S, S * 0.18);
-        }
-    }
-
-    /* Khối mờ dùng cho đường bóng — chỉ có khung, không có ruột, để bé phân
-     * biệt được ngay đâu là quân thật đâu là chỗ nó sắp đáp. */
+    /* Khung mờ chỉ chỗ quân sắp đáp xuống. */
     function drawGhost(g, S, colour) {
-        var D = S * DEPTH;
-        g.lineStyle(Math.max(1.5, S * 0.06), colour, 0.75);
-        g.strokeRect(0, 0, S, S);
-        g.lineStyle(Math.max(1, S * 0.04), colour, 0.38);
-        g.beginPath();
-        g.moveTo(0, 0); g.lineTo(D, -D);
-        g.lineTo(S + D, -D); g.lineTo(S, 0);
-        g.moveTo(S + D, -D); g.lineTo(S + D, S - D);
-        g.lineTo(S, S);
-        g.strokePath();
+        var pad = Math.max(1, S * 0.035);
+        var w = S - pad * 2;
+        g.lineStyle(Math.max(1.6, w * 0.07), colour, 0.8);
+        g.strokeRoundedRect(pad, pad, w, w, w * 0.24);
     }
 
     /* ------------------------------------------------------------------ *

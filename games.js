@@ -51,7 +51,7 @@
             dir: 'block-tower', slug: 'block-tower', tile: 'tile-blocktower',
             en: 'Block Tower', vi: 'Tháp Khối',
             topics: ['puzzle', 'action'], players: '1', added: '2026-08-04',
-            keywords: 'block tower thap khoi game xep hinh xep gach tetris falling blocks isometric 2.5d puzzle brick metal gold cubes stacking phaser'
+            keywords: 'block tower thap khoi game xep hinh xep gach tetris falling blocks colour blocks puzzle gold blocks stacking colour blind friendly phaser'
         },
         {
             dir: 'duck-shoot', slug: 'duck-shoot', tile: 'tile-duckshoot',

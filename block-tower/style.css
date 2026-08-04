@@ -18,11 +18,11 @@
     --card-bg: rgba(15, 20, 38, 0.80);
     --card-border: rgba(255, 255, 255, 0.12);
 
-    --gold: #ffc93c;
-    --metal: #9fb6cf;
-    --brick: #c76a4c;
-    --stone: #9a9da4;
-    --wood: #b98a52;
+    --gold: #ffd24a;
+    --ruby: #ff3b57;
+    --azure: #2ea8ff;
+    --lime: #5ce68a;
+    --violet: #7c3fd6;
 }
 
 * {
@@ -39,8 +39,8 @@ body {
     background-color: var(--bg-dark);
     background-image:
         radial-gradient(circle at 20% 12%, rgba(255, 201, 60, 0.13), transparent 46%),
-        radial-gradient(circle at 82% 24%, rgba(159, 182, 207, 0.12), transparent 46%),
-        radial-gradient(circle at 50% 112%, rgba(199, 106, 76, 0.14), transparent 58%);
+        radial-gradient(circle at 82% 24%, rgba(46, 168, 255, 0.14), transparent 46%),
+        radial-gradient(circle at 50% 112%, rgba(168, 107, 255, 0.15), transparent 58%);
     color: #fff;
     min-height: 100vh;
     overflow: hidden;
@@ -98,7 +98,7 @@ body {
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: 1px;
-    background: linear-gradient(135deg, var(--brick), var(--gold), var(--metal));
+    background: linear-gradient(135deg, var(--ruby), var(--gold), var(--azure));
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -264,10 +264,10 @@ body {
 .next-piece i { border-radius: 3px; }
 .next-piece i.on { box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.35); }
 
-.m-brick { background: var(--brick); }
-.m-stone { background: var(--stone); }
-.m-wood { background: var(--wood); }
-.m-metal { background: var(--metal); }
+.m-ruby { background: var(--ruby); }
+.m-azure { background: var(--azure); }
+.m-lime { background: var(--lime); }
+.m-violet { background: var(--violet); }
 .m-gold { background: var(--gold); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.3), 0 0 6px rgba(255, 201, 60, 0.7) !important; }
 
 .hud-room {
@@ -320,7 +320,7 @@ body.playing .touchpad { opacity: 1; pointer-events: auto; }
 }
 
 .pad-btn:active { transform: scale(0.94); background: rgba(255, 255, 255, 0.16); }
-.pad-turn { color: var(--metal); border-color: rgba(159, 182, 207, 0.45); }
+.pad-turn { color: var(--azure); border-color: rgba(46, 168, 255, 0.45); }
 .pad-drop { color: var(--gold); border-color: rgba(255, 201, 60, 0.45); }
 
 /* ---------------- Bảng phủ ---------------- */
@@ -402,6 +402,7 @@ body.playing .touchpad { opacity: 1; pointer-events: auto; }
 }
 
 .mat.m-gold { color: #3a2600; }
+.mat.m-ruby, .mat.m-azure, .mat.m-violet { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
 
 .best-line {
     font-family: var(--font-display);

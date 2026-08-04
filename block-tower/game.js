@@ -186,26 +186,19 @@
              * khoảng đúng bằng độ lùi, vì mặt trên và mặt phải thò ra ngoài. */
             bakeCubes: function () {
                 var S = A.TEX_SCALE, g = this.add.graphics();
-                var D = CELL * A.DEPTH;
-                this.cubeW = CELL + D;
-                this.cubeH = CELL + D;
-                /* TÁM BIẾN THỂ mỗi chất liệu, theo ba bit hàng xóm: có khối ở
-                 * trên, ở bên phải, ở chéo trên-phải. Một ô nằm giữa đống khối
-                 * thì không được vẽ mặt trên lẫn mặt phải — vẽ là lộ mặt trong
-                 * và cả bức tường thành một mớ hộp rời rạc. Bốn mươi tấm ảnh
-                 * nhỏ, nướng một lần lúc vào game. */
+                this.cubeW = CELL;
+                this.cubeH = CELL;
+                /* MỘT ảnh cho mỗi màu. Khối phẳng thì không còn mặt nào bị ô
+                 * bên cạnh che, nên cũng không cần tám biến thể theo hàng xóm
+                 * như hồi làm khối lập phương. Đơn giản đi hẳn một tầng. */
                 for (var key in A.MATS) {
-                    for (var mask = 0; mask < 8; mask++) {
-                        var tex = 'cube_' + key + '_' + CELL + '_' + mask;
-                        if (this.textures.exists(tex)) continue;
-                        g.clear();
-                        g.scaleCanvas(S, S);
-                        g.translateCanvas(0, D);          // chừa chỗ cho mặt trên
-                        A.drawCube(g, key, CELL, mask);
-                        g.translateCanvas(0, -D);
-                        g.scaleCanvas(1 / S, 1 / S);
-                        g.generateTexture(tex, this.cubeW * S, this.cubeH * S);
-                    }
+                    var tex = 'cube_' + key + '_' + CELL;
+                    if (this.textures.exists(tex)) continue;
+                    g.clear();
+                    g.scaleCanvas(S, S);
+                    A.drawCube(g, key, CELL);
+                    g.scaleCanvas(1 / S, 1 / S);
+                    g.generateTexture(tex, this.cubeW * S, this.cubeH * S);
                 }
                 g.destroy();
             },
@@ -695,27 +688,6 @@
                  * phía trên-phải, nên khối ở trên-phải là khối ở xa: vẽ trước,
                  * rồi khối gần đè lên. Vẽ sai thứ tự thì các mặt cắt nhau lộn
                  * xộn và cả cái tường mất hẳn khối. */
-                /* Bảng ô có khối = giếng CỘNG quân đang rơi. Phải gộp cả hai,
-                 * không thì lúc quân sắp chạm đống, mấy ô giáp nhau vẫn vẽ mặt
-                 * trong và chỗ tiếp giáp trông vỡ ra. */
-                var occ = [];
-                for (y = 0; y < R.ROWS; y++) {
-                    occ.push([]);
-                    for (x = 0; x < R.COLS; x++) occ[y].push(!!G.board[y][x]);
-                }
-                var live = (G.piece && G.mode === 'play') ? R.cellsOf(G.piece) : [];
-                for (i = 0; i < live.length; i++) {
-                    if (live[i][1] >= 0 && live[i][1] < R.ROWS) occ[live[i][1]][live[i][0]] = true;
-                }
-                function on(cx, cy) {
-                    if (cy < 0) return false;              // trên mép giếng coi như trống
-                    if (cy >= R.ROWS || cx < 0 || cx >= R.COLS) return false;
-                    return occ[cy][cx];
-                }
-                function maskAt(cx, cy) {
-                    return (on(cx, cy - 1) ? 1 : 0) | (on(cx + 1, cy) ? 2 : 0) | (on(cx + 1, cy - 1) ? 4 : 0);
-                }
-
                 for (y = 0; y < R.ROWS; y++) {
                     for (x = R.COLS - 1; x >= 0; x--) {
                         var m = G.board[y][x];
@@ -727,7 +699,7 @@
                             fade = (Math.floor(G.clearT * 22) % 2) ? 0.25 : 1;
                             fade *= (1 - k * 0.7);
                         }
-                        need.push({ m: m, x: x, y: y, a: fade, mask: maskAt(x, y) });
+                        need.push({ m: m, x: x, y: y, a: fade });
                     }
                 }
 
@@ -737,21 +709,21 @@
                     cells.sort(function (a, b) { return (a[1] - b[1]) || (b[0] - a[0]); });
                     for (i = 0; i < cells.length; i++) {
                         if (cells[i][1] < 0) continue;
-                        need.push({ m: G.piece.mat, x: cells[i][0], y: cells[i][1], a: 1, mask: maskAt(cells[i][0], cells[i][1]) });
+                        need.push({ m: G.piece.mat, x: cells[i][0], y: cells[i][1], a: 1 });
                     }
                 }
 
                 while (this.imgs.length < need.length) {
-                    this.imgs.push(this.add.image(0, 0, 'cube_brick_' + CELL + '_0').setOrigin(0, 0).setDepth(5));
+                    this.imgs.push(this.add.image(0, 0, 'cube_ruby_' + CELL).setOrigin(0, 0).setDepth(5));
                 }
                 for (i = 0; i < this.imgs.length; i++) {
                     if (i >= need.length) { this.imgs[i].setVisible(false); continue; }
                     var n = need[i];
                     var p = this.cellXY(n.x, n.y, sx, sy);
                     var im = this.imgs[i];
-                    im.setTexture('cube_' + n.m + '_' + CELL + '_' + n.mask);
+                    im.setTexture('cube_' + n.m + '_' + CELL);
                     im.setDisplaySize(this.cubeW, this.cubeH);
-                    im.setPosition(p.x, p.y - CELL * A.DEPTH);
+                    im.setPosition(p.x, p.y);
                     im.setAlpha(n.a);
                     im.setDepth(5 + i * 0.001);
                     im.setVisible(true);

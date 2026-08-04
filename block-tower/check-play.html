@@ -214,24 +214,19 @@ function run(win) {
     say('· ảnh khối nướng sẵn', 'dim');
     var CELL = win.blockTower.size().CELL;
     var miss = [], small = [];
-    /* Tám biến thể mỗi chất liệu, theo ba bit hàng xóm (trên / phải / chéo
-     * trên-phải). Soát ĐỦ CẢ TÁM: thiếu một biến thể thì chỉ những thế cờ hiếm
-     * mới lộ ra ô trống, mà lỗi hiếm là lỗi khó thấy nhất. */
+    /* Một ảnh cho mỗi màu. Hồi làm khối lập phương phải nướng tám biến thể theo
+     * hàng xóm; khối phẳng thì không mặt nào bị che nên bỏ được cả tầng ấy. */
     Object.keys(win.TowerArt.MATS).forEach(function (k) {
-        for (var mk = 0; mk < 8; mk++) {
-            if (!sc.textures.exists('cube_' + k + '_' + CELL + '_' + mk)) miss.push(k + '/' + mk);
-        }
-        var key = 'cube_' + k + '_' + CELL + '_0';
-        if (!sc.textures.exists(key)) return;
+        var key = 'cube_' + k + '_' + CELL;
+        if (!sc.textures.exists(key)) { miss.push(k); return; }
         var src = sc.textures.get(key).getSourceImage();
         /* Nướng đúng cỡ hiển thị thì lên màn nét đôi là nhoè — bài học từ Máy
          * Gắp Thú. Ảnh phải rộng hơn ô ít nhất gấp đôi. */
         if (src.width < CELL * 2) small.push(k + ' rộng ' + src.width + 'px cho ô ' + CELL + 'px');
     });
-    var wantTex = Object.keys(win.TowerArt.MATS).length * 8;
-    say('    ' + (wantTex - miss.length) + '/' + wantTex + ' ảnh khối (5 chất liệu × 8 biến thể), ô ' +
-        CELL + 'px, ảnh ' +
-        (sc.textures.exists('cube_gold_' + CELL + '_0') ? sc.textures.get('cube_gold_' + CELL + '_0').getSourceImage().width + 'px' : '—'));
+    var wantTex = Object.keys(win.TowerArt.MATS).length;
+    say('    ' + (wantTex - miss.length) + '/' + wantTex + ' ảnh khối, ô ' + CELL + 'px, ảnh ' +
+        (sc.textures.exists('cube_gold_' + CELL) ? sc.textures.get('cube_gold_' + CELL).getSourceImage().width + 'px' : '—'));
     if (miss.length) fail('thiếu ảnh khối: ' + miss.join(', '));
     if (small.length) fail('ảnh nướng nhỏ quá, lên màn nét đôi sẽ nhoè: ' + small.join(', '));
 
@@ -256,6 +251,48 @@ function run(win) {
     if (shown.lines !== G.lines) fail('bảng ghi ' + shown.lines + ' hàng mà thật ra là ' + G.lines);
     if (shown.level !== G.level) fail('bảng ghi bàn ' + shown.level + ' mà thật ra là bàn ' + G.level);
 
+    /* ---- 7b: NĂM MÀU KHỐI PHẢI KHÁC NHAU RÕ ----
+     *
+     * Phép soát cũ ở chỗ này hỏi "bốn ô liền có ra một khối liền không", hợp
+     * với hồi khối còn là hình lập phương 2.5D. Anh Hiếu bảo làm lại thành khối
+     * PHẲNG màu bắt mắt, nên câu hỏi cũng phải đổi: khối phẳng CỐ Ý có khe hở
+     * giữa các ô, hỏi câu cũ là hỏi sai.
+     *
+     * Câu đúng bây giờ: năm màu có thật sự phân biệt được không, kể cả với bé
+     * mù màu. Đo hai thứ trên chính ảnh đã nướng: khoảng cách màu giữa từng cặp,
+     * và chênh lệch ĐỘ SÁNG — vì đỏ với xanh lá nhìn qua mắt mù màu đỏ-lục là
+     * một, chỉ còn độ sáng để tách chúng ra.
+     */
+    say('');
+    say('· năm màu khối có phân biệt được không', 'dim');
+    var keys = Object.keys(win.TowerArt.MATS);
+    var lums = {}, rgbs = {};
+    keys.forEach(function (k) {
+        var m = win.TowerArt.MATS[k].fill;
+        var r2 = (m >> 16) & 255, g2 = (m >> 8) & 255, b2 = m & 255;
+        rgbs[k] = [r2, g2, b2];
+        lums[k] = 0.299 * r2 + 0.587 * g2 + 0.114 * b2;
+    });
+    var worstCol = 999, worstColPair = '', worstLum = 999, worstLumPair = '';
+    for (var a1 = 0; a1 < keys.length; a1++) {
+        for (var b1 = a1 + 1; b1 < keys.length; b1++) {
+            var A1 = rgbs[keys[a1]], B1 = rgbs[keys[b1]];
+            var dist = Math.sqrt(Math.pow(A1[0] - B1[0], 2) + Math.pow(A1[1] - B1[1], 2) + Math.pow(A1[2] - B1[2], 2));
+            if (dist < worstCol) { worstCol = dist; worstColPair = keys[a1] + '/' + keys[b1]; }
+            var dl = Math.abs(lums[keys[a1]] - lums[keys[b1]]);
+            if (dl < worstLum) { worstLum = dl; worstLumPair = keys[a1] + '/' + keys[b1]; }
+        }
+    }
+    say('    hai màu gần nhau nhất: ' + worstColPair + ' cách ' + worstCol.toFixed(0) +
+        ' · hai màu sáng gần nhau nhất: ' + worstLumPair + ' chênh ' + worstLum.toFixed(0),
+        (worstCol > 90 && worstLum > 18) ? 'ok' : 'bad');
+    if (worstCol < 90) fail('hai màu ' + worstColPair + ' chỉ cách nhau ' + worstCol.toFixed(0) + ' — quá giống nhau');
+    if (worstLum < 18) fail('hai màu ' + worstLumPair + ' chênh độ sáng chỉ ' + worstLum.toFixed(0) +
+        ' — bé mù màu sẽ không tách được');
+
+    narrowCheck();
+
+    function narrowCheck() {
     /* ---- 8: màn điện thoại hẹp ---- */
     var frame = document.getElementById('frame');
     frame.style.width = '390px';
@@ -280,6 +317,7 @@ function run(win) {
         bad.forEach(function (b) { fail('màn 390px: ' + b); });
         finish();
     }, 500);
+    }
 
     function finish() {
         say('');
