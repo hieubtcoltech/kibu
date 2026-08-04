@@ -63,7 +63,7 @@
         mm.UI.scene.frozen = true;
 
         var N = mm.LEVELS.length;
-        var fails = [], i = 0, runs = 0, slowest = 0, slowestAt = 0;
+        var fails = [], i = 0, runs = 0, slowest = 0, slowestAt = 0, turns = 0, turnsMatter = 0;
         var kinds = {};
 
         lines = [];
@@ -106,6 +106,20 @@
                 }
             }
 
+            /* --- 2b. quay sai chiều thì phải hỏng ---
+             * Không bắt buộc, nhưng phải ĐO: nếu đặt ngược chiều mà cỗ máy vẫn
+             * chạy thì việc quay mảnh chỉ là trang trí, và cả một nửa đề bài
+             * biến mất mà không ai biết. */
+            for (var fk in sol) {
+                if (!mm.P.KIND[sol[fk].kind].flip) continue;
+                var alt = {};
+                for (var fj in sol) alt[fj] = { kind: sol[fj].kind, flip: sol[fj].flip, trayIdx: -1 };
+                alt[fk].flip = !alt[fk].flip;
+                turns++;
+                runs++;
+                if (mm.simulate(i, alt).result !== 'win') turnsMatter++;
+            }
+
             /* --- 3. khay phải đủ mảnh, và mảnh mồi không được trùng kiểu --- */
             var tray = mm.P.trayOf(lv);
             var real = tray.filter(function (t) { return t.from >= 0; });
@@ -134,6 +148,8 @@
             line('các trò đã dùng: ' + used.join(', '));
             line('tổng cộng ' + runs + ' lượt chạy thử; lượt lâu nhất ' +
                  (slowest / 60).toFixed(1) + ' giây (màn ' + slowestAt + ')');
+            line('mảnh có chiều: ' + turnsMatter + '/' + turns +
+                 ' chỗ mà đặt ngược chiều là cỗ máy hỏng thật');
             line('');
             if (fails.length) {
                 line('KHÔNG ĐẠT:');

@@ -40,8 +40,13 @@
      * KIỂU MẢNH
      *
      * Mỗi kiểu có: tên hiển thị, màu, và cách nó tác động lên viên bi.
-     * "flip" cho biết mảnh ấy có phân biệt trái/phải hay không — dốc trượt và
-     * quạt gió thì có (đặt ngược chiều là bi đi sai đường), đệm nảy thì không.
+     *
+     * "flip" cho biết QUAY MẢNH CÓ ĐỔI GÌ KHÔNG. Dốc trượt, bập bênh, bàn
+     * nhún, quạt gió, băng chuyền thì có — quay là đổi hẳn đường bi, và bé
+     * nhìn hình là thấy (dốc đổ hướng nào, mũi tên băng chỉ đâu, cánh quạt
+     * thổi phía nào). Quả đệm tròn xoe và cục nam châm hút đều mọi phía thì
+     * quay cũng thế, nên để false — bấm quay mà không thấy gì đổi chỉ làm bé
+     * tưởng nút hỏng.
      * ------------------------------------------------------------------ */
     var KIND = {
         ramp:   { name: 'Ramp',      color: 0x8f7bff, flip: true,  icon: '📐' },
@@ -50,7 +55,7 @@
         fan:    { name: 'Fan',       color: 0x4dabf7, flip: true,  icon: '💨' },
         belt:   { name: 'Conveyor',  color: 0xffd43b, flip: true,  icon: '➡️' },
         bumper: { name: 'Bumper',    color: 0xf783ac, flip: false, icon: '⭕' },
-        magnet: { name: 'Magnet',    color: 0xff8787, flip: true,  icon: '🧲' }
+        magnet: { name: 'Magnet',    color: 0xff8787, flip: false, icon: '🧲' }
     };
 
     /* ------------------------------------------------------------------ *
@@ -171,7 +176,7 @@
             enter: { x: ENTRY, y: 0 },
             exit: { x: EXIT, y: BAY_H },
             fixed: frame(),
-            slot: { kind: 'belt', x: 350, y: 120, w: 320, h: 20, angle: 0, speed: 4.6 }
+            slot: { kind: 'belt', x: 350, y: 120, w: 320, h: 20, angle: 0, speed: 6.0 }
         };
     }
 
@@ -234,7 +239,7 @@
             fixed: frame([
                 { shape: 'box', x: 360, y: 130, w: 16, h: 92, angle: 0, role: 'wall' }
             ]),
-            slot: { kind: 'spring', x: 220, y: 168, w: 150, h: 20, angle: 0.28, kick: { vx: 300, vy: -400 } }
+            slot: { kind: 'spring', x: 220, y: 168, w: 150, h: 20, angle: 0.28, kick: { vx: 390, vy: -520 } }
         };
     }
 
@@ -249,7 +254,7 @@
             fixed: frame(),
             slot: {
                 kind: 'fan', x: 44, y: 118, w: 64, h: 76, angle: 0,
-                wind: { w: 470, h: 130, force: 0.0048 }
+                wind: { w: 470, h: 130, force: 0.0092 }
             }
         };
     }
@@ -262,7 +267,7 @@
             enter: { x: ENTRY, y: 0 },
             exit: { x: EXIT, y: BAY_H },
             fixed: frame(),
-            slot: { kind: 'bumper', x: 200, y: 140, w: 68, h: 68, angle: 0, kick: { speed: 520 } }
+            slot: { kind: 'bumper', x: 200, y: 140, w: 68, h: 68, angle: 0, kick: { speed: 675 } }
         };
     }
 
@@ -279,7 +284,7 @@
             ]),
             slot: {
                 kind: 'magnet', x: 592, y: 74, w: 60, h: 60, angle: 0,
-                pull: { r: 360, force: 0.0012 }
+                pull: { r: 360, force: 0.0026 }
             }
         };
     }
