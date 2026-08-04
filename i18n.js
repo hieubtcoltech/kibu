@@ -1175,6 +1175,14 @@
         ['{0} bé đang chơi', '{0} kids playing now'],
         ['KIBU Games - Game miễn phí 100%, làm bằng tình yêu dành cho các bé và gia đình.',
             'KIBU Games - 100% Free games built with love for kids and families.'],
+        /* Chữ "KIBU Games" ở chân trang nay là một liên kết riêng, nên phần
+         * chữ còn lại tách thành một đoạn khác — hai cặp dưới đây dịch đúng
+         * phần ấy. Thiếu chúng thì chân trang bản tiếng Việt trơ ra tiếng Anh,
+         * mà chỉ trơ MỘT NỬA câu, còn khó coi hơn. */
+        ['- Game miễn phí 100%, làm bằng tình yêu dành cho các bé và gia đình.',
+            '- 100% Free games built with love for kids and families.'],
+        ['- Game miễn phí 100% do Bon & Tin làm bằng cả tình yêu dành cho các bé.',
+            '- 100% Free games built by Bon & Tin with love for kids.'],
         ['KIBU Games - Game miễn phí 100% do Bon & Tin làm bằng cả tình yêu dành cho các bé.',
             'KIBU Games - 100% Free games built by Bon & Tin with love for kids.'],
         ['Do Các Bé Làm, Cho Các Bé Chơi!', 'Built By Kids, For Kids!'],

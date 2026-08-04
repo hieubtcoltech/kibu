@@ -232,6 +232,23 @@ body > .site-footer {
     gap: 12px;
 }
 
+/* Chữ "KIBU Games" ở chân trang là đường về trang chủ. Giữ nguyên màu chữ
+   quanh nó để câu vẫn đọc liền mạch, chỉ gạch chân mờ để biết bấm được — chân
+   trang không phải chỗ hét lên "bấm vào đây". */
+.footer-credit .footer-home {
+    color: inherit;
+    font-weight: 800;
+    text-decoration: underline;
+    text-decoration-color: rgba(255, 255, 255, 0.28);
+    text-underline-offset: 3px;
+    transition: color 0.12s ease, text-decoration-color 0.12s ease;
+}
+
+.footer-credit .footer-home:hover {
+    color: #fff;
+    text-decoration-color: currentColor;
+}
+
 /* ---------- Kênh liên hệ ----------
  * Hai nút nhỏ ở chân mọi trang, để người dùng nhắn thẳng cho chủ web.
  *
