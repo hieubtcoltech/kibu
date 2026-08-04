@@ -28,6 +28,12 @@
   không có số ngẫu nhiên, không có bộ đếm rình cho bé trượt, không có lượt bị cố
   tình làm yếu đi.
 </p>
+<p>
+  Trang này còn <b>gieo hạt</b> cho thế đống thú, nên mở lại bao nhiêu lần cũng ra
+  đúng một con số. Trước khi gieo hạt thì mỗi lần chạy là một đống thú khác, và
+  cùng một cấu hình đo ba lần ra 29% – 21% – 21%; chênh lệch ấy là do đống thú
+  chứ không do cái càng, mà nhìn vào thì rất dễ tưởng là do cái càng.
+</p>
 <pre id="out">đang dựng tủ…</pre>
 <div id="stage"><div id="game-canvas"></div></div>
 
@@ -80,6 +86,14 @@
             var x = lo + (hi - lo) * (col / (COLS - 1));
             var hit = 0;
             for (var t = 0; t < TRIES; t++) {
+                /* Gieo hạt trước khi dựng tủ. Không gieo thì mỗi lượt là một
+                 * thế đống thú bốc ra từ Math.random(), và trang này đo cùng
+                 * một cấu hình ba lần ra ba số khác nhau (29% – 21% – 21%).
+                 * Em suýt đọc chênh lệch ấy thành "sửa thế này thì tốt hơn thế
+                 * kia". Gieo hạt rồi thì hai cấu hình được so trên ĐÚNG cùng
+                 * những thế đống thú, chênh nhau bao nhiêu là thật bấy nhiêu.
+                 * Hạt đổi theo từng lượt nên vẫn đủ mọi kiểu đống. */
+                cm.seed(col * 977 + t * 31 + 7);
                 cm.start(1);          /* tủ mới, đống thú xếp lại từ đầu */
                 cm.settle(2.2);       /* chờ đống thú nằm yên */
                 cm.grabAt(x);

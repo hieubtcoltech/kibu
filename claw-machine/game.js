@@ -57,20 +57,52 @@
         maxX: BOX.x + BOX.w - 70,
         topY: RAIL_Y + 46,
         /* Càng hạ tới đây thì dừng. Chọn sao cho MŨI MÓC chạm tới sát mặt sàn
-         * (mũi nằm thấp hơn khớp treo chừng 100 ô): có thế thì lúc khép, hai
-         * móc mới lùa được xuống DƯỚI con thú mà xúc lên. Dừng cao hơn thì móc
-         * chỉ bấu vào hông con thú, và hông thì không đỡ được gì. */
-        maxDropY: FLOOR_Y - 100,
+         * mà không cắm xuống dưới sàn: lúc khép hết, mũi móc nằm thấp hơn khớp
+         * treo 115 ô, nên khớp phải dừng cách sàn ngần ấy. Có xuống được tới
+         * đây thì lúc khép, hai móc mới lùa xuống DƯỚI con thú mà xúc lên; dừng
+         * cao hơn thì móc chỉ bấu vào hông, mà hông thì không đỡ được gì. */
+        maxDropY: FLOOR_Y - 118,
         speed: 300,                        // ô/giây khi bé giữ nút
         dropSpeed: 330,
         liftSpeed: 190,
         travelSpeed: 300,
         armLen: 74,
         armW: 15,
-        openAngle: 0.44,                   // radian, lúc mở
-        closeAngle: 0.02,                  // radian, lúc khép hết
+        /* Độ há của càng, đo bằng máy chứ không ước lượng bằng mắt (xem hàm
+         * dựng gọng bên dưới — chỗ dời trọng tâm):
+         *   há 0,62  → hai mũi cách nhau 157 ô, gấp 2,2 lần con thú (70 ô);
+         *   khép −0,16 → còn 76 ô, vừa đúng ôm quanh mình con thú.
+         * Lúc hạ xuống phải há rộng hơn hẳn con thú thì mới ra dáng cái càng
+         * đang chờ chụp; há bằng đúng con thú thì nhìn như cái kẹp quần áo.
+         * Khép phải âm góc, tức là chúi hai mũi vào trong quá phương thẳng
+         * đứng, thì mới thành thế ôm; để 0 thì móc đứng song song, hở ra hai
+         * bên, trông như đang thả chứ không phải đang giữ. */
+        openAngle: 0.62,                   // radian, lúc há
+        closeAngle: -0.16,                 // radian, lúc khép hết
         closeTime: 0.42
     };
+
+    /* ---- NGUỒN SỐ NGẪU NHIÊN CỦA THẾ GIỚI VẬT LÝ ----
+     *
+     * Chỗ con thú rơi xuống lúc dựng tủ vốn lấy thẳng Math.random(), nên mỗi
+     * lần mở game là một thế đống khác — với bé thì hay, với MÁY ĐO thì hỏng:
+     * đo cùng một cấu hình ba lần ra 29% – 21% – 21%, mà em suýt đọc mấy con
+     * số ấy thành "sửa cái này thì tốt hơn cái kia". Không phải, đó chỉ là ba
+     * đống thú khác nhau.
+     *
+     * Nay máy đo gọi seed(n) để dựng lại đúng một thế đống, còn bé chơi thì
+     * không gọi gì cả và vẫn được Math.random() như cũ. Lưu ý: cái này chỉ gieo
+     * hạt cho THẾ ĐỐNG THÚ. Luật giữ càng vẫn không có một con số ngẫu nhiên
+     * nào — bám chặt hay lỏng chỉ phụ thuộc chỗ bé ngắm. */
+    var rndState = 0, rndFixed = false;
+    function rnd() {
+        if (!rndFixed) return Math.random();
+        rndState = (rndState + 0x6D2B79F5) | 0;
+        var t = Math.imul(rndState ^ (rndState >>> 15), 1 | rndState);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+    function seedWorld(n) { rndFixed = (n != null); rndState = n | 0; }
 
     /* LỰC CÀNG LÀ HẰNG SỐ — xem ghi chú đầu tệp. Ba con số dưới đây là tất cả
      * những gì quyết định giữ được hay tuột, và không dòng nào trong game được
@@ -275,6 +307,22 @@
                 this.matter.world.setBounds(0, -400, W, H + 400, 60, true, true, false, true);
                 this.matter.world.setGravity(0, 1.15);
 
+                /* Tự tay quay bánh vật lý, không để Phaser quay hộ.
+                 *
+                 * Để Phaser tự quay thì có HAI chỗ cùng quay một cái bánh: nhịp
+                 * vẽ của Phaser một chỗ, còn máy đo tỉ lệ gắp một chỗ nữa. Hai
+                 * chỗ chen nhau ở những thời điểm không đoán trước được, và kết
+                 * quả là cùng một tệp, cùng một chỗ ngắm, đo ba lần ra ba số
+                 * khác nhau (33% – 50% – 67% ở cùng một cột). Trang đo thì vẫn
+                 * in dòng "lần nào cũng y hệt nhau" — nó nói sai mà không biết.
+                 *
+                 * Đây là lần thứ tư cái MÁY ĐO hỏng chứ không phải cái máy gắp
+                 * hỏng, nên ghi lại cho rõ: chỉ được có đúng một đường quay
+                 * bánh, và đường ấy là stepAll(). */
+                this.matter.world.autoUpdate = false;
+                this.frozen = false;
+                this.acc = 0;
+
                 this.back = this.add.graphics();
                 this.paintCabinetBack();
 
@@ -439,6 +487,17 @@
                         friction: GRIP.friction,
                         frictionStatic: 1.4
                     });
+                    /* Matter xoay vật thể quanh TRỌNG TÂM của nó, mà trọng tâm
+                     * của cái gọng lại nằm giữa thân gọng. Không sửa thì cái
+                     * gọng bị treo lơ lửng ở giữa: nửa trên thò lên trên khớp,
+                     * nửa dưới ngắn đi một nửa, và càng mở ra chỉ rộng đúng
+                     * bằng một con thú thay vì há rộng gấp đôi. Đo mới thấy —
+                     * nhìn hình thì chỉ thấy "càng hơi nhỏ".
+                     *
+                     * Dời trọng tâm về đúng khớp treo (gốc toạ độ lúc dựng) thì
+                     * gọng mới xoay quanh khớp như cái càng thật. */
+                    M.Body.setCentre(arm, { x: -arm.position.x, y: -arm.position.y }, true);
+
                     arm.plugin = { side: s };
                     this.matter.world.add(arm);
                     this.arms.push(arm);
@@ -474,14 +533,14 @@
             },
 
             addPlush: function (atX, atY) {
-                var id = Math.floor(Math.random() * P.COUNT);
+                var id = Math.floor(rnd() * P.COUNT);
                 var si = P.speciesOf(id), vi = P.variantOf(id);
                 /* Thả bên PHẢI cửa trả thưởng thôi. Thả tràn cả bề ngang thì có
                  * con rơi thẳng vào cửa ngay từ lúc dựng tủ — bé mở game ra đã
                  * thấy một con nằm sẵn trong máng, trông như máy hỏng. */
                 var lo = CHUTE.x + CHUTE.w + 60;
-                var x = atX == null ? (lo + Math.random() * (BOX.x + BOX.w - 60 - lo)) : atX;
-                var y = atY == null ? (BOX.y + 60 + Math.random() * 120) : atY;
+                var x = atX == null ? (lo + rnd() * (BOX.x + BOX.w - 60 - lo)) : atX;
+                var y = atY == null ? (BOX.y + 60 + rnd() * 120) : atY;
 
                 var body = M.Bodies.rectangle(x, y, PLUSH_R * 1.75, PLUSH_R * 2.0, {
                     chamfer: { radius: PLUSH_R * 0.7 },
@@ -492,7 +551,7 @@
                     /* Đồ bông thì nặng nề, không lăn lông lốc như quả bóng */
                     frictionAir: 0.02
                 });
-                M.Body.setAngle(body, (Math.random() - 0.5) * 0.8);
+                M.Body.setAngle(body, (rnd() - 0.5) * 0.8);
                 this.matter.world.add(body);
 
                 var img = this.add.image(x, y, 'plush_' + si + '_' + vi);
@@ -573,8 +632,15 @@
             },
 
             update: function (time, delta) {
-                var dt = Math.min(0.05, delta / 1000);
-                this.stepAll(dt);
+                /* Máy đo đang chạy thì nhịp vẽ ĐỨNG YÊN hẳn, không được chen
+                 * thêm bước nào vào giữa. */
+                if (this.frozen) return;
+
+                /* Nhịp cố định 1/60: máy nhanh máy chậm đều ra cùng một đường
+                 * rơi, và cũng đúng bằng nhịp máy đo dùng. Dồn quá 5 nhịp thì
+                 * bỏ phần dư — thà tua chậm còn hơn nhảy cóc xuyên qua tường. */
+                this.acc = Math.min(this.acc + delta / 1000, 5 / 60);
+                while (this.acc >= 1 / 60) { this.acc -= 1 / 60; this.stepAll(1 / 60); }
                 this.syncPlush();
                 this.drawClaw();
             },
@@ -589,8 +655,9 @@
              * phần ấy vốn chạy đúng. Gom vào một chỗ thì không còn đường nào
              * để quên nữa. */
             stepAll: function (dt) {
-                this.stepClaw(dt);
-                this.stepHold(dt);
+                this.stepClaw(dt);                                   // càng đi tới chỗ mới
+                M.Engine.update(this.matter.world.engine, dt * 1000); // đống thú va chạm theo
+                this.stepHold(dt);                                   // con đang bị quắp bám càng
             },
 
             /* Trạng thái của càng, tách riêng để máy đo tỉ lệ gắp gọi thẳng */
@@ -620,7 +687,19 @@
                         var pit = this.plushGroup[pi];
                         if (pit.taken) continue;
                         if (Math.abs(pit.body.position.x - c.x) > 58) continue;
-                        var want = pit.body.position.y - PLUSH_R * 1.35;
+                        /* Dừng cao hơn đỉnh con thú 1,85 lần bán kính. Con số
+                         * này BUỘC vào chiều dài gọng: gọng đang há thò xuống
+                         * dưới khớp treo 84 ô, nên dừng ở đây thì hai mũi móc
+                         * dừng ngang tầm giữa mình con thú — đủ sâu để lát nữa
+                         * khép vào là lùa được xuống dưới, mà chưa sâu tới mức
+                         * cày nát cả đống thú trên đường xuống. Ai đổi chiều
+                         * dài gọng thì phải đo lại con số này.
+                         *
+                         * Đo bằng trang check-grab (48 lượt, thế đống thú gieo
+                         * hạt nên so được): dừng 1,35 → 29% gắp được, 1,85 →
+                         * 44%, 2,30 → 21%. Nông quá thì móc chỉ bấu vào hông,
+                         * sâu quá thì con thú bị ủi văng trước khi càng khép. */
+                        var want = pit.body.position.y - PLUSH_R * 1.85;
                         if (want < stop) stop = want;
                     }
                     if (c.y >= stop) { c.y = stop; this.setPhase('close'); }
@@ -717,6 +796,19 @@
                  * vật thường và rơi theo đúng vật lý. */
                 M.Body.setStatic(best.body, true);
                 this.heldOffset = best.body.position.y - c.y;
+                /* Rồi kéo dần con thú vào ĐÚNG LÒNG CÀNG.
+                 *
+                 * Bắt được con nào thì giữ nguyên chỗ nó đang nằm, mà chỗ ấy có
+                 * thể thấp hơn mũi móc tới cả trăm ô — ảnh chụp lúc nhấc lên
+                 * thấy rõ con thú lủng lẳng BÊN DƯỚI hai cái móc, như bị dán vào
+                 * không khí. Mũi móc khép lại nằm thấp hơn khớp treo 115 ô, nên
+                 * tâm con thú phải nằm quanh mức 76 thì mũi móc mới đúng ở đáy
+                 * con thú — tức là đang xúc từ dưới lên.
+                 *
+                 * Kéo dần chứ không nhảy cóc: nhảy một phát thì con thú dịch chỗ
+                 * tức thì, trông như lỗi vẽ; kéo trong khoảng một phần tư giây
+                 * thì ra đúng cái cảnh càng quắp rồi rút con thú vào lòng. */
+                this.heldWant = PLUSH_R * 1.9;
             },
 
             release: function (vx, vy) {
@@ -740,6 +832,8 @@
                 /* Đung đưa nhè nhẹ theo nhịp càng chạy — bám càng lỏng thì lắc
                  * càng nhiều, để bé nhìn là biết con này sắp tuột. */
                 this.heldSway += dt * 5.5;
+                /* kéo con thú vào lòng càng — xem ghi chú ở tryCatch */
+                this.heldOffset += (this.heldWant - this.heldOffset) * Math.min(1, dt * 8);
                 var wobble = (1 - this.heldGrip) * 0.34;
                 var b = this.held.body;
                 M.Body.setPosition(b, {
@@ -786,7 +880,7 @@
                 else sfx.miss();
 
                 /* thả bù cho đống luôn đầy đặn */
-                for (var k = 0; k < got; k++) this.addPlush(BOX.x + BOX.w * 0.5 + Math.random() * 120, BOX.y - 40);
+                for (var k = 0; k < got; k++) this.addPlush(BOX.x + BOX.w * 0.5 + rnd() * 120, BOX.y - 40);
 
                 G.left[G.turn]--;
                 G.phase = 'idle';
@@ -846,25 +940,25 @@
             /* Quay bánh vật lý n giây mà không đụng tới càng — dùng để chờ
              * đống thú nằm yên trước khi đo. */
             settle: function (seconds) {
+                this.frozen = true;   // đo thì nhịp vẽ phải đứng hẳn, xem create()
                 var n = Math.round((seconds || 1) * 60);
                 for (var i = 0; i < n; i++) M.Engine.update(this.matter.world.engine, 1000 / 60);
                 this.syncPlush();
             },
 
             simulateGrab: function (x, maxSteps) {
+                this.frozen = true;   // đo thì nhịp vẽ phải đứng hẳn, xem create()
                 var steps = 0, cap = maxSteps || 1400;
                 this.claw.x = Phaser.Math.Clamp(x, CLAW.minX, CLAW.maxX);
                 G.phase = 'drop';
                 G.phaseT = 0;
                 var soundWas = sfx.on;
                 sfx.on = false;
-                while (G.phase !== 'idle' && steps++ < cap) {
-                    this.stepAll(1 / 60);
-                    /* Quay bánh vật lý bằng tay qua Matter gốc, không mượn nhịp
-                     * vẽ của Phaser: máy đo phải chạy được cả trong trình duyệt
-                     * không cửa sổ, nơi nhịp vẽ gần như đứng im. */
-                    M.Engine.update(this.matter.world.engine, 1000 / 60);
-                }
+                /* stepAll() quay trọn một nhịp máy — càng, vật lý, con đang bị
+                 * quắp — đúng cái nhịp bé đang chơi. Không mượn nhịp vẽ của
+                 * Phaser vì máy đo phải chạy được cả trong trình duyệt không có
+                 * cửa sổ, nơi nhịp vẽ gần như đứng im. */
+                while (G.phase !== 'idle' && steps++ < cap) this.stepAll(1 / 60);
                 sfx.on = soundWas;
                 return steps < cap;
             }
@@ -1171,6 +1265,8 @@
             G: G, UI: UI, store: store, CLAW: CLAW, BOX: BOX, CHUTE: CHUTE, GRIP: GRIP, P: P,
             start: function (kids) { UI.start(kids || 1); },
             move: function (x) { if (UI.scene) UI.scene.claw.x = x; },
+            /* Gieo hạt cho thế đống thú — chỉ máy đo dùng, xem ghi chú ở rnd() */
+            seed: seedWorld,
             settle: function (sec) { if (UI.scene) UI.scene.settle(sec); },
             grabAt: function (x) { return UI.scene ? UI.scene.simulateGrab(x) : false; },
             pile: function () {
