@@ -46,7 +46,8 @@
         { dir: 'screw-jam', slug: 'screw-jam' },
         { dir: 'claw-machine', slug: 'claw-machine' },
         { dir: 'marble-machine', slug: 'marble-machine' },
-        { dir: 'duck-shoot', slug: 'duck-shoot' }
+        { dir: 'duck-shoot', slug: 'duck-shoot' },
+        { dir: 'block-tower', slug: 'block-tower' }
     ];
 
     var bySlug = {}, byDir = {};

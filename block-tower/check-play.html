@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Tháp Khối — máy soát phần chơi</title>
+<!--
+    MÁY SOÁT PHẦN CHƠI
+    ------------------------------------------------------------------------
+    Mở:  http://localhost:4173/block-tower/check-play.html
+
+    check-rules.js soát LUẬT bằng Node. Máy này soát PHẦN CHƠI THẬT: nạp đúng
+    index.html của game qua khung nhúng, rồi cho một con rô-bốt ngồi chơi bằng
+    CHÍNH những hàm mà ngón tay bé gọi — tryMove, tryRotate, hardDrop.
+
+    Vì sao phải có cả hai: luật đúng mà phần chơi gọi sai thì bé vẫn gặp lỗi.
+    Bài học từ Cỗ Máy Kỳ Quặc — máy soát chạy luật thì màn nào cũng qua, nhưng
+    kéo bằng tay thật lại không phá nổi màn 3, vì chỗ hỏng nằm ở phần chạm.
+
+    Các phép soát:
+      1. Rô-bốt chơi trọn ván bằng hàm thật — ăn được hàng, lên được bàn
+      2. Không bao giờ có quân nào nằm đè lên khối cũ (soát từng nhịp)
+      3. Ăn hàng xong không sót ô lơ lửng
+      4. Đường bóng luôn chỉ đúng chỗ quân đáp xuống
+      5. Ân huệ khi chạm đáy: xoay được sau khi đã chạm, và không kéo dài vô hạn
+      6. Đủ ảnh khối cho cả năm chất liệu, và nướng ở gấp ba
+      7. Điểm và số hàng trên bảng khớp với trạng thái thật
+      8. Bảng điểm không tràn ra ngoài trên màn điện thoại hẹp 390px
+-->
+<style>
+    body { font-family: ui-monospace, Menlo, monospace; background: #0b1220; color: #e2e8f0;
+           margin: 0; padding: 20px; font-size: 13px; line-height: 1.65; }
+    h1 { font-size: 16px; color: #ffc93c; margin: 0 0 4px; }
+    .sub { color: #94a3b8; margin-bottom: 16px; }
+    #out { white-space: pre-wrap; }
+    .ok { color: #8ce99a; } .bad { color: #ff8fae; } .dim { color: #64748b; }
+    iframe { position: fixed; left: -3000px; width: 1100px; height: 900px; border: 0; }
+</style>
+</head>
+<body>
+<h1>THÁP KHỐI — máy soát phần chơi</h1>
+<div class="sub">rô-bốt chơi bằng chính mã của game, không phải bản chép lại</div>
+<div id="out">đang nạp game…</div>
+<iframe id="frame" src="/block-tower/"></iframe>
+
+<script>
+'use strict';
+
+var out = document.getElementById('out');
+var fails = [];
+function say(s, cls) { out.innerHTML += '<span class="' + (cls || '') + '">' + s + '</span>\n'; }
+function fail(s) { fails.push(s); }
+
+function ready(win, cb) {
+    var tries = 0;
+    (function poll() {
+        if (win.blockTower && win.blockTower.UI && win.blockTower.UI.scene) return cb();
+        if (++tries > 200) { say('KHÔNG NẠP ĐƯỢC GAME', 'bad'); return; }
+        setTimeout(poll, 50);
+    })();
+}
+
+/* Rô-bốt: chọn chỗ đặt tốt nhất rồi ĐI TỚI ĐÓ bằng đúng những hàm ngón tay bé
+ * gọi — tryMove để đẩy ngang, tryRotate để xoay, hardDrop để thả. Không được
+ * đặt thẳng toạ độ vào quân: làm thế thì máy soát bỏ qua hết phần điều khiển,
+ * mà điều khiển mới là chỗ hay hỏng. */
+function robotPlay(win, R, G, sc, opt) {
+    opt = opt || {};
+    var steps = 0, guard = opt.guard || 60 * 60 * 6;
+    var placed = 0, badOverlap = 0, badGhost = 0, floaters = 0;
+
+    function overlapCheck() {
+        if (!G.piece) return;
+        var c = R.cellsOf(G.piece);
+        for (var i = 0; i < c.length; i++) {
+            var x = c[i][0], y = c[i][1];
+            if (y < 0) continue;
+            if (x < 0 || x >= R.COLS || y >= R.ROWS) { badOverlap++; return; }
+            if (G.board[y][x]) { badOverlap++; return; }
+        }
+    }
+
+    function ghostCheck() {
+        if (!G.piece) return;
+        var gh = R.dropTo(G.board, G.piece);
+        if (!R.fits(G.board, gh)) { badGhost++; return; }
+        if (R.fits(G.board, R.moved(G.board ? gh : gh, 0, 1))) badGhost++;
+    }
+
+    /* ô trống bị khối nhốt bên trên — đếm để biết ăn hàng có sót gì không */
+    function floatCheck(before) {
+        var h = R.holes(G.board);
+        if (h > before + 4) floaters++;
+        return h;
+    }
+
+    var lastPiece = null, target = null, holesBefore = 0;
+
+    while (G.mode !== 'over' && steps++ < guard) {
+        if (G.mode === 'play' && G.piece) {
+            overlapCheck();
+            ghostCheck();
+
+            /* quân mới thì tính lại chỗ muốn đặt */
+            if (G.piece !== lastPiece && !target) {
+                target = bestPlacement(R, G.board, G.piece);
+                lastPiece = G.piece;
+                holesBefore = R.holes(G.board);
+            }
+
+            if (target) {
+                if ((G.piece.rot & 3) !== target.rot) {
+                    if (!sc.tryRotate(1)) target = null;      // không xoay được thì thả đại
+                } else if (G.piece.x < target.x) {
+                    if (!sc.tryMove(1)) target = null;
+                } else if (G.piece.x > target.x) {
+                    if (!sc.tryMove(-1)) target = null;
+                } else {
+                    sc.hardDrop();
+                    placed++;
+                    target = null;
+                    lastPiece = null;
+                    floatCheck(holesBefore);
+                }
+            } else {
+                sc.hardDrop();
+                placed++;
+                lastPiece = null;
+                floatCheck(holesBefore);
+            }
+        }
+        sc.stepAll(1 / 60);
+        if (opt.max && placed >= opt.max) break;
+    }
+    return { steps: steps, placed: placed, badOverlap: badOverlap, badGhost: badGhost, floaters: floaters };
+}
+
+function bestPlacement(R, board, piece) {
+    var best = null, bestScore = -1e9;
+    for (var rot = 0; rot < 4; rot++) {
+        for (var x = -2; x < R.COLS + 2; x++) {
+            var p = { type: piece.type, mat: piece.mat, x: x, y: piece.y, rot: rot };
+            if (!R.fits(board, p)) continue;
+            var land = R.dropTo(board, p);
+            var copy = board.map(function (r) { return r.slice(); });
+            var over = R.lock(copy, land);
+            if (over) continue;
+            var rows = R.fullRows(copy);
+            var sc2 = rows.length * 60 - R.holes(copy) * 12 - R.stackHeight(copy) * 2;
+            if (sc2 > bestScore) { bestScore = sc2; best = { x: x, rot: rot }; }
+        }
+    }
+    return best;
+}
+
+window.addEventListener('load', function () {
+    var win = document.getElementById('frame').contentWindow;
+    ready(win, function () { setTimeout(function () { run(win); }, 300); });
+});
+
+function run(win) {
+    out.innerHTML = '';
+    var R = win.TowerRules, G = win.blockTower.G, sc = win.blockTower.UI.scene;
+
+    /* ---- 1–3: rô-bốt chơi bằng hàm thật ---- */
+    say('· rô-bốt chơi bằng chính hàm mà ngón tay bé gọi', 'dim');
+    var totalPlaced = 0, totalLines = 0, maxLevel = 1;
+    for (var g = 0; g < 6; g++) {
+        win.blockTower.UI.start();
+        sc.frozen = true;
+        sc.startGame(3000 + g * 97);
+        var r = robotPlay(win, R, G, sc, { max: 160 });
+        totalPlaced += r.placed;
+        totalLines += G.lines;
+        if (G.level > maxLevel) maxLevel = G.level;
+        say('    ván ' + (g + 1) + ': đặt ' + r.placed + ' quân · ăn ' + G.lines +
+            ' hàng · bàn ' + G.level + ' · ' + G.score + ' điểm' +
+            (r.badOverlap ? ' · ĐÈ NHAU ' + r.badOverlap : '') +
+            (r.badGhost ? ' · BÓNG SAI ' + r.badGhost : '') +
+            (r.floaters ? ' · Ô LƠ LỬNG ' + r.floaters : ''),
+            (r.badOverlap || r.badGhost || r.floaters) ? 'bad' : '');
+        if (r.badOverlap) fail('ván ' + (g + 1) + ': quân đang rơi nằm đè lên khối cũ ' + r.badOverlap + ' nhịp');
+        if (r.badGhost) fail('ván ' + (g + 1) + ': đường bóng chỉ sai chỗ ' + r.badGhost + ' nhịp');
+        if (r.floaters) fail('ván ' + (g + 1) + ': ăn hàng xong sinh ra ô lơ lửng ' + r.floaters + ' lần');
+        if (r.placed < 40) fail('ván ' + (g + 1) + ': rô-bốt chỉ đặt nổi ' + r.placed + ' quân — điều khiển đang kẹt ở đâu đó');
+    }
+    say('    cộng lại: ' + totalPlaced + ' quân, ' + totalLines + ' hàng, cao nhất bàn ' + maxLevel);
+    if (!totalLines) fail('chơi sáu ván mà không ăn nổi một hàng nào');
+
+    /* ---- 5: ân huệ khi chạm đáy ---- */
+    say('');
+    say('· ân huệ khi quân đã chạm đáy', 'dim');
+    win.blockTower.UI.start();
+    sc.frozen = true;
+    sc.startGame(555);
+    /* thả quân xuống sát đáy rồi bước tới lúc nó chạm */
+    var guard = 0;
+    while (guard++ < 6000 && R.fits(G.board, R.moved(G.piece, 0, 1))) sc.stepAll(1 / 60);
+    var landed = !R.fits(G.board, R.moved(G.piece, 0, 1));
+    /* chạm rồi vẫn phải xoay được */
+    var rotOk = sc.tryRotate(1);
+    /* và ân huệ phải HẾT chứ không kéo dài vô hạn — bước một giây rưỡi */
+    var before = JSON.stringify(G.board);
+    for (var t = 0; t < 120; t++) sc.stepAll(1 / 60);
+    var lockedEventually = JSON.stringify(G.board) !== before;
+    say('    quân chạm đáy: ' + (landed ? 'có' : 'KHÔNG') +
+        ' · xoay được sau khi chạm: ' + (rotOk ? 'có' : 'không') +
+        ' · sau 2 giây đã gắn vào giếng: ' + (lockedEventually ? 'có' : 'CHƯA'),
+        (landed && lockedEventually) ? 'ok' : 'bad');
+    if (!landed) fail('không dựng được tình huống quân chạm đáy để thử');
+    if (!lockedEventually) fail('quân chạm đáy rồi mà hai giây sau vẫn chưa gắn vào giếng — ân huệ đang kéo dài vô hạn');
+
+    /* ---- 6: ảnh khối ---- */
+    say('');
+    say('· ảnh khối nướng sẵn', 'dim');
+    var CELL = win.blockTower.size().CELL;
+    var miss = [], small = [];
+    Object.keys(win.TowerArt.MATS).forEach(function (k) {
+        var key = 'cube_' + k + '_' + CELL;
+        if (!sc.textures.exists(key)) { miss.push(k); return; }
+        var src = sc.textures.get(key).getSourceImage();
+        /* Nướng đúng cỡ hiển thị thì lên màn nét đôi là nhoè — bài học từ Máy
+         * Gắp Thú. Ảnh phải rộng hơn ô ít nhất gấp đôi. */
+        if (src.width < CELL * 2) small.push(k + ' rộng ' + src.width + 'px cho ô ' + CELL + 'px');
+    });
+    say('    ' + (Object.keys(win.TowerArt.MATS).length - miss.length) + '/' +
+        Object.keys(win.TowerArt.MATS).length + ' chất liệu, ô ' + CELL + 'px, ảnh ' +
+        (sc.textures.exists('cube_gold_' + CELL) ? sc.textures.get('cube_gold_' + CELL).getSourceImage().width + 'px' : '—'));
+    if (miss.length) fail('thiếu ảnh khối: ' + miss.join(', '));
+    if (small.length) fail('ảnh nướng nhỏ quá, lên màn nét đôi sẽ nhoè: ' + small.join(', '));
+
+    /* ---- 7: bảng điểm khớp trạng thái thật ---- */
+    say('');
+    say('· bảng điểm có khớp trạng thái thật không', 'dim');
+    win.blockTower.UI.start();
+    sc.frozen = true;
+    sc.startGame(881);
+    robotPlay(win, R, G, sc, { max: 40 });
+    win.blockTower.UI.paintHud();
+    var d = win.document;
+    var shown = {
+        score: +d.getElementById('hud-score').textContent,
+        lines: +d.getElementById('hud-lines').textContent,
+        level: +d.getElementById('hud-level').textContent
+    };
+    say('    bảng ghi ' + shown.score + ' điểm / ' + shown.lines + ' hàng / bàn ' + shown.level +
+        ' — thật là ' + G.score + ' / ' + G.lines + ' / ' + G.level,
+        (shown.score === G.score && shown.lines === G.lines && shown.level === G.level) ? 'ok' : 'bad');
+    if (shown.score !== G.score) fail('bảng ghi ' + shown.score + ' điểm mà thật ra là ' + G.score);
+    if (shown.lines !== G.lines) fail('bảng ghi ' + shown.lines + ' hàng mà thật ra là ' + G.lines);
+    if (shown.level !== G.level) fail('bảng ghi bàn ' + shown.level + ' mà thật ra là bàn ' + G.level);
+
+    /* ---- 8: màn điện thoại hẹp ---- */
+    var frame = document.getElementById('frame');
+    frame.style.width = '390px';
+    frame.style.height = '780px';
+    say('');
+    say('· bảng điểm trên màn hẹp 390px', 'dim');
+    setTimeout(function () {
+        var dd = win.document;
+        var hud = dd.getElementById('hud');
+        var stage = dd.querySelector('.stage');
+        var hr = hud.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+        var bad = [];
+        if (hr.right > sr.right + 1) bad.push('bảng điểm tràn ra ngoài mặt tranh ' + Math.round(hr.right - sr.right) + 'px');
+        if (hud.scrollWidth > hud.clientWidth + 1)
+            bad.push('bảng điểm chật: chữ bên trong rộng ' + hud.scrollWidth + 'px mà chỗ chỉ có ' + hud.clientWidth + 'px');
+        if (dd.documentElement.scrollWidth > 391)
+            bad.push('cả trang rộng ' + dd.documentElement.scrollWidth + 'px, tràn khỏi màn 390px');
+        var pad = dd.getElementById('touchpad').getBoundingClientRect();
+        if (pad.width < 200) bad.push('hàng nút bấm chỉ rộng ' + Math.round(pad.width) + 'px');
+        say('    ' + (bad.length ? bad.join('; ') : 'gọn gàng, hàng nút rộng ' + Math.round(pad.width) + 'px'),
+            bad.length ? 'bad' : 'ok');
+        bad.forEach(function (b) { fail('màn 390px: ' + b); });
+        finish();
+    }, 500);
+
+    function finish() {
+        say('');
+        if (fails.length) {
+            say('KHÔNG ĐẠT:', 'bad');
+            fails.forEach(function (f) { say('  · ' + f, 'bad'); });
+        } else {
+            say('ĐẠT — rô-bốt chơi được bằng chính hàm của ngón tay, không quân nào đè', 'ok');
+            say('      lên khối cũ, đường bóng luôn đúng, ăn hàng không sinh ô lơ lửng,', 'ok');
+            say('      ân huệ có hạn, ảnh khối đủ và đủ nét, bảng điểm khớp và vừa màn hẹp.', 'ok');
+        }
+        document.title = fails.length ? 'KHONG DAT ' + fails.length : 'DAT';
+        window.__checkDone = { fails: fails };
+    }
+}
+</script>
+</body>
+</html>

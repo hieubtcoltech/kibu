@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Block Tower - Free Online Kids Game | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Block Tower online for free on KIBU Games! A 2.5D block-stacking puzzle with real brick, metal and gold cubes floating in a living room.">
+    <meta name="keywords" content="Block Tower, block puzzle, falling blocks, isometric tetris, 2.5D puzzle, xep hinh, thap khoi, game xep hinh, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/block-tower/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/block-tower/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/block-tower/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/block-tower/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/block-tower/">
+    <meta property="og:title" content="Block Tower - Free Online Game | KIBU Games">
+    <meta property="og:description" content="Stack real 3D blocks of brick, metal and gold in a well that floats in mid-air.">
+    <meta property="og:image" content="https://kibugames.com/block-tower/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/block-tower/">
+    <meta name="twitter:title" content="Block Tower - Free Online Game">
+    <meta name="twitter:description" content="Play Block Tower free on KIBU Games in English & Vietnamese.">
+    <meta name="twitter:image" content="https://kibugames.com/block-tower/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Block Tower",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/block-tower/",
+      "genre": "Casual Arcade",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/block-tower/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body>
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
+                    <img src="/logo.svg" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <img src="/block-tower/icon.jpg" alt="" class="brand-img"
+                        onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><span class="brand-icon">🧱</span>
+                    <h1 class="brand-title">BLOCK TOWER</h1>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button id="btn-help" class="btn">
+                    <i class="fa-solid fa-circle-question"></i> <span>How to play</span>
+                </button>
+                <button id="btn-pause" class="btn">
+                    <i class="fa-solid fa-pause"></i> <span>Pause</span>
+                </button>
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+                </button>
+                <button id="btn-nav-menu" class="btn">
+                    <i class="fa-solid fa-list"></i> <span>Menu</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="game-viewport">
+            <!-- Khung sân giữ đúng tỉ lệ của canvas, do game.js đặt vào --stage-w/h,
+                 nhờ vậy bảng điểm nằm khớp lên mặt tranh. -->
+            <div class="stage">
+                <div id="game-canvas"></div>
+
+                <div id="hud" class="hud" hidden>
+                    <div class="hud-box">
+                        <span class="hud-label">SCORE</span>
+                        <b id="hud-score">0</b>
+                    </div>
+                    <div class="hud-box">
+                        <span class="hud-label">LINES</span>
+                        <b id="hud-lines">0</b>
+                    </div>
+                    <div class="hud-box">
+                        <span class="hud-label">LEVEL</span>
+                        <b id="hud-level">1</b>
+                    </div>
+                    <div class="hud-next">
+                        <span class="hud-label">NEXT</span>
+                        <div id="next-list" class="next-list"></div>
+                    </div>
+                    <div id="hud-room" class="hud-room">Living Room</div>
+                </div>
+
+                <!-- Nút bấm to cho bé chơi bằng điện thoại. Đặt dưới đáy để ngón cái
+                     với tới được mà không che mất cái giếng. -->
+                <div id="touchpad" class="touchpad">
+                    <button class="pad-btn" data-act="left" aria-label="Move left"><i class="fa-solid fa-caret-left"></i></button>
+                    <button class="pad-btn pad-turn" data-act="turn" aria-label="Rotate"><i class="fa-solid fa-rotate-right"></i></button>
+                    <button class="pad-btn" data-act="soft" aria-label="Drop slowly"><i class="fa-solid fa-angles-down"></i></button>
+                    <button class="pad-btn pad-drop" data-act="drop" aria-label="Drop now"><i class="fa-solid fa-download"></i></button>
+                    <button class="pad-btn" data-act="right" aria-label="Move right"><i class="fa-solid fa-caret-right"></i></button>
+                </div>
+            </div>
+
+            <!-- Màn hình chào -->
+            <div id="menu-overlay" class="screen">
+                <div class="panel">
+                    <div class="panel-emoji">🧱✨</div>
+                    <h2 class="panel-title">BLOCK TOWER</h2>
+                    <p class="panel-desc">
+                        A well of <b>real 3D blocks</b> floating in mid-air. Stack brick, stone, wood and
+                        metal - and grab the <b>gold blocks</b>, they are worth triple.
+                    </p>
+
+                    <div class="mat-strip">
+                        <span class="mat m-brick">brick</span>
+                        <span class="mat m-stone">stone</span>
+                        <span class="mat m-wood">wood</span>
+                        <span class="mat m-metal">metal</span>
+                        <span class="mat m-gold">gold ×3</span>
+                    </div>
+
+                    <p class="best-line">Best score: <b id="menu-best">0</b></p>
+                    <button id="btn-play" class="big-btn"><i class="fa-solid fa-play"></i> START STACKING</button>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn -->
+            <div id="help-overlay" class="screen hidden">
+                <div class="panel panel-small">
+                    <div class="panel-emoji">🎮</div>
+                    <h2 class="panel-title">HOW TO PLAY</h2>
+                    <ul class="help-list">
+                        <li><b>Tap the left or right side</b> of the screen to slide the block. <b>Tap the middle</b> to turn it.</li>
+                        <li><b>Swipe down</b> - or press the big button - to drop it straight away.</li>
+                        <li>On a keyboard: arrow keys to move and turn, space to drop, P to pause.</li>
+                        <li>Fill a whole row and it bursts. Four rows at once is worth far more than one at a time.</li>
+                        <li>🥇 <b>Gold blocks are worth triple.</b> A row made only of gold is the best you can do.</li>
+                        <li>The pale outline shows exactly where the block will land - aim with it.</li>
+                    </ul>
+                    <button id="btn-help-back" class="big-btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                </div>
+            </div>
+
+            <!-- Tạm dừng -->
+            <div id="pause-overlay" class="screen hidden">
+                <div class="panel panel-small">
+                    <div class="panel-emoji">⏸️</div>
+                    <h2 class="panel-title">PAUSED</h2>
+                    <p class="panel-desc">Take a break, the tower will wait.</p>
+                    <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> KEEP STACKING</button>
+                </div>
+            </div>
+
+            <!-- Kết thúc -->
+            <div id="over-overlay" class="screen hidden">
+                <div class="panel">
+                    <div class="panel-emoji">🏆</div>
+                    <h2 class="panel-title">TOWER FULL!</h2>
+                    <div class="final-grid">
+                        <div class="score-row"><span>Score</span><b id="over-score">0</b></div>
+                        <div class="score-row"><span>Rows cleared</span><b id="over-lines">0</b></div>
+                        <div class="score-row"><span>Level reached</span><b id="over-level">1</b></div>
+                    </div>
+                    <p class="best-line">Best score: <b id="over-best">0</b>
+                        <span id="over-new" class="new-best" hidden>NEW BEST!</span></p>
+                    <div class="over-actions">
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> PLAY AGAIN</button>
+                        <button id="btn-over-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> MENU</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> <a href="/" class="footer-home">KIBU Games</a> - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <a class="footer-contact is-facebook" href="https://www.facebook.com/kibugames.official/"
+                    target="_blank" rel="noopener" title="Follow on Facebook" aria-label="Follow on Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a class="footer-contact is-telegram" href="https://t.me/coolkitty007"
+                    target="_blank" rel="noopener" title="Chat on Telegram" aria-label="Chat on Telegram">
+                    <i class="fa-brands fa-telegram"></i>
+                </a>
+                <a class="footer-contact is-whatsapp" href="https://wa.me/84988100942"
+                    target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <!-- Phaser 3 lấy từ CDN: máy chủ chưa bật gzip cho .js nên tự host sẽ
+         bắt bé tải 1,2 MB thô, còn CDN trả về 253 KB đã nén brotli. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"
+            integrity="sha512-/tJYyDCrI7hnHWp45P189aOwPa6lTREosRhlxEIqx8skB4A3a3rD3iz4o335SJd4sORqjVHw5y1S2hq4hciwLw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="/block-tower/rules.js"></script>
+    <script src="/block-tower/art.js"></script>
+    <script src="/block-tower/game.js"></script>
+</body>
+</html>
