@@ -221,9 +221,11 @@ body > .site-footer {
 
 .footer-credit a {
     color: #38bdf8;
-    text-decoration: underline;
+    text-decoration: none;
     margin-left: 6px;
 }
+
+.footer-credit a:hover { color: #7dd3fc; }
 
 .footer-tools {
     flex-shrink: 0;
@@ -232,22 +234,19 @@ body > .site-footer {
     gap: 12px;
 }
 
-/* Chữ "KIBU Games" ở chân trang là đường về trang chủ. Giữ nguyên màu chữ
-   quanh nó để câu vẫn đọc liền mạch, chỉ gạch chân mờ để biết bấm được — chân
-   trang không phải chỗ hét lên "bấm vào đây". */
+/* Chữ "KIBU Games" ở chân trang là đường về trang chủ. Tô cùng màu xanh với
+   liên kết "Về Chúng Tôi" bên cạnh và KHÔNG gạch chân: hai liên kết trong cùng
+   một dòng thì phải trông giống nhau, mỗi cái một kiểu là mắt tưởng chúng khác
+   loại. Bản đầu em gạch chân, anh Hiếu bảo bỏ đi cho gọn. */
 .footer-credit .footer-home {
-    color: inherit;
+    color: #38bdf8;
     font-weight: 800;
-    text-decoration: underline;
-    text-decoration-color: rgba(255, 255, 255, 0.28);
-    text-underline-offset: 3px;
-    transition: color 0.12s ease, text-decoration-color 0.12s ease;
+    text-decoration: none;
+    margin-left: 0;
+    transition: color 0.12s ease;
 }
 
-.footer-credit .footer-home:hover {
-    color: #fff;
-    text-decoration-color: currentColor;
-}
+.footer-credit .footer-home:hover { color: #7dd3fc; }
 
 /* ---------- Kênh liên hệ ----------
  * Hai nút nhỏ ở chân mọi trang, để người dùng nhắn thẳng cho chủ web.
