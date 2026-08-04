@@ -285,17 +285,79 @@ function run(win) {
     if (miss.length) fail('thiếu ảnh vịt: ' + miss.join(', '));
     if (small.length) fail('ảnh nướng nhỏ quá, lên màn nét đôi sẽ nhoè: ' + small.join(', '));
 
-    /* ---- kết ---- */
+    /* ---- 8: thẻ điểm trên màn điện thoại hẹp nhất ----
+     *
+     * Anh Hiếu chụp bàn 4 bé trên điện thoại: bốn cái mặt biểu tượng đều bị
+     * cắt mất một nửa. Em đã dùng ::first-letter để giữ lại cái mặt khi giấu
+     * tên bé — mà một emoji là nhiều mã ký tự ghép lại, trình duyệt cắt ngay
+     * giữa cụm.
+     *
+     * Phép soát này thu khung nhúng về đúng bề ngang một chiếc điện thoại rồi
+     * đo từng thẻ: chữ có tràn ra ngoài thẻ không, mặt biểu tượng có còn thật
+     * sự nhìn thấy được không. Đo hình chứ không đọc mã, nên mẹo mực kiểu gì
+     * cũng lộ. */
+    var frame = document.getElementById('frame');
+    frame.style.width = '390px';
+    frame.style.height = '780px';
     say('');
-    if (fails.length) {
-        say('KHÔNG ĐẠT:', 'bad');
-        fails.forEach(function (f) { say('  · ' + f, 'bad'); });
-    } else {
-        say('ĐẠT — sáu vòng đều tự đóng, không con vịt nào kẹt, bắn sang làn bạn', 'ok');
-        say('      không ăn điểm, chuỗi nhân đúng bảng, ảnh vịt nướng đủ và đủ nét.', 'ok');
+    say('· thẻ điểm bàn 1–4 bé trên màn hẹp 390px', 'dim');
+
+    var queue = [1, 2, 3, 4];
+    (function nextKids() {
+        if (!queue.length) return finish();
+        var kids = queue.shift();
+        win.duckShoot.UI.start(kids);
+        win.duckShoot.UI.scene.frozen = true;
+        setTimeout(function () {
+            var d = win.document;
+            var box = d.getElementById('cards');
+            var br = box.getBoundingClientRect();
+            var bad = [];
+            for (var i = 0; i < kids; i++) {
+                var card = d.getElementById('pcard' + i);
+                var cr = card.getBoundingClientRect();
+                /* thẻ phải nằm gọn trong dải bảng điểm */
+                if (cr.right > br.right + 1 || cr.left < br.left - 1) bad.push('thẻ bé ' + (i + 1) + ' tràn ra ngoài dải');
+                /* chữ trong thẻ không được rộng hơn thẻ */
+                if (card.scrollWidth > card.clientWidth + 1) {
+                    bad.push('thẻ bé ' + (i + 1) + ' chật, chữ bên trong rộng ' +
+                        card.scrollWidth + 'px mà thẻ chỉ ' + card.clientWidth + 'px');
+                }
+                /* mặt biểu tượng phải thật sự nhìn thấy được, không cụt */
+                var em = card.querySelector('.pc-emoji');
+                if (!em) { bad.push('thẻ bé ' + (i + 1) + ' mất mặt biểu tượng'); continue; }
+                var er = em.getBoundingClientRect();
+                if (er.width < 9 || er.height < 9) {
+                    bad.push('mặt biểu tượng bé ' + (i + 1) + ' chỉ còn ' +
+                        Math.round(er.width) + '×' + Math.round(er.height) + 'px');
+                }
+                if (er.right > cr.right + 1) bad.push('mặt biểu tượng bé ' + (i + 1) + ' bị thẻ cắt mất');
+                /* con số điểm cũng phải còn nguyên */
+                var sc2 = d.getElementById('pscore' + i).getBoundingClientRect();
+                if (sc2.right > cr.right + 1) bad.push('con số của bé ' + (i + 1) + ' bị thẻ cắt mất');
+            }
+            var w0 = d.getElementById('pcard0').getBoundingClientRect().width;
+            say('    ' + kids + ' bé: thẻ rộng ' + Math.round(w0) + 'px · ' +
+                (bad.length ? bad.join('; ') : 'gọn gàng'), bad.length ? 'bad' : 'ok');
+            bad.forEach(function (b) { fail(kids + ' bé trên màn 390px: ' + b); });
+            nextKids();
+        }, 260);
+    })();
+
+    /* ---- kết ---- */
+    function finish() {
+        say('');
+        if (fails.length) {
+            say('KHÔNG ĐẠT:', 'bad');
+            fails.forEach(function (f) { say('  · ' + f, 'bad'); });
+        } else {
+            say('ĐẠT — sáu vòng đều tự đóng, không con vịt nào kẹt, bắn sang làn bạn', 'ok');
+            say('      không ăn điểm, bảng chữ tự dọn khi vào trận, thẻ điểm vừa cả', 'ok');
+            say('      màn hẹp, chuỗi nhân đúng bảng, ảnh vịt nướng đủ và đủ nét.', 'ok');
+        }
+        document.title = fails.length ? 'KHONG DAT ' + fails.length : 'DAT';
+        window.__checkDone = { fails: fails };
     }
-    document.title = fails.length ? 'KHONG DAT ' + fails.length : 'DAT';
-    window.__checkDone = { fails: fails };
 }
 </script>
 </body>

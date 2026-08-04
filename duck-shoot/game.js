@@ -801,16 +801,26 @@
         paintCards: function () {
             var box = el('cards');
             if (!box) return;
+            /* Mặt biểu tượng để RIÊNG một thẻ, không dính vào tên bé.
+             *
+             * Bản đầu em gộp "🦆 BÉ 1" vào một thẻ rồi trên màn hẹp thì thu tên
+             * còn 0 và phóng ::first-letter lên để giữ lại cái mặt. Anh Hiếu
+             * chụp ảnh bàn 4 bé: bốn cái mặt đều bị cắt mất một nửa. ::first-
+             * letter vốn không dành cho emoji — một emoji là nhiều mã ký tự
+             * ghép lại, trình duyệt cắt ngay giữa cụm ấy. Tách ra hai thẻ thì
+             * muốn giấu tên chỉ việc giấu, không phải mẹo mực gì. */
             var html = '';
             for (var i = 0; i < G.kids; i++) {
                 var k = KIDS[i];
                 html += '<div class="pcard" id="pcard' + i + '" style="--kid:' + k.css + '">' +
-                    '<span class="pc-name">' + k.emoji + ' ' + (lang() === 'vi' ? k.vi : k.en) + '</span>' +
+                    '<span class="pc-emoji">' + k.emoji + '</span>' +
+                    '<span class="pc-name">' + (lang() === 'vi' ? k.vi : k.en) + '</span>' +
                     '<b class="pc-score" id="pscore' + i + '">0</b>' +
                     '<span class="pc-combo" id="pcombo' + i + '"></span>' +
                     '</div>';
             }
             box.innerHTML = html;
+            box.className = 'cards kids-' + G.kids;
             box.style.setProperty('--kids', G.kids);
         },
 

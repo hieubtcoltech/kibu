@@ -235,6 +235,12 @@ body {
     box-shadow: 0 0 18px color-mix(in srgb, var(--kid) 45%, transparent);
 }
 
+.pc-emoji {
+    font-size: 1rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
 .pc-name {
     font-family: var(--font-display);
     font-size: 0.85rem;
@@ -694,13 +700,15 @@ body {
     .site-footer { display: none; }
 }
 
-/* Bàn 4 bé trên điện thoại: bốn thẻ điểm cạnh nhau thì tên bé không còn chỗ,
-   nên bỏ chữ chỉ giữ mặt biểu tượng và con số. */
+/* Bàn 3–4 bé trên điện thoại: ba bốn thẻ điểm cạnh nhau thì tên bé không còn
+   chỗ, nên giấu chữ, chỉ giữ mặt biểu tượng và con số. Bé vẫn biết thẻ nào của
+   mình nhờ mặt biểu tượng và màu viền — đúng hai thứ ấy cũng in trên nút chọn
+   số người lúc bắt đầu. */
 @media (max-width: 560px) {
-    .cards[style*="--kids: 4"] .pc-name,
-    .cards[style*="--kids: 3"] .pc-name { font-size: 0; }
-    .cards[style*="--kids: 4"] .pc-name::first-letter,
-    .cards[style*="--kids: 3"] .pc-name::first-letter { font-size: 1rem; }
+    .cards.kids-3 .pc-name,
+    .cards.kids-4 .pc-name { display: none; }
+    .cards.kids-4 .pc-emoji { font-size: 0.92rem; }
+    .cards.kids-4 .pcard { padding: 5px 4px; gap: 4px; }
 }
 
 /* Trên máy có cảm ứng, bảng chọn hay dài hơn màn hình và nút BẮT ĐẦU trôi
