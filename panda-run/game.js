@@ -1359,170 +1359,317 @@
         cheek: 'rgba(255,120,150,0.5)'
     };
 
+    /* ---- gấu trúc: BẢN NGÀY 03/08, đã quay lại theo yêu cầu ----
+     * Hôm 04/08 em vẽ lại con này sáu lần liền theo góp ý của anh Hiếu: cho
+     * đáng yêu hơn, quay mặt về phía chạy, chỉnh theo ảnh chụp, chỉnh theo số
+     * đo lấy từ tệp SVG, bỏ tay rút ngắn chân, rồi dựng lại thành một cục
+     * tròn kiểu mấy bạn thú. Không bản nào anh ưng, và anh chốt quay về bản
+     * cũ. Nên bản dưới đây là nguyên văn hàm vẽ của ngày 03/08 — em không sửa
+     * một nét nào.
+     *
+     * Ghi lại để sau này ai định vẽ lại thì biết: sáu lần thử ấy nằm trong
+     * lịch sử git từ 85d0ca8 tới 0c87403, xem trước rồi hãy làm, đừng đi lại
+     * đúng đường cũ.
+     */
     function paintPanda(g, u, pose, k) {
-        /* ------------------------------------------------------------------
-         * MỘT CỤC TRÒN, GIỐNG HỆT MẤY BẠN THÚ CHẠY PHÍA SAU
-         *
-         * Anh Hiếu: "anh muốn em làm như nhân vật thỏ chạy với đầu của gấu
-         * panda, chân không cần dài".
-         *
-         * Mấy bạn thú trong game (paintPal) không có đầu riêng và thân riêng —
-         * cả con chỉ là MỘT hình tròn, tai với mặt vẽ luôn lên đó, cộng hai
-         * cái chân ngắn ngủn nhấp nhô. Em thì cứ dựng panda kiểu người: đầu
-         * một khối, thân một khối, tay chân riêng. Hai lối dựng khác nhau nên
-         * panda đứng cạnh bầy bạn thế nào cũng lệch, chỉnh tỉ lệ kiểu gì cũng
-         * không cứu được.
-         *
-         * Nay panda dựng đúng khuôn của bạn thỏ, phóng to gấp đôi:
-         *      thân      MỘT hình tròn bán kính 0,62 u
-         *      chân      dày 0,24 u, thò ra dưới bụng, đưa qua đưa lại 0,20 u
-         *      mặt       vẽ thẳng lên hình tròn ấy, không có cổ
-         * ---------------------------------------------------------------- */
-        const cx = 1.35 * u;
-        const foot = 1.86 * u;
+        const H = 2.0 * u;             // chiều cao tấm ảnh
+        const cx = 1.35 * u;           // trục thân, lệch phải để chừa chỗ khăn bay
+        const foot = 1.86 * u;         // chân chạm đất ở đây
+
         const a = k * TAU;
         const run = pose === 'run';
+        const bob = run ? Math.abs(Math.sin(a)) * 0.05 * u : 0;
         const slide = pose === 'slide';
         const jump = pose === 'jump';
-        const cheer = pose === 'cheer';
 
-        const bob = run ? Math.abs(Math.sin(a)) * 0.045 * u : 0;
-        const R = slide ? 0.58 * u : 0.62 * u;
-        const bodyCY = (slide ? foot - 0.50 * u : foot - 0.70 * u) - bob;
-
-        /* Chân: đúng kiểu bạn thỏ — hai que ngắn thò ra dưới bụng, đầu bo
-         * tròn, đưa qua đưa lại theo nhịp. Không đầu gối, không bàn chân
-         * riêng, không tay. */
-        let swing, lift;
-        if (run) {
-            swing = Math.cos(a) * 0.20 * u;
-            lift = Math.max(0, Math.sin(a)) * 0.10 * u;
-        } else if (jump) {
-            swing = 0.14 * u; lift = 0.12 * u;
-        } else if (slide) {
-            swing = 0.20 * u; lift = 0;
-        } else {
-            swing = 0.06 * u; lift = 0;
+        /* Đổ người về trước một chút khi chạy. Đây là dấu hiệu mạnh nhất cho
+         * biết nhân vật đang lao tới: người đứng thẳng đơ mà chân khua thì mắt
+         * đọc ra "đang giậm chân tại chỗ" chứ không phải "đang chạy". Xoay
+         * quanh điểm đặt chân nên bàn chân gần như không xê dịch. */
+        const lean = run ? 0.075 : 0;
+        if (lean) {
+            g.save();
+            g.translate(cx, foot);
+            g.rotate(lean);
+            g.translate(-cx, -foot);
         }
 
-        function leg(hx, dx, lifted, col) {
-            g.strokeStyle = col;
-            g.lineWidth = 0.24 * u;
-            g.lineCap = 'round';
-            g.beginPath();
-            g.moveTo(cx + hx, bodyCY + R * 0.62);
-            g.lineTo(cx + hx + dx, foot - lifted);
-            g.stroke();
-        }
+        /* Trượt thì cả người nằm rạp xuống và ngả về trước. */
+        const bodyCY = slide ? foot - 0.32 * u : foot - 0.58 * u - bob;
+        const headCY = slide ? foot - 0.60 * u : foot - 1.14 * u - bob;
+        const headR = 0.42 * u;
+        const bodyRX = slide ? 0.50 * u : 0.42 * u;
+        const bodyRY = slide ? 0.26 * u : 0.34 * u;
 
-        /* chân bên xa, sẫm hơn một nấc để tách lớp */
-        leg(-0.14 * u, -swing, Math.max(0, -Math.sin(a)) * 0.10 * u, PANDA.limbFar);
+        /* --- ba lô: vẽ trước thân để nằm hẳn ra sau lưng, và nhô hẳn ra ngoài
+         * viền thân, không thì thân trắng nuốt mất nó --- */
+        g.fillStyle = PANDA.pack;
+        rr(g, cx - bodyRX - 0.24 * u, bodyCY - 0.34 * u, 0.42 * u, 0.60 * u, 0.16 * u);
+        g.fill();
+        g.fillStyle = PANDA.packDark;
+        rr(g, cx - bodyRX - 0.24 * u, bodyCY - 0.04 * u, 0.42 * u, 0.13 * u, 0.05 * u);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.28)';
+        rr(g, cx - bodyRX - 0.19 * u, bodyCY - 0.28 * u, 0.13 * u, 0.2 * u, 0.05 * u);
+        g.fill();
 
-        /* --- KHĂN QUÀNG bay ngược chiều chạy, vẽ trước thân --- */
-        const flap = run ? Math.sin(a * 2) * 0.05 * u : 0;
-        g.fillStyle = PANDA.scarf;
+        /* --- đuôi khăn: vẽ TRƯỚC thân để bay ra sau lưng ---
+         * Vẽ sau thân thì dải đỏ nằm đè lên bụng trắng, con panda thành ra
+         * đeo yếm. Dải cũng phải thon dần và lượn sóng, không thì nhìn như
+         * một tấm ván sơn đỏ đóng ngang người. */
+        const neckY0 = (slide ? headCY + 0.26 * u : headCY + 0.34 * u);
+        const flut = run ? Math.sin(a * 2) * 0.09 * u : 0;
+        g.fillStyle = PANDA.scarfDark;
         g.beginPath();
-        g.moveTo(cx - R * 0.28, bodyCY - R * 0.14);
-        g.quadraticCurveTo(cx - R * 1.30, bodyCY - R * 0.46 + flap,
-            cx - R * 1.72, bodyCY + R * 0.06 + flap);
-        g.quadraticCurveTo(cx - R * 1.05, bodyCY + R * 0.34,
-            cx - R * 0.26, bodyCY + R * 0.34);
+        g.moveTo(cx - 0.10 * u, neckY0 - 0.02 * u);
+        g.quadraticCurveTo(cx - 0.52 * u, neckY0 - 0.26 * u + flut,
+            cx - 0.94 * u, neckY0 - 0.06 * u + flut * 1.6);
+        g.quadraticCurveTo(cx - 0.60 * u, neckY0 + 0.04 * u, cx - 0.44 * u, neckY0 + 0.16 * u);
+        g.quadraticCurveTo(cx - 0.26 * u, neckY0 + 0.14 * u, cx - 0.08 * u, neckY0 + 0.12 * u);
         g.closePath();
         g.fill();
 
-        /* --- TAI, vẽ trước thân để nằm sau --- */
-        g.fillStyle = PANDA.black;
-        g.beginPath();
-        g.arc(cx - R * 0.66, bodyCY - R * 0.76, R * 0.30, 0, TAU);
-        g.fill();
-        g.beginPath();
-        g.arc(cx + R * 0.60, bodyCY - R * 0.80, R * 0.26, 0, TAU);
-        g.fill();
+        /* ====================================================================
+         *  CHÂN VÀ TAY — viết lại theo đúng một chu kỳ chạy
+         * --------------------------------------------------------------------
+         *  Bản trước sai ở chỗ không ai ngờ tới: pha tay chân đã đúng, nhưng
+         *  BÀN CHÂN TRƯỢT. Một lần chống đất kéo dài nửa giây, trong nửa giây
+         *  đó mặt đất trôi qua 3,5 u mà bàn chân chỉ lùi được 0,52 u so với
+         *  thân — tức là nó miết TỚI TRƯỚC gần hết quãng đường. Đó đúng là
+         *  động tác moonwalk, nên mắt đọc ra "chạy ngược" dù mọi con số pha
+         *  đều đúng.
+         *
+         *  Hai thứ phải sửa cùng lúc:
+         *    1. Lúc chống đất, bàn chân lùi ĐỀU (đường thẳng), không phải theo
+         *       hình sin. Sin thì hai đầu chậm giữa nhanh, nhìn cũng ra trượt.
+         *    2. Nhịp chân phải tính từ tốc độ chạy, sao cho quãng bàn chân lùi
+         *       đúng bằng quãng mặt đất trôi. Chỗ này làm ở stepPlayer.
+         *
+         *  Quỹ đạo bàn chân theo pha p (0 → 1 là một vòng của MỘT chân):
+         *    p ∈ [0 , 0.5]  CHỐNG ĐẤT — chân sát đất, lùi đều từ trước ra sau
+         *    p ∈ [0.5 , 1]  ĐƯA CHÂN — nhấc lên, vòng ra trước
+         * ==================================================================*/
+        const LEG_A = LEG_AMP * u;         // biên độ trước–sau của bàn chân
+        const LEG_LIFT = 0.30 * u;         // nhấc cao nhất lúc đưa chân
+        const hipY = bodyCY + 0.20 * u;
 
-        /* --- MỘT CỤC TRÒN: vừa là đầu vừa là thân --- */
-        g.fillStyle = PANDA.white;
-        g.beginPath();
-        g.arc(cx, bodyCY, R, 0, TAU);
-        g.fill();
-        g.fillStyle = PANDA.shade;
-        g.beginPath();
-        g.arc(cx + R * 0.14, bodyCY + R * 0.16, R * 0.88, 0, TAU);
-        g.fill();
-        g.fillStyle = PANDA.white;
-        g.beginPath();
-        g.arc(cx - R * 0.05, bodyCY - R * 0.08, R * 0.90, 0, TAU);
-        g.fill();
+        function footAt(p) {
+            p = ((p % 1) + 1) % 1;
+            if (p < LEG_CONTACT) {
+                const t = p / LEG_CONTACT;
+                return { x: LEG_A * (1 - 2 * t), y: 0 };
+            }
+            const t = (p - LEG_CONTACT) / (1 - LEG_CONTACT);
+            /* Nhấc cao nhất ở giữa quãng đưa chân, và hơi lệch về nửa đầu —
+             * chân co lên nhanh rồi mới duỗi ra đón đất, chứ không phải một
+             * vòng cung cân đối. */
+            return {
+                x: LEG_A * (2 * t - 1),
+                y: LEG_LIFT * Math.sin(Math.PI * Math.pow(t, 0.78))
+            };
+        }
 
-        /* chân bên gần, vẽ đè lên thân */
-        leg(0.12 * u, swing, lift, PANDA.black);
-
-        /* KHÔNG vẽ vành khăn quanh cổ nữa: cục tròn này vừa là đầu vừa là
-         * thân nên không có cái cổ nào cả, vành khăn vẽ vào thành một vệt đỏ
-         * vắt ngang mặt — nhìn ra cái lưỡi thè. Chỉ giữ đuôi khăn bay phía
-         * sau, thế là đủ thấy gió. */
-
-        /* ================= MẶT, vẽ thẳng lên cục tròn =================
-         * Vẫn nhìn về phía chạy: cụm mặt dồn lên trên và về phía trước, tai
-         * bên xa nhỏ hơn — hai thứ ấy là toàn bộ cái quay đầu. */
-        const fx = R * 0.10, fy = -R * 0.20;
-
-        g.fillStyle = PANDA.shade;
-        g.beginPath();
-        g.ellipse(cx + fx + R * 0.22, bodyCY + fy + R * 0.26, R * 0.22, R * 0.19, 0, 0, TAU);
-        g.fill();
-        g.fillStyle = PANDA.white;
-        g.beginPath();
-        g.ellipse(cx + fx + R * 0.22, bodyCY + fy + R * 0.23, R * 0.21, R * 0.18, 0, 0, TAU);
-        g.fill();
-
-        const eyes = [
-            { x: cx + fx - R * 0.14, y: bodyCY + fy - R * 0.06, r: 0.185, tilt: -0.34, pupil: 0.09 },
-            { x: cx + fx + R * 0.30, y: bodyCY + fy - R * 0.02, r: 0.17, tilt: 0.30, pupil: 0.085 }
-        ];
-        for (const e of eyes) {
-            g.save();
-            g.translate(e.x, e.y);
-            g.rotate(e.tilt);
-            g.fillStyle = PANDA.black;
+        /* Chân MỘT KHÚC liền từ hông xuống bàn chân, không đầu gối.
+         *
+         * Gấu trúc chân ngắn và mập, gập gối vào chỉ tổ làm cái chân vốn đã
+         * ngắn nay gãy làm đôi, nhìn còn ngắn hơn. Chân một khúc bo tròn hai
+         * đầu hợp với tạo hình tròn trịa của cả con vật hơn.
+         *
+         * Bỏ luôn được phần giải ngược tìm đầu gối, nên bàn chân bao giờ cũng
+         * đặt đúng chỗ cần đặt — trước đó khi hông và bàn chân xa nhau quá tầm
+         * hai đốt thì phải kẹp lại, bàn chân hụt khỏi mặt đất một chút. */
+        function leg(hx, hy, fx, fy, col, w) {
+            g.strokeStyle = col;
+            g.lineWidth = w;
             g.beginPath();
-            g.ellipse(0, 0, R * e.r, R * e.r * 0.92, 0, 0, TAU);
+            g.moveTo(hx, hy);
+            g.lineTo(fx, fy);
+            g.stroke();
+            /* Bàn chân nằm vuông góc với ống chân. */
+            g.save();
+            g.translate(fx, fy);
+            g.rotate(Math.atan2(fy - hy, fx - hx) - Math.PI / 2);
+            g.fillStyle = col;
+            g.beginPath();
+            g.ellipse(0, 0, w * 0.72, w * 0.5, 0, 0, TAU);
             g.fill();
             g.restore();
         }
-        for (const e of eyes) {
-            const pr = R * e.pupil;
-            g.fillStyle = '#ffffff';
+
+        /* Tay cũng hai đốt, xoay quanh vai, vung đều cả trước lẫn sau lưng.
+         * Biên độ để xấp xỉ biên độ chân thì mắt mới đọc ra được tay và chân
+         * đang ngược nhau — thứ mắt bắt là biên độ, không phải con số pha. */
+        function arm(sx0, sy0, p, col) {
+            const sw = Math.cos(p * TAU) * 1.05;
+            /* Tay dài thêm theo sải chân: chân bước rộng mà tay khua tí tẹo thì nhìn
+             * lệch. */
+            const upper = 0.22 * u, fore = 0.20 * u;
+            const ex = sx0 + Math.sin(sw * 0.7) * upper;
+            const ey = sy0 + Math.cos(sw * 0.7) * upper;
+            /* Cẳng tay gập thêm về trước — kiểu tay chạy, không phải tay đi bộ. */
+            const fa = sw * 0.7 + 0.85;
+            const hx = ex + Math.sin(fa) * fore;
+            const hy = ey + Math.cos(fa) * fore;
+            g.strokeStyle = col;
+            g.lineWidth = 0.17 * u;
             g.beginPath();
-            g.arc(e.x + pr * 0.15, e.y - pr * 0.45, pr * 0.60, 0, TAU);
-            g.fill();
+            g.moveTo(sx0, sy0);
+            g.lineTo(ex, ey);
+            g.lineTo(hx, hy);
+            g.stroke();
+            g.fillStyle = col;
             g.beginPath();
-            g.arc(e.x + pr * 0.75, e.y + pr * 0.55, pr * 0.28, 0, TAU);
+            g.ellipse(hx, hy, 0.115 * u, 0.09 * u, 0, 0, TAU);
             g.fill();
         }
 
-        const nx = cx + fx + R * 0.22, ny = bodyCY + fy;
+        const limb = (x1, y1, x2, y2, w, col, paw) => {
+            g.strokeStyle = col;
+            g.lineWidth = w;
+            g.beginPath();
+            g.moveTo(x1, y1);
+            g.lineTo(x2, y2);
+            g.stroke();
+            if (paw) {
+                g.fillStyle = col;
+                g.beginPath();
+                g.ellipse(x2, y2, w * 0.62, w * 0.46, 0, 0, TAU);
+                g.fill();
+            }
+        };
+
+        /* Pha của hai chân lệch nhau nửa vòng. Chân XA đi trước nửa nhịp. */
+        const pNear = k;
+        const pFar = k + 0.5;
+
+        if (slide) {
+            limb(cx - 0.10 * u, hipY - 0.06 * u, cx - 0.58 * u, foot - 0.05 * u, 0.24 * u, PANDA.limbFar, true);
+        } else if (jump) {
+            /* Nhảy thì co chân lại — duỗi thẳng nhìn như đang rơi chứ không bật. */
+            leg(cx - 0.11 * u, hipY, cx - 0.30 * u, foot - 0.34 * u, PANDA.limbFar, 0.21 * u);
+            arm(cx - 0.16 * u, bodyCY - 0.16 * u, 0.5, PANDA.limbFar);
+        } else {
+            const f = footAt(pFar);
+            leg(cx - 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.limbFar, 0.21 * u);
+            /* Tay XA cùng pha với chân GẦN — tức ngược pha với chân cùng bên
+             * nó. Đó là vận động chéo: tay phải theo chân trái. */
+            arm(cx - 0.16 * u, bodyCY - 0.16 * u, pNear, PANDA.limbFar);
+        }
+
+        /* --- thân trắng --- */
+        const bg = g.createLinearGradient(cx - bodyRX, bodyCY - bodyRY, cx + bodyRX, bodyCY + bodyRY);
+        bg.addColorStop(0, PANDA.white);
+        bg.addColorStop(1, PANDA.shade);
+        g.fillStyle = bg;
+        g.beginPath();
+        g.ellipse(cx, bodyCY, bodyRX, bodyRY, 0, 0, TAU);
+        g.fill();
+
+        /* --- chân GẦN, vẽ đè lên thân --- */
+        if (slide) {
+            limb(cx + 0.20 * u, hipY - 0.08 * u, cx + 0.62 * u, foot - 0.03 * u, 0.24 * u, PANDA.black, true);
+        } else if (jump) {
+            leg(cx + 0.11 * u, hipY, cx + 0.34 * u, foot - 0.18 * u, PANDA.black, 0.225 * u);
+        } else {
+            const f = footAt(pNear);
+            leg(cx + 0.11 * u, hipY, cx + f.x, foot - f.y, PANDA.black, 0.225 * u);
+        }
+
+        /* --- tay GẦN --- */
+        if (jump) {
+            limb(cx + 0.16 * u, bodyCY - 0.16 * u, cx + 0.52 * u, bodyCY - 0.40 * u,
+                0.19 * u, PANDA.black, true);
+        } else if (!slide) {
+            arm(cx + 0.12 * u, bodyCY - 0.16 * u, pFar, PANDA.black);
+        } else {
+            limb(cx + 0.22 * u, bodyCY - 0.10 * u, cx + 0.68 * u, bodyCY + 0.06 * u,
+                0.19 * u, PANDA.black, true);
+        }
+
+        /* --- nút khăn quàng ở cổ, vẽ sau thân cho nằm trước ngực --- */
+        const neckY = neckY0;
+        g.fillStyle = PANDA.scarfDark;
+        rr(g, cx - 0.30 * u, neckY - 0.10 * u, 0.60 * u, 0.20 * u, 0.09 * u);
+        g.fill();
+        g.fillStyle = PANDA.scarf;
+        rr(g, cx - 0.27 * u, neckY - 0.14 * u, 0.55 * u, 0.18 * u, 0.08 * u);
+        g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.25)';
+        rr(g, cx - 0.22 * u, neckY - 0.12 * u, 0.42 * u, 0.05 * u, 0.02 * u);
+        g.fill();
+
+        /* --- tai --- */
+        g.fillStyle = PANDA.black;
+        g.beginPath();
+        g.arc(cx - 0.26 * u, headCY - 0.32 * u, 0.16 * u, 0, TAU);
+        g.arc(cx + 0.28 * u, headCY - 0.34 * u, 0.16 * u, 0, TAU);
+        g.fill();
+
+        /* --- đầu --- */
+        const hg = g.createRadialGradient(cx - 0.12 * u, headCY - 0.16 * u, 0.06 * u,
+            cx, headCY, headR);
+        hg.addColorStop(0, '#ffffff');
+        hg.addColorStop(1, PANDA.shade);
+        g.fillStyle = hg;
+        g.beginPath();
+        g.arc(cx, headCY, headR, 0, TAU);
+        g.fill();
+
+        /* --- hai mảng mắt đen, đặt hơi lệch phải cho ra góc ba phần tư --- */
+        g.fillStyle = PANDA.black;
+        g.beginPath();
+        g.ellipse(cx + 0.02 * u, headCY - 0.02 * u, 0.135 * u, 0.175 * u, -0.35, 0, TAU);
+        g.ellipse(cx + 0.29 * u, headCY - 0.04 * u, 0.125 * u, 0.165 * u, 0.35, 0, TAU);
+        g.fill();
+
+        /* mắt: tròng trắng + con ngươi, thêm chấm sáng cho có hồn */
+        const eye = (ex, ey, r) => {
+            g.fillStyle = '#ffffff';
+            g.beginPath(); g.arc(ex, ey, r, 0, TAU); g.fill();
+            g.fillStyle = PANDA.ink;
+            g.beginPath(); g.arc(ex + r * 0.18, ey + r * 0.05, r * 0.62, 0, TAU); g.fill();
+            g.fillStyle = '#ffffff';
+            g.beginPath(); g.arc(ex + r * 0.4, ey - r * 0.36, r * 0.26, 0, TAU); g.fill();
+        };
+        if (pose === 'cheer') {
+            /* Mắt nhắm hình vòng cung — dùng cho lúc vừa cứu được bạn. */
+            g.strokeStyle = '#ffffff';
+            g.lineWidth = 0.045 * u;
+            g.beginPath();
+            g.arc(cx + 0.03 * u, headCY + 0.02 * u, 0.075 * u, Math.PI, 0);
+            g.arc(cx + 0.29 * u, headCY, 0.07 * u, Math.PI, 0);
+            g.stroke();
+        } else {
+            eye(cx + 0.03 * u, headCY - 0.01 * u, 0.072 * u);
+            eye(cx + 0.29 * u, headCY - 0.03 * u, 0.066 * u);
+        }
+
+        /* --- mũi và miệng --- */
         g.fillStyle = PANDA.ink;
         g.beginPath();
-        g.ellipse(nx, ny + R * 0.14, R * 0.085, R * 0.065, 0, 0, TAU);
+        g.ellipse(cx + 0.17 * u, headCY + 0.15 * u, 0.062 * u, 0.048 * u, 0, 0, TAU);
         g.fill();
         g.strokeStyle = PANDA.ink;
-        g.lineWidth = 0.026 * u;
-        g.lineCap = 'round';
+        g.lineWidth = 0.036 * u;
         g.beginPath();
-        if (cheer || run) {
-            g.moveTo(nx - R * 0.15, ny + R * 0.27);
-            g.quadraticCurveTo(nx, ny + R * 0.40, nx + R * 0.15, ny + R * 0.27);
+        if (pose === 'cheer' || run) {
+            /* Miệng cười mở — panda trong bản thiết kế lúc nào cũng đang vui. */
+            g.moveTo(cx + 0.09 * u, headCY + 0.21 * u);
+            g.quadraticCurveTo(cx + 0.17 * u, headCY + 0.32 * u, cx + 0.26 * u, headCY + 0.20 * u);
         } else {
-            g.moveTo(nx - R * 0.12, ny + R * 0.27);
-            g.quadraticCurveTo(nx, ny + R * 0.35, nx + R * 0.12, ny + R * 0.27);
+            g.moveTo(cx + 0.10 * u, headCY + 0.22 * u);
+            g.quadraticCurveTo(cx + 0.17 * u, headCY + 0.28 * u, cx + 0.25 * u, headCY + 0.21 * u);
         }
         g.stroke();
 
+        /* --- má hồng --- */
         g.fillStyle = PANDA.cheek;
         g.beginPath();
-        g.ellipse(cx + fx - R * 0.46, ny + R * 0.20, R * 0.13, R * 0.09, 0, 0, TAU);
-        g.ellipse(cx + fx + R * 0.54, ny + R * 0.16, R * 0.11, R * 0.075, 0, 0, TAU);
+        g.ellipse(cx - 0.14 * u, headCY + 0.16 * u, 0.085 * u, 0.06 * u, 0, 0, TAU);
+        g.ellipse(cx + 0.40 * u, headCY + 0.13 * u, 0.075 * u, 0.055 * u, 0, 0, TAU);
         g.fill();
+
+        if (lean) g.restore();
     }
 
     /* ---- các bạn động vật ----
