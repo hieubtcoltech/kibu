@@ -44,7 +44,8 @@
         { dir: 'melon-drop', slug: 'melon-drop' },
         { dir: 'water-sort', slug: 'water-sort' },
         { dir: 'screw-jam', slug: 'screw-jam' },
-        { dir: 'claw-machine', slug: 'claw-machine' }
+        { dir: 'claw-machine', slug: 'claw-machine' },
+        { dir: 'marble-machine', slug: 'marble-machine' }
     ];
 
     var bySlug = {}, byDir = {};

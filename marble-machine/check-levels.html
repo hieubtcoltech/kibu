@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Cỗ Máy Kỳ Quặc — máy soát màn chơi</title>
+<style>
+ body{margin:0;background:#140f30;color:#f0ecff;font:14px/1.6 ui-monospace,Menlo,monospace;padding:22px}
+ h1{font:700 20px/1.3 system-ui;margin:0 0 6px}
+ p{max-width:76ch;color:#cfc7f5;font:14px/1.6 system-ui}
+ pre{background:#0c0920;border:1px solid #3d2f8a;border-radius:12px;padding:14px 16px;overflow:auto}
+ .ok{color:#63e6be;font-weight:700}
+ .bad{color:#ff8fae;font-weight:700}
+ #stage{position:fixed;left:-4000px;top:0;width:720px;height:1120px}
+</style>
+</head>
+<body>
+<h1>Cỗ Máy Kỳ Quặc — máy soát màn chơi</h1>
+<p>
+  Trang này lắp lại <b>toàn bộ 40 màn</b> rồi cho chạy thử, ngay trước mắt bạn.
+  Nó chạy ĐÚNG cái vật lý bé đang chơi — cùng một tệp <code>game.js</code>,
+  cùng một cỗ máy — chứ không phải một bản chép để soát cho đẹp.
+</p>
+<p>
+  Đây là chỗ chứng minh lời hứa của game: <b>màn nào cũng lắp lại được, và màn
+  nào cũng thật sự cần bé lắp.</b> Mỗi màn phải qua hai phép thử:
+</p>
+<p>
+  <b>1. Lắp đủ mảnh đúng chiều → viên bi phải về tới giỏ.</b> Không có màn nào
+  bế tắc, không màn nào cần mua thêm gì.<br>
+  <b>2. Để trống bất kỳ ô nào → viên bi phải KHÔNG về được.</b> Không có màn nào
+  bé chẳng làm gì cũng thắng.
+</p>
+<pre id="out">đang dựng cỗ máy…</pre>
+<div id="stage"><div id="game-canvas"></div></div>
+
+<!-- Mấy thẻ giao diện mà game.js cần có mặt; ở đây giấu đi vì trang này chỉ soát. -->
+<div style="display:none">
+  <div id="hud"><b id="hud-level"></b><b id="hud-left"></b><button id="btn-help"></button></div>
+  <div id="pad"></div><div id="tip"></div>
+  <div id="menu-overlay"></div><div id="win-overlay"></div><div id="levels-overlay"></div><div id="help-overlay"></div>
+  <div id="levels-grid"></div><span id="levels-stars"></span><span id="menu-progress"></span>
+  <span id="win-level"></span><span id="win-tries"></span><span id="win-stars"></span>
+  <button id="btn-play"></button><button id="btn-menu-levels"></button><button id="btn-levels-back"></button>
+  <button id="btn-nav-levels"></button><button id="btn-nav-menu"></button><button id="btn-help-back"></button>
+  <button id="btn-next"></button><button id="btn-again"></button><button id="btn-win-menu"></button>
+  <button id="btn-reset"></button><button id="btn-run"></button><button id="btn-retry"></button>
+  <button id="btn-sound"><i id="sound-icon"></i></button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.90.0/phaser.min.js"></script>
+<script src="/marble-machine/parts.js"></script>
+<script src="/marble-machine/levels.js"></script>
+<script src="/marble-machine/game.js"></script>
+<script>
+(function () {
+    var out = document.getElementById('out');
+    var lines = [];
+    function line(t) { lines.push(t); out.textContent = lines.join('\n'); }
+
+    function start() {
+        var mm = window.marbleMachine;
+        if (!mm || !mm.UI.scene) { setTimeout(start, 250); return; }
+        mm.UI.scene.frozen = true;
+
+        var N = mm.LEVELS.length;
+        var fails = [], i = 0, runs = 0, slowest = 0, slowestAt = 0;
+        var kinds = {};
+
+        lines = [];
+        line('soát ' + N + ' màn bằng đúng cỗ máy bé đang chơi');
+        line('');
+
+        (function next() {
+            if (i >= N) { finish(); return; }
+
+            var name = 'màn ' + (i + 1);
+            var lv = mm.P.inflate(mm.LEVELS[i]);
+            lv.bays.forEach(function (b) { kinds[b.kind] = (kinds[b.kind] || 0) + 1; });
+
+            /* --- giao ước giữa các tầng ---
+             * Chỗ ra của tầng trên phải soi gương đúng vào chỗ vào của tầng
+             * dưới. Sai chỗ này thì chuỗi đứt mà nhìn hình vẫn thấy "đẹp". */
+            for (var q = 0; q < lv.bays.length; q++) {
+                var bay = lv.bays[q];
+                if (bay.enter.x + bay.exit.x !== mm.P.BAY_W) {
+                    fails.push(name + ': tầng ' + q + ' có cửa vào + cửa ra ≠ bề ngang tầng');
+                }
+            }
+
+            /* --- 1. lắp đủ thì phải về đích --- */
+            var sol = mm.solutionOf(i);
+            var need = Object.keys(sol).length;
+            var r = mm.simulate(i, sol);
+            runs++;
+            if (r.result !== 'win') {
+                fails.push(name + ': lắp đủ mảnh mà viên bi KHÔNG về đích (' + r.result + ')');
+            } else if (r.steps > slowest) { slowest = r.steps; slowestAt = i + 1; }
+
+            /* --- 2. thiếu mảnh nào cũng phải hỏng --- */
+            for (var k in sol) {
+                var part = {};
+                for (var j in sol) if (j !== k) part[j] = sol[j];
+                runs++;
+                if (mm.simulate(i, part).result === 'win') {
+                    fails.push(name + ': để trống ô ở tầng ' + k + ' mà viên bi VẪN về đích — ô này thừa');
+                }
+            }
+
+            /* --- 3. khay phải đủ mảnh, và mảnh mồi không được trùng kiểu --- */
+            var tray = mm.P.trayOf(lv);
+            var real = tray.filter(function (t) { return t.from >= 0; });
+            if (real.length !== need) fails.push(name + ': khay có ' + real.length + ' mảnh thật nhưng có ' + need + ' ô trống');
+            var needKinds = {};
+            real.forEach(function (t) { needKinds[t.kind] = 1; });
+            tray.forEach(function (t) {
+                if (t.from < 0 && needKinds[t.kind]) {
+                    fails.push(name + ': mảnh mồi nhử trùng kiểu với mảnh đang thiếu — cắm mồi vào ô cũng thắng');
+                }
+            });
+
+            if ((i + 1) % 10 === 0) {
+                line('  đã soát tới màn ' + (i + 1) + '  (' + runs + ' lượt chạy thử)');
+            }
+            i++;
+            setTimeout(next, 0);
+        })();
+
+        function finish() {
+            line('');
+            var names = { ramp: 'dốc trượt', seesaw: 'bập bênh', spring: 'bàn nhún', fan: 'quạt gió',
+                          belt: 'băng chuyền', bumper: 'đệm nảy', magnet: 'nam châm' };
+            var used = [];
+            for (var k in kinds) used.push(names[k] + ' ×' + kinds[k]);
+            line('các trò đã dùng: ' + used.join(', '));
+            line('tổng cộng ' + runs + ' lượt chạy thử; lượt lâu nhất ' +
+                 (slowest / 60).toFixed(1) + ' giây (màn ' + slowestAt + ')');
+            line('');
+            if (fails.length) {
+                line('KHÔNG ĐẠT:');
+                fails.forEach(function (f) { line('  · ' + f); });
+            } else {
+                line('ĐẠT — cả ' + mm.LEVELS.length + ' màn đều lắp lại được, và màn nào cũng thật sự');
+                line('      cần bé lắp: bỏ trống một ô bất kỳ là viên bi không về được đích.');
+            }
+            out.innerHTML = out.textContent
+                .replace('ĐẠT —', '<span class="ok">ĐẠT</span> —')
+                .replace('KHÔNG ĐẠT:', '<span class="bad">KHÔNG ĐẠT:</span>');
+            document.title = fails.length ? ('KHONG DAT ' + fails.length) : 'DAT';
+        }
+    }
+
+    setTimeout(start, 700);
+})();
+</script>
+</body>
+</html>
