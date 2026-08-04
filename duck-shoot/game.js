@@ -396,7 +396,16 @@
 
                 if (G.mode === 'intro') {
                     this.introT += dt;
-                    if (this.introT > 2.1) { G.mode = 'play'; UI.paintHud(); }
+                    if (this.introT > 2.1) {
+                        G.mode = 'play';
+                        /* PHẢI dọn bảng chữ đi ở đây. Bản đầu em chỉ viết đường
+                         * bay VÀO cho nó rồi tưởng thế là xong, nên tên vòng và
+                         * câu mách nước nằm lì giữa màn suốt cả vòng, che mất
+                         * đàn vịt. Anh Hiếu bắn được 3 với 11 điểm rồi mà chữ
+                         * "Sunset Lake" vẫn còn đó. */
+                        UI.hideFlash();
+                        UI.paintHud();
+                    }
                     return;
                 }
                 if (G.mode === 'tally') {
@@ -826,6 +835,20 @@
             }
         },
 
+        /* Cho bảng chữ mờ dần rồi mới ẩn hẳn. Ẩn phựt một cái thì mắt bé giật
+         * mình, mà đúng lúc ấy con vịt đầu tiên đang bật lên. */
+        hideFlash: function () {
+            var box = el('flash');
+            if (!box || box.classList.contains('hidden')) return;
+            box.classList.remove('go');
+            box.classList.add('out');
+            clearTimeout(this.flashT);
+            this.flashT = setTimeout(function () {
+                box.classList.add('hidden');
+                box.classList.remove('out');
+            }, 420);
+        },
+
         paintRound: function () {
             var r = R.ROUNDS[G.round];
             var box = el('flash');
@@ -833,7 +856,9 @@
             box.innerHTML = '<span class="fl-no">' + (lang() === 'vi' ? 'VÒNG' : 'ROUND') + ' ' + (G.round + 1) + '</span>' +
                 '<b class="fl-name">' + (lang() === 'vi' ? r.vi : r.en) + '</b>' +
                 '<span class="fl-hint">' + (lang() === 'vi' ? r.hint_vi : r.hint_en) + '</span>';
+            clearTimeout(this.flashT);        // đang mờ dần dở thì huỷ
             box.classList.remove('hidden');
+            box.classList.remove('out');
             box.classList.remove('go');
             void box.offsetWidth;
             box.classList.add('go');
@@ -851,7 +876,9 @@
             }
             box.innerHTML = '<span class="fl-no">' + (lang() === 'vi' ? 'HẾT VÒNG' : 'ROUND OVER') + '</span>' +
                 '<div class="tally">' + rows + '</div>';
+            clearTimeout(this.flashT);        // đang mờ dần dở thì huỷ
             box.classList.remove('hidden');
+            box.classList.remove('out');
             box.classList.remove('go');
             void box.offsetWidth;
             box.classList.add('go');

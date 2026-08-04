@@ -183,6 +183,39 @@ function run(win) {
     if (sh > 0.10) fail('bốn bé bắn giỏi như nhau mà số vịt hạ được lệch ' + (sh * 100).toFixed(1) + '%');
     if (sp > 0.25) fail('điểm lệch tới ' + (sp * 100).toFixed(1) + '%, quá mức may rủi con vàng gây ra được');
 
+    /* ---- 4b: bảng chữ báo vòng phải biến đi khi vào trận ----
+     *
+     * Anh Hiếu bắt được lỗi này bằng mắt: tên vòng và câu mách nước nằm lì
+     * giữa màn suốt cả vòng, che mất đàn vịt. Em viết đường bay VÀO cho nó rồi
+     * tưởng thế là xong, quên hẳn chỗ dọn đi. Máy soát cũ không thấy vì nó chỉ
+     * đếm điểm với đếm vịt, không hề nhìn tới giao diện.
+     *
+     * Giờ soát đủ ba chặng: lúc báo vòng phải HIỆN, vào trận phải TẮT, hết
+     * vòng phải HIỆN lại để khoe điểm. */
+    say('');
+    say('· bảng chữ báo vòng có tự dọn đi khi vào trận không', 'dim');
+    var fl = win.document.getElementById('flash');
+    sc.frozen = true;
+    sc.laneOfX = win.duckShoot.laneOf;
+    sc.startGame(2, 909);
+    var shownIntro = !fl.classList.contains('hidden');
+    /* bước qua hết đoạn báo vòng (2,1 giây) rồi thêm chút cho nó mờ hẳn */
+    for (var s2 = 0; s2 < 60 * 3; s2++) sc.stepAll(1 / 60);
+    var askedToHide = fl.classList.contains('out') || fl.classList.contains('hidden');
+    /* chơi nốt vòng 1 để xem lúc tổng kết nó có hiện lại không */
+    var g2 = 0;
+    while (G.mode === 'play' && g2++ < 60 * 40) sc.stepAll(1 / 60);
+    var shownTally = G.mode === 'tally' && !fl.classList.contains('hidden') &&
+        !fl.classList.contains('out');
+
+    say('    lúc báo vòng: ' + (shownIntro ? 'hiện' : 'KHÔNG HIỆN') +
+        ' · vào trận: ' + (askedToHide ? 'đã dọn đi' : 'CÒN NẰM ĐÓ') +
+        ' · hết vòng: ' + (shownTally ? 'hiện lại' : 'KHÔNG HIỆN LẠI'),
+        (shownIntro && askedToHide && shownTally) ? 'ok' : 'bad');
+    if (!shownIntro) fail('vào vòng mới mà không báo tên vòng');
+    if (!askedToHide) fail('vào trận rồi mà bảng chữ báo vòng vẫn nằm giữa màn, che mất đàn vịt');
+    if (!shownTally) fail('hết vòng mà không hiện bảng tổng kết điểm');
+
     /* ---- 5: bắn sang làn bạn không được tính ---- */
     say('');
     say('· bắn sang làn bạn thì có ăn điểm không', 'dim');
