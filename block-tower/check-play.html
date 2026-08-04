@@ -307,6 +307,72 @@ function run(win) {
     if (immediate.indexOf('turn') < 0) fail('xoay không có tiếng');
     S2.trace = false;
 
+    /* ---- 7a2: NHẠC NỀN VÀ TIẾNG TÍCH ----
+     *
+     * Anh Hiếu: "game khi chơi buồn tẻ quá, các game kiểu này có nhạc nền vui
+     * tươi khi chơi mà sao em không có, các khối gạch tự trôi cũng đều có các
+     * âm thanh tick tick đi kèm cơ mà".
+     *
+     * Ba chuyện phải đúng và máy đếm được cả ba: nhạc chạy khi vào ván và
+     * ngừng khi hết ván hay khi tạm dừng; nhịp nhạc nhanh dần theo bàn; và mỗi
+     * lần khối tự trôi xuống một hàng thì có đúng một tiếng tích.
+     */
+    say('');
+    say('· nhạc nền và tiếng tích', 'dim');
+    var M = win.blockTower.music;
+    win.blockTower.UI.start();
+    sc.frozen = true;
+    sc.startGame(1717);
+    var mOnPlay = M.playing, bpm1 = M.bpm;
+    win.blockTower.UI.togglePause();
+    var mOnPause = M.playing;
+    win.blockTower.UI.togglePause();
+    var mBack = M.playing;
+    M.setLevel(9);
+    var bpm9 = M.bpm;
+    M.setLevel(40);
+    var bpmMax = M.bpm;
+    say('    vào ván: ' + (mOnPlay ? 'có nhạc' : 'KHÔNG CÓ') +
+        ' · tạm dừng: ' + (mOnPause ? 'VẪN CHẠY' : 'ngừng') +
+        ' · chơi tiếp: ' + (mBack ? 'chạy lại' : 'KHÔNG CHẠY LẠI'),
+        (mOnPlay && !mOnPause && mBack) ? 'ok' : 'bad');
+    say('    nhịp nhạc: bàn 1 = ' + bpm1 + ' · bàn 9 = ' + bpm9 + ' · bàn 40 = ' + bpmMax + ' (có trần)',
+        (bpm9 > bpm1 && bpmMax <= 170) ? 'ok' : 'bad');
+    if (!mOnPlay) fail('vào ván mà không có nhạc nền');
+    if (mOnPause) fail('tạm dừng rồi mà nhạc vẫn chạy');
+    if (!mBack) fail('chơi tiếp mà nhạc không chạy lại');
+    if (bpm9 <= bpm1) fail('lên bàn cao mà nhịp nhạc không nhanh lên');
+    if (bpmMax > 170) fail('nhịp nhạc không có trần, bàn cao sẽ thành tiếng ù');
+    /* Bảng giai điệu phải đủ tám ô nhịp và không được toàn nốt lặng */
+    var notes = M.MELODY.filter(function (n) { return n > 0; }).length;
+    say('    giai điệu: ' + M.MELODY.length + ' nốt móc đơn (' + (M.MELODY.length / 8) +
+        ' ô nhịp), ' + notes + ' nốt có tiếng, ' + M.BASS.length + ' nốt trầm');
+    if (M.MELODY.length < 32) fail('giai điệu quá ngắn, nghe vài vòng là chán');
+    if (notes < M.MELODY.length * 0.5) fail('quá nửa giai điệu là nốt lặng');
+    if (M.BASS.length !== M.MELODY.length / 8) fail('số nốt trầm không khớp số ô nhịp');
+
+    /* tiếng tích: mỗi hàng tự trôi đúng một tiếng */
+    win.blockTower.UI.start();
+    sc.frozen = true;
+    sc.startGame(1818);
+    var S3 = win.blockTower.sfx;
+    S3.trace = true; S3.log = [];
+    var rowsFallen = 0, lastY = G.piece.y, ticks = 0;
+    for (var s3 = 0; s3 < 60 * 12; s3++) {
+        var before3 = S3.log.length;
+        sc.stepAll(1 / 60);
+        if (!G.piece) break;
+        if (G.piece.y > lastY) { rowsFallen += G.piece.y - lastY; lastY = G.piece.y; }
+        for (var q5 = before3; q5 < S3.log.length; q5++) if (S3.log[q5].name === 'tick') ticks++;
+        if (rowsFallen >= 6) break;
+    }
+    S3.trace = false;
+    say('    khối tự trôi ' + rowsFallen + ' hàng, nghe ' + ticks + ' tiếng tích',
+        (rowsFallen > 0 && ticks === rowsFallen) ? 'ok' : 'bad');
+    if (!rowsFallen) fail('không dựng được tình huống khối tự trôi để thử');
+    if (ticks !== rowsFallen)
+        fail('khối trôi ' + rowsFallen + ' hàng mà chỉ có ' + ticks + ' tiếng tích — nhịp tích là đồng hồ của ván chơi, thiếu là bé mất cảm giác nhịp');
+
     /* ---- 7b: NĂM MÀU KHỐI PHẢI KHÁC NHAU RÕ ----
      *
      * Phép soát cũ ở chỗ này hỏi "bốn ô liền có ra một khối liền không", hợp

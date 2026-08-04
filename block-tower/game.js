@@ -235,6 +235,155 @@
             var f = [523, 440, 349, 262];
             for (var i = 0; i < f.length; i++) this.tone(f[i], f[i] * 0.94, 0.34, 'sawtooth', 0.05, i * 0.17);
             this.hit(0.5, 0.05, 500, 'lowpass', 0.5);
+        },
+
+        /* TIẾNG TÍCH KHI KHỐI TỰ TRÔI XUỐNG MỘT HÀNG.
+         *
+         * Anh Hiếu nhắc: "các khối gạch tự trôi cũng đều có các âm thanh tick
+         * tick đi kèm cơ mà". Đúng, và nó không chỉ để cho vui: tiếng tích là
+         * cái đồng hồ của ván chơi. Nghe nhịp tích nhanh dần là bé biết mình
+         * đã lên bàn cao mà không cần liếc lên bảng điểm.
+         *
+         * Phải RẤT khẽ. To bằng tiếng đẩy ngang thì mỗi giây kêu một cái, chơi
+         * mười phút là inh tai. */
+        tick: function (soft) {
+            this.mark('tick');
+            this.tone(soft ? 1600 : 1200, 0, 0.018, 'square', soft ? 0.008 : 0.016);
+        }
+    };
+
+    /* ========================================================================
+     *  3b. NHẠC NỀN
+     *
+     * Anh Hiếu: "các game kiểu này có nhạc nền vui tươi khi chơi mà sao em
+     * không có". Đúng, thiếu hẳn. Nhưng game của mình không tải tệp âm thanh
+     * nào, nên nhạc phải DỰNG BẰNG MÃ: một bản tám ô nhịp, ba bè — bè giai
+     * điệu, bè trầm, và tiếng gõ nhịp.
+     *
+     * ĐẶT LỊCH TRƯỚC MỘT KHOẢNG, KHÔNG PHÁT TỪNG NỐT ĐÚNG LÚC.
+     * Cứ 25 mili-giây ngó một lần, và đặt lịch sẵn mọi nốt rơi vào 120 mili
+     * giây tới. setInterval có trễ vài chục mili-giây cũng không sao, vì nốt
+     * đã nằm sẵn trên đồng hồ của card âm thanh rồi. Phát đúng lúc gọi thì chỉ
+     * cần máy khựng một nhịp là nhạc vấp — mà lúc ăn bốn hàng là lúc máy bận
+     * nhất, đúng lúc không được vấp nhất.
+     *
+     * NHỊP NHANH DẦN THEO BÀN: 120 nhịp một phút ở bàn 1, mỗi bàn thêm 4, chặn
+     * ở 168. Bé lên bàn cao thì nhạc cũng gấp gáp theo, không cần nói cũng
+     * thấy căng.
+     * ======================================================================*/
+
+    var music = {
+        playing: false, timer: null, step: 0, nextT: 0, bpm: 120, gain: null,
+
+        /* Giai điệu tám ô nhịp, mỗi ô tám nốt móc đơn. Số là cao độ MIDI,
+         * 0 là lặng. Vòng hoà thanh La thứ – Fa – Đô – Sol: nghe sáng và đi
+         * tới, hợp với việc xếp khối chứ không ru ngủ. */
+        MELODY: [
+            76, 74, 72, 74, 76, 76, 76, 0,
+            74, 74, 74, 0, 76, 79, 79, 0,
+            77, 76, 74, 76, 77, 77, 77, 0,
+            76, 76, 74, 72, 74, 0, 0, 0,
+            72, 76, 79, 76, 72, 0, 76, 0,
+            74, 76, 77, 76, 74, 72, 0, 0,
+            79, 77, 76, 74, 72, 74, 76, 0,
+            74, 71, 74, 79, 0, 0, 0, 0
+        ],
+        /* nốt trầm của từng ô nhịp: La – Fa – Đô – Sol, mỗi hợp âm hai ô */
+        BASS: [45, 45, 41, 41, 48, 48, 43, 43],
+
+        freq: function (midi) { return 440 * Math.pow(2, (midi - 69) / 12); },
+
+        start: function () {
+            if (this.playing) return;
+            sfx.wake();
+            if (!sfx.ctx) return;
+            if (!this.gain) {
+                this.gain = sfx.ctx.createGain();
+                /* Nhạc nền phải NHỎ hơn hẳn tiếng game. Nó là nền, không được
+                 * át tiếng khối chạm đáy — mà tiếng ấy mới là thứ bé cần nghe
+                 * để biết chuyện gì vừa xảy ra. */
+                this.gain.gain.setValueAtTime(0.16, sfx.ctx.currentTime);
+                this.gain.connect(sfx.master);
+            }
+            this.playing = true;
+            this.step = 0;
+            this.nextT = sfx.ctx.currentTime + 0.08;
+            var self = this;
+            this.timer = setInterval(function () { self.pump(); }, 25);
+        },
+
+        stop: function () {
+            this.playing = false;
+            if (this.timer) { clearInterval(this.timer); this.timer = null; }
+        },
+
+        setLevel: function (lv) { this.bpm = Math.min(168, 120 + (lv - 1) * 4); },
+
+        /* Đặt lịch sẵn mọi nốt rơi vào 120 mili-giây tới */
+        pump: function () {
+            if (!this.playing || !sfx.on || !sfx.ctx || sfx.ctx.state !== 'running') return;
+            var spb = 60 / this.bpm / 2;              // một nốt móc đơn
+
+            /* BẮT NHỊP LẠI nếu đã tụt lại quá xa.
+             *
+             * Cùng một lớp lỗi với tiếng game vừa sửa. Bé chuyển sang tab khác
+             * thì trình duyệt hãm setInterval xuống một lần mỗi giây, còn máy
+             * âm thanh vẫn chạy. Quay lại, mốc nốt kế tiếp đã nằm mấy giây
+             * trong quá khứ, và vòng lặp dưới sẽ đặt lịch một lúc mấy chục nốt
+             * — nhạc nổ ra một tràng rồi mới trở lại bình thường. Thà bỏ đoạn
+             * đã lỡ, bắt vào nhịp từ bây giờ. */
+            if (this.nextT < sfx.ctx.currentTime - 0.2) {
+                this.nextT = sfx.ctx.currentTime + 0.05;
+            }
+
+            while (this.nextT < sfx.ctx.currentTime + 0.12) {
+                this.emit(this.step, this.nextT, spb);
+                this.nextT += spb;
+                this.step = (this.step + 1) % this.MELODY.length;
+            }
+        },
+
+        emit: function (i, t, spb) {
+            var c = sfx.ctx, m = this.MELODY[i];
+
+            /* bè giai điệu */
+            if (m) this.note(this.freq(m), t, spb * 0.9, 'square', 0.055);
+
+            /* bè trầm: gõ ở phách 1 và 3 của mỗi ô nhịp */
+            var inBar = i % 8, bar = Math.floor(i / 8);
+            if (inBar === 0 || inBar === 4) {
+                this.note(this.freq(this.BASS[bar]), t, spb * 1.5, 'triangle', 0.075);
+            }
+            if (inBar === 2 || inBar === 6) {
+                this.note(this.freq(this.BASS[bar] + 7), t, spb * 0.8, 'triangle', 0.045);
+            }
+
+            /* tiếng gõ nhịp: nhẹ ở mọi nốt, nhấn ở phách chẵn */
+            if (sfx.noiseBuf) {
+                var src = c.createBufferSource();
+                src.buffer = sfx.noiseBuf;
+                var f = c.createBiquadFilter();
+                f.type = 'highpass';
+                f.frequency.setValueAtTime(7000, t);
+                var g = c.createGain();
+                var v = (inBar % 2 === 0) ? 0.030 : 0.014;
+                g.gain.setValueAtTime(v, t);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+                src.connect(f); f.connect(g); g.connect(this.gain);
+                src.start(t); src.stop(t + 0.05);
+            }
+        },
+
+        note: function (freq, t, dur, type, vol) {
+            var c = sfx.ctx;
+            var o = c.createOscillator(), g = c.createGain();
+            o.type = type;
+            o.frequency.setValueAtTime(freq, t);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.linearRampToValueAtTime(vol, t + 0.008);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            o.connect(g); g.connect(this.gain);
+            o.start(t); o.stop(t + dur + 0.02);
         }
     };
 
@@ -431,6 +580,8 @@
                 for (var i = 0; i < 3; i++) G.next.push(this.drawPiece());
                 this.nextPiece();
                 G.mode = 'play';
+                music.setLevel(1);
+                music.start();
                 UI.paintHud();
             },
 
@@ -447,6 +598,7 @@
                 G.grace = 0;
                 if (!R.fits(G.board, G.piece)) {
                     G.mode = 'over';
+                    music.stop();
                     UI.finish();
                     return;
                 }
@@ -471,7 +623,7 @@
                     this.shake = Math.max(this.shake, 0.10 + rows.length * 0.05);
                     return;
                 }
-                if (over) { G.mode = 'over'; UI.finish(); return; }
+                if (over) { G.mode = 'over'; music.stop(); UI.finish(); return; }
                 this.nextPiece();
             },
 
@@ -481,7 +633,7 @@
                 G.score += R.scoreLines(n, G.level, mult);
                 G.lines += n;
                 var lv = R.levelFor(G.lines);
-                if (lv !== G.level) { G.level = lv; sfx.level(); UI.paintRoom(); }
+                if (lv !== G.level) { G.level = lv; sfx.level(); music.setLevel(lv); UI.paintRoom(); }
                 G.clearRows = [];
                 G.mode = 'play';
                 UI.paintHud();
@@ -524,6 +676,7 @@
                         G.fall -= delay;
                         if (R.fits(G.board, R.moved(G.piece, 0, 1))) {
                             G.piece = R.moved(G.piece, 0, 1);
+                            sfx.tick(G.soft);
                             if (G.soft) G.score += 1;
                         } else break;
                     }
@@ -945,8 +1098,8 @@
         },
 
         togglePause: function () {
-            if (G.mode === 'play') { G.mode = 'pause'; show(el('pause-overlay')); }
-            else if (G.mode === 'pause') { G.mode = 'play'; hide(el('pause-overlay')); }
+            if (G.mode === 'play') { G.mode = 'pause'; music.stop(); show(el('pause-overlay')); }
+            else if (G.mode === 'pause') { G.mode = 'play'; music.start(); hide(el('pause-overlay')); }
         },
 
         paintHud: function () {
@@ -1001,6 +1154,7 @@
 
     function openMenu() {
         G.mode = 'menu';
+        music.stop();
         document.body.classList.remove('playing');
         hideAll();
         show(el('menu-overlay'));
@@ -1047,7 +1201,15 @@
             icon.className = 'fa-solid ' + (sfx.on ? 'fa-volume-high' : 'fa-volume-xmark');
             soundBtn.classList.toggle('is-off', !sfx.on);
         }
-        soundBtn.addEventListener('click', function () { sfx.wake(); sfx.toggle(); paintSound(); });
+        soundBtn.addEventListener('click', function () {
+            sfx.wake();
+            sfx.toggle();
+            /* Tắt tiếng là tắt CẢ nhạc nền. Để nhạc chạy tiếp lúc bé đã bấm
+             * tắt tiếng thì bé bấm thêm mấy lần nữa rồi kết luận là nút hỏng. */
+            if (sfx.on) { if (G.mode === 'play') music.start(); }
+            else music.stop();
+            paintSound();
+        });
         paintSound();
     }
 
@@ -1072,7 +1234,7 @@
             state: function () {
                 return { mode: G.mode, score: G.score, lines: G.lines, level: G.level };
             },
-            sfx: sfx
+            sfx: sfx, music: music
         };
     }
 
