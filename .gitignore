@@ -12,3 +12,6 @@ tmp/
 
 # Địa chỉ public tạm thời do start-public.command tạo ra
 .public-url.txt
+
+# Số liệu lượt chơi do máy chủ tự ghi — không theo git, deploy không đụng tới
+data/

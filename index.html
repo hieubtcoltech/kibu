@@ -665,6 +665,75 @@
             color: #38bdf8;
         }
 
+        /* ---------- Hàng lọc theo chủ đề ----------
+           Cuộn ngang được trên máy hẹp: tám nút không đời nào vừa một hàng
+           trên điện thoại, mà xuống dòng thì đẩy hết lưới game xuống dưới nếp
+           gấp — mở trang ra không thấy game nào là hỏng. */
+        .topic-row {
+            display: flex;
+            gap: 8px;
+            padding: 4px 2px 14px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .topic-row::-webkit-scrollbar { display: none; }
+
+        .topic-chip {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            /* 44px chiều cao: đúng vùng chạm tối thiểu đã áp cho cả hai mươi
+               game hồi trước, ngón tay trẻ con bấm mới trúng */
+            min-height: 44px;
+            padding: 0 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.06);
+            color: #cfd7ff;
+            font-family: inherit;
+            font-size: 0.92rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+        }
+
+        .topic-chip:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.12); }
+
+        .topic-chip.is-on {
+            background: linear-gradient(135deg, #38bdf8, #6366f1);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: #fff;
+        }
+
+        .topic-chip i { font-size: 0.86rem; opacity: 0.9; }
+
+        /* ---------- Số lượt chơi và nhãn ĐANG HOT ----------
+           Cả hai do /api/stats bơm vào lúc chạy, nên nếu máy chủ chưa có số
+           liệu (hoặc gọi hỏng) thì trang chủ vẫn y nguyên như cũ — không có ô
+           nào trống, không có chỗ nào vỡ. */
+        .tile-plays {
+            position: absolute;
+            left: 8px;
+            bottom: 8px;
+            padding: 3px 9px;
+            border-radius: 999px;
+            background: rgba(8, 12, 30, 0.72);
+            color: #cfe3ff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            pointer-events: none;
+        }
+
+        .badge-hot {
+            background: linear-gradient(135deg, #ff8a3d, #ff3d6e);
+            color: #fff;
+        }
+
         /* No Results Container */
         .no-results {
             display: none;
@@ -734,10 +803,24 @@
 
     <!-- Poki Main Grid -->
     <main class="poki-grid-container">
+        <!-- Hàng lọc theo chủ đề — do make-home.js sinh ra từ games.js -->
+        <div class="topic-row" id="topicRow">
+            <button type="button" class="topic-chip is-on" data-topic="">All games</button>
+            <button type="button" class="topic-chip" data-topic="puzzle"><i class="fa-solid fa-puzzle-piece"></i> Puzzle</button>
+            <button type="button" class="topic-chip" data-topic="action"><i class="fa-solid fa-bolt"></i> Action</button>
+            <button type="button" class="topic-chip" data-topic="sports"><i class="fa-solid fa-futbol"></i> Sports</button>
+            <button type="button" class="topic-chip" data-topic="board"><i class="fa-solid fa-chess"></i> Board</button>
+            <button type="button" class="topic-chip" data-topic="creative"><i class="fa-solid fa-palette"></i> Creative</button>
+            <button type="button" class="topic-chip" data-topic="learning"><i class="fa-solid fa-graduation-cap"></i> Learning</button>
+            <button type="button" class="topic-chip" data-topic="physics"><i class="fa-solid fa-atom"></i> Physics</button>
+            <button type="button" class="topic-chip" data-topic="duo"><i class="fa-solid fa-users"></i> Play together</button>
+        </div>
+
         <div class="poki-grid" id="cardsGrid">
 
             <a href="/g/marble-machine" class="poki-tile tile-marble"
-                data-keywords="marble machine marble run chain reaction rube goldberg co may ky quac game vat ly domino ramp conveyor seesaw bouncer fan magnet bumper physics puzzle 40 levels phaser">
+                data-topics="puzzle physics"
+                data-keywords="marble machine marble run chain reaction rube goldberg co may ky quac game vat ly domino ramp conveyor seesaw bouncer fan magnet bumper physics puzzle 40 levels phaser cỗ máy kỳ quặc marble machine">
                 <span class="tile-badge badge-new">NEW</span>
                 <img src="/marble-machine/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
@@ -745,7 +828,8 @@
             </a>
 
             <a href="/g/claw-machine" class="poki-tile tile-claw"
-                data-keywords="claw machine plush grabber may gap thu game gap thu bong gap gau bong toy crane prize grabber physics phaser collect 30 plushies 4 player turns">
+                data-topics="physics duo"
+                data-keywords="claw machine plush grabber may gap thu game gap thu bong gap gau bong toy crane prize grabber physics phaser collect 30 plushies 4 player turns máy gắp thú claw machine">
                 <span class="tile-badge badge-new">NEW</span>
                 <img src="/claw-machine/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
@@ -753,7 +837,8 @@
             </a>
 
             <a href="/g/screw-jam" class="poki-tile tile-screwjam"
-                data-keywords="screw jam nuts and bolts puzzle unscrew bolts game van oc tro choi thao oc vit thao vit screw puzzle wooden plates 60 levels colour blind friendly 2 player race phaser">
+                data-topics="puzzle duo"
+                data-keywords="screw jam nuts and bolts puzzle unscrew bolts game van oc tro choi thao oc vit thao vit screw puzzle wooden plates 60 levels colour blind friendly 2 player race phaser vặn ốc screw jam">
                 <span class="tile-badge badge-new">NEW</span>
                 <img src="/screw-jam/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
@@ -761,169 +846,181 @@
             </a>
 
             <a href="/g/water-sort" class="poki-tile tile-watersort"
-                data-keywords="water sort color sort colour pouring puzzle game xep mau game rot mau tro choi xep mau nuoc sort puzzle 60 levels hint undo colour blind friendly 2 player race">
-                <span class="tile-badge badge-new">NEW</span>
+                data-topics="puzzle duo"
+                data-keywords="water sort color sort colour pouring puzzle game xep mau game rot mau tro choi xep mau nuoc sort puzzle 60 levels hint undo colour blind friendly 2 player race rót màu water sort">
                 <img src="/water-sort/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Water Sort</div>
             </a>
 
             <a href="/g/melon-drop" class="poki-tile tile-melon"
-                data-keywords="melon drop fruit merge watermelon game suika ghep trai cay game dua hau tro choi ghep hoa qua drop and merge physics puzzle 2 player one screen cherry strawberry grape">
-                <span class="tile-badge badge-new">NEW</span>
+                data-topics="puzzle physics"
+                data-keywords="melon drop suika fruit merge game tha dua game ghep hoa qua watermelon merge physics puzzle drop fruit combine ghép dưa hấu melon drop">
                 <img src="/melon-drop/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Melon Drop</div>
             </a>
 
             <a href="/g/bounce-hoops" class="poki-tile tile-hoops"
-                data-keywords="bounce hoops ball physics puzzle nem bong vao ro tro choi nem bong basketball puzzle bounce ball into hoop springboard levels stars">
-                <span class="tile-badge badge-new">NEW</span>
+                data-topics="physics puzzle"
+                data-keywords="bounce hoops ball physics puzzle game bong nay vao ro tro choi nem bong aim bounce ricochet levels ném bóng vào rổ bounce hoops">
                 <img src="/bounce-hoops/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Bounce Hoops</div>
             </a>
 
             <a href="/g/panda-run" class="poki-tile tile-panda"
-                data-keywords="panda run panda chay vo tan tro choi chay giai cuu ban endless runner running jump slide platformer rescue animals arcade">
-                <span class="tile-badge badge-new">NEW</span>
+                data-topics="action"
+                data-keywords="panda run endless runner game gau truc chay tro choi chay nhay jump slide obstacles panda giải cứu bạn panda run">
                 <img src="/panda-run/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Panda Run</div>
             </a>
 
             <a href="/g/bubble-pop" class="poki-tile tile-bubble"
-                data-keywords="bubble pop bubble shooter ban bong tro choi ban bong pop bubbles puzzle match 3 colours ice stone star bomb 24 levels">
-                <span class="tile-badge badge-new">NEW</span>
+                data-topics="puzzle action"
+                data-keywords="bubble pop bubble shooter game ban bong tro choi ban bong mau match colours aim shoot bắn bóng nổ bubble pop">
                 <img src="/bubble-pop/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Bubble Pop</div>
             </a>
 
             <a href="/g/fruit-crush" class="poki-tile tile-fruit tile-hot"
-                data-keywords="fruit crush match 3 candy sweets berries">
-                <span class="tile-badge">HOT</span>
+                data-topics="puzzle"
+                data-keywords="fruit crush match 3 game xep hoa qua tro choi ghep 3 candy match puzzle swap xếp hoa quả fruit crush">
                 <img src="/fruit-crush/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Fruit Crush</div>
             </a>
 
             <a href="/g/sling-blast" class="poki-tile tile-sling"
-                data-keywords="sling blast slingshot physics knock down towers ban na pha thap ban bi angry catapult puzzle 12 levels phaser">
-                <span class="tile-badge badge-new">NEW</span>
+                data-topics="physics action"
+                data-keywords="sling blast slingshot physics game ban na tro choi ban bi aim launch phaser bắn bi phá tháp sling blast">
                 <img src="/sling-blast/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Sling Blast</div>
             </a>
 
             <a href="/g/magic-coloring" class="poki-tile tile-coloring"
-                data-keywords="magic coloring colouring book paint pictures to mau cho be toddler preschool kitty unicorn princess mermaid creative 3 4 5 years old">
-                <span class="tile-badge badge-new">NEW</span>
+                data-topics="creative"
+                data-keywords="magic coloring colouring book game to mau tro choi to mau paint draw kids art tô màu thần kỳ magic coloring">
                 <img src="/coloring-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Magic Coloring</div>
             </a>
 
             <a href="/g/basketball-duel" class="poki-tile tile-basket tile-hot"
-                data-keywords="basketball duel sports hoops 2 player shooting">
-                <span class="tile-badge">HOT</span>
-                <img src="/basketball-game/icon.jpg" alt="" class="tile-img" decoding="async"
+                data-topics="sports duo"
+                data-keywords="basketball duel game bong ro tro choi nem ro hoop shoot 2 player song đấu bóng rổ basketball duel">
+                <img src="/basketball-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Basketball Duel</div>
             </a>
 
             <a href="/g/strike-party" class="poki-tile tile-bowling"
-                data-keywords="strike party bowling 10 pin bowling tro choi bowling bowling cho be strike spare 2 3 4 player versus sports physics">
-                <span class="tile-badge badge-new">NEW</span>
-                <img src="/bowling-game/icon.jpg" alt="" class="tile-img" decoding="async"
+                data-topics="sports duo"
+                data-keywords="strike party bowling game bowling tro choi bowling pins strike spare 4 player ném bóng bowling strike party">
+                <img src="/bowling-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Strike Party</div>
             </a>
 
             <a href="/g/cyber-snake" class="poki-tile tile-snake"
-                data-keywords="cyber snake retro classic arcade eat grow neon 8 stages phaser smooth ran san moi tro choi ran">
-                <span class="tile-badge badge-new">NEW</span>
-                <img src="/cyber-snake/icon.jpg" alt="" class="tile-img" decoding="async"
+                data-topics="action"
+                data-keywords="cyber snake game ran san moi tro choi con ran neon snake grow eat phaser rắn săn mồi cyber snake">
+                <img src="/cyber-snake/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Cyber Snake</div>
             </a>
 
             <a href="/g/pool-masters" class="poki-tile tile-pool"
-                data-keywords="pool masters billiards 8 ball snooker cue 2 player">
-                <img src="/billiards-game/icon.jpg" alt="" class="tile-img" decoding="async"
+                data-topics="sports physics duo"
+                data-keywords="pool masters billiards game bi a tro choi bi a 8 ball cue physics 2 player cao thủ bi-a pool masters">
+                <img src="/billiards-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Pool Masters</div>
             </a>
 
             <a href="/g/super-striker" class="poki-tile tile-soccer"
-                data-keywords="super striker soccer football penalty 2 4 player">
-                <img src="/soccer-game/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="sports duo"
+                data-keywords="super striker soccer football game sut bong tro choi da bong goal penalty 2 player sút bóng siêu đỉnh super striker">
+                <img src="/soccer-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Super Striker</div>
             </a>
 
             <a href="/g/balloon-darts" class="poki-tile tile-darts"
-                data-keywords="balloon darts pop carnival target aim throwing">
-                <img src="/darts-game/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="sports action"
+                data-keywords="balloon darts game phi tieu tro choi nem phi tieu bong bay throw aim pop phi tiêu bong bóng balloon darts">
+                <img src="/darts-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Balloon Darts</div>
             </a>
 
             <a href="/g/co-tuong" class="poki-tile tile-xiangqi"
-                data-keywords="co tuong xiangqi chinese chess online 2 player room code board game">
-                <img src="/xiangqi/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="board duo"
+                data-keywords="xiangqi chinese chess co tuong choi co tuong online board game 2 player cờ tướng xiangqi">
+                <img src="/xiangqi/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Xiangqi</div>
             </a>
 
             <a href="/g/tic-tac-toe" class="poki-tile tile-tictactoe"
-                data-keywords="tic tac toe co caro caro board game multiplayer 2 player X O">
-                <img src="/tictactoe-game/icon.png" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="board duo"
+                data-keywords="tic tac toe game co caro tro choi caro noughts crosses 2 player cờ ca-rô tic tac toe">
+                <img src="/tictactoe-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Tic Tac Toe</div>
             </a>
 
             <a href="/g/ocean-party" class="poki-tile tile-ocean"
-                data-keywords="ocean party underwater swim treasure pearls 4 player multiplayer sea">
-                <img src="/ocean-game/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="action duo"
+                data-keywords="ocean party underwater treasure game tiec dai duong tro choi duoi bien 4 player family tiệc đại dương ocean party">
+                <img src="/ocean-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Ocean Party</div>
             </a>
 
             <a href="/g/aqua-dash" class="poki-tile tile-aqua"
-                data-keywords="aqua dash underwater race swimming auto scroll 4 player diver dolphin">
-                <img src="/aqua-dash/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="action duo"
+                data-keywords="aqua dash underwater race game dua duoi bien tro choi boi loi swim dash treasure 4 player đua dưới biển aqua dash">
+                <img src="/aqua-dash/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Aqua Dash</div>
             </a>
 
             <a href="/g/neon-racer" class="poki-tile tile-racer"
-                data-keywords="neon racer racing car speed nitro sports">
-                <img src="/racer-game/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="action sports"
+                data-keywords="neon racer racing car game dua xe tro choi lai xe speed dodge đua xe neon neon racer">
+                <img src="/racer-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Neon Racer</div>
             </a>
 
             <a href="/g/neon-nebula" class="poki-tile tile-space"
-                data-keywords="neon nebula space shooter galaxy asteroid alien">
-                <img src="/space-shooter/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="action"
+                data-keywords="neon nebula space shooter game phi thuyen tro choi ban may bay vu tru stars phi thuyền neon neon nebula">
+                <img src="/space-shooter/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Neon Nebula</div>
             </a>
 
             <a href="/g/bot-arena" class="poki-tile tile-shooter"
-                data-keywords="bot arena robot shooter action gun aiming">
-                <img src="/shooter-game/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="action"
+                data-keywords="bot arena shooter game dau truong robot tro choi ban robot aim survive đấu trường rô-bốt bot arena">
+                <img src="/shooter-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">Bot Arena</div>
             </a>
 
             <a href="/g/english-quest" class="poki-tile tile-english"
-                data-keywords="english quest learning education grammar present perfect study">
-                <img src="/english-game/icon.jpg" alt="" class="tile-img" loading="lazy" decoding="async"
+                data-topics="learning"
+                data-keywords="english quest learn english game hoc tieng anh tro choi hoc tu vung present perfect grammar kids học tiếng anh english quest">
+                <img src="/english-game/icon.jpg" alt="" class="tile-img" fetchpriority="high" decoding="async"
                      onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
                 <div class="tile-label">English Quest</div>
             </a>
+
             <!-- No Results Container -->
             <div id="noResults" class="no-results">
                 <i class="fa-solid fa-face-frown"></i>
@@ -952,6 +1049,9 @@
         const gameTiles = document.querySelectorAll('.poki-tile');
         const noResults = document.getElementById('noResults');
 
+        const topicRow = document.getElementById('topicRow');
+        let activeTopic = '';
+
         function filterGames() {
             const query = searchInput.value.toLowerCase().trim();
 
@@ -966,8 +1066,15 @@
             gameTiles.forEach(tile => {
                 const title = tile.querySelector('.tile-label').textContent.toLowerCase();
                 const keywords = tile.getAttribute('data-keywords') || '';
+                const topics = tile.getAttribute('data-topics') || '';
 
-                if (title.includes(query) || keywords.includes(query)) {
+                /* Chủ đề và ô tìm kiếm phải cùng đúng thì mới hiện: bé lọc
+                   "Giải đố" rồi gõ tiếp là lọc trong nhóm ấy, chứ không phải
+                   gõ một cái là văng khỏi nhóm vừa chọn. */
+                const okTopic = !activeTopic || topics.split(' ').indexOf(activeTopic) >= 0;
+                const okText = title.includes(query) || keywords.includes(query);
+
+                if (okTopic && okText) {
                     tile.style.display = 'flex';
                     visibleCount++;
                 } else {
@@ -983,6 +1090,70 @@
         }
 
         searchInput.addEventListener('input', filterGames);
+
+        /* ---------- Bơm số lượt chơi từ máy chủ ----------
+           Gọi sau khi trang đã hiện xong, và hỏng thì im lặng bỏ qua: số lượt
+           là thứ hay-thì-có, không được phép chặn bé vào chơi. */
+        function paintPlayCounts() {
+            fetch('/api/stats', { cache: 'no-store' })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    if (!data) return;
+                    const total = data.total || {};
+                    const week = data.week || {};
+
+                    /* Ba game được chơi nhiều nhất trong bảy ngày được gắn nhãn
+                       ĐANG HOT. Lấy theo TUẦN chứ không theo tổng mọi thời —
+                       theo tổng thì mấy game cũ nhất cứ nằm mãi trên đỉnh, nhãn
+                       "hot" thành nhãn "lâu đời", chẳng nói lên điều gì. */
+                    const hot = Object.keys(week)
+                        .filter(k => week[k] > 0)
+                        .sort((a, b) => week[b] - week[a])
+                        .slice(0, 3);
+
+                    gameTiles.forEach(tile => {
+                        const slug = (tile.getAttribute('href') || '').split('/g/')[1];
+                        if (!slug) return;
+                        const n = total[slug] || 0;
+                        if (n > 0 && !tile.querySelector('.tile-plays')) {
+                            const pill = document.createElement('span');
+                            pill.className = 'tile-plays';
+                            pill.textContent = (n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n) + ' plays';
+                            tile.appendChild(pill);
+                        }
+                        /* Nhãn HOT thay chỗ nhãn MỚI nếu game vừa mới ra lại
+                           vừa đang được chơi nhiều — hai nhãn chồng lên nhau
+                           thì che mất icon game. */
+                        if (hot.indexOf(slug) >= 0) {
+                            let b = tile.querySelector('.tile-badge');
+                            if (!b) {
+                                b = document.createElement('span');
+                                b.className = 'tile-badge';
+                                tile.insertBefore(b, tile.firstChild);
+                            }
+                            b.className = 'tile-badge badge-hot';
+                            b.textContent = 'HOT';
+                        }
+                    });
+                })
+                .catch(() => { });
+        }
+
+        if (document.readyState === 'complete') paintPlayCounts();
+        else window.addEventListener('load', paintPlayCounts, { once: true });
+
+        topicRow.addEventListener('click', (ev) => {
+            const chip = ev.target.closest('.topic-chip');
+            if (!chip) return;
+            /* Bấm lại đúng nút đang bật thì tắt lọc — không có đường thoát thì
+               bé chọn nhầm một nhóm là kẹt trong đó, phải tải lại trang. */
+            const key = chip.getAttribute('data-topic') || '';
+            activeTopic = (key && key === activeTopic) ? '' : key;
+            topicRow.querySelectorAll('.topic-chip').forEach(c => {
+                c.classList.toggle('is-on', (c.getAttribute('data-topic') || '') === activeTopic);
+            });
+            filterGames();
+        });
 
         clearBtn.addEventListener('click', () => {
             searchInput.value = '';

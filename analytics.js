@@ -73,7 +73,40 @@ function trackGameOpen() {
     });
 }
 
+/* ---------- Đếm lượt chơi của RIÊNG MÌNH ----------
+   GA4 ở trên đếm đúng nhưng số nằm bên Google, mình không lấy ra để hiện lên
+   trang được. Cửa /api/play của máy chủ nhà thì lấy ra được, nên trang chủ mới
+   có hàng "đang hot" và số lượt trên từng ô.
+
+   Máy chủ KHÔNG lưu gì nhận dạng được người chơi — chỉ slug game và ngày. Chỗ
+   này cũng không gửi gì thêm ngoài slug.
+
+   CHỐNG THỔI PHỒNG: một tab chỉ tính một lượt cho mỗi game trong 30 phút. Bấm
+   F5 mười lần vẫn là một lượt, và một bé mở đi mở lại cả buổi cũng không đẩy
+   game ấy lên đầu bảng "hot". Ghi mốc thời gian vào sessionStorage nên đóng
+   tab là quên — không phải cookie, không theo dõi qua ngày. */
+const PLAY_COOLDOWN_MS = 30 * 60 * 1000;
+
+function countPlayOnce() {
+    if (!game) return;
+    const key = 'kibu_played_' + game.slug;
+    try {
+        const last = +(sessionStorage.getItem(key) || 0);
+        if (Date.now() - last < PLAY_COOLDOWN_MS) return;
+        sessionStorage.setItem(key, String(Date.now()));
+    } catch (e) { /* trình duyệt khoá sessionStorage: cứ đếm, thà hơn không */ }
+
+    /* fetch với keepalive để lượt chơi vẫn được ghi kể cả khi bé bấm vào game
+       rồi rời trang ngay. Hỏng thì im lặng bỏ qua — đây là con số cho vui,
+       không đáng để làm phiền bé bằng một thông báo lỗi. */
+    try {
+        fetch('/api/play?g=' + encodeURIComponent(game.slug), {
+            method: 'GET', keepalive: true, cache: 'no-store'
+        }).catch(() => { });
+    } catch (e) { /* bỏ qua */ }
+}
+
 if (game) {
-    if (document.readyState === 'complete') trackGameOpen();
-    else window.addEventListener('load', trackGameOpen, { once: true });
+    if (document.readyState === 'complete') { trackGameOpen(); countPlayOnce(); }
+    else window.addEventListener('load', () => { trackGameOpen(); countPlayOnce(); }, { once: true });
 }

@@ -492,6 +492,40 @@
         ['Cổng Trời', 'Sky Gate'],
         ['Luồn quả bóng qua đúng cái khe giữa hai khối.', 'Thread the ball through the gap.'],
 
+        /* ---------- Hàng lọc chủ đề và số lượt chơi ở trang chủ ----------
+         * Mấy chữ này ngắn và trùng với từ thông thường (Action, Board, Sports)
+         * nên đánh dấu 'x' — chỉ dịch khi cả ô chữ đúng y hệt, không dịch khi
+         * chúng nằm lẫn trong một câu dài. Thiếu cờ ấy thì trong game nào có
+         * chữ "Board" giữa câu cũng bị đổi thành "Cờ & bàn". */
+        ['Tất cả game', 'All games', 'x'],
+        ['Giải đố', 'Puzzle', 'x'],
+        ['Hành động', 'Action', 'x'],
+        ['Thể thao', 'Sports', 'x'],
+        ['Cờ & bàn', 'Board', 'x'],
+        ['Vẽ & sáng tạo', 'Creative', 'x'],
+        ['Học tập', 'Learning', 'x'],
+        ['Vật lý', 'Physics', 'x'],
+        ['Chơi cùng nhau', 'Play together', 'x'],
+        ['{0} lượt chơi', '{0} plays'],
+        ['ĐANG HOT', 'HOT', 'x'],
+
+        /* ---------- Tên mười game còn thiếu bản tiếng Việt ----------
+         * Máy soát danh bạ (node check-games.js) chỉ ra mười game chưa từng có
+         * cặp dịch, nên bật cờ Việt lên vẫn thấy nguyên tên tiếng Anh — cả trên
+         * ô gạch trang chủ lẫn trong game. Không ai báo vì nó không "hỏng",
+         * chỉ là thiếu. Đây đúng là loại lỗi im lặng mà máy soát sinh ra để
+         * bắt. */
+        ['Xếp Hoa Quả', 'Fruit Crush'],
+        ['Rắn Săn Mồi', 'Cyber Snake'],
+        ['Cao Thủ Bi-a', 'Pool Masters'],
+        ['Sút Bóng Siêu Đỉnh', 'Super Striker'],
+        ['Tiệc Đại Dương', 'Ocean Party'],
+        ['Đua Dưới Biển', 'Aqua Dash'],
+        ['Đua Xe Neon', 'Neon Racer'],
+        ['Phi Thuyền Neon', 'Neon Nebula'],
+        ['Đấu Trường Rô-bốt', 'Bot Arena'],
+        ['Học Tiếng Anh', 'English Quest'],
+
         /* ---------- Marble Machine (marble-machine) ---------- */
         ['Cỗ Máy Kỳ Quặc', 'Marble Machine'],
         ['CỖ MÁY KỲ QUẶC', 'MARBLE MACHINE'],

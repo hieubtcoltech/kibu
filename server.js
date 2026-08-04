@@ -183,6 +183,102 @@ function touchPresence(id) {
     return presence.size;
 }
 
+/* ---------- Đếm lượt chơi ----------
+   Ghi lại game nào được mở bao nhiêu lần, để trang chủ hiện được hàng "đang
+   hot" và số lượt trên từng ô. Trước đây chỉ có GA4 của Google: nó đếm đúng
+   nhưng dữ liệu nằm bên Google, mình không lấy ra để hiện lên trang được.
+
+   BA ĐIỀU RÀNG BUỘC, ghi rõ ở đây vì chúng quyết định toàn bộ thiết kế:
+
+   1. ĐÂY LÀ WEB CHO TRẺ CON — không lưu bất cứ thứ gì nhận dạng được người
+      chơi. Không cookie, không mã người dùng, không địa chỉ IP, không user
+      agent. Mỗi lượt chơi ghi đúng hai thứ: slug game và NGÀY (không giờ phút).
+      Có muốn cũng không truy ra được ai đã chơi gì.
+
+   2. KHÔNG THÊM PHẦN MỀM NGOÀI. Cả web chạy Node thuần, không một gói npm nào,
+      và em giữ nguyên nếp ấy. Số liệu để trong một tệp JSON bé xíu, gộp sẵn
+      theo ngày — không cần cơ sở dữ liệu, không cần tiến trình thứ hai.
+
+   3. SỐNG SÓT QUA KHỞI ĐỘNG LẠI. Máy chủ restart mỗi lần deploy (webhook kéo
+      mã mới rồi pm2 restart). Đếm trong bộ nhớ như phần "đang online" thì mất
+      sạch mỗi lần deploy, nên số lượt phải ghi xuống đĩa. Ghi mỗi lượt một
+      lần thì tốn ổ đĩa vô ích, nên gộp trong bộ nhớ rồi mỗi 60 giây mới xả
+      xuống một lần, và xả nốt lúc tắt.
+
+   Tệp nằm ở data/plays.json, KHÔNG theo git — deploy kiểu "git pull" không
+   đụng tới nó. */
+const PLAYS_FILE = path.join(ROOT, 'data', 'plays.json');
+const PLAYS_KEEP_DAYS = 60;      // giữ lịch sử hai tháng, đủ cho "hot 7 ngày"
+const PLAYS_FLUSH_MS = 60000;
+
+let plays = { total: {}, days: {} };   // {slug: n} và {'YYYY-MM-DD': {slug: n}}
+let playsDirty = false;
+
+function today() {
+    const d = new Date();
+    return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+}
+
+function loadPlays() {
+    try {
+        const raw = fs.readFileSync(PLAYS_FILE, 'utf8');
+        const d = JSON.parse(raw);
+        if (d && typeof d === 'object') {
+            plays.total = d.total || {};
+            plays.days = d.days || {};
+        }
+    } catch (e) { /* chưa có tệp: lần chạy đầu, bắt đầu từ số không */ }
+}
+
+function savePlays() {
+    if (!playsDirty) return;
+    /* Dọn ngày quá cũ trước khi ghi, để tệp không phình mãi */
+    const keys = Object.keys(plays.days).sort();
+    while (keys.length > PLAYS_KEEP_DAYS) delete plays.days[keys.shift()];
+    try {
+        fs.mkdirSync(path.dirname(PLAYS_FILE), { recursive: true });
+        fs.writeFileSync(PLAYS_FILE, JSON.stringify(plays));
+        playsDirty = false;
+    } catch (e) {
+        console.error('không ghi được số lượt chơi:', e.message);
+    }
+}
+
+/* Chỉ nhận slug có thật trong danh bạ. Thiếu chỗ này thì ai gọi
+   /api/play?g=<gì cũng được> cũng làm phình tệp số liệu bằng rác. */
+function countPlay(slug) {
+    if (!slug || !ROUTES.dirOf(slug)) return false;
+    const day = today();
+    plays.total[slug] = (plays.total[slug] || 0) + 1;
+    if (!plays.days[day]) plays.days[day] = {};
+    plays.days[day][slug] = (plays.days[day][slug] || 0) + 1;
+    playsDirty = true;
+    return true;
+}
+
+/* Bảng tổng cho trang chủ: tổng mọi thời và tổng bảy ngày gần nhất. */
+function playStats() {
+    const now = new Date();
+    const week = {};
+    for (let i = 0; i < 7; i++) {
+        const d = new Date(now.getTime() - i * 86400000);
+        const key = d.getFullYear() + '-' +
+            String(d.getMonth() + 1).padStart(2, '0') + '-' +
+            String(d.getDate()).padStart(2, '0');
+        const day = plays.days[key];
+        if (!day) continue;
+        for (const slug in day) week[slug] = (week[slug] || 0) + day[slug];
+    }
+    return { total: plays.total, week: week };
+}
+
+loadPlays();
+setInterval(savePlays, PLAYS_FLUSH_MS).unref();
+process.on('SIGTERM', () => { savePlays(); process.exit(0); });
+process.on('SIGINT', () => { savePlays(); process.exit(0); });
+
 /* ---------- Xử lý request ---------- */
 async function handle(req, res) {
     const started = Date.now();
@@ -234,6 +330,30 @@ async function handle(req, res) {
         send(res, 200, body, {
             'Content-Type': 'application/json; charset=utf-8',
             'Cache-Control': 'no-store'
+        });
+        return log(200);
+    }
+
+    /* Một lượt chơi. Gọi bằng ảnh beacon nên phải là GET; trả về 1×1 rỗng.
+       Bên trình duyệt tự chặn gọi lại trong 30 phút cho cùng một game, nên bấm
+       F5 mười lần vẫn tính một lượt. */
+    if (pathname === '/api/play') {
+        const g = new URLSearchParams(parsed.query || '').get('g');
+        const ok = countPlay(g);
+        send(res, 200, JSON.stringify({ ok: ok }), {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'no-store'
+        });
+        return log(200);
+    }
+
+    /* Bảng tổng lượt chơi cho trang chủ. Cho phép nằm bộ nhớ đệm 60 giây —
+       con số này không cần chính xác tới từng giây, mà để no-store thì mỗi
+       lượt vào trang chủ lại đánh thức máy chủ một lần vô ích. */
+    if (pathname === '/api/stats') {
+        send(res, 200, JSON.stringify(playStats()), {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Cache-Control': 'public, max-age=60'
         });
         return log(200);
     }
