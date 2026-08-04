@@ -791,6 +791,18 @@
                 return out;
             },
 
+            /* Ô gần ngón tay nhất trong tầm hít. Dùng chung cho lúc thả mảnh
+             * và lúc vẽ gợi ý trong khi kéo, để hai bên không bao giờ lệch
+             * nhau — vẽ sáng ô này mà thả lại vào ô kia là mất tin ngay. */
+            slotUnder: function (x, y) {
+                var slots = this.emptySlots(), best = null, bd = SNAP;
+                for (var i = 0; i < slots.length; i++) {
+                    var d = Math.hypot(x - slots[i].x, y - slots[i].y);
+                    if (d < bd) { bd = d; best = slots[i]; }
+                }
+                return best;
+            },
+
             onDown: function (p) {
                 if (G.mode !== 'play' || G.running) return;
                 sfx.wake();
@@ -848,20 +860,26 @@
                         put.flip = !put.flip;
                         sfx.flip();
                         this.rebuildFromPlacement();
+                    } else if (put) {
+                        /* mảnh tròn quay cũng thế — nói ra chứ đừng im lặng,
+                         * im lặng thì bé tưởng máy hỏng rồi chạm loạn lên */
+                        showTip('This piece works either way', 1200);
                     }
                     this.paintAll();
                     return;
                 }
 
-                /* thả mảnh: tìm ô trống gần nhất */
-                var slots = this.emptySlots(), best = null, bd = SNAP;
-                for (var i = 0; i < slots.length; i++) {
-                    var s = slots[i];
-                    if (s.filled) continue;
-                    var d = Math.hypot(g.x - s.x, g.y - s.y);
-                    if (d < bd) { bd = d; best = s; }
-                }
+                /* Thả mảnh vào ô gần nhất — KỂ CẢ Ô ĐANG CÓ MẢNH.
+                 *
+                 * Trước đó ô đã có mảnh thì bị bỏ qua, mảnh thả vào lặng lẽ bay
+                 * về khay chẳng nói gì. Anh Hiếu gặp đúng chuyện này: đặt nhầm
+                 * rồi muốn đổi mảnh khác vào, thả mãi không được, mà cũng không
+                 * có dấu hiệu nào bảo vì sao. Nay thả đè lên là ĐỔI CHỖ: mảnh
+                 * cũ tự về khay, mảnh mới vào ô. */
+                var best = this.slotUnder(g.x, g.y);
                 if (best) {
+                    var old = G.placed[best.bay];
+                    if (old && old.trayIdx >= 0) G.tray[old.trayIdx].used = false;
                     G.placed[best.bay] = { kind: G.tray[g.idx].kind, flip: !!g.flip, trayIdx: g.idx };
                     G.tray[g.idx].used = true;
                     sfx.drop();
@@ -1291,7 +1309,36 @@
                 var g = this.gDrag;
                 g.clear();
                 if (!this.grab || this.grab.from !== 'tray') return;
-                /* mảnh đang cầm trên tay: to hơn một chút cho nổi bật */
+
+                /* Trong lúc kéo phải CHỈ RÕ mảnh sắp rơi vào đâu: ô nhận sáng
+                 * lên và có đường nối tới ngón tay. Không có nó thì bé thả
+                 * xong mới biết trúng hay trượt, mà trượt thì mảnh lặng lẽ bay
+                 * về khay — đúng cái cảm giác "kéo mãi không được". */
+                var t = this.slotUnder(this.grab.x, this.grab.y);
+                if (t) {
+                    var w = Math.max(120, t.w * 0.5) + 10, h = 68;
+                    g.fillStyle(0xffd43b, 0.16);
+                    g.fillRoundedRect(t.x - w / 2, t.y - h / 2, w, h, 14);
+                    g.lineStyle(4, 0xffd43b, 0.95);
+                    g.strokeRoundedRect(t.x - w / 2, t.y - h / 2, w, h, 14);
+                    g.lineStyle(3, 0xffd43b, 0.4);
+                    g.beginPath();
+                    g.moveTo(this.grab.x, this.grab.y);
+                    g.lineTo(t.x, t.y);
+                    g.strokePath();
+                    if (t.filled) {
+                        /* báo trước là sẽ đổi chỗ mảnh đang nằm đó */
+                        g.fillStyle(0xffd43b, 0.9);
+                        g.fillCircle(t.x, t.y - h / 2 - 12, 11);
+                        g.lineStyle(3, 0x1a1440, 1);
+                        g.beginPath(); g.arc(t.x, t.y - h / 2 - 12, 5, 0.4, 5.2, false); g.strokePath();
+                    }
+                } else {
+                    /* không trúng ô nào: sáng cái khay lên cho biết mảnh sẽ về đó */
+                    g.lineStyle(4, 0x8f7bff, 0.75);
+                    g.strokeRoundedRect(26, TRAY.y + 2, W - 52, TRAY.h - 4, 18);
+                }
+
                 g.fillStyle(0x0a0722, 0.3);
                 g.fillCircle(this.grab.x + 4, this.grab.y + 8, 42);
                 this.paintChip(g, this.grab.x, this.grab.y, G.tray[this.grab.idx].kind, this.grab.flip);

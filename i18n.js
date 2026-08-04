@@ -514,6 +514,7 @@
         ['Cách chơi', 'How to play'],
         ['Xếp lại từ đầu', 'Start this level over'],
         ['Đã dọn sạch — xếp lại nào!', 'Cleared - build it again!'],
+        ['Mảnh này quay kiểu gì cũng được', 'This piece works either way'],
         ['CHỌN MÀN', 'PICK A LEVEL'],
         ['Sao', 'Stars'],
         ['Chơi lại từ đầu', 'Start over'],
