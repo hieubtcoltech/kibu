@@ -171,16 +171,21 @@ body {
      * đo ra thẻ sân 400×648, tỉ lệ sai hẳn, và bảng điểm lệch khỏi mặt tranh.
      * Phải tự tính bề ngang bằng đơn vị theo khung chứa (cqw/cqh) thì mới lấy
      * được cái nhỏ hơn trong hai giới hạn. */
+     * Tỉ lệ do game.js đặt vào --stage-ar, vì khổ bầu trời đổi theo máy: nằm
+     * ngang thì 1280×720, cầm dựng thì 720×cao. Nhờ vậy canvas lấp gần kín
+     * khung ở cả hai kiểu cầm, không còn dải mỏng kẹp giữa hai vùng đen. */
+    --stage-w: 1280;
+    --stage-h: 720;
     width: 100%;
     height: auto;
-    aspect-ratio: 1280 / 720;
+    aspect-ratio: var(--stage-w) / var(--stage-h);
     max-width: 100%;
     max-height: 100%;
     min-width: 0;
 }
 
 @supports (width: 1cqh) {
-    .stage { width: min(100cqw, 100cqh * 1280 / 720); }
+    .stage { width: min(100cqw, 100cqh * var(--stage-w) / var(--stage-h)); }
 }
 
 #game-canvas {

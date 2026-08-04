@@ -41,19 +41,35 @@
 
 const R = require('./rules.js');
 
-const W = 1280, H = 720;
-const GROUND = H * 0.86;      // vịt bật lên từ đây
-const TOP = 70;               // trên nữa là ra khỏi vùng bắn
+/* Hai khổ thế giới, đúng hai khổ game chọn lúc chạy: máy tính nằm ngang và
+ * điện thoại cầm dựng. Phải soát cả hai — trò chơi công bằng ở khổ ngang mà
+ * lệch ở khổ dựng thì vẫn là trò chơi không công bằng, vì bé chơi bằng điện
+ * thoại nhiều hơn bằng máy tính. */
+const WORLDS = [
+    { name: 'máy tính nằm ngang', W: 1280, H: 720 },
+    { name: 'điện thoại cầm dựng', W: 720, H: 1380 },
+    /* Hai khổ dẹt nhất và cao nhất mà pickSize() còn cho phép. Soát ở hai đầu
+     * chặn là đủ: mọi khổ thật đều nằm giữa hai cái này. */
+    { name: 'điện thoại xoay ngang (dẹt nhất)', W: 1280, H: 457 },
+    { name: 'màn hình cao nhất', W: 720, H: 1385 }
+];
 const GAMES = 400;            // số ván chạy thử cho mỗi cỡ bàn
 const STEP = 1 / 30;          // bước thời gian khi bay thử
 
 const fails = [];
 console.log('soát công bằng: ' + GAMES + ' ván cho mỗi cỡ bàn, bay từng con vịt theo đúng hàm của game\n');
 
+for (const world of WORLDS) {
+const W = world.W, H = world.H;
+const GROUND = H * 0.86;      // vịt bật lên từ đây
+const TOP = Math.round(H * 0.097);   // trên nữa là ra khỏi vùng bắn
+
 function laneOf(x, kids) {
     const i = Math.floor(x / (W / kids));
     return i < 0 ? 0 : (i >= kids ? kids - 1 : i);
 }
+
+console.log('  ── ' + world.name + ' (' + W + '×' + H + ')');
 
 for (const kids of [2, 3, 4]) {
     const first = new Array(kids).fill(0);   // số lần được gặp vịt đầu tiên
@@ -92,7 +108,8 @@ for (const kids of [2, 3, 4]) {
     };
 
     const sf = spread(first), sa = spread(aim), sp = spread(pts);
-    console.log('  ' + kids + ' bé:');
+    const tag = world.name + ', ' + kids + ' bé';
+    console.log('     ' + kids + ' bé:');
     console.log('     gặp trước      ' + first.map(n => Math.round(n)).join('  ') +
         '   lệch ' + (sf * 100).toFixed(1) + '%');
     console.log('     giây được ngắm ' + aim.map(n => Math.round(n)).join('  ') +
@@ -100,33 +117,44 @@ for (const kids of [2, 3, 4]) {
     console.log('     cơ hội ăn điểm ' + pts.map(n => Math.round(n)).join('  ') +
         '   lệch ' + (sp * 100).toFixed(1) + '%');
 
-    if (sf > 0.06) fails.push(kids + ' bé: số lần gặp vịt trước lệch ' + (sf * 100).toFixed(1) + '% giữa các làn');
-    if (sa > 0.06) fails.push(kids + ' bé: thời gian được ngắm lệch ' + (sa * 100).toFixed(1) + '% giữa các làn');
-    if (sp > 0.06) fails.push(kids + ' bé: cơ hội ăn điểm lệch ' + (sp * 100).toFixed(1) + '% giữa các làn');
+    if (sf > 0.06) fails.push(tag + ': số lần gặp vịt trước lệch ' + (sf * 100).toFixed(1) + '% giữa các làn');
+    if (sa > 0.06) fails.push(tag + ': thời gian được ngắm lệch ' + (sa * 100).toFixed(1) + '% giữa các làn');
+    if (sp > 0.06) fails.push(tag + ': cơ hội ăn điểm lệch ' + (sp * 100).toFixed(1) + '% giữa các làn');
 
     /* Không làn nào được phép TRẮNG cơ hội gặp trước — đây đúng là lỗi bản đầu:
      * bé ở giữa không bao giờ thấy vịt trước. */
     for (let i = 0; i < kids; i++) {
-        if (first[i] === 0) fails.push(kids + ' bé: làn ' + (i + 1) + ' KHÔNG BAO GIỜ được gặp vịt đầu tiên');
+        if (first[i] === 0) fails.push(tag + ': làn ' + (i + 1) + ' KHÔNG BAO GIỜ được gặp vịt đầu tiên');
     }
 }
 
-/* ---- vài phép soát luật khác ---- */
+/* Một vòng phải dài xấp xỉ nhau ở cả hai khổ. Đây là phép soát cho chỗ nhân
+ * tốc độ theo khổ: quên nhân thì ở khổ dựng con vịt bay lên ì ạch và vòng dài
+ * gấp đôi, bé chờ mãi mới hết vòng. */
+for (let r = 0; r < R.ROUNDS.length; r++) {
+    const t = R.roundTime(r, 777, W, H);
+    if (t < 8 || t > 26) fails.push(world.name + ': vòng ' + (r + 1) + ' dài ' +
+        t.toFixed(1) + ' giây, ngoài khoảng 8–26');
+}
+console.log('     một vòng dài ' +
+    R.ROUNDS.map((_, r) => R.roundTime(r, 777, W, H).toFixed(0)).join('/') + ' giây');
+console.log('');
+
+}   /* hết một khổ thế giới */
+
+/* ---- vài phép soát luật khác, không phụ thuộc khổ ---- */
 const seenRound = {};
 for (let r = 0; r < R.ROUNDS.length; r++) {
     const c = R.ROUNDS[r];
     if (seenRound[c.key]) fails.push('hai vòng trùng mã "' + c.key + '"');
     seenRound[c.key] = 1;
     if (!c.vi || !c.en) fails.push('vòng ' + (r + 1) + ' thiếu tên hai thứ tiếng');
-    const t = R.roundTime(r, 777, W, H);
-    /* Vòng dài quá thì bé mất tập trung, ngắn quá thì chưa kịp vào nhịp. */
-    if (t < 8 || t > 26) fails.push('vòng ' + (r + 1) + ' dài ' + t.toFixed(1) + ' giây, ngoài khoảng 8–26');
 }
 
 /* Cùng một hạt phải ra cùng một đàn vịt, không thì máy soát đo một đằng bé
  * chơi một nẻo. */
-const a1 = JSON.stringify(R.flock(2, 555, W, H));
-const a2 = JSON.stringify(R.flock(2, 555, W, H));
+const a1 = JSON.stringify(R.flock(2, 555, 1280, 720));
+const a2 = JSON.stringify(R.flock(2, 555, 1280, 720));
 if (a1 !== a2) fails.push('cùng một hạt mà hai lần dựng ra hai đàn vịt khác nhau');
 
 /* Chuỗi bắn trúng không được nhân vô hạn: một bé đang dẫn mà điểm phi mã thì

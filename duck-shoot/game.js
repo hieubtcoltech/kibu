@@ -33,10 +33,50 @@
      *  1. CẤU HÌNH
      * ======================================================================*/
 
+    /* KHỔ THẾ GIỚI ĐỔI THEO MÁY — không ép một khổ ngang duy nhất.
+     *
+     * Bản đầu em cố định 1280×720 rồi để Phaser co cho vừa. Trên máy tính thì
+     * đẹp, nhưng anh Hiếu mở bằng điện thoại cầm dựng thì cả bầu trời co thành
+     * một dải mỏng kẹp giữa hai vùng đen — gần như không còn chỗ chơi. Ảnh anh
+     * gửi cho thấy vùng chơi chỉ chiếm khoảng một phần tư màn hình.
+     *
+     * Chữa bằng cách chọn khổ theo khung thật:
+     *   · khung nằm ngang  → 1280 ô ngang, cao suy ra từ tỉ lệ
+     *   · khung dựng đứng  →  720 ô ngang, cao suy ra từ tỉ lệ
+     * Bề ngang nhỏ đi ở khổ dựng để con vịt vẫn to bằng chừng ấy ngón tay trên
+     * màn hẹp; nếu giữ 1280 thì con vịt chỉ còn 9px trên máy rộng 390px.
+     *
+     * Tốc độ bay được nhân theo khổ ở rules.js, nên khổ nào cũng bay "nhanh
+     * như nhau" theo cảm nhận, và máy soát công bằng chạy cả hai khổ. */
     var W = 1280, H = 720;
     var GROUND = H * 0.86;          // vịt bật lên từ đây
     var TOP = 70;                   // cao hơn đây là khuất tầm bắn
-    var HUD_H = 96;                 // dải bảng điểm trên cùng
+
+    /* Chọn khổ từ bề ngang và bề cao thật của khung chơi. Trả về {W, H}. */
+    function pickSize(cw, ch) {
+        if (!(cw > 0) || !(ch > 0)) return { W: 1280, H: 720 };
+        var ar = cw / ch;
+        var w = ar >= 1.15 ? 1280 : 720;
+        /* Chặn hai đầu để cảnh không bị dẹt hay dài quá mức: dưới 0.52 thì bầu
+         * trời cao lêu nghêu, vịt bay mãi không tới đỉnh; trên 2.1 thì đồi và
+         * mặt trời bị kéo bẹp. */
+        var a = Math.max(0.52, Math.min(2.8, ar));
+        return { W: w, H: Math.round(w / a) };
+    }
+
+    /* Đặt khổ và tính lại những mốc suy ra từ nó. TOP giữ đúng tỉ lệ 70/720 vì
+     * nó là mép dưới của dải bảng điểm, mà dải ấy cũng co theo khung. */
+    function applySize(size) {
+        W = size.W;
+        H = size.H;
+        GROUND = H * 0.86;
+        TOP = Math.round(H * 0.097);
+        var st = document.querySelector('.stage');
+        if (st) {
+            st.style.setProperty('--stage-w', W);
+            st.style.setProperty('--stage-h', H);
+        }
+    }
 
     var KIDS = [
         { vi: 'BÉ 1', en: 'KID 1', emoji: '🦆', color: 0x38bdf8, css: '#38bdf8' },
@@ -170,14 +210,7 @@
                 this.puffs = [];
                 this.pops = [];
                 this.dog = { t: 99, mood: 'tease', lane: 0, kind: 'big' };
-                this.stars = [];
-                this.rain = [];
-                this.flies = [];
-                for (var i = 0; i < 60; i++) {
-                    this.stars.push({ x: Math.random() * W, y: TOP + Math.random() * (GROUND - TOP) * 0.7, r: 0.6 + Math.random() * 1.5, p: Math.random() * TAU });
-                }
-                for (var j = 0; j < 70; j++) this.rain.push({ x: Math.random() * W, y: Math.random() * GROUND, v: 620 + Math.random() * 420 });
-                for (var k = 0; k < 24; k++) this.flies.push({ x: Math.random() * W, y: TOP + Math.random() * (GROUND - TOP), p: Math.random() * TAU, s: 0.6 + Math.random() });
+                this.reseedScenery();
 
                 this.acc = 0;
                 this.frozen = false;
@@ -186,6 +219,20 @@
                 this.buildKeys();
 
                 UI.sceneReady(this);
+            },
+
+            /* Sao, hạt mưa và đom đóm rải theo khổ thế giới. Phải rải lại mỗi
+             * khi đổi khổ, không thì xoay máy xong nửa bầu trời trống trơn còn
+             * nửa kia mưa dồn cục. */
+            reseedScenery: function () {
+                this.stars = [];
+                this.rain = [];
+                this.flies = [];
+                for (var i = 0; i < 60; i++) {
+                    this.stars.push({ x: Math.random() * W, y: TOP + Math.random() * (GROUND - TOP) * 0.7, r: 0.6 + Math.random() * 1.5, p: Math.random() * TAU });
+                }
+                for (var j = 0; j < 70; j++) this.rain.push({ x: Math.random() * W, y: Math.random() * GROUND, v: 620 + Math.random() * 420 });
+                for (var k = 0; k < 24; k++) this.flies.push({ x: Math.random() * W, y: TOP + Math.random() * (GROUND - TOP), p: Math.random() * TAU, s: 0.6 + Math.random() });
             },
 
             /* Nướng sẵn 3 loài × 3 tư thế cánh. Nướng ở gấp ba rồi thu lại —
@@ -244,6 +291,7 @@
             },
 
             startRound: function (n) {
+                UI.takePendingSize();          // bé vừa xoay máy giữa vòng trước
                 G.round = n;
                 G.t = 0;
                 G.ducks = [];
@@ -682,6 +730,7 @@
         boot: function () {
             if (this.game) return;
             definePlayScene();
+            applySize(this.wanted());
             this.game = new Phaser.Game({
                 type: Phaser.AUTO,
                 parent: 'game-canvas',
@@ -691,6 +740,40 @@
                 scene: [PlayScene],
                 banner: false
             });
+        },
+
+        /* Khổ mà khung chơi đang muốn. Đo thẻ .game-viewport chứ không đo cửa
+         * sổ: thanh trên và chân trang ăn mất một phần chiều cao, đo cửa sổ thì
+         * ra khổ dẹt hơn thực tế. */
+        wanted: function () {
+            var box = document.querySelector('.game-viewport');
+            if (!box) return { W: 1280, H: 720 };
+            var r = box.getBoundingClientRect();
+            return pickSize(r.width, r.height);
+        },
+
+        /* Xoay máy, hoặc bàn phím ảo đóng lại, thì khổ đổi. Đổi giữa lúc đang
+         * bắn thì đàn vịt phải dựng lại từ đầu vòng, nên chỉ đổi ngay khi bé
+         * chưa vào trận; đang chơi thì hẹn tới đầu vòng sau. */
+        resize: function () {
+            if (!this.scene || !this.game) return;
+            var s = this.wanted();
+            if (Math.abs(s.W - W) < 1 && Math.abs(s.H - H) < 24) return;
+            if (G.mode === 'play' || G.mode === 'intro') { this.pendingSize = s; return; }
+            this.pendingSize = null;
+            applySize(s);
+            this.game.scale.resize(W, H);
+            this.scene.reseedScenery();
+        },
+
+        /* Gọi ở đầu mỗi vòng: nếu có khổ đang chờ thì lúc này áp vào là gọn,
+         * đàn vịt của vòng mới vốn dĩ dựng lại từ đầu. */
+        takePendingSize: function () {
+            if (!this.pendingSize || !this.game) return;
+            applySize(this.pendingSize);
+            this.pendingSize = null;
+            this.game.scale.resize(W, H);
+            this.scene.reseedScenery();
         },
 
         start: function (kids) {
@@ -857,10 +940,24 @@
         openMenu();
         UI.boot();
 
+        /* Xoay máy hay đổi cỡ cửa sổ thì chọn lại khổ bầu trời. Chờ một nhịp
+         * rồi mới đo: lúc sự kiện bắn ra, trình duyệt trên điện thoại vẫn còn
+         * đang trả về khổ cũ. */
+        var rt = null;
+        function onResize() {
+            clearTimeout(rt);
+            rt = setTimeout(function () { UI.resize(); }, 220);
+        }
+        window.addEventListener('resize', onResize);
+        window.addEventListener('orientationchange', onResize);
+
         window.duckShoot = {
             G: G, UI: UI, R: R, store: store, W: W, H: H, GROUND: GROUND, TOP: TOP,
             start: function (kids) { UI.start(kids || 2); },
             laneOf: laneOf,
+            /* khổ thế giới hiện tại — máy soát và máy đo giao diện đọc ở đây,
+               vì W/H không còn cố định nữa */
+            size: function () { return { W: W, H: H, GROUND: GROUND, TOP: TOP }; },
             state: function () {
                 return { mode: G.mode, kids: G.kids, round: G.round, scores: G.scores.slice(), ducks: G.ducks.length };
             }

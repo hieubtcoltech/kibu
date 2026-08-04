@@ -126,6 +126,13 @@
         var rnd = rng(seed + round * 7919);
         var out = [];
         var t = 0.6;
+
+        /* Tốc độ nhân theo khổ thế giới. Bầu trời trên điện thoại cầm dựng chỉ
+         * rộng 720 ô nhưng cao hơn nhiều; giữ nguyên số ô/giây thì vịt bay
+         * ngang vụt qua trong chớp mắt còn bay lên thì ì ạch mãi không khuất.
+         * Nhân theo khổ thì bé cầm máy kiểu nào cũng thấy con vịt bay "nhanh
+         * như nhau", và số giây một vòng gần như không đổi. */
+        var sx = W / 1280, sy = H / 720;
         for (var i = 0; i < R.ducks; i++) {
             var gold = R.goldRate ? rnd() < R.goldRate : rnd() < 0.08;
             var small = !gold && rnd() < 0.42;
@@ -155,10 +162,10 @@
                 t: +t.toFixed(3),
                 kind: kind,
                 x0: Math.round(x0),
-                speed: Math.round(sp * KINDS[kind].vs),
+                speed: Math.round(sp * KINDS[kind].vs * sx),
                 dir: dir,
-                rise: Math.round((88 + rnd() * 52) * KINDS[kind].vs),
-                amp: R.fly === 'wave' ? 26 + rnd() * 44 : (R.fly === 'gust' ? 14 + rnd() * 28 : 0),
+                rise: Math.round((88 + rnd() * 52) * KINDS[kind].vs * sy),
+                amp: (R.fly === 'wave' ? 26 + rnd() * 44 : (R.fly === 'gust' ? 14 + rnd() * 28 : 0)) * sy,
                 phase: rnd() * Math.PI * 2
             });
             t += R.gap * (0.72 + rnd() * 0.56);
@@ -217,7 +224,7 @@
         var f = flock(round, seed, W, H);
         var last = 0;
         for (var i = 0; i < f.length; i++) {
-            last = Math.max(last, f[i].t + (H * 0.86) / f[i].rise);
+            last = Math.max(last, f[i].t + (H * 0.86 - Math.round(H * 0.097)) / f[i].rise);
         }
         return last + 0.8;
     }
