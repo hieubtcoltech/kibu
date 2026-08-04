@@ -222,6 +222,7 @@
 
                 this.puffs = [];
                 this.pops = [];
+                this.lanePulse = [0, 0, 0, 0];
                 this.dog = { t: 99, mood: 'tease', lane: 0, kind: 'big' };
                 this.reseedScenery();
 
@@ -320,6 +321,7 @@
                 this.duckImgs.forEach(function (im) { im.destroy(); });
                 this.duckImgs = [];
                 this.puffs = []; this.pops = [];
+                this.lanePulse = [0, 0, 0, 0];
                 this.dog.t = 99;
                 G.roundStart = G.scores.slice();
                 G.mode = 'intro';
@@ -408,7 +410,11 @@
                     G.scores[lane] = Math.max(0, G.scores[lane] + pen);
                     G.streaks[lane] = 0;
                     G.wrong[lane]++;
-                    this.pops.push({ x: hit.x, y: hit.y, t: 0, pts: pen, lane: lane, bad: true });
+                    this.pops.push({
+                        x: hit.x, y: hit.y, t: 0, pts: pen, lane: lane, bad: true,
+                        seed: Math.random() * TAU, bits: this.makeFeathers()
+                    });
+                    this.lanePulse[lane] = 0.55;
                     sfx.wrong();
                     this.dogSay('tease', lane);
                     UI.paintHud();
@@ -419,10 +425,31 @@
                 G.streaks[lane]++;
                 var pts = R.score(hit.kind, G.streaks[lane]);
                 G.scores[lane] += pts;
-                this.pops.push({ x: hit.x, y: hit.y, t: 0, pts: pts, lane: lane, gold: hit.kind === 'gold' });
+                this.pops.push({
+                    x: hit.x, y: hit.y, t: 0, pts: pts, lane: lane,
+                    gold: hit.kind === 'gold', seed: Math.random() * TAU
+                });
                 if (hit.kind === 'gold') sfx.gold(); else sfx.hit();
                 if (G.streaks[lane] >= 3) this.dogSay('proud', lane, hit.kind);
                 UI.paintHud();
+            },
+
+            /* Một búi lông tối màu: mỗi cọng một hướng, một tốc độ, một kiểu
+             * xoay. Trộn hai màu của con chim lạ để búi lông đúng là lông CỦA
+             * NÓ chứ không phải mấy hạt xám chung chung. */
+            makeFeathers: function () {
+                var out = [], n = 11;
+                for (var i = 0; i < n; i++) {
+                    var a = (i / n) * TAU + Math.random() * 0.5;
+                    out.push({
+                        a: a,
+                        v: 130 + Math.random() * 210,
+                        spin: (Math.random() - 0.5) * 9,
+                        len: 7 + Math.random() * 7,
+                        col: [0x2b2f45, 0x1b1e30, 0xff5a36][i % 3]
+                    });
+                }
+                return out;
             },
 
             dogSay: function (mood, lane, kind) {
@@ -516,8 +543,10 @@
                 }
                 for (i = this.pops.length - 1; i >= 0; i--) {
                     this.pops[i].t += dt;
-                    this.pops[i].y -= 42 * dt;
                     if (this.pops[i].t > 1.1) this.pops.splice(i, 1);
+                }
+                for (i = 0; i < this.lanePulse.length; i++) {
+                    if (this.lanePulse[i] > 0) this.lanePulse[i] -= dt;
                 }
                 if (this.dog.t < 99) this.dog.t += dt;
             },
@@ -716,39 +745,134 @@
                 return Math.max(0, 1 - d / 200);
             },
 
+            /* ---------------------------------------------------------------
+             * HIỆU ỨNG
+             *
+             * Bản đầu em báo "bắn nhầm" bằng hai nét gạch chéo thành chữ X.
+             * Anh Hiếu nói thẳng: đấy là làm cho có. Anh đúng — chữ X là ký
+             * hiệu của người lập trình, không phải hình của trò chơi. Nó không
+             * kể chuyện gì cả: bé không thấy chuyện gì vừa xảy ra, chỉ thấy
+             * một dấu gạch báo lỗi.
+             *
+             * Làm lại theo lối kể chuyện bằng hình. Bắn nhầm con chim lạ thì
+             * cái phải thấy là: một búi lông tối bung ra và rơi xuống, một
+             * vòng sóng đỏ lan ra rồi tắt, con số −3 nảy lên rồi trôi đi, và
+             * làn của bé ấy loé đỏ ở hai mép. Bốn thứ ấy cùng kể một câu:
+             * "bé vừa bắn trúng con không nên bắn, và mất 3 điểm".
+             *
+             * Bắn trúng vịt cũng được vẽ lại cho cùng một ngôn ngữ — nổ ra
+             * chùm tia sáng và con số +N — chứ không để cái sai được chăm
+             * chút hơn cái đúng.
+             * -------------------------------------------------------------*/
             paintFx: function () {
                 var g = this.gFx;
                 g.clear();
-                var i;
+                var i, s, a;
+
+                /* --- vệt đạn: vòng loe ra rồi tắt --- */
                 for (i = 0; i < this.puffs.length; i++) {
                     var p = this.puffs[i], k = p.t / 0.35;
-                    g.lineStyle(3, KIDS[p.lane].color, 1 - k);
+                    g.lineStyle(3, KIDS[p.lane].color, (1 - k) * 0.9);
                     g.strokeCircle(p.x, p.y, 10 + k * 40);
-                    g.lineStyle(2, 0xffffff, (1 - k) * 0.8);
-                    g.beginPath();
-                    g.moveTo(p.x - 16, p.y); g.lineTo(p.x + 16, p.y);
-                    g.moveTo(p.x, p.y - 16); g.lineTo(p.x, p.y + 16);
-                    g.strokePath();
+                    g.lineStyle(1.5, 0xffffff, (1 - k) * 0.55);
+                    g.strokeCircle(p.x, p.y, 4 + k * 20);
                 }
+
+                /* --- làn loé đỏ khi bé làn ấy bắn nhầm --- */
+                var lw = laneW();
+                for (i = 0; i < G.kids; i++) {
+                    var lp = this.lanePulse[i];
+                    if (!lp || lp <= 0) continue;
+                    var lk = lp / 0.55;                       // 1 → 0
+                    /* Vẽ hai dải sáng ở HAI MÉP làn chứ không phủ đỏ cả làn:
+                     * phủ kín thì che mất đàn vịt đúng lúc bé cần nhìn nhất. */
+                    for (s = 0; s < 7; s++) {
+                        var fade = lk * 0.30 * (1 - s / 7);
+                        g.fillStyle(0xff3b30, fade);
+                        g.fillRect(i * lw + s * 7, TOP, 7, GROUND - TOP + 30);
+                        g.fillRect((i + 1) * lw - (s + 1) * 7, TOP, 7, GROUND - TOP + 30);
+                    }
+                }
+
                 for (i = 0; i < this.pops.length; i++) {
-                    var q = this.pops[i], t = q.t / 1.1;
-                    var col = q.bad ? 0xff3b30 : (q.gold ? 0xffd43b : KIDS[q.lane].color);
-                    g.fillStyle(col, (1 - t) * 0.9);
-                    for (var s = 0; s < 8; s++) {
-                        var a = s / 8 * TAU + t * 2;
-                        g.fillCircle(q.x + Math.cos(a) * (16 + t * 46), q.y + Math.sin(a) * (16 + t * 46), 4 * (1 - t) + 1);
-                    }
-                    /* Bắn nhầm thì vẽ thêm một chữ X đỏ to. Chỉ nghe tiếng thôi
-                     * không đủ: bé nào cũng tắt tiếng, mà bàn có bốn bé thì
-                     * phải thấy được PHÁT NÀO của AI vừa hỏng. */
+                    var q = this.pops[i], t = Math.min(1, q.t / 1.1);
+                    var ease = 1 - Math.pow(1 - t, 3);        // nhanh lúc đầu, chậm dần
+
                     if (q.bad) {
-                        g.lineStyle(6, 0xff3b30, (1 - t));
-                        var d2 = 26 + t * 20;
-                        g.beginPath();
-                        g.moveTo(q.x - d2, q.y - d2); g.lineTo(q.x + d2, q.y + d2);
-                        g.moveTo(q.x + d2, q.y - d2); g.lineTo(q.x - d2, q.y + d2);
-                        g.strokePath();
+                        /* sóng đỏ lan ra, mảnh dần */
+                        g.lineStyle(7 * (1 - t), 0xff3b30, (1 - t) * 0.85);
+                        g.strokeCircle(q.x, q.y, 12 + ease * 78);
+                        g.lineStyle(2.5 * (1 - t), 0xffd0cc, (1 - t) * 0.6);
+                        g.strokeCircle(q.x, q.y, 6 + ease * 46);
+
+                        /* búi lông bung ra rồi rơi xuống — cái này mới là hình
+                         * KỂ được chuyện: bé bắn trúng một con chim thật */
+                        for (s = 0; s < q.bits.length; s++) {
+                            var b = q.bits[s];
+                            var bt = q.t;
+                            var bx = q.x + Math.cos(b.a) * b.v * bt;
+                            var by = q.y + Math.sin(b.a) * b.v * bt + 240 * bt * bt;
+                            var spin = b.a + b.spin * bt;
+                            var al = Math.max(0, 1 - t * 1.15);
+                            g.fillStyle(b.col, al);
+                            /* mỗi cọng lông là một hình thoi mảnh, xoay theo
+                             * đường bay — vẽ tròn thì thành hạt bụi vô nghĩa */
+                            var cx = Math.cos(spin), cy = Math.sin(spin);
+                            var L = b.len * (1 - t * 0.3), Wd = b.len * 0.30;
+                            g.beginPath();
+                            g.moveTo(bx + cx * L, by + cy * L);
+                            g.lineTo(bx - cy * Wd, by + cx * Wd);
+                            g.lineTo(bx - cx * L * 0.55, by - cy * L * 0.55);
+                            g.lineTo(bx + cy * Wd, by - cx * Wd);
+                            g.closePath();
+                            g.fillPath();
+                        }
+                    } else {
+                        /* bắn trúng: chùm tia sáng toả ra, dài ngắn xen kẽ */
+                        var col = q.gold ? 0xffd43b : KIDS[q.lane].color;
+                        for (s = 0; s < 10; s++) {
+                            a = s / 10 * TAU + q.seed;
+                            var r0 = 10 + ease * 26;
+                            var r1 = r0 + (s % 2 ? 14 : 26) * (1 - t);
+                            g.lineStyle(3 * (1 - t) + 0.5, col, (1 - t) * 0.95);
+                            g.beginPath();
+                            g.moveTo(q.x + Math.cos(a) * r0, q.y + Math.sin(a) * r0);
+                            g.lineTo(q.x + Math.cos(a) * r1, q.y + Math.sin(a) * r1);
+                            g.strokePath();
+                        }
+                        g.lineStyle(2.5 * (1 - t), 0xffffff, (1 - t) * 0.7);
+                        g.strokeCircle(q.x, q.y, 8 + ease * 40);
                     }
+                }
+
+                this.paintPopNumbers();
+            },
+
+            /* Con số điểm bay lên. Dùng thẻ chữ thật của Phaser chứ không vẽ
+             * số bằng nét: số vẽ tay ở cỡ này trông ngay ra đồ chắp vá, mà đây
+             * lại là thứ bé nhìn nhiều nhất sau con vịt. */
+            paintPopNumbers: function () {
+                if (!this.popTexts) this.popTexts = [];
+                var need = this.pops.length;
+                while (this.popTexts.length < need) {
+                    this.popTexts.push(this.add.text(0, 0, '', {
+                        fontFamily: '"Baloo 2", Nunito, system-ui, sans-serif',
+                        fontSize: '46px', fontStyle: '800',
+                        color: '#ffffff', stroke: '#0b1220', strokeThickness: 7
+                    }).setOrigin(0.5).setDepth(11));
+                }
+                for (var i = 0; i < this.popTexts.length; i++) {
+                    var tx = this.popTexts[i];
+                    if (i >= need) { tx.setVisible(false); continue; }
+                    var q = this.pops[i], t = Math.min(1, q.t / 1.1);
+                    /* nảy lên rồi trôi: to vọt ra ở nhịp đầu, sau đó nhỏ dần */
+                    var pop = t < 0.18 ? (t / 0.18) * 1.25 : 1.25 - (t - 0.18) / 0.82 * 0.45;
+                    tx.setText((q.pts > 0 ? '+' : '') + q.pts);
+                    tx.setColor(q.bad ? '#ff5c52' : (q.gold ? '#ffd43b' : KIDS[q.lane].css));
+                    tx.setPosition(q.x, q.y - 26 - t * 54);
+                    tx.setScale(pop * (H / 720));
+                    tx.setAlpha(t < 0.75 ? 1 : (1 - t) / 0.25);
+                    tx.setVisible(true);
                 }
             },
 
