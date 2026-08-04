@@ -57,29 +57,64 @@
      * lên trên và sang phải, nên tấm ảnh nướng ra rộng và cao hơn cạnh ô một
      * khoảng đúng bằng độ lùi.
      * ------------------------------------------------------------------ */
-    function drawCube(g, matKey, S) {
+    /* mask: bit 0 = có khối NGAY TRÊN, bit 1 = có khối NGAY BÊN PHẢI,
+     *       bit 2 = có khối ở CHÉO TRÊN-PHẢI */
+    function drawCube(g, matKey, S, mask) {
         var c = matOf(matKey);
         var D = S * DEPTH;
+        mask = mask || 0;
+        var up = !!(mask & 1), right = !!(mask & 2), upRight = !!(mask & 4);
 
-        /* --- mặt trên --- */
-        g.fillStyle(c.top, 1);
-        g.beginPath();
-        g.moveTo(0, 0);
-        g.lineTo(D, -D);
-        g.lineTo(S + D, -D);
-        g.lineTo(S, 0);
-        g.closePath();
-        g.fillPath();
+        /* --- mặt trên: CHỈ vẽ khi phía trên trống ---
+         *
+         * Anh Hiếu bắt được lỗi này: "các hình khối vẽ nhưng không đúng lắm,
+         * nhìn rất khó". Bản đầu em vẽ mỗi ô thành một khối lập phương hoàn
+         * chỉnh, kể cả khi có ô khác nằm chồng ngay lên. Hậu quả: mặt trên của
+         * ô dưới bị vẽ ĐÈ LÊN mặt trước của ô trên, thành một vệt sáng cắt
+         * ngang giữa thân quân — và cả quân chữ J trông ra ba cái hộp rời rạc
+         * xếp cạnh nhau chứ không phải một khối liền.
+         *
+         * Trong một khối đặc, mặt trên chỉ thấy được ở những ô trên cùng, mặt
+         * phải chỉ thấy được ở những ô ngoài cùng bên phải. Đấy là chuyện hiển
+         * nhiên khi nhìn vật thật, mà em lại vẽ từng ô một cách độc lập nên
+         * không nhận ra cho tới khi anh chỉ. */
+        if (!up) {
+            g.fillStyle(c.top, 1);
+            g.beginPath();
+            g.moveTo(0, 0);
+            g.lineTo(D, -D);
+            g.lineTo(S + D, -D);
+            g.lineTo(S, 0);
+            g.closePath();
+            g.fillPath();
+        }
 
-        /* --- mặt phải --- */
-        g.fillStyle(c.right, 1);
-        g.beginPath();
-        g.moveTo(S, 0);
-        g.lineTo(S + D, -D);
-        g.lineTo(S + D, S - D);
-        g.lineTo(S, S);
-        g.closePath();
-        g.fillPath();
+        /* --- mặt phải: chỉ vẽ khi bên phải trống --- */
+        if (!right) {
+            g.fillStyle(c.right, 1);
+            g.beginPath();
+            g.moveTo(S, 0);
+            g.lineTo(S + D, -D);
+            g.lineTo(S + D, S - D);
+            g.lineTo(S, S);
+            g.closePath();
+            g.fillPath();
+        }
+
+        /* --- miếng vá góc ---
+         * Trên có khối, phải có khối, mà CHÉO trên-phải thì trống: lúc ấy cái
+         * góc nhỏ trên-phải không ai che, thủng ra một mảnh nền. Ô bên phải đáng
+         * lẽ che chỗ ấy bằng mặt trên của nó, nhưng chính nó cũng bị khối phía
+         * trên bịt mất nên không vẽ mặt trên nữa. */
+        if (up && right && !upRight) {
+            g.fillStyle(c.top, 1);
+            g.beginPath();
+            g.moveTo(S, 0);
+            g.lineTo(S, -D);
+            g.lineTo(S + D, -D);
+            g.closePath();
+            g.fillPath();
+        }
 
         /* --- mặt trước --- */
         g.fillStyle(c.front, 1);
@@ -88,15 +123,15 @@
         /* --- vân từng chất liệu, vẽ trước khi kẻ cạnh --- */
         detail(g, matKey, c, S, D);
 
-        /* --- cạnh khối --- */
-        g.lineStyle(Math.max(1, S * 0.035), c.edge, 0.85);
+        /* --- cạnh khối. Nét quanh mặt trước để nhẹ hơn: nó chạy cả ở ranh
+         * giới giữa hai ô liền nhau, đậm quá thì lại thành mấy cái hộp rời. --- */
+        g.lineStyle(Math.max(1, S * 0.03), c.edge, 0.45);
         g.strokeRect(0, 0, S, S);
+        g.lineStyle(Math.max(1, S * 0.035), c.edge, 0.85);
         g.beginPath();
-        g.moveTo(0, 0); g.lineTo(D, -D);
-        g.moveTo(S, 0); g.lineTo(S + D, -D);
-        g.moveTo(S + D, -D); g.lineTo(S + D, S - D);
-        g.moveTo(S, S); g.lineTo(S + D, S - D);
-        g.moveTo(D, -D); g.lineTo(S + D, -D);
+        if (!up) { g.moveTo(0, 0); g.lineTo(D, -D); g.moveTo(D, -D); g.lineTo(S + D, -D); }
+        if (!right) { g.moveTo(S + D, -D); g.lineTo(S + D, S - D); g.moveTo(S, S); g.lineTo(S + D, S - D); }
+        if (!up && !right) { g.moveTo(S, 0); g.lineTo(S + D, -D); }
         g.strokePath();
     }
 

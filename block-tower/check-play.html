@@ -214,17 +214,24 @@ function run(win) {
     say('· ảnh khối nướng sẵn', 'dim');
     var CELL = win.blockTower.size().CELL;
     var miss = [], small = [];
+    /* Tám biến thể mỗi chất liệu, theo ba bit hàng xóm (trên / phải / chéo
+     * trên-phải). Soát ĐỦ CẢ TÁM: thiếu một biến thể thì chỉ những thế cờ hiếm
+     * mới lộ ra ô trống, mà lỗi hiếm là lỗi khó thấy nhất. */
     Object.keys(win.TowerArt.MATS).forEach(function (k) {
-        var key = 'cube_' + k + '_' + CELL;
-        if (!sc.textures.exists(key)) { miss.push(k); return; }
+        for (var mk = 0; mk < 8; mk++) {
+            if (!sc.textures.exists('cube_' + k + '_' + CELL + '_' + mk)) miss.push(k + '/' + mk);
+        }
+        var key = 'cube_' + k + '_' + CELL + '_0';
+        if (!sc.textures.exists(key)) return;
         var src = sc.textures.get(key).getSourceImage();
         /* Nướng đúng cỡ hiển thị thì lên màn nét đôi là nhoè — bài học từ Máy
          * Gắp Thú. Ảnh phải rộng hơn ô ít nhất gấp đôi. */
         if (src.width < CELL * 2) small.push(k + ' rộng ' + src.width + 'px cho ô ' + CELL + 'px');
     });
-    say('    ' + (Object.keys(win.TowerArt.MATS).length - miss.length) + '/' +
-        Object.keys(win.TowerArt.MATS).length + ' chất liệu, ô ' + CELL + 'px, ảnh ' +
-        (sc.textures.exists('cube_gold_' + CELL) ? sc.textures.get('cube_gold_' + CELL).getSourceImage().width + 'px' : '—'));
+    var wantTex = Object.keys(win.TowerArt.MATS).length * 8;
+    say('    ' + (wantTex - miss.length) + '/' + wantTex + ' ảnh khối (5 chất liệu × 8 biến thể), ô ' +
+        CELL + 'px, ảnh ' +
+        (sc.textures.exists('cube_gold_' + CELL + '_0') ? sc.textures.get('cube_gold_' + CELL + '_0').getSourceImage().width + 'px' : '—'));
     if (miss.length) fail('thiếu ảnh khối: ' + miss.join(', '));
     if (small.length) fail('ảnh nướng nhỏ quá, lên màn nét đôi sẽ nhoè: ' + small.join(', '));
 
