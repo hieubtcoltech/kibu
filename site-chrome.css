@@ -268,6 +268,7 @@ body > .site-footer {
    hệ — nhìn ra hai nút trái tim. Ghi đè lại cho chúng theo màu chữ của nút. */
 .footer-contact i { color: inherit; }
 
+.footer-contact.is-facebook:hover { background: rgba(24, 119, 242, 0.28); border-color: #1877f2; }
 .footer-contact.is-telegram:hover { background: rgba(42, 171, 238, 0.28); border-color: #2aabee; }
 .footer-contact.is-whatsapp:hover { background: rgba(37, 211, 102, 0.28); border-color: #25d366; }
 

@@ -113,9 +113,12 @@ for (const f of pages) {
     const p = path.join(ROOT, f);
     if (!fs.existsSync(p)) continue;
     const html = fs.readFileSync(p, 'utf8');
-    if (html.indexOf('t.me/coolkitty007') < 0 || html.indexOf('wa.me/') < 0) {
-        fails.push(`${f}: chân trang thiếu kênh liên hệ (Telegram / WhatsApp)`);
-    }
+    const miss = [
+        ['facebook.com/kibugames.official', 'Facebook'],
+        ['t.me/coolkitty007', 'Telegram'],
+        ['wa.me/', 'WhatsApp']
+    ].filter(([needle]) => html.indexOf(needle) < 0).map(([, name]) => name);
+    if (miss.length) fails.push(`${f}: chân trang thiếu kênh liên hệ (${miss.join(', ')})`);
 }
 
 /* ---- kết quả ---- */

@@ -493,6 +493,7 @@
         ['Luồn quả bóng qua đúng cái khe giữa hai khối.', 'Thread the ball through the gap.'],
 
         /* ---------- Kênh liên hệ ---------- */
+        ['Theo dõi trên Facebook', 'Follow on Facebook'],
         ['Nhắn qua Telegram', 'Chat on Telegram'],
         ['Nhắn qua WhatsApp', 'Chat on WhatsApp'],
         ['Nhắn cho nhà mình', 'Talk to us'],
