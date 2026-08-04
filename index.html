@@ -710,26 +710,6 @@
             transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease;
         }
 
-        /* Máy hẹp: co nút lại vừa đủ để tám nhóm nằm gọn trong hai hàng, mà
-           vùng chạm vẫn giữ 40px — dưới mức ấy ngón tay trẻ con bấm trượt. */
-        @media (max-width: 700px) {
-            .topic-row { gap: 6px; padding-bottom: 20px; }
-            .topic-chip { min-height: 40px; padding: 0 12px; font-size: 0.82rem; gap: 6px; }
-            .topic-chip i { font-size: 0.78rem; }
-        }
-
-        /* Dưới 460px thì BỎ BIỂU TƯỢNG trên nút. Biểu tượng giúp bé chưa đọc
-           thạo nhận ra nhóm, nhưng mỗi cái ngốn chừng 20px, nhân chín nút là
-           gần một hàng rưỡi. Đo thật: có biểu tượng thì máy 390px tốn ba hàng,
-           máy 320px tốn tận NĂM hàng — đẩy hết lưới game xuống dưới nếp gấp,
-           mở trang ra không thấy game nào. Bỏ biểu tượng thì cả hai đều gọn
-           trong hai hàng. Nhìn thấy đủ tám nhóm quan trọng hơn. */
-        @media (max-width: 460px) {
-            .topic-row { gap: 5px; }
-            .topic-chip { padding: 0 11px; font-size: 0.79rem; }
-            .topic-chip i { display: none; }
-        }
-
         .topic-chip:hover { transform: translateY(-2px); background: rgba(255, 255, 255, 0.12); }
 
         .topic-chip.is-on {
@@ -739,6 +719,53 @@
         }
 
         .topic-chip i { font-size: 0.86rem; opacity: 0.9; }
+
+        /* ---------- Máy hẹp: MỘT HÀNG, cuộn ngang ----------
+           Anh Hiếu chốt kiểu này. Đổi lại phải có dấu hiệu cho biết còn nút ở
+           bên phải — lần trước em cuộn ngang mà ẩn luôn thanh cuộn, thành ra
+           không ai biết là cuộn được, và anh báo "hiển thị không đủ".
+           Nay có hai dấu hiệu: mép phải mờ dần, và nút cuối luôn bị cắt dở
+           chứ không bao giờ vừa khít. Mép mờ tự tắt khi cuộn tới cuối. */
+        @media (max-width: 700px) {
+            .topic-row {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                gap: 6px;
+                padding-bottom: 20px;
+                scroll-snap-type: x proximity;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+                -webkit-mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+                mask-image: linear-gradient(to right, #000 82%, transparent 100%);
+            }
+
+            .topic-row::-webkit-scrollbar { display: none; }
+
+            /* cuộn tới cuối rồi thì bỏ mép mờ, không thì nút cuối cùng lúc nào
+               cũng trông như bị mờ đi dù đã hết hàng */
+            .topic-row.at-end {
+                -webkit-mask-image: none;
+                mask-image: none;
+            }
+
+            .topic-chip {
+                min-height: 40px;
+                padding: 0 12px;
+                font-size: 0.82rem;
+                gap: 6px;
+                scroll-snap-align: start;
+            }
+            .topic-chip i { font-size: 0.78rem; }
+        }
+
+        /* Dưới 460px thu thêm một nấc nữa cho nhiều nút lọt vào tầm nhìn hơn,
+           nhưng GIỮ biểu tượng: một hàng cuộn ngang thì không còn phải tiết
+           kiệm bề ngang như hồi để nút xuống dòng, mà biểu tượng lại giúp bé
+           chưa đọc thạo nhận ra nhóm. */
+        @media (max-width: 460px) {
+            .topic-row { gap: 5px; }
+            .topic-chip { padding: 0 11px; font-size: 0.79rem; }
+        }
 
         /* ---------- Số lượt chơi và nhãn ĐANG HOT ----------
            Cả hai do /api/stats bơm vào lúc chạy, nên nếu máy chủ chưa có số
@@ -1189,6 +1216,15 @@
 
         if (document.readyState === 'complete') paintPlayCounts();
         else window.addEventListener('load', paintPlayCounts, { once: true });
+
+        /* Mép mờ bên phải tắt đi khi đã cuộn tới cuối hàng. */
+        function syncTopicEdge() {
+            const more = topicRow.scrollWidth - topicRow.clientWidth - topicRow.scrollLeft;
+            topicRow.classList.toggle('at-end', more <= 4);
+        }
+        topicRow.addEventListener('scroll', syncTopicEdge, { passive: true });
+        window.addEventListener('resize', syncTopicEdge);
+        syncTopicEdge();
 
         topicRow.addEventListener('click', (ev) => {
             const chip = ev.target.closest('.topic-chip');
