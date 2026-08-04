@@ -55,7 +55,7 @@
      * Tốc độ bay được nhân theo khổ ở rules.js, nên khổ nào cũng bay "nhanh
      * như nhau" theo cảm nhận, và máy soát công bằng chạy cả hai khổ. */
     var W = 1280, H = 720;
-    var GROUND = H * 0.86;          // vịt bật lên từ đây
+    var GROUND = H * 0.80;          // vịt bật lên từ đây (R.groundOf tính lại)
     var TOP = 70;                   // cao hơn đây là khuất tầm bắn
 
     /* Chọn khổ từ bề ngang và bề cao thật của khung chơi. Trả về {W, H}. */
@@ -75,8 +75,8 @@
     function applySize(size) {
         W = size.W;
         H = size.H;
-        GROUND = H * 0.86;
-        TOP = Math.round(H * 0.097);
+        GROUND = R.groundOf(H);
+        TOP = R.topOf(H);
         var st = document.querySelector('.stage');
         if (st) {
             st.style.setProperty('--stage-w', W);
@@ -161,6 +161,8 @@
         },
         quack: function () { this.tone(340, 250, 0.14, 'sawtooth', 0.05); },
         caw: function () { this.tone(720, 430, 0.18, 'square', 0.045); },
+        splash: function () { this.tone(1200, 320, 0.16, 'sine', 0.05); },
+        rustle: function () { this.tone(260, 190, 0.12, 'sawtooth', 0.03); },
         away: function () { this.tone(300, 180, 0.28, 'sine', 0.045); },
         round: function () {
             var s = this;
@@ -188,6 +190,16 @@
         t: 0,                // giây trong vòng
         cool: []             // hồi phát bắn của từng bé
     };
+
+    /* Trộn hai màu theo tỉ lệ k. Dùng cho mấy lớp cỏ tiền cảnh: mỗi lớp một
+     * sắc độ giữa màu cỏ và màu lá tối, không phải phủ đen lên. */
+    function mixHex(a, b, k) {
+        var ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+        var br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+        return (Math.round(ar + (br - ar) * k) << 16)
+            | (Math.round(ag + (bg - ag) * k) << 8)
+            | Math.round(ab + (bb - ab) * k);
+    }
 
     function laneW() { return W / G.kids; }
     function laneOf(x) {
@@ -223,6 +235,9 @@
                 this.puffs = [];
                 this.pops = [];
                 this.lanePulse = [0, 0, 0, 0];
+                this.splashes = [];
+                this.dusts = [];
+                this.bushes = [];
                 this.dog = { t: 99, mood: 'tease', lane: 0, kind: 'big' };
                 this.reseedScenery();
 
@@ -257,13 +272,25 @@
                     var box = this.texBox(kind);
                     var r = R.KINDS[kind].r;
                     var tw = box.w, th = box.h;
-                    for (var w = 0; w < 3; w++) {
-                        var key = 'duck_' + kind + '_' + w;
+                    /* Ba tư thế bay + hai bước chân + một dáng bơi. Dáng chạy
+                     * và dáng bơi là hình khác hẳn chứ không phải hình bay
+                     * xoay đi — con vịt chạy có chân, con vịt bơi thì chìm
+                     * nửa dưới và không thấy chân. */
+                    var poses = [
+                        ['_0', function (gg, k, rr) { A.drawDuck(gg, k, 0, rr); }],
+                        ['_1', function (gg, k, rr) { A.drawDuck(gg, k, 1, rr); }],
+                        ['_2', function (gg, k, rr) { A.drawDuck(gg, k, 2, rr); }],
+                        ['_w0', function (gg, k, rr) { A.drawDuckWalk(gg, k, 0, rr); }],
+                        ['_w1', function (gg, k, rr) { A.drawDuckWalk(gg, k, 1, rr); }],
+                        ['_s', function (gg, k, rr) { A.drawDuckSwim(gg, k, rr); }]
+                    ];
+                    for (var w = 0; w < poses.length; w++) {
+                        var key = 'duck_' + kind + poses[w][0];
                         if (this.textures.exists(key)) continue;
                         g.clear();
                         g.scaleCanvas(S, S);
                         g.translateCanvas(tw * box.ax, th * box.ay);
-                        A.drawDuck(g, kind, w, r);
+                        poses[w][1](g, kind, r);
                         g.translateCanvas(-tw * box.ax, -th * box.ay);
                         g.scaleCanvas(1 / S, 1 / S);
                         g.generateTexture(key, tw * S, th * S);
@@ -322,6 +349,18 @@
                 this.duckImgs = [];
                 this.puffs = []; this.pops = [];
                 this.lanePulse = [0, 0, 0, 0];
+                this.splashes = []; this.dusts = [];
+                /* Bụi cây mọc sẵn từ đầu vòng, ở đúng những chỗ rules.js đã
+                 * định — kể cả mấy bụi trống không giấu con nào. */
+                var below = H - GROUND;
+                this.bushes = R.bushes(n, G.seed, W, H).map(function (b) {
+                    /* Bụi giấu vịt phải nằm ĐÚNG trên đường chạy của nó, không
+                     * xê dịch được. Bụi trống thì kéo xuống gần ống kính và vẽ
+                     * to ra — đó là chỗ tạo chiều sâu. */
+                    if (!b.decoy) return { x: b.x, y: GROUND + 10, r: 34 + (b.x % 15), shake: 0 };
+                    var dp = b.depth;
+                    return { x: b.x, y: GROUND + 14 + dp * below * 0.62, r: 38 + dp * 44, shake: 0 };
+                });
                 this.dog.t = 99;
                 G.roundStart = G.scores.slice();
                 G.mode = 'intro';
@@ -361,7 +400,7 @@
                 var cx = (lane + 0.5) * laneW(), best = null, bd = 1e9;
                 for (var i = 0; i < G.ducks.length; i++) {
                     var d = G.ducks[i];
-                    if (d.dead || laneOf(d.x) !== lane) continue;
+                    if (d.dead || d.hidden || laneOf(d.x) !== lane) continue;
                     /* Bé chơi bằng phím thì máy ngắm hộ, nên máy KHÔNG được
                      * ngắm vào chim lạ — bắt bé chịu phạt vì cái máy ngắm hộ
                      * bắn nhầm thì oan quá. Bé chạm bằng tay vẫn tự chịu. */
@@ -384,6 +423,11 @@
                 for (var i = 0; i < G.ducks.length; i++) {
                     var d = G.ducks[i];
                     if (d.dead) continue;
+                    /* Con đang trong bụi hay đang lặn thì KHÔNG bắn được. Cho
+                     * bắn xuyên qua chỗ nấp thì cả cái hay của việc nấp mất
+                     * sạch, mà bé bắn trúng thứ mình không nhìn thấy cũng chẳng
+                     * hiểu vì sao mình trúng. */
+                    if (d.hidden) continue;
                     if (laneOf(d.x) !== lane) continue;
                     var r = R.KINDS[d.kind].r * 1.45;
                     var dist = Math.hypot(d.x - x, d.y - y);
@@ -432,6 +476,34 @@
                 if (hit.kind === 'gold') sfx.gold(); else sfx.hit();
                 if (G.streaks[lane] >= 3) this.dogSay('proud', lane, hit.kind);
                 UI.paintHud();
+            },
+
+            /* Con vịt vừa đổi cách xử sự — đây là chỗ đặt hiệu ứng, vì bé cần
+             * một dấu hiệu để hiểu chuyện gì vừa xảy ra:
+             *   xuống nước / ngoi lên  → nước bắn tung
+             *   chui vào bụi / vọt ra  → bụi rung
+             *   rời mặt đất bay lên    → bụi đất tung
+             * Thiếu mấy dấu hiệu này thì con vịt cứ biến mất rồi hiện ra một
+             * cách vô cớ, bé không đoán được gì và chỉ thấy game giật cục. */
+            onStateChange: function (k) {
+                if (k.state === 'under' || (k.was === 'under' && k.state === 'water')) {
+                    this.splashes.push({ x: k.x, y: k.y, t: 0, up: k.state !== 'under' });
+                    sfx.splash();
+                } else if (k.state === 'bush' || k.was === 'bush') {
+                    this.shakeBush(k.x);
+                    sfx.rustle();
+                } else if ((k.was === 'ground' || k.was === 'water') && k.state === 'air') {
+                    this.dusts.push({ x: k.x, y: k.was === 'water' ? k.y : GROUND, t: 0, wet: k.was === 'water' });
+                }
+            },
+
+            shakeBush: function (x) {
+                var best = -1, bd = 1e9;
+                for (var i = 0; i < this.bushes.length; i++) {
+                    var d = Math.abs(this.bushes[i].x - x);
+                    if (d < bd) { bd = d; best = i; }
+                }
+                if (best >= 0 && bd < 90) this.bushes[best].shake = 0.5;
             },
 
             /* Một búi lông tối màu: mỗi cọng một hướng, một tốc độ, một kiểu
@@ -491,7 +563,8 @@
                     var d = G.queue.shift();
                     G.ducks.push({
                         spec: d, kind: d.kind, born: G.t, x: d.x0, y: GROUND,
-                        dead: false, fallV: 0, wing: 0, wingT: 0, face: d.dir, gone: false
+                        dead: false, fallV: 0, wing: 0, wingT: 0, face: d.dir, gone: false,
+                        state: 'air', was: 'air'
                     });
                     /* chim lạ kêu khác hẳn — thêm một manh mối nữa cho bé, vì
                      * nó bật lên từ bụi cỏ trước khi bé kịp nhìn rõ hình */
@@ -516,9 +589,13 @@
                     }
 
                     var age = G.t - k.born;
-                    var p = R.duckAt(k.spec, age, GROUND, W);
+                    var p = R.duckAt(k.spec, age, GROUND, W, H);
                     k.face = p.turn;
                     k.x = p.x; k.y = p.y;
+                    k.was = k.state;
+                    k.state = p.state;
+                    k.hidden = p.hidden;
+                    if (k.state !== k.was) this.onStateChange(k);
                     if (!R.inView(p, W, TOP)) {
                         /* thoát mất — không ai được điểm, chó ra trêu */
                         G.ducks.splice(i, 1);
@@ -547,6 +624,17 @@
                 }
                 for (i = 0; i < this.lanePulse.length; i++) {
                     if (this.lanePulse[i] > 0) this.lanePulse[i] -= dt;
+                }
+                for (i = this.splashes.length - 1; i >= 0; i--) {
+                    this.splashes[i].t += dt;
+                    if (this.splashes[i].t > 0.65) this.splashes.splice(i, 1);
+                }
+                for (i = this.dusts.length - 1; i >= 0; i--) {
+                    this.dusts[i].t += dt;
+                    if (this.dusts[i].t > 0.55) this.dusts.splice(i, 1);
+                }
+                for (i = 0; i < this.bushes.length; i++) {
+                    if (this.bushes[i].shake > 0) this.bushes[i].shake -= dt;
                 }
                 if (this.dog.t < 99) this.dog.t += dt;
             },
@@ -635,13 +723,76 @@
                 }
 
                 /* cỏ */
+                var below = H - GROUND;
                 g.fillStyle(sc.grass, 1);
-                g.fillRect(0, GROUND, W, H - GROUND);
+                g.fillRect(0, GROUND, W, below);
                 g.fillStyle(sc.tree, 0.55);
                 for (var b = 0; b < 46; b++) {
                     var bx = (b * 29 + 11) % W;
                     var bh = 16 + ((b * 37) % 22);
                     g.fillTriangle(bx, GROUND + 6, bx + 7, GROUND + 6 - bh, bx + 14, GROUND + 6);
+                }
+
+                /* AO TRƯỚC MẶT — chỉ có ở vòng nào có vịt lặn. Ao vẽ ĐÈ lên cỏ
+                 * chứ không thay cỏ: bờ cỏ còn lại ở trên làm cái mép ao, không
+                 * thì mặt nước dán thẳng vào chân màn hình, trông như một dải
+                 * màu chứ không phải cái ao. */
+                if (sc.pond) {
+                    var pondTop = GROUND + (H - GROUND) * 0.16;
+                    g.fillStyle(sc.pond.deep, 1);
+                    g.fillRect(0, pondTop, W, H - pondTop);
+                    g.fillStyle(sc.pond.top, 0.55);
+                    g.fillRect(0, pondTop, W, (H - pondTop) * 0.42);
+                    /* gợn sóng chạy ngang, lệch pha nhau cho khỏi thành hàng kẻ */
+                    for (var q2 = 0; q2 < 22; q2++) {
+                        var wy = pondTop + ((q2 * 37) % Math.max(1, (H - pondTop) - 8)) + 4;
+                        var wx = (q2 * 113 + Math.sin(tt * 0.9 + q2) * 26) % W;
+                        g.fillStyle(sc.pond.foam, 0.16);
+                        g.fillRect(wx, wy, 42 + (q2 % 3) * 22, 2);
+                    }
+                    g.fillStyle(sc.pond.foam, 0.22);
+                    g.fillRect(0, pondTop - 2, W, 3);
+                }
+
+                /* BỤI CÂY — chỗ con vịt chui vào trốn. Vẽ sau cỏ, trước ao,
+                 * và bụi nào cũng mọc từ đầu vòng kể cả bụi trống. */
+                for (var bi = 0; bi < this.bushes.length; bi++) {
+                    var bu = this.bushes[bi];
+                    var sq = bu.shake > 0 ? Math.sin(bu.shake * 34) * (bu.shake / 0.5) : 0;
+                    g.save();
+                    g.translateCanvas(bu.x, bu.y);
+                    A.drawBush(g, bu.r, sc.bush || { dark: 0x24523a, light: 0x357a45 }, sq);
+                    g.restore();
+                }
+
+                /* CỎ TIỀN CẢNH BA LỚP — càng gần ống kính càng cao, càng thưa
+                 * và càng tối. Đây là thứ làm dải đất dưới cùng có chiều sâu
+                 * thay vì phẳng lì như một dải màu.
+                 *
+                 * Bản đầu em vẽ dày và đều tăm tắp, trông ra hàng rào chứ không
+                 * ra cỏ, lại còn phủ thêm mấy dải tối đè lên nhau thành những
+                 * vạch ngang rõ mồn một. Thưa ra, cao thấp lệch nhau, và chỉ
+                 * làm tối bằng MÀU của lá cỏ chứ không phủ dải đen. */
+                for (var lay = 0; lay < 3; lay++) {
+                    var ly = GROUND + below * (0.26 + lay * 0.30);
+                    var step2 = 52 - lay * 12;
+                    var dark = lay / 2;
+                    g.fillStyle(mixHex(sc.grass, sc.tree, 0.35 + dark * 0.65), 1);
+                    for (var gx = -30; gx < W + 30; gx += step2) {
+                        var jx = ((gx * 37 + lay * 91) % 23) - 11;
+                        var lh = (12 + lay * 13) * (0.6 + (((gx * 13 + lay * 7) % 9) / 9));
+                        var lean = (((gx * 17 + lay * 5) % 7) - 3) * 1.6;
+                        g.fillTriangle(gx + jx - 4 - lay, ly + 8,
+                            gx + jx + lean, ly - lh,
+                            gx + jx + 4 + lay, ly + 8);
+                    }
+                }
+
+                /* tối dần về đáy màn — tám dải mảnh thay cho gradient, vì
+                 * Phaser chỉ vẽ được gradient khi có WebGL */
+                for (var vg = 0; vg < 8; vg++) {
+                    g.fillStyle(0x000000, 0.035 * (vg + 1));
+                    g.fillRect(0, H - (8 - vg) * below * 0.075, W, below * 0.075 + 1);
                 }
 
                 /* mưa bão */
@@ -717,13 +868,23 @@
 
                 for (var j = 0; j < G.ducks.length; j++) {
                     var d = G.ducks[j], img = this.duckImgs[j];
+                    /* Con đang trong bụi hay đang lặn thì không vẽ. Vẽ mờ mờ
+                     * cho "biết là nó ở đấy" nghe thì tử tế, nhưng hoá ra bé
+                     * cứ nhè cái bóng mà bắn, mà bắn lại không trúng — bực hơn
+                     * là không thấy gì. */
+                    if (d.hidden && !d.dead) { img.setVisible(false); continue; }
                     var tex = this.duckTex[d.kind];
-                    img.setTexture('duck_' + d.kind + '_' + (d.dead ? 2 : d.wing));
+                    var pose = d.dead ? '_2'
+                        : (d.state === 'ground' ? (d.wing % 2 ? '_w1' : '_w0')
+                            : (d.state === 'water' ? '_s' : '_' + d.wing));
+                    img.setTexture('duck_' + d.kind + pose);
                     img.setDisplaySize(tex.w, tex.h);
                     img.setOrigin(tex.ax, tex.ay);
                     img.setPosition(d.x, d.y);
                     img.setFlipX(d.face < 0);
-                    img.setAngle(d.dead ? 180 : (d.spec.amp ? Math.sin((G.t - d.born) * 3.1 + d.spec.phase) * 8 : 0));
+                    var airborne = d.state === 'air';
+                    img.setAngle(d.dead ? 180
+                        : (airborne && d.spec.amp ? Math.sin((G.t - d.born) * 3.1 + d.spec.phase) * 8 : 0));
                     img.setVisible(true);
                     /* Đêm tối: vịt chỉ rõ khi nằm trong vệt trăng — nhưng CHIM
                      * LẠ thì luôn hiện rõ. Bắn nhầm nó là mất điểm, mà bắt bé
@@ -732,9 +893,14 @@
                      * bẫy. */
                     img.setAlpha(sc.dark && !R.isDecoy(d.kind) ? 0.34 + 0.66 * this.moonLit(d.x) : 1);
 
-                    /* bóng trên cỏ — cho thấy con vịt đang ở đâu theo bề ngang */
-                    g.fillStyle(0x000000, 0.13);
-                    g.fillEllipse(d.x, GROUND + 14, R.KINDS[d.kind].r * 1.7, R.KINDS[d.kind].r * 0.42);
+                    /* Bóng trên cỏ — cho thấy con vịt đang ở đâu theo bề ngang.
+                     * Con đang bơi thì thay bằng gợn nước quanh mình nó. */
+                    if (d.state === 'water') {
+                        /* gợn nước vẽ ở lớp TRÊN (paintFx), xem chú thích ở đó */
+                    } else {
+                        g.fillStyle(0x000000, 0.13);
+                        g.fillEllipse(d.x, GROUND + 14, R.KINDS[d.kind].r * 1.7, R.KINDS[d.kind].r * 0.42);
+                    }
                 }
             },
 
@@ -845,6 +1011,49 @@
                     }
                 }
 
+                /* --- gợn nước quanh con vịt đang bơi ---
+                 * Vẽ ĐÈ LÊN con vịt chứ không vẽ dưới. Vòng nước cắt ngang bụng
+                 * nó là thứ duy nhất nói được "nửa dưới đang chìm"; vẽ ở lớp
+                 * dưới thì con vịt trông như đặt lên mặt nước như một món đồ
+                 * chơi nhựa. */
+                var sc0 = A.SCENES[(R.ROUNDS[G.round] || R.ROUNDS[0]).key] || A.SCENES.dawn;
+                var foam = sc0.pond ? sc0.pond.foam : 0xffffff;
+                for (i = 0; i < G.ducks.length; i++) {
+                    var wd = G.ducks[i];
+                    if (wd.dead || wd.hidden || wd.state !== 'water') continue;
+                    var wr = R.KINDS[wd.kind].r;
+                    for (s = 0; s < 3; s++) {
+                        g.lineStyle(2.4 - s * 0.5, foam, 0.42 - s * 0.11);
+                        g.strokeEllipse(wd.x, wd.y + wr * 0.44, wr * (2.1 + s * 1.0), wr * (0.46 + s * 0.22));
+                    }
+                }
+
+                /* --- nước bắn khi lặn xuống hoặc ngoi lên --- */
+                for (i = 0; i < this.splashes.length; i++) {
+                    var sp2 = this.splashes[i], sk = sp2.t / 0.65;
+                    g.lineStyle(3 * (1 - sk), 0xd8ecff, (1 - sk) * 0.85);
+                    g.strokeEllipse(sp2.x, sp2.y + 10, 24 + sk * 96, 8 + sk * 26);
+                    for (s = 0; s < 9; s++) {
+                        a = -Math.PI * (0.15 + 0.7 * (s / 8));
+                        var sv = 120 + (s % 3) * 60;
+                        var dx = Math.cos(a) * sv * sp2.t * (s % 2 ? 1 : -1);
+                        var dy = Math.sin(a) * sv * sp2.t + 420 * sp2.t * sp2.t;
+                        g.fillStyle(0xeaf6ff, Math.max(0, 1 - sk * 1.2));
+                        g.fillCircle(sp2.x + dx, sp2.y + dy, 3.4 * (1 - sk) + 1);
+                    }
+                }
+
+                /* --- bụi tung lên lúc cất cánh khỏi mặt đất --- */
+                for (i = 0; i < this.dusts.length; i++) {
+                    var du = this.dusts[i], dk = du.t / 0.55;
+                    for (s = 0; s < 6; s++) {
+                        a = s / 6 * TAU;
+                        g.fillStyle(du.wet ? 0xd8ecff : 0xd9c9a8, (1 - dk) * 0.5);
+                        g.fillCircle(du.x + Math.cos(a) * (14 + dk * 52),
+                            du.y - 6 - dk * 16 + Math.sin(a) * 6, (7 - s * 0.6) * (1 - dk) + 1);
+                    }
+                }
+
                 this.paintPopNumbers();
             },
 
@@ -891,18 +1100,29 @@
                 A.drawDog(g, 34, this.dog.mood, this.dog.kind);
                 g.restore();
 
-                /* Bụi cỏ vẽ ĐÈ LÊN chân chó. Thiếu nó thì chú chó trôi lơ lửng
-                 * trên mặt cỏ như bị dán vào, chứ không phải nhô lên từ bụi.
-                 * Bụi vẽ bằng hình bầu chứ không phải hình chữ nhật — hình chữ
-                 * nhật xoá mất đám cỏ nền bên dưới và để lại một vệt vuông rõ
-                 * mồn một, ảnh chụp thử lộ ngay. */
-                g.fillStyle(sc.grass, 1);
-                g.fillEllipse(x, GROUND + 26, 210, 68);
-                g.fillStyle(sc.tree, 0.6);
-                for (var i = -5; i <= 5; i++) {
-                    var bx = x + i * 17 + (i % 2) * 5;
-                    var bh = 22 + ((i * 37) % 15);
-                    g.fillTriangle(bx - 7, GROUND + 14, bx, GROUND + 14 - bh, bx + 7, GROUND + 14);
+                /* Che chân chó lại, không thì nó trôi lơ lửng như bị dán vào
+                 * nền. Vòng có ao thì che bằng GỢN NƯỚC chứ không phải bụi cỏ:
+                 * vẽ một bụi cỏ xanh giữa mặt ao thì thành mảng xanh lù lù
+                 * trên nước, ảnh chụp thử lộ ngay. Chú chó lội nước đi nhặt vịt
+                 * cũng đúng cảnh hơn. */
+                if (sc.pond) {
+                    for (var w2 = 0; w2 < 4; w2++) {
+                        g.lineStyle(3 - w2 * 0.5, sc.pond.foam, 0.42 - w2 * 0.09);
+                        g.strokeEllipse(x, GROUND + 34, 90 + w2 * 52, 20 + w2 * 12);
+                    }
+                    g.fillStyle(sc.pond.deep, 1);
+                    g.fillEllipse(x, GROUND + 52, 150, 46);
+                } else {
+                    /* Bụi vẽ bằng hình bầu chứ không phải hình chữ nhật — hình
+                     * chữ nhật xoá mất đám cỏ nền và để lại một vệt vuông. */
+                    g.fillStyle(sc.grass, 1);
+                    g.fillEllipse(x, GROUND + 26, 210, 68);
+                    g.fillStyle(sc.tree, 0.6);
+                    for (var i = -5; i <= 5; i++) {
+                        var bx = x + i * 17 + (i % 2) * 5;
+                        var bh = 22 + ((i * 37) % 15);
+                        g.fillTriangle(bx - 7, GROUND + 14, bx, GROUND + 14 - bh, bx + 7, GROUND + 14);
+                    }
                 }
             }
         });

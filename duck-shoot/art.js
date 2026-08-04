@@ -126,6 +126,187 @@
     }
 
     /* ------------------------------------------------------------------ *
+     * DÁNG CHẠY TRÊN BỜ
+     *
+     * Không phải con vịt bay bị xoay ngang. Con vịt đang chạy thì thân dựng
+     * đứng hơn, cổ vươn ra trước, cánh cụp sát người và có HAI CÁI CHÂN — mà
+     * chân mới là thứ mắt đọc ra "đang chạy". Bỏ chân đi thì dù có nhấp nhô
+     * bao nhiêu, nó vẫn chỉ là con vịt bay là là mặt đất.
+     * ------------------------------------------------------------------ */
+    function drawDuckWalk(g, kind, step, r) {
+        var c = kind === 'crow' ? CROW : SKIN[kind];
+
+        g.save();
+        g.scaleCanvas(1.11, 1.11);
+        walkShapes(g, c, r, step, kind, c.edge);
+        g.restore();
+
+        walkShapes(g, c, r, step, kind, null);
+
+        /* mắt */
+        var ex = r * 0.96, ey = -r * 0.74;
+        g.fillStyle(kind === 'crow' ? 0xffe9c8 : 0xffffff, 1);
+        g.fillCircle(ex, ey, r * 0.19);
+        g.fillStyle(c.eye, 1);
+        g.fillCircle(ex + r * 0.04, ey, r * 0.12);
+        if (kind !== 'crow') {
+            g.fillStyle(0xffffff, 1);
+            g.fillCircle(ex, ey - r * 0.05, r * 0.05);
+        }
+    }
+
+    function walkShapes(g, c, r, step, kind, flat) {
+        var col = function (x) { return flat === null ? x : flat; };
+        /* Hai bước chân ngược pha. Chân trước duỗi, chân sau co — dáng chạy
+         * chứ không phải dáng đi thong thả. */
+        var legs = [[0.55, -0.35], [-0.30, 0.50]][step];
+
+        g.fillStyle(col(0xf0a63c), 1);
+        for (var i = 0; i < 2; i++) {
+            var lx = r * (0.05 + legs[i] * 0.55);
+            g.fillRect(lx - r * 0.06, r * 0.42, r * 0.12, r * 0.46);
+            /* bàn chân màng, hướng theo chiều chân đang bước */
+            g.beginPath();
+            g.moveTo(lx - r * 0.06, r * 0.86);
+            g.lineTo(lx + r * (legs[i] > 0 ? 0.34 : -0.30), r * 0.94);
+            g.lineTo(lx - r * 0.06, r * 0.98);
+            g.closePath();
+            g.fillPath();
+        }
+
+        /* thân hơi dựng, không nằm ngang như lúc bay */
+        g.fillStyle(col(c.body), 1);
+        g.fillEllipse(0, 0, r * 1.86, r * 1.42);
+        g.fillStyle(col(c.belly), 1);
+        g.fillEllipse(-r * 0.04, r * 0.20, r * 1.32, r * 0.86);
+
+        /* đuôi hếch lên */
+        g.fillStyle(col(c.body), 1);
+        g.beginPath();
+        g.moveTo(-r * 0.78, -r * 0.10);
+        g.lineTo(-r * 1.46, -r * 0.52);
+        g.lineTo(-r * 1.30, r * 0.06);
+        g.closePath();
+        g.fillPath();
+
+        /* cổ vươn ra trước */
+        g.fillStyle(col(c.head), 1);
+        g.fillEllipse(r * 0.52, -r * 0.36, r * 0.60, r * 0.74);
+        g.fillEllipse(r * 0.80, -r * 0.66, r * 0.80, r * 0.74);
+        if (kind !== 'gold' && kind !== 'crow') {
+            g.fillStyle(col(0xf4f6ee), 1);
+            g.fillEllipse(r * 0.60, -r * 0.30, r * 0.56, r * 0.15);
+        }
+        if (kind === 'crow') {
+            g.fillStyle(col(c.mark), 1);
+            g.fillEllipse(r * 0.28, r * 0.02, r * 0.72, r * 0.60);
+        }
+
+        /* mỏ */
+        g.fillStyle(col(c.beak), 1);
+        g.beginPath();
+        g.moveTo(r * 1.10, -r * 0.74);
+        g.lineTo(r * (kind === 'crow' ? 1.98 : 1.78), -r * 0.62);
+        g.lineTo(r * 1.10, -r * 0.46);
+        g.closePath();
+        g.fillPath();
+
+        /* cánh cụp sát người */
+        g.fillStyle(col(c.wing), 1);
+        g.fillEllipse(-r * 0.10, -r * 0.06, r * 1.10, r * 0.66);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * DÁNG BƠI TRÊN AO
+     *
+     * Nửa dưới chìm nên không vẽ chân. Thân bầu tròn hơn, cổ dựng cao —
+     * đúng dáng con vịt trôi trên mặt nước. Phần vẽ trong game sẽ phủ một
+     * đường nước lên ngang bụng cho khớp.
+     * ------------------------------------------------------------------ */
+    function drawDuckSwim(g, kind, r) {
+        var c = kind === 'crow' ? CROW : SKIN[kind];
+
+        g.save();
+        g.scaleCanvas(1.10, 1.10);
+        swimShapes(g, c, r, kind, c.edge);
+        g.restore();
+
+        swimShapes(g, c, r, kind, null);
+
+        var ex = r * 0.80, ey = -r * 0.92;
+        g.fillStyle(kind === 'crow' ? 0xffe9c8 : 0xffffff, 1);
+        g.fillCircle(ex, ey, r * 0.19);
+        g.fillStyle(c.eye, 1);
+        g.fillCircle(ex + r * 0.04, ey, r * 0.12);
+        if (kind !== 'crow') {
+            g.fillStyle(0xffffff, 1);
+            g.fillCircle(ex, ey - r * 0.05, r * 0.05);
+        }
+    }
+
+    function swimShapes(g, c, r, kind, flat) {
+        var col = function (x) { return flat === null ? x : flat; };
+
+        g.fillStyle(col(c.body), 1);
+        g.fillEllipse(0, r * 0.10, r * 2.05, r * 1.20);
+
+        g.fillStyle(col(c.body), 1);
+        g.beginPath();
+        g.moveTo(-r * 0.86, -r * 0.06);
+        g.lineTo(-r * 1.52, -r * 0.56);
+        g.lineTo(-r * 1.34, r * 0.06);
+        g.closePath();
+        g.fillPath();
+
+        g.fillStyle(col(c.head), 1);
+        g.fillEllipse(r * 0.44, -r * 0.46, r * 0.54, r * 0.86);
+        g.fillEllipse(r * 0.64, -r * 0.86, r * 0.78, r * 0.74);
+        if (kind !== 'gold' && kind !== 'crow') {
+            g.fillStyle(col(0xf4f6ee), 1);
+            g.fillEllipse(r * 0.50, -r * 0.40, r * 0.52, r * 0.14);
+        }
+        if (kind === 'crow') {
+            g.fillStyle(col(c.mark), 1);
+            g.fillEllipse(r * 0.30, r * 0.06, r * 0.78, r * 0.56);
+        }
+
+        g.fillStyle(col(c.beak), 1);
+        g.beginPath();
+        g.moveTo(r * 0.94, -r * 0.94);
+        g.lineTo(r * (kind === 'crow' ? 1.86 : 1.62), -r * 0.82);
+        g.lineTo(r * 0.94, -r * 0.66);
+        g.closePath();
+        g.fillPath();
+
+        g.fillStyle(col(c.wing), 1);
+        g.fillEllipse(-r * 0.14, -r * 0.02, r * 1.14, r * 0.60);
+    }
+
+    /* ------------------------------------------------------------------ *
+     * BỤI CÂY — chỗ con vịt chui vào trốn
+     *
+     * Ba khối tròn chồng nhau, khối giữa cao nhất. squash 0…1 là lúc bụi rung
+     * lên vì có con vịt vừa chui vào hay vừa vọt ra — bé phải THẤY bụi rung
+     * thì mới đoán được con vịt đang ở trong đó, không thì nó biến mất một
+     * cách vô cớ.
+     * ------------------------------------------------------------------ */
+    function drawBush(g, r, pal, squash) {
+        var s = 1 + (squash || 0) * 0.16;
+        var q = 1 - (squash || 0) * 0.12;
+        var lobes = [[-0.62, -0.10, 0.72], [0, -0.34, 1.0], [0.62, -0.06, 0.78]];
+        /* nền tối vẽ trước, rồi mảng sáng đè lên — hai lớp là đủ cho bụi cây
+         * có khối, ba lớp trở lên chỉ tốn nét mà mắt không đọc thêm được gì */
+        for (var pass = 0; pass < 2; pass++) {
+            g.fillStyle(pass === 0 ? pal.dark : pal.light, 1);
+            for (var i = 0; i < lobes.length; i++) {
+                var L = lobes[i];
+                var off = pass === 0 ? 0 : -r * 0.14;
+                g.fillEllipse(L[0] * r * s, L[1] * r + off, L[2] * r * 1.5 * s, L[2] * r * 1.25 * q);
+            }
+        }
+    }
+
+    /* ------------------------------------------------------------------ *
      * CON CHIM LẠ — bắn nhầm là trừ điểm
      *
      * Phải khác con vịt ngay từ cái BÓNG, không chỉ khác màu. Bé không có thì
@@ -298,12 +479,17 @@
     var SCENES = {
         dawn: {
             sky: [0xffd9a0, 0xffb3c1, 0x8ecae6], sun: 0xfff3b0, sunY: 0.62,
-            hill: [0x3f7d4e, 0x2f5f3c], grass: 0x2f6b3a, tree: 0x24523a, glow: 0xffe9b5
+            hill: [0x3f7d4e, 0x2f5f3c], grass: 0x2f6b3a, tree: 0x24523a, glow: 0xffe9b5,
+            bush: { dark: 0x10321f, light: 0x1e5a33 }
         },
         lake: {
             sky: [0xff9e5e, 0xff6f61, 0x4a3f7a], sun: 0xffd166, sunY: 0.70,
-            hill: [0x3a3f6b, 0x272a4d], grass: 0x223050, tree: 0x1c2440, glow: 0xffb86b,
-            water: true
+            hill: [0x3a3f6b, 0x272a4d], grass: 0x2b4a46, tree: 0x1e3630, glow: 0xffb86b,
+            /* Ao phải TƯƠNG PHẢN hẳn với bờ, không thì cả dải dưới thành một
+             * mảng tối và bé không biết con vịt đang bơi hay đang đứng. Bờ ngả
+             * xanh rêu, mặt nước ngả xanh lam sáng. */
+            water: true, pond: { deep: 0x123a72, top: 0x2f7fd0, foam: 0xcfeaff },
+            bush: { dark: 0x102822, light: 0x1e433a }
         },
         /* sunY là độ cao mặt trời/trăng tính từ đáy màn. Phải để trên 0.55, vì
          * đồi được vẽ đè lên sau — đặt thấp hơn là mặt trăng khuất sau đồi,
@@ -312,18 +498,19 @@
         night: {
             sky: [0x0f1a3c, 0x16244f, 0x24356b], sun: 0xf2f6ff, sunY: 0.76,
             hill: [0x121c3a, 0x0d1530], grass: 0x101a33, tree: 0x0b1128, glow: 0x9db8ff,
-            dark: true, stars: true
+            dark: true, stars: true, bush: { dark: 0x060c1a, light: 0x111d38 }
         },
         /* Bão thì không vẽ mặt trời — mây dày kín, mà cái quầng sáng lửng lơ
          * giữa trời xám trông như vết bẩn trên màn hình. */
         storm: {
             sky: [0x4a5568, 0x2d3748, 0x1a202c], sun: 0x8fa3bf, sunY: 0.34,
             hill: [0x2b3a4a, 0x1f2b36], grass: 0x24333f, tree: 0x1a2630, glow: 0xc3d3e8,
-            rain: true, noSun: true
+            rain: true, noSun: true, bush: { dark: 0x0e1820, light: 0x1d2c38 }
         },
         flock: {
             sky: [0x9be7ff, 0x63c7f0, 0x2f9bd4], sun: 0xfff6c2, sunY: 0.58,
-            hill: [0x4a9e5c, 0x36794a], grass: 0x3a8a4a, tree: 0x2b6b40, glow: 0xfff3b0
+            hill: [0x4a9e5c, 0x36794a], grass: 0x3a8a4a, tree: 0x2b6b40, glow: 0xfff3b0,
+            bush: { dark: 0x1a4a2c, light: 0x2c6b3d }
         },
         /* Vòng vàng: trời phải TỐI, không được vàng.
          *
@@ -333,7 +520,9 @@
          * một đốm lửa, mà vẫn giữ được cái không khí "vòng cuối". */
         golden: {
             sky: [0xff7a3c, 0xc03a5e, 0x3b1f56], sun: 0xfff0b0, sunY: 0.64,
-            hill: [0x5a2f52, 0x3b1f3c], grass: 0x33203a, tree: 0x241428, glow: 0xffb86b
+            hill: [0x5a2f52, 0x3b1f3c], grass: 0x33203a, tree: 0x241428, glow: 0xffb86b,
+            pond: { deep: 0x3a1a4e, top: 0x8a4a86, foam: 0xffd0b8 },
+            bush: { dark: 0x180c1c, light: 0x301936 }
         }
     };
 
@@ -343,6 +532,9 @@
         SKIN: SKIN,
         SCENES: SCENES,
         drawDuck: drawDuck,
+        drawDuckWalk: drawDuckWalk,
+        drawDuckSwim: drawDuckSwim,
+        drawBush: drawBush,
         drawDog: drawDog
     };
 }));

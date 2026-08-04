@@ -28,6 +28,8 @@
       5. Bảng chữ báo vòng phải tự dọn đi khi vào trận, hiện lại khi hết vòng
       6. Chim lạ: bắn nhầm trừ đúng 3 điểm, xoá chuỗi, và điểm KHÔNG tụt âm;
          bé bắn loạn phải thua bé biết tránh
+      6b. Đủ năm kiểu xử sự; con đang nấp thì bắn không trúng, và nấp rồi
+          phải ló lại chứ không biến mất luôn
       7. Bắn sang làn bạn KHÔNG được tính điểm
       8. Chuỗi bắn trúng nhân điểm đúng bảng, và bắn trượt là mất chuỗi
       9. Ảnh nướng đủ mọi loài × ba tư thế cánh, và nướng ở gấp ba
@@ -151,7 +153,11 @@ function run(win) {
             p.maxDuckLife.toFixed(1) + ' giây');
         if (p.mode !== 'over') fail(kids + ' bé (không bắn): ván treo ở "' + p.mode + '"');
         if (p.rounds !== R.ROUNDS.length) fail(kids + ' bé (không bắn): chỉ đóng được ' + p.rounds + ' vòng');
-        if (p.maxDuckLife > 14) fail(kids + ' bé: có con vịt bay ' + p.maxDuckLife.toFixed(1) + ' giây chưa thoát');
+        /* Nới từ 14 lên 17 giây: con vịt bây giờ còn chạy trên bờ, nấp trong
+         * bụi hay lặn dưới ao trước khi cất cánh, nên nó ở trong màn lâu hơn
+         * một cách chính đáng. Vẫn phải có trần, vì con vịt không bao giờ thoát
+         * thì bé ngồi đợi hết vòng. */
+        if (p.maxDuckLife > 17) fail(kids + ' bé: có con vịt bay ' + p.maxDuckLife.toFixed(1) + ' giây chưa thoát');
     }
 
     /* ---- 2: rô-bốt bắn chuẩn, có chờ vịt bay nửa giây rồi mới bắn ---- */
@@ -192,17 +198,28 @@ function run(win) {
     say('    số vịt hạ được: ' + sumHit.join('  ') + '   lệch ' + (sh * 100).toFixed(1) + '%');
     say('    điểm (chỉ để tham khảo — con vàng làm nhiễu): ' + sumPts.join('  ') +
         '   lệch ' + (sp * 100).toFixed(1) + '%', 'dim');
-    /* Ngưỡng 12% chứ không phải 6% như check-fair.js, và đây là con số tính
-     * ra chứ không phải đoán: 60 ván × ~57 con vịt chia bốn làn là chừng 850
-     * con mỗi làn, độ lệch chuẩn √(850×0,75) ≈ 25, nên riêng may rủi đã cho
-     * chênh lệch cỡ 3σ/850 ≈ 8,5%. Đặt ngưỡng dưới mức ấy thì máy soát thỉnh
-     * thoảng lại báo hỏng oan — mà một cái máy soát hay báo oan thì rồi cũng
-     * bị bỏ qua, tệ hơn là không có.
+    /* NGƯỠNG TỰ TÍNH THEO MỨC NHIỄU, không gõ tay một con số.
      *
-     * Phép đo chính xác nằm ở check-fair.js: nó tính bằng hình học chứ không
-     * qua rô-bốt nên không có nhiễu, và ngưỡng ở đó mới là 6%. Chỗ này chỉ là
-     * tấm lưới thô: bắt trường hợp phần chơi làm hỏng hẳn sự công bằng. */
-    if (sh > 0.12) fail('bốn bé bắn giỏi như nhau mà số vịt hạ được lệch ' + (sh * 100).toFixed(1) + '%');
+     * Đếm đầu con là phép đếm nhị thức: mỗi con vịt rơi vào một làn nào đó.
+     * Với trung bình m con mỗi làn thì độ lệch chuẩn là √(m × 0,75), nên riêng
+     * may rủi đã cho chênh lệch cỡ 3σ/m. Gõ tay một con số cố định thì hôm nào
+     * em đổi số vịt mỗi vòng là ngưỡng lại sai — mà em vừa đổi thật: thêm năm
+     * kiểu xử sự xong, số vịt bắn được giảm đi và mức nhiễu tăng lên, ngưỡng
+     * 12% gõ tay hôm qua thành báo hỏng oan hôm nay.
+     *
+     * Một cái máy soát hay báo oan thì rồi cũng bị bỏ qua — tệ hơn là không có.
+     * Nên ngưỡng tự tính, và vẫn còn răng: lệch thật cỡ 25% là nó bắt ngay.
+     *
+     * Phép đo chính xác nằm ở check-fair.js — tính bằng hình học, không qua
+     * rô-bốt nên không có nhiễu, ngưỡng ở đó mới là 6%. Chỗ này là tấm lưới
+     * thô, bắt trường hợp phần chơi làm hỏng hẳn sự công bằng. */
+    var mean = (sumHit[0] + sumHit[1] + sumHit[2] + sumHit[3]) / 4;
+    var noise3 = mean > 0 ? 3 * Math.sqrt(mean * 0.75) / mean : 1;
+    var limit = Math.max(0.10, noise3 * 1.5);
+    say('    ngưỡng tự tính từ mức nhiễu: ' + (limit * 100).toFixed(1) +
+        '% (may rủi thuần đã cho tới ' + (noise3 * 100).toFixed(1) + '%)', 'dim');
+    if (sh > limit) fail('bốn bé bắn giỏi như nhau mà số vịt hạ được lệch ' +
+        (sh * 100).toFixed(1) + '%, quá ngưỡng ' + (limit * 100).toFixed(1) + '%');
     if (sp > 0.25) fail('điểm lệch tới ' + (sp * 100).toFixed(1) + '%, quá mức may rủi con vàng gây ra được');
 
     /* ---- 4b: bảng chữ báo vòng phải biến đi khi vào trận ----
@@ -305,6 +322,68 @@ function run(win) {
     if (reckless.scores[0] >= careful.scores[0])
         fail('bắn loạn cũng được điểm bằng bé biết tránh — cái phạt không có tác dụng');
 
+    /* ---- 4d: năm kiểu con vịt xử sự ----
+     *
+     * Ý anh Hiếu: đừng để con nào cũng bật lên bay thẳng. Ba chuyện phải đúng:
+     * đủ cả năm kiểu chạy được, con đang nấp thì KHÔNG bắn trúng được, và con
+     * nấp rồi vẫn phải ló ra chứ không biến mất luôn. */
+    say('');
+    say('· năm kiểu con vịt xử sự', 'dim');
+    var S0 = win.duckShoot.size();
+    var seen = {}, hidEver = 0, cameBack = 0, stateSeen = {};
+    for (var rr2 = 0; rr2 < R.ROUNDS.length; rr2++) {
+        R.flock(rr2, 31337, S0.W, S0.H).forEach(function (d) {
+            seen[d.mode] = (seen[d.mode] || 0) + 1;
+            var wasHidden = false, backAfter = false;
+            for (var tt2 = 0; tt2 < 20; tt2 += 0.05) {
+                var pp = R.duckAt(d, tt2, R.groundOf(S0.H), S0.W, S0.H);
+                if (!R.inView(pp, S0.W, R.topOf(S0.H))) break;
+                stateSeen[pp.state] = 1;
+                if (pp.hidden) wasHidden = true;
+                else if (wasHidden) backAfter = true;
+            }
+            if (wasHidden) { hidEver++; if (backAfter) cameBack++; }
+        });
+    }
+    var wantModes = ['rise', 'runner', 'hider', 'diver', 'panic'];
+    var missMode = wantModes.filter(function (m) { return !seen[m]; });
+    say('    ' + wantModes.map(function (m) { return m + ' ' + (seen[m] || 0); }).join(' · '));
+    say('    trạng thái gặp được: ' + Object.keys(stateSeen).sort().join(' '));
+    if (missMode.length) fail('không vòng nào dùng tới kiểu: ' + missMode.join(', '));
+    ['ground', 'water', 'bush', 'under', 'air'].forEach(function (st2) {
+        if (!stateSeen[st2]) fail('không con vịt nào từng ở trạng thái "' + st2 + '"');
+    });
+    say('    con từng khuất: ' + hidEver + ', trong đó ló lại: ' + cameBack,
+        (hidEver > 0 && cameBack === hidEver) ? 'ok' : 'bad');
+    if (!hidEver) fail('không con nào từng nấp đi — bụi cây và mặt ao thành vô nghĩa');
+    if (cameBack !== hidEver) fail((hidEver - cameBack) + ' con nấp đi rồi không bao giờ ló lại');
+
+    /* con đang nấp thì bắn không trúng */
+    sc.frozen = true;
+    sc.laneOfX = win.duckShoot.laneOf;
+    sc.startGame(2, 777);
+    G.mode = 'play';
+    var guard2 = 0, hiddenDuck = null;
+    while (guard2++ < 60 * 90 && !hiddenDuck) {
+        sc.stepAll(1 / 60);
+        for (var q3 = 0; q3 < G.ducks.length; q3++) {
+            if (G.ducks[q3].hidden && !G.ducks[q3].dead) { hiddenDuck = G.ducks[q3]; break; }
+        }
+    }
+    if (!hiddenDuck) {
+        fail('chạy 90 giây không gặp con vịt nào đang nấp để thử');
+    } else {
+        var ln2 = win.duckShoot.laneOf(hiddenDuck.x);
+        var before2 = G.scores[ln2];
+        G.cool[ln2] = 0;
+        sc.fire(ln2, hiddenDuck.x, hiddenDuck.y);
+        say('    bắn thẳng vào con đang nấp: ' +
+            (hiddenDuck.dead ? 'VẪN TRÚNG' : 'không trúng') +
+            ', điểm ' + before2 + ' → ' + G.scores[ln2],
+            hiddenDuck.dead ? 'bad' : 'ok');
+        if (hiddenDuck.dead) fail('bắn trúng được con vịt đang nấp trong bụi hoặc đang lặn');
+    }
+
     /* ---- 5: bắn sang làn bạn không được tính ---- */
     say('');
     say('· bắn sang làn bạn thì có ăn điểm không', 'dim');
@@ -358,13 +437,17 @@ function run(win) {
     /* ---- 7: ảnh vịt nướng sẵn ---- */
     say('');
     say('· ảnh vịt nướng sẵn', 'dim');
+    /* 6 tư thế mỗi loài: ba nhịp cánh khi bay, hai bước chân khi chạy, một
+     * dáng khi bơi. Khai Ở ĐÂY, trước vòng lặp dùng nó — em vừa đặt nhầm xuống
+     * dưới và cả phép soát chết lặng giữa chừng, không báo gì, chỉ ngừng in. */
+    var POSES = ['_0', '_1', '_2', '_w0', '_w1', '_s'];
     var miss = [], small = [];
     /* Duyệt HẾT bảng loài chứ không gõ tay ba cái tên. Em thêm con chim lạ mà
      * quên sửa danh sách gõ tay thì ảnh của nó không ai soát — đúng kiểu lỗi
      * lặng lẽ nhất. */
     Object.keys(win.DuckRules.KINDS).forEach(function (kind) {
-        for (var w = 0; w < 3; w++) {
-            var key = 'duck_' + kind + '_' + w;
+        for (var w = 0; w < POSES.length; w++) {
+            var key = 'duck_' + kind + POSES[w];
             if (!sc.textures.exists(key)) { miss.push(key); continue; }
             var src = sc.textures.get(key).getSourceImage();
             /* Nướng đúng cỡ hiển thị thì lên màn nét đôi là nhoè — bài học từ
@@ -372,7 +455,7 @@ function run(win) {
             if (src.width < win.DuckRules.KINDS[kind].r * 4.2 * 2) small.push(key + ' rộng ' + src.width);
         }
     });
-    var wantTex = Object.keys(win.DuckRules.KINDS).length * 3;
+    var wantTex = Object.keys(win.DuckRules.KINDS).length * POSES.length;
     say('    ' + (wantTex - miss.length) + '/' + wantTex + ' ảnh, cỡ ảnh con to: ' +
         (sc.textures.exists('duck_big_0') ? sc.textures.get('duck_big_0').getSourceImage().width + 'px' : '—'));
     if (miss.length) fail('thiếu ảnh vịt: ' + miss.join(', '));

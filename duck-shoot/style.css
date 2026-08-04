@@ -279,11 +279,13 @@ body {
 }
 
 /* ---------------- Huy hiệu vòng ---------------- */
+/* Huy hiệu vòng nằm sát góc dưới bên trái, không nằm giữa.
+   Từ khi có vịt bơi trên ao thì giữa đáy màn là chỗ con vịt lội qua — huy hiệu
+   đặt ở đó là che đúng thứ bé đang ngắm. */
 .round-badge {
     position: absolute;
-    left: 50%;
-    bottom: 12px;
-    transform: translateX(-50%);
+    left: 10px;
+    bottom: 8px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -294,16 +296,17 @@ body {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     font-family: var(--font-display);
-    font-size: 0.82rem;
+    font-size: 0.74rem;
     letter-spacing: 1px;
     color: #cbd5e1;
     pointer-events: none;
     z-index: 4;
     white-space: nowrap;
+    opacity: 0.82;
 }
 
 .round-badge[hidden] { display: none; }
-.round-badge b { color: var(--gold); font-size: 0.95rem; }
+.round-badge b { color: var(--gold); font-size: 0.86rem; }
 
 /* ---------------- Chữ báo vòng ---------------- */
 .flash {

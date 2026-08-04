@@ -565,6 +565,8 @@
         ['nhầm ', 'oops ', 'x'],
         ['Bắn trúng liên tiếp thì điểm nhân dần, tối đa <b>×3</b>. Trượt một phát là mất chuỗi.',
             'Hit ducks in a row and your points multiply, up to <b>×3</b>. One miss and the streak is gone.'],
+        ['Vịt không chỉ biết bay: có con chạy trên bờ, có con chui vào bụi cây, có con bơi rồi lặn xuống ao. Con đang nấp thì bắn không trúng đâu — chờ nó ló ra.',
+            'Ducks do not just fly: some run along the bank, some hide in a bush, some swim and dive under the pond. You cannot hit a duck while it is hidden — wait for it.'],
         ['Sáu vòng, sáu bầu trời khác nhau. Con vịt nào thoát được là chú chó lại cười trêu!',
             'Six rounds, six different skies. The dog laughs at every duck that gets away!'],
         ['1 BÉ', '1 KID'],

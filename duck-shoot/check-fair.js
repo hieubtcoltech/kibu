@@ -61,8 +61,8 @@ console.log('soát công bằng: ' + GAMES + ' ván cho mỗi cỡ bàn, bay t�
 
 for (const world of WORLDS) {
 const W = world.W, H = world.H;
-const GROUND = H * 0.86;      // vịt bật lên từ đây
-const TOP = Math.round(H * 0.097);   // trên nữa là ra khỏi vùng bắn
+const GROUND = R.groundOf(H); // vịt bật lên từ đây — hỏi rules.js, không tự nhân
+const TOP = R.topOf(H);       // trên nữa là ra khỏi vùng bắn
 
 function laneOf(x, kids) {
     const i = Math.floor(x / (W / kids));
@@ -71,11 +71,16 @@ function laneOf(x, kids) {
 
 console.log('  ── ' + world.name + ' (' + W + '×' + H + ')');
 
+/* thống kê chung cho cả khổ này, gom qua mọi cỡ bàn */
+const modes = {};
+let maxLife = 0, stuck = 0;
+
 for (const kids of [2, 3, 4]) {
     const first = new Array(kids).fill(0);   // số lần được gặp vịt đầu tiên
     const aim = new Array(kids).fill(0);     // tổng giây vịt nằm trong tầm
     const pts = new Array(kids).fill(0);     // Σ(điểm × giây nằm trong làn)
     const trap = new Array(kids).fill(0);    // Σ(giây CHIM LẠ nằm trong làn)
+    const gnd = new Array(kids).fill(0);     // Σ(giây vịt ở dưới đất/mặt ao)
     let ducks = 0, crows = 0;
 
     for (let g = 0; g < GAMES; g++) {
@@ -89,12 +94,23 @@ for (const kids of [2, 3, 4]) {
                 if (!decoy) first[laneOf(d.x0, kids)]++;
 
                 /* bay thử, mỗi bước cộng thời gian cho làn nó đang ở */
+                modes[d.mode] = (modes[d.mode] || 0) + 1;
                 const val = R.KINDS[d.kind].pts;
                 let t = 0;
-                while (t < 12) {
-                    const p = R.duckAt(d, t, GROUND, W);
+                while (t < 30) {
+                    const p = R.duckAt(d, t, GROUND, W, H);
                     if (!R.inView(p, W, TOP)) break;
+                    t += STEP;
+                    /* GIÂY CON VỊT ĐANG KHUẤT THÌ KHÔNG TÍNH.
+                     *
+                     * Con nấp trong bụi và con đang lặn dưới ao không bắn được,
+                     * nên những giây ấy không phải là cơ hội của ai cả. Cộng
+                     * chúng vào "giây được ngắm" thì phép đo hoá ra rộng rãi
+                     * hơn sự thật, và tệ hơn: nếu chỗ nấp không rải đều thì cái
+                     * lệch ấy bị chính phần thời gian khuất che mất. */
+                    if (p.hidden) continue;
                     const ln = laneOf(p.x, kids);
+                    if (p.state === 'ground' || p.state === 'water') gnd[ln] += STEP;
                     if (decoy) {
                         /* Chim lạ đo RIÊNG. Nhét chung vào "cơ hội ăn điểm" là
                          * hỏng phép đo: điểm của nó âm nên làn nào gặp nhiều
@@ -107,8 +123,9 @@ for (const kids of [2, 3, 4]) {
                         aim[ln] += STEP;
                         pts[ln] += val * STEP;
                     }
-                    t += STEP;
                 }
+                if (t > maxLife) maxLife = t;
+                if (t >= 30) stuck++;
             }
         }
     }
@@ -119,7 +136,7 @@ for (const kids of [2, 3, 4]) {
         return avg > 0 ? (hi - lo) / avg : 0;
     };
 
-    const sf = spread(first), sa = spread(aim), sp = spread(pts), st = spread(trap);
+    const sf = spread(first), sa = spread(aim), sp = spread(pts), st = spread(trap), sg = spread(gnd);
     const tag = world.name + ', ' + kids + ' bé';
     console.log('     ' + kids + ' bé:');
     console.log('     gặp trước      ' + first.map(n => Math.round(n)).join('  ') +
@@ -130,6 +147,8 @@ for (const kids of [2, 3, 4]) {
         '   lệch ' + (sp * 100).toFixed(1) + '%');
     console.log('     bẫy chim lạ    ' + trap.map(n => Math.round(n)).join('  ') +
         '   lệch ' + (st * 100).toFixed(1) + '%');
+    console.log('     giây dưới đất  ' + gnd.map(n => Math.round(n)).join('  ') +
+        '   lệch ' + (sg * 100).toFixed(1) + '%');
 
     if (sf > 0.06) fails.push(tag + ': số lần gặp vịt trước lệch ' + (sf * 100).toFixed(1) + '% giữa các làn');
     if (sa > 0.06) fails.push(tag + ': thời gian được ngắm lệch ' + (sa * 100).toFixed(1) + '% giữa các làn');
@@ -138,6 +157,10 @@ for (const kids of [2, 3, 4]) {
      * phạt nhiều hơn chỉ vì chỗ ngồi — hệt như chuyện cơ hội, chỉ ngược dấu. */
     if (st > 0.06) fails.push(tag + ': số giây chim lạ bay trong làn lệch ' + (st * 100).toFixed(1) + '%');
     if (crows === 0) fails.push(tag + ': cả ' + GAMES + ' ván không có lấy một con chim lạ nào');
+    /* Vịt chạy trên bờ và vịt bơi trên ao là mục tiêu DỄ — làn nào được nhiều
+     * giây "vịt dưới đất" hơn thì bé ngồi đó ăn điểm dễ hơn. */
+    if (sg > 0.06) fails.push(tag + ': số giây vịt ở dưới đất/mặt ao lệch ' + (sg * 100).toFixed(1) + '% giữa các làn');
+    if (stuck) fails.push(tag + ': ' + stuck + ' con vịt bay quá 30 giây vẫn chưa thoát — bé sẽ ngồi đợi hết vòng');
 
     /* Không làn nào được phép TRẮNG cơ hội gặp trước — đây đúng là lỗi bản đầu:
      * bé ở giữa không bao giờ thấy vịt trước. */
@@ -154,6 +177,8 @@ for (let r = 0; r < R.ROUNDS.length; r++) {
     if (t < 8 || t > 26) fails.push(world.name + ': vòng ' + (r + 1) + ' dài ' +
         t.toFixed(1) + ' giây, ngoài khoảng 8–26');
 }
+console.log('     đủ năm kiểu: ' + Object.keys(modes).sort().join(' ') +
+    ' · con lâu nhất ' + maxLife.toFixed(1) + ' giây');
 console.log('     một vòng dài ' +
     R.ROUNDS.map((_, r) => R.roundTime(r, 777, W, H).toFixed(0)).join('/') + ' giây');
 console.log('');
