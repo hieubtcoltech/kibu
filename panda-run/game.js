@@ -1361,22 +1361,22 @@
 
     function paintPanda(g, u, pose, k) {
         /* ------------------------------------------------------------------
-         * TỈ LỆ LẤY TỪ ẢNH SVG ANH HIẾU GỬI, không phải ước lượng bằng mắt.
+         * MỘT CỤC TRÒN, GIỐNG HỆT MẤY BẠN THÚ CHẠY PHÍA SAU
          *
-         * Ảnh ấy là bản đồ những mảng ĐEN của con gấu trúc (tai, mảng mắt,
-         * mũi, tay, chân, khăn), nên đo được thẳng từ đó. Em tách từng mảng
-         * rồi quy về đơn vị u — cả hình cao 1,58 u:
+         * Anh Hiếu: "anh muốn em làm như nhân vật thỏ chạy với đầu của gấu
+         * panda, chân không cần dài".
          *
-         *      đầu          bán kính 0,50 u, tâm cách mặt đất 1,06 u
-         *      thân         bán kính 0,26 × 0,25 u, tâm cách đất 0,57 u
-         *      chân         dày 0,28 u, dài chừng 0,44 u
-         *      tay          dày 0,21 u, đầu có BÀN TAY tròn to hơn
-         *      khăn         rộng 0,84 u — gần bằng bề ngang cái đầu
-         *      mảng mắt     0,22 u, hai mảng sát nhau và dồn về phía trước
+         * Mấy bạn thú trong game (paintPal) không có đầu riêng và thân riêng —
+         * cả con chỉ là MỘT hình tròn, tai với mặt vẽ luôn lên đó, cộng hai
+         * cái chân ngắn ngủn nhấp nhô. Em thì cứ dựng panda kiểu người: đầu
+         * một khối, thân một khối, tay chân riêng. Hai lối dựng khác nhau nên
+         * panda đứng cạnh bầy bạn thế nào cũng lệch, chỉnh tỉ lệ kiểu gì cũng
+         * không cứu được.
          *
-         * Con số quan trọng nhất: ĐẦU TO GẦN GẤP ĐÔI THÂN. Lần trước em nghe
-         * "thân quá nhỏ" rồi thu đầu lại phình thân ra — đúng là ngược hẳn với
-         * bản thiết kế. Đo mới biết.
+         * Nay panda dựng đúng khuôn của bạn thỏ, phóng to gấp đôi:
+         *      thân      MỘT hình tròn bán kính 0,62 u
+         *      chân      dày 0,24 u, thò ra dưới bụng, đưa qua đưa lại 0,20 u
+         *      mặt       vẽ thẳng lên hình tròn ấy, không có cổ
          * ---------------------------------------------------------------- */
         const cx = 1.35 * u;
         const foot = 1.86 * u;
@@ -1386,176 +1386,98 @@
         const jump = pose === 'jump';
         const cheer = pose === 'cheer';
 
-        const bob = run ? Math.abs(Math.sin(a)) * 0.05 * u : 0;
-        /* Ngả người rất nhẹ thôi. Mấy bạn thú chạy sau đều đứng thẳng, ngả
-         * nhiều là panda lạc kiểu khỏi cả bầy. */
-        const lean = run ? 0.045 : (jump ? 0.04 : 0);
-        if (lean) {
-            g.save();
-            g.translate(cx, foot);
-            g.rotate(lean);
-            g.translate(-cx, -foot);
-        }
+        const bob = run ? Math.abs(Math.sin(a)) * 0.045 * u : 0;
+        const R = slide ? 0.58 * u : 0.62 * u;
+        const bodyCY = (slide ? foot - 0.50 * u : foot - 0.70 * u) - bob;
 
-        const headR = slide ? 0.46 * u : 0.50 * u;
-        const headCY = slide ? foot - 0.54 * u : foot - 1.06 * u - bob;
-        const bodyCX = cx - 0.11 * u;
-        const bodyCY = slide ? foot - 0.26 * u : foot - 0.57 * u - bob;
-        const bodyRX = slide ? 0.36 * u : 0.31 * u;
-        const bodyRY = slide ? 0.21 * u : 0.29 * u;
-
-        /* Chi: ống mập, đầu ngoài có BÀN tròn to hơn ống — trong ảnh mẫu bàn
-         * tay và bàn chân đều phình ra rõ, đó là thứ làm chi trông có sức chứ
-         * không phải cái que. */
-        /* Chi trong ảnh mẫu KHÔNG phải cái ống đều: nó là một dải THON, phình
-         * hẳn ra ở đầu ngoài thành bàn tay / bàn chân tròn. Vẽ ống đều thì ra
-         * mấy cái que cắm vào thân; thon rồi phình mới ra chi có sức. Vẽ bằng
-         * cách chồng ba lớp: gốc mảnh, thân dải, bàn tròn to. */
-        function limb(x0, y0, x1, y1, w, col, pawScale) {
-            const paw = w * (pawScale == null ? 0.52 : pawScale);
-            g.strokeStyle = col;
-            g.lineCap = 'round';
-            g.lineWidth = w * 0.62;                    // gốc mảnh
-            g.beginPath();
-            g.moveTo(x0, y0);
-            g.lineTo(x0 + (x1 - x0) * 0.45, y0 + (y1 - y0) * 0.45);
-            g.stroke();
-            g.lineWidth = w * 0.86;                    // giữa dải
-            g.beginPath();
-            g.moveTo(x0 + (x1 - x0) * 0.35, y0 + (y1 - y0) * 0.35);
-            g.lineTo(x1, y1);
-            g.stroke();
-            g.fillStyle = col;                          // bàn tròn ở đầu ngoài
-            g.beginPath();
-            g.arc(x1, y1, paw, 0, TAU);
-            g.fill();
-        }
-
-        function footAt(p) {
-            const t = p * TAU;
-            /* Sải NGẮN, đúng bằng nhịp chân của mấy bạn thú chạy sau lưng.
-             *
-             * Anh Hiếu: "bỏ tay panda đi, rút ngắn chân để panda chạy giống
-             * như các nhân vật đi sau nó, anh cần chạy đơn giản như vậy thôi".
-             * Em đã đi quá xa theo hướng "vẽ cho ra dáng vận động viên": chân
-             * dài, sải rộng, tay vung — càng thêm càng rối, mà cả bầy sau lưng
-             * thì chỉ có hai cái chân ngắn ngủn nhấp nhô. Cùng một màn hình mà
-             * hai lối vẽ khác nhau thì con nào cũng lạc lõng. */
-            return { x: Math.cos(t) * 0.17 * u, y: Math.max(0, Math.sin(t)) * 0.11 * u };
-        }
-
-        const pNear = k, pFar = (k + 0.5) % 1;
-        let fN, fF;
+        /* Chân: đúng kiểu bạn thỏ — hai que ngắn thò ra dưới bụng, đầu bo
+         * tròn, đưa qua đưa lại theo nhịp. Không đầu gối, không bàn chân
+         * riêng, không tay. */
+        let swing, lift;
         if (run) {
-            fN = footAt(pNear); fF = footAt(pFar);
+            swing = Math.cos(a) * 0.20 * u;
+            lift = Math.max(0, Math.sin(a)) * 0.10 * u;
         } else if (jump) {
-            fN = { x: 0.24 * u, y: 0.26 * u }; fF = { x: -0.16 * u, y: 0.20 * u };
+            swing = 0.14 * u; lift = 0.12 * u;
         } else if (slide) {
-            fN = { x: 0.36 * u, y: 0.02 * u }; fF = { x: 0.22 * u, y: 0.02 * u };
+            swing = 0.20 * u; lift = 0;
         } else {
-            fN = { x: 0.12 * u, y: 0 }; fF = { x: -0.12 * u, y: 0 };
+            swing = 0.06 * u; lift = 0;
         }
 
-        const hipY = bodyCY + bodyRY * 0.5;
-        const legW = 0.21 * u;
+        function leg(hx, dx, lifted, col) {
+            g.strokeStyle = col;
+            g.lineWidth = 0.24 * u;
+            g.lineCap = 'round';
+            g.beginPath();
+            g.moveTo(cx + hx, bodyCY + R * 0.62);
+            g.lineTo(cx + hx + dx, foot - lifted);
+            g.stroke();
+        }
 
-        /* --- chân BÊN XA. KHÔNG VẼ TAY: mấy bạn thú chạy sau cũng không có
-         * tay, chỉ hai chân nhấp nhô, và nhìn vẫn ra đang chạy. Thêm tay vào
-         * chỉ tổ rối phần dưới cái đầu. --- */
-        limb(bodyCX - 0.11 * u, hipY, bodyCX - 0.11 * u + fF.x, foot - fF.y, legW, PANDA.limbFar, 0.52);
+        /* chân bên xa, sẫm hơn một nấc để tách lớp */
+        leg(-0.14 * u, -swing, Math.max(0, -Math.sin(a)) * 0.10 * u, PANDA.limbFar);
 
-        /* --- KHĂN QUÀNG: rộng gần bằng bề ngang cái đầu, đuôi nhọn hất ngược
-         * ra sau. Trong ảnh mẫu đây là mảng lớn thứ nhất, lớn hơn cả cái chân —
-         * bản trước em vẽ nó bé tí nên cả con mất hẳn cảm giác đang lao đi. */
+        /* --- KHĂN QUÀNG bay ngược chiều chạy, vẽ trước thân --- */
         const flap = run ? Math.sin(a * 2) * 0.05 * u : 0;
-        const neckX = bodyCX - 0.02 * u, neckY = headCY + headR * 0.72;
         g.fillStyle = PANDA.scarf;
         g.beginPath();
-        g.moveTo(neckX, neckY - 0.06 * u);
-        g.quadraticCurveTo(neckX - 0.52 * u, neckY - 0.20 * u + flap,
-            neckX - 0.90 * u, neckY + 0.06 * u + flap);
-        g.quadraticCurveTo(neckX - 0.52 * u, neckY + 0.18 * u,
-            neckX - 0.04 * u, neckY + 0.20 * u);
+        g.moveTo(cx - R * 0.28, bodyCY - R * 0.14);
+        g.quadraticCurveTo(cx - R * 1.30, bodyCY - R * 0.46 + flap,
+            cx - R * 1.72, bodyCY + R * 0.06 + flap);
+        g.quadraticCurveTo(cx - R * 1.05, bodyCY + R * 0.34,
+            cx - R * 0.26, bodyCY + R * 0.34);
         g.closePath();
         g.fill();
 
-        /* --- THÂN: nhỏ và tròn, nằm hơi lệch ra sau so với đầu --- */
-        g.fillStyle = PANDA.white;
-        g.beginPath();
-        g.ellipse(bodyCX, bodyCY, bodyRX, bodyRY, 0, 0, TAU);
-        g.fill();
-        g.fillStyle = PANDA.shade;
-        g.beginPath();
-        g.ellipse(bodyCX + bodyRX * 0.24, bodyCY + bodyRY * 0.20, bodyRX * 0.74, bodyRY * 0.66, 0, 0, TAU);
-        g.fill();
-        g.fillStyle = PANDA.white;
-        g.beginPath();
-        g.ellipse(bodyCX - bodyRX * 0.12, bodyCY - bodyRY * 0.14, bodyRX * 0.82, bodyRY * 0.74, 0, 0, TAU);
-        g.fill();
-
-        /* --- chân BÊN GẦN --- */
-        limb(bodyCX + 0.11 * u, hipY, bodyCX + 0.11 * u + fN.x, foot - fN.y, legW, PANDA.black, 0.55);
-
-        /* --- vành khăn quanh cổ --- */
-        g.fillStyle = PANDA.scarf;
-        g.beginPath();
-        g.ellipse(bodyCX + 0.03 * u, neckY + 0.02 * u, 0.24 * u, 0.10 * u, 0, 0, TAU);
-        g.fill();
-        g.fillStyle = PANDA.scarfDark;
-        g.beginPath();
-        g.ellipse(bodyCX + 0.03 * u, neckY + 0.07 * u, 0.22 * u, 0.06 * u, 0, 0, TAU);
-        g.fill();
-
-        /* --- TAI HÌNH LƯỠI LIỀM ---
-         * Trong ảnh mẫu tai không phải hình tròn mà là mảnh trăng khuyết: một
-         * cục tròn bị chính cái đầu khoét mất phần trong. Vẽ tròn thì ra hai
-         * cái cúc áo dán lên đầu, khoét đi mới ra vành tai. */
-        function ear(ex, ey, er, cutX, cutY) {
-            g.save();
-            g.beginPath();
-            g.arc(ex, ey, er, 0, TAU);
-            g.arc(cutX, cutY, er * 0.92, 0, TAU, true);
-            g.fillStyle = PANDA.black;
-            g.fill('evenodd');
-            g.restore();
-        }
+        /* --- TAI, vẽ trước thân để nằm sau --- */
         g.fillStyle = PANDA.black;
         g.beginPath();
-        g.arc(cx - headR * 0.74, headCY - headR * 0.70, headR * 0.30, 0, TAU);
+        g.arc(cx - R * 0.66, bodyCY - R * 0.76, R * 0.30, 0, TAU);
         g.fill();
         g.beginPath();
-        g.arc(cx + headR * 0.62, headCY - headR * 0.76, headR * 0.26, 0, TAU);
+        g.arc(cx + R * 0.60, bodyCY - R * 0.80, R * 0.26, 0, TAU);
         g.fill();
 
-        /* --- ĐẦU --- */
+        /* --- MỘT CỤC TRÒN: vừa là đầu vừa là thân --- */
         g.fillStyle = PANDA.white;
         g.beginPath();
-        g.arc(cx, headCY, headR, 0, TAU);
+        g.arc(cx, bodyCY, R, 0, TAU);
         g.fill();
         g.fillStyle = PANDA.shade;
         g.beginPath();
-        g.arc(cx + headR * 0.14, headCY + headR * 0.16, headR * 0.88, 0, TAU);
+        g.arc(cx + R * 0.14, bodyCY + R * 0.16, R * 0.88, 0, TAU);
         g.fill();
         g.fillStyle = PANDA.white;
         g.beginPath();
-        g.arc(cx - headR * 0.05, headCY - headR * 0.07, headR * 0.90, 0, TAU);
+        g.arc(cx - R * 0.05, bodyCY - R * 0.08, R * 0.90, 0, TAU);
         g.fill();
 
-        /* --- MẶT: hai mảng mắt sát nhau, dồn về phía trước --- */
-        const fx = headR * 0.10;
+        /* chân bên gần, vẽ đè lên thân */
+        leg(0.12 * u, swing, lift, PANDA.black);
+
+        /* KHÔNG vẽ vành khăn quanh cổ nữa: cục tròn này vừa là đầu vừa là
+         * thân nên không có cái cổ nào cả, vành khăn vẽ vào thành một vệt đỏ
+         * vắt ngang mặt — nhìn ra cái lưỡi thè. Chỉ giữ đuôi khăn bay phía
+         * sau, thế là đủ thấy gió. */
+
+        /* ================= MẶT, vẽ thẳng lên cục tròn =================
+         * Vẫn nhìn về phía chạy: cụm mặt dồn lên trên và về phía trước, tai
+         * bên xa nhỏ hơn — hai thứ ấy là toàn bộ cái quay đầu. */
+        const fx = R * 0.10, fy = -R * 0.20;
 
         g.fillStyle = PANDA.shade;
         g.beginPath();
-        g.ellipse(cx + fx + headR * 0.26, headCY + headR * 0.28, headR * 0.26, headR * 0.22, 0, 0, TAU);
+        g.ellipse(cx + fx + R * 0.22, bodyCY + fy + R * 0.26, R * 0.22, R * 0.19, 0, 0, TAU);
         g.fill();
         g.fillStyle = PANDA.white;
         g.beginPath();
-        g.ellipse(cx + fx + headR * 0.26, headCY + headR * 0.25, headR * 0.25, headR * 0.21, 0, 0, TAU);
+        g.ellipse(cx + fx + R * 0.22, bodyCY + fy + R * 0.23, R * 0.21, R * 0.18, 0, 0, TAU);
         g.fill();
 
         const eyes = [
-            { x: cx + fx - headR * 0.14, y: headCY - headR * 0.10, r: 0.215, tilt: -0.34, pupil: 0.105 },
-            { x: cx + fx + headR * 0.36, y: headCY - headR * 0.05, r: 0.20, tilt: 0.30, pupil: 0.10 }
+            { x: cx + fx - R * 0.14, y: bodyCY + fy - R * 0.06, r: 0.185, tilt: -0.34, pupil: 0.09 },
+            { x: cx + fx + R * 0.30, y: bodyCY + fy - R * 0.02, r: 0.17, tilt: 0.30, pupil: 0.085 }
         ];
         for (const e of eyes) {
             g.save();
@@ -1563,48 +1485,44 @@
             g.rotate(e.tilt);
             g.fillStyle = PANDA.black;
             g.beginPath();
-            g.ellipse(0, 0, headR * e.r, headR * e.r * 0.92, 0, 0, TAU);
+            g.ellipse(0, 0, R * e.r, R * e.r * 0.92, 0, 0, TAU);
             g.fill();
             g.restore();
         }
         for (const e of eyes) {
-            const pr = headR * e.pupil;
+            const pr = R * e.pupil;
             g.fillStyle = '#ffffff';
             g.beginPath();
-            g.arc(e.x + pr * 0.15, e.y - pr * 0.45, pr * 0.62, 0, TAU);
+            g.arc(e.x + pr * 0.15, e.y - pr * 0.45, pr * 0.60, 0, TAU);
             g.fill();
             g.beginPath();
-            g.arc(e.x + pr * 0.75, e.y + pr * 0.55, pr * 0.30, 0, TAU);
+            g.arc(e.x + pr * 0.75, e.y + pr * 0.55, pr * 0.28, 0, TAU);
             g.fill();
         }
 
-        /* --- MŨI và MIỆNG cười --- */
-        const nx = cx + fx + headR * 0.26;
+        const nx = cx + fx + R * 0.22, ny = bodyCY + fy;
         g.fillStyle = PANDA.ink;
         g.beginPath();
-        g.ellipse(nx, headCY + headR * 0.14, headR * 0.10, headR * 0.075, 0, 0, TAU);
+        g.ellipse(nx, ny + R * 0.14, R * 0.085, R * 0.065, 0, 0, TAU);
         g.fill();
         g.strokeStyle = PANDA.ink;
-        g.lineWidth = 0.028 * u;
+        g.lineWidth = 0.026 * u;
         g.lineCap = 'round';
         g.beginPath();
         if (cheer || run) {
-            g.moveTo(nx - headR * 0.17, headCY + headR * 0.30);
-            g.quadraticCurveTo(nx, headCY + headR * 0.46, nx + headR * 0.17, headCY + headR * 0.30);
+            g.moveTo(nx - R * 0.15, ny + R * 0.27);
+            g.quadraticCurveTo(nx, ny + R * 0.40, nx + R * 0.15, ny + R * 0.27);
         } else {
-            g.moveTo(nx - headR * 0.14, headCY + headR * 0.30);
-            g.quadraticCurveTo(nx, headCY + headR * 0.39, nx + headR * 0.14, headCY + headR * 0.30);
+            g.moveTo(nx - R * 0.12, ny + R * 0.27);
+            g.quadraticCurveTo(nx, ny + R * 0.35, nx + R * 0.12, ny + R * 0.27);
         }
         g.stroke();
 
-        /* --- MÁ HỒNG --- */
         g.fillStyle = PANDA.cheek;
         g.beginPath();
-        g.ellipse(cx + fx - headR * 0.52, headCY + headR * 0.22, headR * 0.15, headR * 0.10, 0, 0, TAU);
-        g.ellipse(cx + fx + headR * 0.62, headCY + headR * 0.18, headR * 0.12, headR * 0.085, 0, 0, TAU);
+        g.ellipse(cx + fx - R * 0.46, ny + R * 0.20, R * 0.13, R * 0.09, 0, 0, TAU);
+        g.ellipse(cx + fx + R * 0.54, ny + R * 0.16, R * 0.11, R * 0.075, 0, 0, TAU);
         g.fill();
-
-        if (lean) g.restore();
     }
 
     /* ---- các bạn động vật ----
