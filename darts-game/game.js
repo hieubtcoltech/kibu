@@ -1263,20 +1263,25 @@
             ctx.fillRect(x0, 0, w, SEA_Y);
 
             // --- MẶT TRỜI: chung cho cả màn, nên đặt theo W ---
-            const sunX = W * 0.74, sunY = 112;
-            for (let i = 5; i >= 1; i--) {
-                ctx.fillStyle = `rgba(255,245,190,${0.05 * i})`;
-                ctx.beginPath(); ctx.arc(sunX, sunY, 34 + i * 22, 0, TAU); ctx.fill();
+            /* MẶT TRỜI: NHỎ, TRẮNG SÁNG, Ở XA.
+             *
+             * Bản trước em vẽ nó to bằng quả bóng và vàng đúng màu quả bóng
+             * vàng. Anh Hiếu nhìn là nhầm ngay — mà nhầm ở đây tốn tiền thật:
+             * bé ném cả một mũi tiêu vào mặt trời.
+             *
+             * Hai chỗ sửa đều là chỗ phân biệt: NHỎ hẳn lại (bằng một phần ba
+             * quả bóng bé nhất) và TRẮNG chứ không vàng. Quả bóng thì to, vàng
+             * đậm, có vệt sáng và có dây; mặt trời thì bé, trắng, và toả quầng.
+             * Không còn gì để nhầm nữa. */
+            /* 0.66 chứ không phải 0.78: chỗ cũ nằm khuất sau bảng điểm của bé
+             * ngồi ngoài cùng bên phải. */
+            const sunX = W * 0.66, sunY = 84, sunR = 15;
+            for (let i = 4; i >= 1; i--) {
+                ctx.fillStyle = `rgba(255,250,225,${0.045 * i})`;
+                ctx.beginPath(); ctx.arc(sunX, sunY, sunR + i * 16, 0, TAU); ctx.fill();
             }
-            /* Mặt trời phải ĐẬM hơn nền trời rõ rệt. Bản đầu em dùng vàng rất
-             * nhạt, đặt trên trời xanh nhạt thì nó nhoè đi gần như không thấy
-             * — mà mặt trời là thứ nói lên "trời nắng" trong cả bức tranh. */
-            const sunG = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, 34);
-            sunG.addColorStop(0, '#fffbe6');
-            sunG.addColorStop(0.6, '#ffe066');
-            sunG.addColorStop(1, '#ffc93c');
-            ctx.fillStyle = sunG;
-            ctx.beginPath(); ctx.arc(sunX, sunY, 34, 0, TAU); ctx.fill();
+            ctx.fillStyle = '#fffdf0';
+            ctx.beginPath(); ctx.arc(sunX, sunY, sunR, 0, TAU); ctx.fill();
 
             // --- MÂY: trôi chậm, quay vòng theo bề ngang cả màn ---
             for (let i = 0; i < 5; i++) {
@@ -1312,7 +1317,7 @@
             // vệt nắng loang trên mặt nước, ngay dưới mặt trời
             const glare = ctx.createLinearGradient(sunX - 60, SEA_Y, sunX + 60, WET_Y);
             glare.addColorStop(0, 'rgba(255,255,255,0)');
-            glare.addColorStop(0.5, 'rgba(255,250,210,0.22)');
+            glare.addColorStop(0.5, 'rgba(255,252,232,0.16)');
             glare.addColorStop(1, 'rgba(255,255,255,0)');
             ctx.fillStyle = glare;
             ctx.fillRect(x0, SEA_Y, w, WET_Y - SEA_Y);
