@@ -214,11 +214,13 @@ body {
      * là chiều cao dải trống ấy.
      *
      * Trừ 100% — tức chiều cao THẬT của chính hàng thẻ điểm — nên hàng thẻ nằm
-     * vừa sát BÊN TRÊN mép sân, không đè lên bóng. Lấy chiều cao thật thay vì
-     * đoán một con số cố định, vì thẻ cao khác nhau theo cỡ máy.
+     * BÊN TRÊN mép sân chứ không đè lên bóng. Lấy chiều cao thật thay vì đoán
+     * một con số cố định, vì thẻ cao khác nhau theo cỡ máy.
+     * Trừ thêm 12px nữa để thẻ không dính sát mép mái lều — sát quá thì nhìn
+     * như thẻ đang đè lên khung game.
      * max(0px, …) lo trường hợp khung vừa khít hình (máy tính, hoặc chưa vẽ lần
      * nào nên biến chưa có): lúc đó giữ nguyên chỗ cũ. */
-    transform: translateY(max(0px, calc(var(--play-inset-y, 0px) - 100% - 14px)));
+    transform: translateY(max(0px, calc(var(--play-inset-y, 0px) - 100% - 14px - 12px)));
 }
 
 /* Hai dải bảng điểm hai bên, đồng hồ nằm chính giữa */
@@ -1260,7 +1262,7 @@ body {
  * cỡ cũ vẫn không đủ chỗ, mà chiều cao thì càng ít nên chữ càng phải bớt. */
 @media (max-width: 760px), (max-height: 560px) {
     .hud-overlay { padding: 7px; }
-    .hud-top { transform: translateY(max(0px, calc(var(--play-inset-y, 0px) - 100% - 7px))); }
+    .hud-top { transform: translateY(max(0px, calc(var(--play-inset-y, 0px) - 100% - 7px - 10px))); }
 
     .hud-top { align-items: center; gap: 6px; }
     .score-strip { gap: 5px; }
