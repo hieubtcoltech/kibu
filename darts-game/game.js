@@ -687,7 +687,7 @@
     //  không cần nhìn kỹ mới phân biệt được — mà lúc đang ném thì không ai
     //  nhìn kỹ.
     // =========================================================
-    const GULL_PTS = -3;               // đúng bằng quả bom, để bé dễ nhớ
+    const GULL_PTS = -5;               // đúng bằng quả bom, để bé dễ nhớ
 
     class Gull {
         constructor(x0, x1) {
@@ -1190,8 +1190,7 @@
 
         /* BẮN NHẦM HẢI ÂU.
          *
-         * Trừ đúng 3 điểm, bằng quả bom — hai cái phạt cùng một giá thì bé dễ
-         * nhớ hơn là mỗi thứ một mức. Xoá luôn chuỗi bắn trúng, vì chuỗi là
+         * Trừ đúng 5 điểm — xoá luôn chuỗi bắn trúng, vì chuỗi là
          * phần thưởng cho sự cẩn thận mà cú này thì không cẩn thận.
          *
          * Vẽ búi lông trắng bay ra chứ không vẽ mảnh bóng vỡ: bé phải nhận ra
@@ -1205,7 +1204,7 @@
             for (let i = 0; i < 14; i++) {
                 this.shreds.push(new Shred(g.x, g.y, { base: '#ffffff', light: '#e8eef6' }, 12));
             }
-            this.addFx('🐦 -3', '#ffd0d0', g.x, g.y, 26);
+            this.addFx('🐦 -5', '#ffd0d0', g.x, g.y, 26);
             Sfx.bomb();
             Game.bumpCard(this.idx);
         }
