@@ -38,6 +38,12 @@
     const BAL_TOP = 88;                    // bóng bay cao quá đây là thoát mất
     const BAL_BOT = 500;                   // bóng bay xuất hiện từ đây
 
+    /* Hai mốc của cảnh biển. Trước nằm trong hàm vẽ nền, giờ đưa ra ngoài vì
+       đàn cá heo cũng phải biết mặt nước ở đâu — và vì có ở ngoài thì máy soát
+       mới kiểm được là không con nào nhảy lên quá đường chân trời. */
+    const SEA_Y = 300;                     // chân trời
+    const WET_Y = GROUND_Y - 74;           // mép nước liếm lên cát
+
     /* ---------- Các loại bóng bay ----------
        Bóng bay hội chợ đường kính thật 21 - 38cm. Tốc độ bay lên đã được
        giảm xuống so với bóng bơm khí heli thật (1-2 m/s) để bé kịp ngắm. */
@@ -157,6 +163,95 @@
     const rnd = (a, b) => a + Math.random() * (b - a);
     const pick = arr => arr[(Math.random() * arr.length) | 0];
     const TAU = Math.PI * 2;
+    /* ---------- Đàn cá heo và mấy con cá mập ngoài khơi ----------
+     *
+     * Hàm thuần: đưa vào một mốc thời gian, trả ra danh sách con vật đang
+     * thấy được. Không đụng canvas, không giữ trạng thái. Tách ra như vậy để
+     * máy soát chạy được vài nghìn mốc thời gian mà kiểm: không con nào nhảy
+     * lên quá đường chân trời, không con nào lọt xuống bãi cát, và không con
+     * nào to bằng quả bóng.
+     *
+     * lane: nằm ở đâu trong dải nước, 0 là chân trời, 1 là mép cát. Càng gần
+     *       bờ thì vẽ càng to — đó là toàn bộ cách tạo chiều sâu ở đây.
+     * per:  bao lâu thì hiện lại một lần. Ba con ba chu kỳ lệch nhau và không
+     *       chia hết cho nhau, nên chúng không bao giờ nhảy thành hàng.
+     */
+    /* Ba con số dưới đây đều do máy soát chỉnh lại, không phải em chọn cho đẹp:
+     *
+     * - Bản đầu con cá heo luồng gần chân trời nhất nhảy vọt LÊN TRÊN đường
+     *   chân trời chừng 11px, tức là nó bay trên bầu trời. Máy soát bắt ngay ở
+     *   6930 mốc thời gian. Giờ luồng nào cũng lùi xuống sâu hơn, và độ cao cú
+     *   nhảy còn bị chặn lại theo khoảng cách tới chân trời.
+     * - Bản đầu con cá heo dài 52px trong khi quả bóng BÉ NHẤT chỉ 39px ngang
+     *   — con vật trang trí to hơn cái đích bắn thì hỏng. Hệ số cỡ hạ xuống
+     *   để con to nhất còn 35px.
+     * - Bản đầu lúc nào cũng có con trên mặt nước 88.9% thời gian. Anh Hiếu
+     *   nói "thỉnh thoảng" chứ không phải "liên tục". Kéo dài chu kỳ và rút
+     *   ngắn quãng nổi lại. */
+    const JUMP_FRAC = 0.11;                // phần chu kỳ con cá heo ở trên mặt nước
+    const FIN_FRAC = 0.18;                 // phần chu kỳ vây cá mập còn nổi
+    const FIN_RUN = 470;                   // quãng đường một lượt cá mập lượn qua
+    const DOL_UP = 22;                     // chóp vây lưng, tính từ tâm con cá
+    const POD = [
+        { lane: 0.22, per: 14.3, off: 0.0, vx: 44, dir: 1 },
+        { lane: 0.34, per: 19.7, off: 5.3, vx: 37, dir: -1 },
+        { lane: 0.46, per: 26.1, off: 11.1, vx: 31, dir: 1 }
+    ];
+    const FINS = [
+        { lane: 0.30, per: 34, off: 3.0, dir: 1, from: 0.12 },
+        { lane: 0.44, per: 47, off: 19.0, dir: -1, from: 0.86 }
+    ];
+
+    function seaLife(time) {
+        const band = WET_Y - SEA_Y, out = [];
+
+        for (const d of POD) {
+            const k = ((time + d.off) % d.per) / d.per;
+            if (k > JUMP_FRAC) continue;                 // đang lặn, không thấy
+            const j = k / JUMP_FRAC;                     // 0 là vừa rời nước, 1 là vừa cắm xuống
+
+            const wy = SEA_Y + band * d.lane;            // mặt nước của luồng này
+            const s = 0.22 + d.lane * 0.56;
+            const span = W + 320;
+            const p = (time * d.vx + d.off * 137) % span;
+            const x = d.dir > 0 ? p - 160 : W + 160 - p;
+
+            /* Vòng cung nửa hình sin. Ngửa đầu lúc lên, chúi đầu lúc xuống —
+               góc lấy từ chính vận tốc của cung chứ không áp tay, nên con cá
+               luôn nằm đúng theo hướng nó đang bay.
+               Độ cao còn bị chặn để chóp vây lưng không bao giờ vượt qua đường
+               chân trời: chặn ngay ở đây thì dù sau này có chỉnh luồng hay
+               chỉnh cỡ, con cá cũng không thể bay lên trời được nữa. */
+            const dur = d.per * JUMP_FRAC;
+            const hMax = Math.min(30 * s + 16, wy - (SEA_Y + 8) - DOL_UP * s);
+            const h = Math.sin(j * Math.PI) * hMax;
+            const vy = -Math.cos(j * Math.PI) * Math.PI * hMax / dur;
+            out.push({
+                type: 'dolphin', x, y: wy - h, wy, s, j, dir: d.dir,
+                ang: Math.atan2(vy, d.dir * d.vx)
+            });
+        }
+
+        for (const f of FINS) {
+            const k = ((time + f.off) % f.per) / f.per;
+            if (k > FIN_FRAC) continue;                  // lặn sâu, mất tăm
+            const t = k / FIN_FRAC;
+
+            /* Trồi lên ở đầu lượt bơi, hụp xuống ở cuối, và dập dềnh nhẹ ở
+               giữa — cá mập không đi ngang mặt nước như cái phao. */
+            const up = clamp(Math.sin(t * Math.PI) * 1.9, 0, 1) * (0.74 + 0.26 * Math.sin(t * 11));
+            if (up <= 0.08) continue;
+
+            /* Cá mập chỉ lượn qua một quãng ngắn rồi lặn, không băng hết màn
+               hình — băng hết trong chừng ấy giây thì nó phóng nhanh hơn ca nô. */
+            const wy = SEA_Y + band * f.lane;
+            const s = 0.22 + f.lane * 0.56;
+            out.push({ type: 'fin', x: W * f.from + f.dir * t * FIN_RUN, wy, s, up, dir: f.dir });
+        }
+
+        return out;
+    }
+
     // Xoay góc theo đường ngắn nhất, tránh nhảy vọt khi vượt qua ±180°
     const angDelta = (a, b) => {
         let d = (b - a) % TAU;
@@ -1292,8 +1387,6 @@
          * ------------------------------------------------------------------ */
         drawBeach(ctx, time) {
             const x0 = this.x0, x1 = this.x1, w = this.w;
-            const SEA_Y = 300;                 // chân trời
-            const WET_Y = GROUND_Y - 74;       // mép nước liếm lên cát
 
             // --- TRỜI ---
             const sky = ctx.createLinearGradient(0, 0, 0, SEA_Y);
@@ -1397,6 +1490,9 @@
                 ctx.stroke();
             }
 
+            // --- CÁ HEO NHẢY và VÂY CÁ MẬP, vẽ đè lên sóng ---
+            this.drawSeaLife(ctx, time);
+
             // --- BỌT SÓNG ở mép nước, phập phồng theo nhịp thở của biển ---
             const surf = Math.sin(time * 1.15) * 8;
             ctx.fillStyle = 'rgba(255,255,255,0.92)';
@@ -1440,6 +1536,193 @@
              * hình trang trí, mà giờ hải âu là vật BẮN TRÚNG ĐƯỢC nên phải là
              * vật thật, có toạ độ và có va chạm — xem lớp Gull. Để cả hai thì
              * bé ném vào con vẽ trang trí rồi không hiểu vì sao không ăn gì. */
+        }
+
+        /* --- ĐÀN CÁ HEO và VÂY CÁ MẬP ---
+         *
+         * Anh Hiếu: "ở dưới biển thỉnh thoảng có cá heo nhảy lên rồi lặn
+         * xuống, có nhìn thấy đuôi cá mập bơi thỉnh thoảng nữa cho game trông
+         * sống động".
+         *
+         * Chúng CHỈ ĐỂ NHÌN, không bắn được — nên phải khác quả bóng ở mọi
+         * dấu hiệu mà mắt bắt được, không thì lặp lại đúng vụ mặt trời: bé
+         * tưởng bắn được, ném cả mũi tiêu vào rồi mất lượt. Bốn chỗ khác:
+         * màu xám xanh chứ không rực rỡ, hình thon dài và tam giác chứ không
+         * tròn, chạy NGANG chứ không bay lên, và nằm hẳn trong dải nước chứ
+         * không lên tới vùng bóng bay.
+         *
+         * Vị trí tính theo GIỜ chứ không nuôi trạng thái riêng: cùng một giây
+         * thì khoảnh của mọi bé thấy cùng một con — biển sau lưng bốn bé là
+         * MỘT cái biển, không phải bốn. Tạm dừng rồi chơi tiếp cũng không đẻ
+         * ra con nào ở lưng chừng cú nhảy. */
+        drawSeaLife(ctx, time) {
+            for (const o of seaLife(time)) {
+                // ngoài khoảnh này thì khỏi vẽ, đằng nào cũng bị cắt
+                if (o.x < this.x0 - 90 || o.x > this.x1 + 90) continue;
+
+                if (o.type === 'fin') {
+                    ctx.save();
+                    ctx.translate(o.x, o.wy);
+                    this.drawFin(ctx, o);
+                    ctx.restore();
+                    continue;
+                }
+
+                /* Bọt nước ở CHỖ MẶT NƯỚC, không phải ở chỗ con cá — lúc rời
+                   nước và lúc cắm xuống. Thiếu nó thì con cá heo trông như
+                   đang bay lơ lửng chứ không phải nhảy lên từ biển. */
+                if (o.j < 0.17) this.drawSplash(ctx, o.x, o.wy, o.s, (0.17 - o.j) / 0.17);
+                else if (o.j > 0.83) this.drawSplash(ctx, o.x, o.wy, o.s, (o.j - 0.83) / 0.17);
+
+                ctx.save();
+                ctx.translate(o.x, o.y);
+                ctx.rotate(o.ang);
+                /* Bơi sang trái thì góc ngửa quanh 180 độ, xoay xong con cá
+                   lộn ngược bụng lên trời. Lật lại trục dọc TRONG hệ đã xoay
+                   là xong, khỏi phải vẽ riêng một con quay mặt trái. */
+                if (o.dir < 0) ctx.scale(1, -1);
+                ctx.scale(o.s, o.s);
+                this.drawDolphin(ctx);
+                ctx.restore();
+            }
+        }
+
+        /* Con cá heo, mõm hướng về +x, dài chừng 73 đơn vị.
+         *
+         * Bản đầu em vẽ ra một con CÁ THƯỜNG chứ không phải cá heo: thân cụt,
+         * không có mõm, đuôi dựng đứng như đuôi cá rô. Ba chỗ làm nên con cá
+         * heo mà bản đầu thiếu cả ba — cái mõm dài tách hẳn khỏi trán, cái vây
+         * lưng hình lưỡi liềm ngả về sau, và đuôi nằm NGANG chứ không dựng. */
+        drawDolphin(ctx) {
+            /* THÂN CONG HÌNH VÒNG CUNG — đây mới là thứ làm nên con cá heo
+               đang nhảy, và là thứ hai bản trước của em thiếu.
+               Em cứ vẽ một cái ống THẲNG rồi xoay nghiêng theo cung bay, ra
+               con cá thường nằm chéo. Con cá heo lúc vọt lên thì UỐN CẢ NGƯỜI
+               theo cung ấy: lưng vồng lên, mõm chúc xuống, đuôi cũng hạ xuống.
+               Chỉ đổi mỗi dáng cong này là nhìn ra ngay, không cần thêm nét
+               nào — mà ở cỡ 30px thì cũng chẳng còn chỗ cho nét nào nữa. */
+            ctx.fillStyle = '#3c5c74';
+            ctx.beginPath();
+            ctx.moveTo(24, 1);                                   // gốc mõm
+            ctx.bezierCurveTo(15, -7, 2, -12, -12, -10);         // lưng vồng
+            ctx.bezierCurveTo(-19, -9, -24, -6, -28, -2);        // cuống đuôi
+            ctx.lineTo(-28, 1);
+            ctx.bezierCurveTo(-22, 0, -12, 1, -2, 2.5);          // bụng cũng cong theo
+            ctx.bezierCurveTo(9, 4, 18, 5.5, 24, 4.5);
+            ctx.closePath();
+            ctx.fill();
+
+            /* Mõm NGẮN, dày và chúc xuống theo đà lao. Bản trước em kéo dài
+               tới 33 và mảnh như cái kim — ra con cá kiếm. */
+            ctx.beginPath();
+            ctx.moveTo(23, 0.6);
+            ctx.quadraticCurveTo(28, 2.6, 30.5, 4.6);
+            ctx.quadraticCurveTo(27, 5.8, 23, 4.8);
+            ctx.fill();
+
+            // bụng nhạt, mờ thôi — đậm quá thì thành mảng trắng rời khỏi con cá
+            ctx.fillStyle = 'rgba(226,241,248,0.6)';
+            ctx.beginPath();
+            ctx.moveTo(23, 4.3);
+            ctx.bezierCurveTo(16, 5.2, 8, 3.8, -2, 2.3);
+            ctx.bezierCurveTo(-12, 0.8, -21, -0.2, -27, 0.8);
+            ctx.lineTo(-27, 1);
+            ctx.bezierCurveTo(-21, 0.2, -12, 1.2, -2, 2.7);
+            ctx.bezierCurveTo(9, 4.2, 18, 5.7, 23, 4.7);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#32506a';
+            /* Vây lưng dựng ở chỗ lưng vồng cao nhất, lưỡi liềm ngả về sau.
+               Phải TO thì mới đọc ra ở cỡ 30px — bản trước chỉ là cái mấu
+               bằng hai pixel, nhìn xa thành con cá trơn lưng. */
+            ctx.beginPath();
+            ctx.moveTo(-1, -11.4);
+            ctx.quadraticCurveTo(-10, -30, -19, -9.4);
+            ctx.quadraticCurveTo(-9, -14.6, -1, -11.4);
+            ctx.fill();
+            // vây bơi, nhỏ và ngả về sau
+            ctx.beginPath();
+            ctx.moveTo(11, 4.4);
+            ctx.quadraticCurveTo(5, 11.5, -1, 3.4);
+            ctx.quadraticCurveTo(5, 5.4, 11, 4.4);
+            ctx.fill();
+            /* Đuôi: hai lá vươn RA SAU và bè ngang, khe giữa nông. Vẽ dựng
+               đứng thành ra đuôi cá, mà cá heo thì đuôi nằm ngang. */
+            ctx.beginPath();
+            ctx.moveTo(-27, -1.5);
+            ctx.quadraticCurveTo(-34, -4, -41, -6.5);
+            ctx.quadraticCurveTo(-34, -0.5, -33, 1.5);
+            ctx.quadraticCurveTo(-34, 4.5, -40, 8.5);
+            ctx.quadraticCurveTo(-31, 4, -26, 1.5);
+            ctx.fill();
+
+            /* Nắng hắt trên lưng ướt. Vệt miệng thì bỏ hẳn: ở cỡ 35px nó chỉ
+               còn là một chấm xám làm bẩn cái mõm chứ không ai đọc ra khoé
+               miệng. Vẽ ít nét mà rõ hơn là vẽ nhiều nét rồi nhoè cả cụm. */
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.moveTo(17, -3.5);
+            ctx.quadraticCurveTo(6, -9.6, -9, -9.4);
+            ctx.stroke();
+
+            // mắt
+            ctx.fillStyle = '#0e1f2b';
+            ctx.beginPath();
+            ctx.arc(16.5, -1.6, 1.6, 0, TAU);
+            ctx.fill();
+        }
+
+        /* Vây cá mập: lưỡi liềm ngả về sau, kéo theo vệt nước hình chữ V.
+         *
+         * Vệt nước mới là thứ nói cho mắt biết nó đang BƠI. Bản đầu em kẻ hai
+         * đường thẳng dài, đều nét, lại bắt đầu từ TRƯỚC cái vây — nhìn ra hai
+         * cái râu chứ không ra sóng nước. Giờ vệt bắt đầu từ sau chân vây, cong
+         * ra hai bên và nhạt dần về cuối, đúng như nước rẽ rồi loang mất. */
+        drawFin(ctx, o) {
+            const s = o.s, h = (16 + 12 * s) * o.up, d = o.dir;
+
+            const tail = 46 * s;
+            const g = ctx.createLinearGradient(0, 0, -d * tail, 0);
+            g.addColorStop(0, 'rgba(255,255,255,0.62)');
+            g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.strokeStyle = g;
+            ctx.lineWidth = 1.3 * s + 0.55;
+            for (const sg of [-1, 1]) {
+                ctx.beginPath();
+                ctx.moveTo(-d * 6 * s, 1.5);
+                ctx.quadraticCurveTo(-d * 22 * s, 1.5 + sg * 3.4 * s, -d * tail, 1.5 + sg * 9 * s);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#3a4f60';
+            ctx.beginPath();
+            ctx.moveTo(d * 10 * s, 2);
+            ctx.quadraticCurveTo(d * 7 * s, -h * 0.55, -d * 2 * s, -h);   // mép trước, chóp ngả về sau
+            ctx.quadraticCurveTo(-d * 4 * s, -h * 0.35, -d * 10 * s, 2);  // mép sau lõm
+            ctx.fill();
+
+            // gợn nước ôm chân vây
+            ctx.fillStyle = 'rgba(255,255,255,0.6)';
+            ctx.beginPath();
+            ctx.ellipse(0, 2.2, 11 * s, 2.2 * s, 0, 0, TAU);
+            ctx.fill();
+        }
+
+        drawSplash(ctx, x, y, s, a) {
+            ctx.fillStyle = `rgba(255,255,255,${(0.75 * a).toFixed(3)})`;
+            for (let i = 0; i < 7; i++) {
+                const ang = -Math.PI * (0.12 + i * 0.127);
+                const r = (11 + (i % 3) * 7) * s * (0.5 + a);
+                ctx.beginPath();
+                ctx.ellipse(x + Math.cos(ang) * r, y + Math.sin(ang) * r * 0.45,
+                    3.3 * s, 2.2 * s, 0, 0, TAU);
+                ctx.fill();
+            }
+            ctx.beginPath();
+            ctx.ellipse(x, y + 1, 17 * s, 3.2 * s, 0, 0, TAU);
+            ctx.fill();
         }
 
         /* Đảo dừa xa: một mô đất, vài thân dừa cong và tán lá xoè.
@@ -2576,6 +2859,7 @@
     window.dartsGame = {
         game: Game,
         TRIPLE_TIME,                    // để máy đo lấy đúng con số đang chạy
+        seaLife, SEA_Y, WET_Y, KINDS,   // cho máy soát đàn cá heo ngoài biển
         /* Thả một con hải âu vào khoảnh của bé, và bắn trúng nó — để máy soát
            và máy chụp ảnh dựng được tình huống mà không phải ngồi chờ con chim
            tự bay ra rồi ném cho trúng. */

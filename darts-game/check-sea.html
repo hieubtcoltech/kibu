@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Máy soát đàn cá heo — Phi Tiêu Bóng Bay</title>
+<style>
+    body { font: 15px/1.6 ui-monospace, Menlo, monospace; background: #0e1b26; color: #d8e6ef; margin: 0; padding: 20px; }
+    h1 { font-size: 17px; color: #7bdcff; }
+    pre { background: #132534; border-radius: 10px; padding: 14px 16px; white-space: pre-wrap; }
+    .ok { color: #7ce0a8; } .bad { color: #ff9a9a; }
+    iframe { width: 1280px; height: 300px; border: 0; opacity: 0.25; pointer-events: none; }
+</style>
+</head>
+<body>
+<h1>Máy soát đàn cá heo và vây cá mập ngoài biển</h1>
+<pre id="o">đang chạy…</pre>
+<iframe id="f" src="./"></iframe>
+<script>
+/* Chạy hàm seaLife() THẬT của game qua 60000 mốc thời gian, tức mười phút
+   chơi liên tục, rồi soi bốn điều:
+
+   1. Không con nào vượt lên trên đường chân trời. Cá heo bay trên bầu trời
+      thì buồn cười, mà lỗi ấy đã xảy ra thật ở bản đầu — 6930 mốc dính.
+   2. Cú nhảy của TỪNG luồng phải thật sự nhô lên khỏi mặt nước. Xét cả đàn
+      thì một con hỏng núp được sau hai con lành, máy soát gật ngay.
+   3. Con cá heo không được to bằng quả bóng bé nhất. Chúng chỉ để nhìn chứ
+      không bắn được; to bằng cái đích thì bé lại ném vào như từng ném vào
+      mặt trời.
+   4. Không con nào lọt lên bãi cát.
+
+   Cách dùng: mở /darts-game/check-sea.html trên máy chạy web. */
+function go() {
+    (function wait() {
+        var w = document.getElementById('f').contentWindow, D = w.dartsGame;
+        if (!(D && D.seaLife)) return setTimeout(wait, 50);
+
+        var SEA = D.SEA_Y, WET = D.WET_Y, bad = [];
+        /* Cỡ vẽ thật, lấy đúng theo hàm drawDolphin: chóp vây lưng ở -22 so
+           với tâm, bụng và vây bơi xuống tới +15, thân dài 72 đơn vị. */
+        var DOL_UP = 22, DOL_DOWN = 15, DOL_LEN = 72;
+        var maxLen = 0, maxFin = 0, seen = 0, N = 0, both = 0, peaks = [];
+        var lowest = -9e9, highest = 9e9;
+
+        for (var t = 0; t < 600; t += 0.01) {
+            N++;
+            var L = D.seaLife(t), nd = 0;
+            if (L.length) seen++;
+            for (var i = 0; i < L.length; i++) {
+                var o = L[i];
+                if (o.type === 'dolphin') {
+                    var top = o.y - DOL_UP * o.s, bot = o.y + DOL_DOWN * o.s;
+                    if (top < SEA) bad.push('cá heo vượt chân trời ở t=' + t.toFixed(2) + ' (đỉnh ' + top.toFixed(1) + ' < ' + SEA + ')');
+                    if (bot > WET) bad.push('cá heo lọt lên cát ở t=' + t.toFixed(2));
+                    if (o.wy < SEA || o.wy > WET) bad.push('mặt nước sai ở t=' + t.toFixed(2));
+                    if (o.y > o.wy + 0.5) bad.push('cá heo luồng ' + nd + ' chúi xuống DƯỚI mặt nước lúc đang nhảy, t=' + t.toFixed(2));
+                    peaks[nd] = Math.max(peaks[nd] === undefined ? -9e9 : peaks[nd], o.wy - o.y);
+                    highest = Math.min(highest, top); lowest = Math.max(lowest, bot);
+                    maxLen = Math.max(maxLen, DOL_LEN * o.s);
+                    nd++;
+                } else {
+                    var h = (16 + 12 * o.s) * o.up;
+                    if (o.wy - h < SEA) bad.push('vây cá mập vượt chân trời ở t=' + t.toFixed(2));
+                    if (o.wy > WET) bad.push('vây cá mập lên cát ở t=' + t.toFixed(2));
+                    maxFin = Math.max(maxFin, h);
+                    highest = Math.min(highest, o.wy - h); lowest = Math.max(lowest, o.wy + 3);
+                }
+            }
+            if (nd >= 2) both++;
+        }
+
+        var rmin = 1e9;
+        D.KINDS.forEach(function (k) { rmin = Math.min(rmin, k.r); });
+        peaks.forEach(function (pk, i) {
+            if (pk < 12) bad.push('cá heo luồng ' + i + ' chỉ nhô lên ' + pk.toFixed(1) + 'px, coi như không nhảy');
+        });
+        if (maxLen > rmin * 2) bad.push('cá heo dài ' + maxLen.toFixed(0) + 'px, to hơn cả quả bóng bé nhất (' + (rmin * 2).toFixed(0) + 'px)');
+
+        var L2 = [];
+        L2.push('chạy ' + N + ' mốc thời gian, tức mười phút chơi liên tục');
+        L2.push('  dải nước:              ' + SEA + ' .. ' + WET);
+        L2.push('  con vật lên cao nhất:  ' + highest.toFixed(1) + '   xuống thấp nhất: ' + lowest.toFixed(1));
+        L2.push('  có con trên mặt nước:  ' + (100 * seen / N).toFixed(1) + '% thời gian');
+        L2.push('  hai con cá heo cùng lúc: ' + (100 * both / N).toFixed(1) + '% thời gian');
+        L2.push('  cá heo dài nhất ' + maxLen.toFixed(0) + 'px, vây cá mập cao nhất ' + maxFin.toFixed(0) + 'px');
+        L2.push('  quả bóng bé nhất ngang ' + (rmin * 2).toFixed(0) + 'px -> cá heo bằng ' + (100 * maxLen / (rmin * 2)).toFixed(0) + '%');
+        L2.push('  cú nhảy từng luồng: ' + peaks.map(function (v) { return v.toFixed(0) + 'px'; }).join(' / '));
+
+        var el = document.getElementById('o');
+        el.textContent = L2.join('\n') + '\n\n' + (bad.length
+            ? 'KHÔNG ĐẠT — ' + bad.length + ' lỗi\n  ' + bad.slice(0, 8).join('\n  ')
+            : 'ĐẠT — không con nào ra khỏi dải nước, luồng nào cũng nhảy thật, và không con nào to bằng quả bóng.');
+        el.className = bad.length ? 'bad' : 'ok';
+        document.title = bad.length ? 'KHÔNG ĐẠT' : 'ĐẠT';
+    })();
+}
+document.getElementById('f').addEventListener('load', go);
+window.onerror = function (e, u, l, c, err) {
+    document.getElementById('o').textContent = 'LỖI: ' + e + '\n' + ((err && err.stack) || '');
+};
+</script>
+</body>
+</html>

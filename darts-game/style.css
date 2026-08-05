@@ -1134,18 +1134,32 @@ body {
    được, nhưng rồi cảnh trong game đổi mà hình minh hoạ đứng yên — bé chọn một
    đằng vào chơi một nẻo. Ảnh thật thì không bao giờ lệch. */
 .opt-arena {
-    padding: 0 0 10px;
+    /* Ảnh không còn dán vào mép nút nữa nên trả lại đệm quanh, không thì ảnh
+       nhỏ nằm lọt thỏm giữa một cái nút rỗng trông rất chông chênh. */
+    padding: 10px 10px 11px;
     overflow: hidden;
     gap: 0;
 }
 
+/* NHỎ LẠI, THẤP XUỐNG, MÀ PHẢI NÉT.
+   Anh Hiếu: "vẽ phần thumbnail nhỏ thôi nhưng sắc nét, thu height lại cho
+   gọn gàng nhé".
+
+   Ba việc, làm cả ba:
+   - Chặn bề ngang ở 152px và canh giữa, thay vì kéo căng hết bề rộng nút.
+   - Khung dẹt lại 15/8 thay vì 5/3, nên cao chỉ còn 81px so với 120px.
+   - Tệp nguồn NGƯỢC LẠI, to lên: 480px cho ô 152px, tức hơn ba lần. Nhỏ trên
+     màn mà nét thì tệp phải to hơn ô, chứ không phải nhỏ theo. Thu tệp theo
+     cho "nhẹ" là đúng cái lỗi em vừa mắc ở icon trang chủ. */
 .opt-thumb {
     display: block;
     width: 100%;
+    max-width: 152px;
+    margin-inline: auto;
     height: auto;
-    aspect-ratio: 5 / 3;
+    aspect-ratio: 15 / 8;
     object-fit: cover;
-    border-radius: 14px 14px 0 0;
+    border-radius: 12px;
     /* Ảnh chìm xuống một chút khi chưa chọn, sáng hẳn lên khi chọn — mắt bắt
        được lựa chọn hiện tại mà không cần đọc viền. */
     filter: saturate(0.7) brightness(0.72);
@@ -1155,9 +1169,10 @@ body {
 .opt-arena.sel .opt-thumb { filter: none; }
 .opt-arena:hover .opt-thumb { filter: saturate(0.9) brightness(0.88); }
 
-.opt-arena .opt-name { margin-top: 9px; }
+.opt-arena .opt-name { margin-top: 8px; }
 .opt-arena .opt-desc { margin-top: 1px; }
 
 @media (max-width: 560px) {
-    .opt-thumb { border-radius: 12px 12px 0 0; }
+    /* Máy hẹp thì ô còn chật hơn, cho ảnh bé thêm chút nữa cho cân với chữ. */
+    .opt-thumb { max-width: 130px; }
 }
