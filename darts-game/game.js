@@ -548,6 +548,98 @@
     }
 
     // =========================================================
+    //  HẢI ÂU — chỉ có ở bãi biển, bắn nhầm là mất điểm
+    //
+    //  Anh Hiếu: "ở bãi biển thì có chim bay, bắn nhầm vào chim cũng bị trừ
+    //  điểm nhé". Cùng ý với con chim lạ bên Bắn Vịt, và nó chữa đúng chỗ yếu
+    //  giống hệt: không có nó thì bé cứ nhè chỗ nào có động mà ném.
+    //
+    //  Con hải âu phải KHÁC QUẢ BÓNG ngay từ cái bóng đen: bóng thì tròn và
+    //  đứng yên một chỗ nhấp nhô, chim thì có hai cánh vỗ và LƯỚT NGANG. Bé
+    //  không cần nhìn kỹ mới phân biệt được — mà lúc đang ném thì không ai
+    //  nhìn kỹ.
+    // =========================================================
+    const GULL_PTS = -3;               // đúng bằng quả bom, để bé dễ nhớ
+
+    class Gull {
+        constructor(x0, x1) {
+            this.dir = Math.random() < 0.5 ? 1 : -1;
+            this.x = this.dir > 0 ? x0 - 60 : x1 + 60;
+            this.y = rnd(120, 330);
+            this.sp = rnd(58, 104);
+            this.r = 20;               // bán kính va chạm, ôm cả sải cánh
+            this.t = rnd(0, 6);
+            this.alive = true;
+            this.dead = false;         // trúng phi tiêu thì rơi
+            this.vy = 0;
+        }
+
+        update(dt, wind, x0, x1) {
+            this.t += dt;
+            if (this.dead) {
+                this.vy += 620 * dt;
+                this.y += this.vy * dt;
+                this.x += this.dir * 26 * dt;
+                if (this.y > GROUND_Y + 30) this.alive = false;
+                return;
+            }
+            /* Gió đẩy con chim đi, y như đẩy mũi phi tiêu — cùng một trận gió
+             * thì mọi thứ trong màn phải chịu chung, không thì bé thấy sai. */
+            this.x += (this.dir * this.sp + wind * 16) * dt;
+            this.y += Math.sin(this.t * 1.4) * 14 * dt;
+            if (this.x < x0 - 90 || this.x > x1 + 90) this.alive = false;
+        }
+
+        draw(ctx) {
+            const flap = this.dead ? -0.9 : Math.sin(this.t * 7.5) * 0.85;
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.scale(this.dir, 1);
+            if (this.dead) ctx.rotate(0.9);
+
+            // thân
+            ctx.fillStyle = '#fdfdfd';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 14, 7, 0, 0, TAU);
+            ctx.fill();
+            // đuôi
+            ctx.beginPath();
+            ctx.moveTo(-11, -1); ctx.lineTo(-22, -6); ctx.lineTo(-20, 3);
+            ctx.closePath(); ctx.fill();
+            // đầu và mỏ
+            ctx.beginPath(); ctx.arc(12, -4, 6.4, 0, TAU); ctx.fill();
+            ctx.fillStyle = '#ff9f1a';
+            ctx.beginPath();
+            ctx.moveTo(17, -5); ctx.lineTo(27, -3); ctx.lineTo(17, -1);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = '#33404f';
+            ctx.beginPath(); ctx.arc(14, -6, 1.7, 0, TAU); ctx.fill();
+
+            /* Hai cánh vỗ — đây mới là thứ nói cho mắt biết đó là CON CHIM chứ
+             * không phải quả bóng trắng. Cánh xa vẽ tối hơn cho có chiều sâu. */
+            for (const [side, col] of [[-1, '#b9c6d6'], [1, '#ffffff']]) {
+                /* Cộng thêm một góc mở cố định vào nhịp vỗ. Bản đầu em cho cánh
+                 * dao động quanh 0, nên đúng lúc nhịp về giữa thì hai cánh nằm
+                 * bẹp vào thân và con chim trông như một vệt trắng. Có góc mở
+                 * sẵn thì lúc nào nó cũng ra con chim, nhịp vỗ chỉ làm nó sống
+                 * động thêm. */
+                const open = (flap + 0.55 * side) * side;
+                ctx.fillStyle = col;
+                ctx.beginPath();
+                ctx.moveTo(-1, -2);
+                ctx.quadraticCurveTo(-7, -9 - open * 17, -23, -5 - open * 25);
+                ctx.quadraticCurveTo(-8, 1 - open * 11, -1, 3);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = 'rgba(90,110,135,0.45)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+
+    // =========================================================
     //  Mũi phi tiêu
     // =========================================================
     class Dart {
@@ -567,7 +659,7 @@
         get tipY() { return this.y + Math.sin(this.ang) * DART_L * 0.5; }
 
         /* Trả về danh sách quả bóng bị đâm trúng trong bước này. */
-        step(dt, wind, balloons, x0, x1) {
+        step(dt, wind, balloons, x0, x1, gulls) {
             if (this.stuck) {
                 this.stuckT += dt;
                 if (this.stuckT > 1.5) this.alive = false;
@@ -606,6 +698,22 @@
                         hit.push(b);
                         // Xuyên qua thì chậm lại, còn đủ đà thì nổ tiếp quả nữa
                         this.vx *= 0.62; this.vy *= 0.62;
+                    }
+                }
+
+                /* Con chim cũng bị đầu mũi quét trúng như quả bóng. Dùng CHUNG
+                 * phép quét đoạn thẳng ấy chứ không viết riêng — mũi tiêu bay
+                 * rất nhanh, kiểm bằng khoảng cách tại từng khung hình thì nó
+                 * xuyên qua mà không ai hay. */
+                if (gulls) {
+                    for (const g of gulls) {
+                        if (!g.alive || g.dead) continue;
+                        if (segHitsCircle(px, py, nx, ny, g.x, g.y, g.r)) {
+                            g.dead = true;
+                            g.vy = -40;
+                            hit.push(g);
+                            this.vx *= 0.55; this.vy *= 0.55;
+                        }
                     }
                 }
 
@@ -733,6 +841,10 @@
             this.chargeBeep = 0;
 
             this.balloons = [];
+
+            this.gulls = [];
+
+            this.gullT = rnd(2.5, 6);
             this.darts = [];
             this.shreds = []; this.drops = []; this.shocks = []; this.necks = [];
             this.fx = [];
@@ -846,6 +958,20 @@
 
             // Bóng bay vẫn bay lên kể cả lúc đếm ngược cho sinh động
             for (const b of this.balloons) b.update(dt, wind, this.x0 + 6, this.x1 - 6);
+
+            /* HẢI ÂU chỉ có ở bãi biển, và thưa thôi. Dày quá thì bé không dám
+             * ném nữa — cái phạt phải làm bé NHÌN KỸ, không phải làm bé sợ. */
+            if (Game.arena === 'beach' && playing) {
+                this.gullT -= dt;
+                if (this.gullT <= 0 && this.gulls.length < 2) {
+                    this.gulls.push(new Gull(this.x0, this.x1));
+                    this.gullT = rnd(5.5, 11);
+                }
+            }
+            for (let i = this.gulls.length - 1; i >= 0; i--) {
+                this.gulls[i].update(dt, wind, this.x0, this.x1);
+                if (!this.gulls[i].alive) this.gulls.splice(i, 1);
+            }
             this.balloons = this.balloons.filter(b => b.alive);
 
             if (playing) {
@@ -858,7 +984,7 @@
 
             // Mũi tiêu đang bay
             for (const d of this.darts) {
-                const popped = d.step(dt, wind, this.balloons, this.x0, this.x1);
+                const popped = d.step(dt, wind, this.balloons, this.x0, this.x1, this.gulls);
                 for (const b of popped) this.onPop(b, mode);
             }
             this.darts = this.darts.filter(d => d.alive);
@@ -934,8 +1060,32 @@
             this.state = 'aim';
         }
 
-        /* Một quả bóng vừa bị đâm trúng: dựng cả chùm hiệu ứng nổ */
+        /* BẮN NHẦM HẢI ÂU.
+         *
+         * Trừ đúng 3 điểm, bằng quả bom — hai cái phạt cùng một giá thì bé dễ
+         * nhớ hơn là mỗi thứ một mức. Xoá luôn chuỗi bắn trúng, vì chuỗi là
+         * phần thưởng cho sự cẩn thận mà cú này thì không cẩn thận.
+         *
+         * Vẽ búi lông trắng bay ra chứ không vẽ mảnh bóng vỡ: bé phải nhận ra
+         * mình vừa bắn trúng CON CHIM, không phải nổ nhầm quả bóng nào. */
+        onGull(g) {
+            this.score += GULL_PTS;
+            this.bombs++;
+            this.streak = 0;
+            this.onFire = false;
+            this.shake = 14;
+            for (let i = 0; i < 14; i++) {
+                this.shreds.push(new Shred(g.x, g.y, { base: '#ffffff', light: '#e8eef6' }, 12));
+            }
+            this.addFx('🐦 -3', '#ffd0d0', g.x, g.y, 26);
+            Sfx.bomb();
+            Game.bumpCard(this.idx);
+        }
+
+        /* Một quả bóng vừa bị đâm trúng: dựng cả chùm hiệu ứng nổ.
+         * Con hải âu cũng đi qua đây — nó không có .kind nên rẽ nhánh ngay. */
         onPop(b, mode) {
+            if (b instanceof Gull) return this.onGull(b);
             const k = b.kind, r = b.r;
             this.pendingHits++;
 
@@ -1073,6 +1223,7 @@
             else this.drawBooth(ctx, time);
             for (const b of this.balloons) b.draw(ctx, time);
             for (const a of this.necks) a.draw(ctx);
+            for (const g of this.gulls) g.draw(ctx);
             for (const a of this.shreds) a.draw(ctx);
             for (const a of this.drops) a.draw(ctx);
             for (const a of this.shocks) a.draw(ctx);
@@ -1226,19 +1377,10 @@
             // --- Ô DÙ và khăn tắm ở mép khoảnh, cho ra bãi biển có người ---
             this.drawParasol(ctx, x0 + w * 0.14, GROUND_Y + 6, w);
 
-            // --- HẢI ÂU lượn ngang trời ---
-            for (let i = 0; i < 3; i++) {
-                const bx = ((i * 431 + time * 26) % (W + 200)) - 100;
-                const by = 130 + (i % 2) * 46 + Math.sin(time * 0.9 + i) * 9;
-                const flap = 4 + Math.sin(time * 5 + i * 2) * 4;
-                ctx.strokeStyle = 'rgba(40,60,80,0.55)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(bx - 11, by);
-                ctx.quadraticCurveTo(bx - 5, by - flap, bx, by);
-                ctx.quadraticCurveTo(bx + 5, by - flap, bx + 11, by);
-                ctx.stroke();
-            }
+            /* Mấy con hải âu vẽ bằng nét ở đây trước kia đã bỏ. Chúng chỉ là
+             * hình trang trí, mà giờ hải âu là vật BẮN TRÚNG ĐƯỢC nên phải là
+             * vật thật, có toạ độ và có va chạm — xem lớp Gull. Để cả hai thì
+             * bé ném vào con vẽ trang trí rồi không hiểu vì sao không ăn gì. */
         }
 
         /* Đảo dừa xa: một mô đất, vài thân dừa cong và tán lá xoè.
@@ -2374,6 +2516,26 @@
        cửa này thì mọi thay đổi ở màn kết quả chỉ kiểm được bằng mắt. */
     window.dartsGame = {
         game: Game,
+        /* Thả một con hải âu vào khoảnh của bé, và bắn trúng nó — để máy soát
+           và máy chụp ảnh dựng được tình huống mà không phải ngồi chờ con chim
+           tự bay ra rồi ném cho trúng. */
+        spawnGull(i = 0) {
+            const b = Game.booths[i];
+            if (!b) return null;
+            const g = new Gull(b.x0, b.x1);
+            g.x = b.cx; g.y = 260; g.dir = 1;
+            b.gulls.push(g);
+            return g;
+        },
+        hitGull(i = 0) {
+            const b = Game.booths[i];
+            const g = b && b.gulls.find(x => x.alive && !x.dead);
+            if (!g) return null;
+            const before = { score: b.score, streak: b.streak, bombs: b.bombs };
+            g.dead = true;
+            b.onPop(g, Game.modeCfg);
+            return { before, after: { score: b.score, streak: b.streak, bombs: b.bombs } };
+        },
         fakeFinish(rows) {
             Game.build(rows.length);
             rows.forEach((t, i) => {
