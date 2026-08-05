@@ -47,15 +47,33 @@
         { key: 'small', name: 'SMALL BALLOON', r: MS(0.105), pts: 3, vy: [66, 100], w: 24 },
         { key: 'gold', name: 'GOLDEN BALLOON', r: MS(0.098), pts: 5, vy: [98, 132], w: 7, gold: true },
         { key: 'bomb', name: 'BOMB BALLOON', r: MS(0.155), pts: -3, vy: [44, 70], w: 9, bomb: true },
-        /* Bóng thần kỳ: hiếm gặp, nổ được thì 5 giây tiếp theo mỗi lần phi ra
-           một chùm ba mũi toả về ba hướng. */
+        /* Bóng thần kỳ: hiếm gặp (5 trên tổng 110 điểm cân, tức chưa tới 5%),
+           nổ được thì trong TRIPLE_TIME giây tiếp theo mỗi lần phi ra một chùm
+           ba mũi toả về ba hướng. */
         { key: 'magic', name: 'MAGIC BALLOON', r: MS(0.13), pts: 3, vy: [76, 112], w: 5, magic: true },
         /* Bóng quậy: bay lắt léo, khó ngắm. Đổi lại nổ được nó thì cả màn hình
            nổ theo, và bom dính chùm cũng không bị trừ điểm. */
         { key: 'crazy', name: 'CRAZY BALLOON', r: MS(0.12), pts: 4, vy: [70, 104], w: 5, crazy: true }
     ];
 
-    const TRIPLE_TIME = 5;            // giây được bắn chùm
+    /* THỜI GIAN ĂN PHÉP: 10 GIÂY, KHÔNG PHẢI 5.
+     *
+     * Anh Hiếu: "tăng thời gian của tripple shot lên nhé, đang hơi ít".
+     *
+     * Em cho robot ném thử 25 lượt bằng chính hàm điều khiển của game, mà là
+     * robot chơi ĐÚNG CÁCH — chỉ bấm khi tay ngắm thật sự chỉ vào một quả bóng,
+     * chứ không bấm bừa. Nhịp ra: trung vị 1.38 giây một lượt, nhưng lúc xui
+     * phải chờ tay quét vòng lại thì tới 3.85 giây. Nghĩa là 5 giây có hôm chỉ
+     * đủ MỘT loạt — ăn được quả bóng hiếm nhất bàn mà gần như không thấy gì.
+     *
+     * (Đo lần đầu em để robot bấm bừa không thèm ngắm, ra 0.95 giây một lượt
+     * và kết luận 5 giây được 5 loạt. Sai ở chỗ cái robot chứ không phải ở
+     * game: nó bỏ qua đúng khâu tốn thời gian nhất là chờ ngắm.)
+     *
+     * 10 giây thì kể cả gặp hai quãng chờ xui nhất vẫn còn ra được 2-3 loạt,
+     * còn chơi thường thì 7 loạt. Bóng thần kỳ chưa tới 5% nên rộng tay không
+     * làm hỏng cân bằng. */
+    const TRIPLE_TIME = 10;           // giây được bắn chùm
     const TRIPLE_SPREAD = 0.20;       // độ toả của hai mũi bên (radian)
     const KIND = Object.fromEntries(KINDS.map(k => [k.key, k]));
 
@@ -1136,7 +1154,8 @@
                     for (let i = 0; i < 10; i++) this.drops.push(new Droplet(o.x, o.y, o.col.light));
                     this.shocks.push(new Shock(o.x, o.y, o.r, o.col.light));
                     this.necks.push(new Neck(o.x, o.y + o.r, o.col, o.r));
-                    if (o.kind.magic) this.tripleT = TRIPLE_TIME;   // vẫn ăn phép nếu quét trúng
+                    // vẫn ăn phép nếu bị quét trúng trong dây chuyền, cũng cộng dồn
+                    if (o.kind.magic) this.tripleT = Math.min(TRIPLE_TIME * 2, this.tripleT + TRIPLE_TIME);
                 }
                 this.balloons = this.balloons.filter(o => o.alive);
                 this.chaining = false;
@@ -1148,9 +1167,14 @@
             }
 
             if (k.magic) {
-                this.tripleT = TRIPLE_TIME;
+                /* Cộng dồn chứ không đặt lại. Nổ được quả thứ hai lúc còn phép
+                   mà thời gian đứng yên thì công ấy coi như đổ sông — vẫn chặn
+                   trên ở gấp đôi để không thành bất tử. */
+                this.tripleT = Math.min(TRIPLE_TIME * 2, this.tripleT + TRIPLE_TIME);
                 label = `✨ TRIPLE SHOT! +${pts}`;
-                this.addFx('✨ TRIPLE SHOT — 5 SECONDS!', '#7bdcff', this.cx, THROW_Y - 200, 26);
+                /* Chữ lấy thẳng từ hằng số. Trước đây ghi chết "5 SECONDS" nên
+                   sửa hằng số là chữ nói dối ngay. */
+                this.addFx(`✨ TRIPLE SHOT — ${Math.round(this.tripleT)} SECONDS!`, '#7bdcff', this.cx, THROW_Y - 200, 26);
                 Sfx.gold();
             }
             else if (k.gold) { this.golds++; Sfx.gold(); label = `🥇 +${pts}`; }
@@ -2551,6 +2575,7 @@
        cửa này thì mọi thay đổi ở màn kết quả chỉ kiểm được bằng mắt. */
     window.dartsGame = {
         game: Game,
+        TRIPLE_TIME,                    // để máy đo lấy đúng con số đang chạy
         /* Thả một con hải âu vào khoảnh của bé, và bắn trúng nó — để máy soát
            và máy chụp ảnh dựng được tình huống mà không phải ngồi chờ con chim
            tự bay ra rồi ném cho trúng. */
