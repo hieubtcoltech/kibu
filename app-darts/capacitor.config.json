@@ -1,0 +1,17 @@
+{
+  "appId": "com.kibugames.balloondarts",
+  "appName": "Balloon Darts",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#070914",
+    "scrollEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#070914",
+      "showSpinner": false
+    }
+  }
+}

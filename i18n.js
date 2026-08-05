@@ -1475,6 +1475,12 @@
             'the arrow swings by itself; hold to charge, release to throw'],
         ['Kéo lùi trong gian hàng của mình rồi thả, như bắn ná',
             'drag back inside your own booth and release, like a slingshot'],
+        /* Hai câu dưới là bản cho MÁY CẢM ỨNG: không nhắc phím vì điện thoại
+           không có bàn phím, và nói "phần sân của mình" chứ không nói "giữ phím". */
+        ['Giữ phần sân của mình để lấy lực, thả ra để phi',
+            'Hold your own half to charge, release to throw'],
+        ['Kéo lùi trong phần sân của mình rồi thả, như bắn ná',
+            'Drag back in your own half and release, like a slingshot'],
         ['Cả nhà cùng được {0} điểm — thi lại một ván nữa nhé!',
             'Everyone finished on {0} points — time for another round!'],
         ['{0} điểm', '{0} points'],

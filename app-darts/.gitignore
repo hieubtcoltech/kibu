@@ -1,0 +1,10 @@
+node_modules/
+
+# www/ được dựng lại từ ../darts-game mỗi lần `npm run build`, giữ trong git chỉ
+# tổ lệch với bản web.
+www/
+
+# vendor/ thì NGƯỢC LẠI: có trong git. Phông chữ với bộ icon tải một lần rồi
+# thôi, để đó thì máy khác dựng được app mà không cần mạng.
+
+.DS_Store

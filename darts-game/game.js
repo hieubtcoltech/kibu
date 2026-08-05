@@ -8,6 +8,12 @@
 
     const W = 1240, H = 720;
 
+    /* Máy cảm ứng (điện thoại, máy tính bảng) hay máy có bàn phím? Câu trả lời
+       đổi hẳn cách bày chữ trên màn hình: không có bàn phím thì liệt kê phím
+       A · F · J · L là vô nghĩa, mà đó lại là dòng chữ dài nhất lúc đang chơi. */
+    const IS_TOUCH = typeof matchMedia === 'function'
+        && matchMedia('(hover: none) and (pointer: coarse)').matches;
+
     /* ---------- Đơn vị đo ----------
        Mọi thứ tính theo mét thật rồi đổi ra pixel, nhờ vậy trọng lực,
        sức cản không khí và tốc độ ném đều là số liệu ngoài đời.
@@ -2237,6 +2243,16 @@
             this.bindUI();
             this.bindInput();
             window.addEventListener('resize', () => this.resize());
+            /* XOAY MÁY: chỉ nghe sự kiện resize của window là hỏng trên iOS —
+               nó bắn ra TRƯỚC khi trang bố cục lại, nên số đo lấy được vẫn là
+               của chiều cũ, và không có sự kiện thứ hai để sửa lại. Hậu quả
+               thấy rõ khi cầm ngang: khung hình vẫn giữ kích thước lúc dựng
+               đứng nên bị cắt mất mái lều với mặt đất, chân các bé cụt ngang.
+               ResizeObserver bắn đúng lúc khung nhìn đổi kích thước THẬT, nên
+               đo bao giờ cũng khớp. */
+            if (window.ResizeObserver) {
+                new ResizeObserver(() => this.resize()).observe(this.viewport);
+            }
             this.resize();
 
             let last = performance.now();
@@ -2334,12 +2350,39 @@
             this.updateHint();
         },
 
+        /* Dòng nhắc dưới đáy màn chơi.
+         *
+         * Trên máy cảm ứng KHÔNG liệt kê phím: điện thoại làm gì có bàn phím,
+         * mà "🐯 A · 🐼 F · 🐸 J · 🦊 L" lại chiếm quá nửa dòng chữ dài nhất
+         * trên màn hình lúc đang chơi. Bỏ nó đi thì câu còn lại đủ ngắn để nằm
+         * gọn một dòng trên iPhone dựng đứng. */
         updateHint() {
             this.buildKeysList();
-            const keys = this.booths.map((b, i) => `${b.cfg.emoji} ${this.keyLabel(i)}`).join(' · ');
-            this.el.hint.textContent = this.control === 'sweep'
-                ? `${keys} — the arrow swings by itself; hold to charge, release to throw`
-                : `${keys} — drag back inside your own booth and release, like a slingshot`;
+            const keys = IS_TOUCH ? ''
+                : this.booths.map((b, i) => `${b.cfg.emoji} ${this.keyLabel(i)}`).join(' · ') + ' — ';
+            const how = this.control === 'sweep'
+                ? (IS_TOUCH ? 'Hold your own half to charge, release to throw'
+                    : 'the arrow swings by itself; hold to charge, release to throw')
+                : (IS_TOUCH ? 'Drag back in your own half and release, like a slingshot'
+                    : 'drag back inside your own booth and release, like a slingshot');
+            this.el.hint.textContent = keys + how;
+        },
+
+        /* Trên máy cảm ứng, dòng nhắc chỉ sống 8 giây đầu mỗi ván rồi mờ đi.
+         *
+         * Anh Hiếu: "không gian chơi là chính, text nào không quan trọng thì bỏ
+         * đi". Đúng với dòng này: đọc một lần là bé quen tay, để nó nằm mãi
+         * giữa sân thì vừa che bóng vừa thừa — cầm ngang điện thoại, sân chỉ
+         * cao hơn 280 điểm ảnh mà nó chiếm mất một dải ngang giữa hai bé.
+         * Máy có bàn phím thì giữ nguyên: dòng đó đang liệt kê phím của từng
+         * bé, chơi bốn người rất hay phải liếc lại. */
+        flashHint() {
+            const el = this.el.hint;
+            if (!el) return;
+            el.classList.remove('hint-gone');
+            clearTimeout(this._hintT);
+            if (!IS_TOUCH) return;
+            this._hintT = setTimeout(() => el.classList.add('hint-gone'), 8000);
         },
 
         /* Bảng phím ở màn hình cấu hình: mỗi bé một dòng, dựng lại mỗi khi đổi
@@ -2461,6 +2504,7 @@
             this.el.pause.classList.add('hidden');
             this.el.clockLabel.textContent = this.modeName();
             this.syncHud();
+            this.flashHint();
             Sfx.ensure();
         },
 
@@ -2851,6 +2895,16 @@
             this.scale = Math.min(r.width / W, r.height / H);
             this.ox = (r.width - W * this.scale) / 2;
             this.oy = (r.height - H * this.scale) / 2;
+
+            /* Nói cho CSS biết mép THẬT của sân chơi.
+             *
+             * Canvas phủ kín khung nhìn, nhưng hình vẽ giữ đúng tỉ lệ 1240×720
+             * nên nằm giữa và chừa hai dải trống. Trên điện thoại dựng đứng hai
+             * dải ấy cao cả trăm điểm ảnh — bảng điểm dán ở mép khung là trôi ra
+             * tận giữa vùng tối, cách chỗ bóng bay đang nổ một quãng. Bảng điểm
+             * bám theo hai biến này thì luôn ôm sát sân, dọc hay ngang cũng vậy. */
+            this.viewport.style.setProperty('--play-inset-x', Math.round(this.ox) + 'px');
+            this.viewport.style.setProperty('--play-inset-y', Math.round(this.oy) + 'px');
         }
     };
 

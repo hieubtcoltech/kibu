@@ -205,6 +205,20 @@ body {
     align-items: flex-start;
     justify-content: space-between;
     gap: 10px;
+    /* Bảng điểm tụt xuống đúng mép trên của SÂN CHƠI, không dán ở mép khung.
+     *
+     * Canvas phủ kín khung nhìn nhưng hình vẽ giữ tỉ lệ 1240×720 nên nằm giữa,
+     * chừa hai dải trống; cầm điện thoại dựng đứng thì mỗi dải cao hơn trăm
+     * điểm ảnh, bảng điểm dán mép khung là trôi ra tận giữa vùng tối, xa hẳn
+     * chỗ bóng đang nổ. --play-inset-y do resize() trong game.js ghi ra chính
+     * là chiều cao dải trống ấy.
+     *
+     * Trừ 100% — tức chiều cao THẬT của chính hàng thẻ điểm — nên hàng thẻ nằm
+     * vừa sát BÊN TRÊN mép sân, không đè lên bóng. Lấy chiều cao thật thay vì
+     * đoán một con số cố định, vì thẻ cao khác nhau theo cỡ máy.
+     * max(0px, …) lo trường hợp khung vừa khít hình (máy tính, hoặc chưa vẽ lần
+     * nào nên biến chưa có): lúc đó giữ nguyên chỗ cũ. */
+    transform: translateY(max(0px, calc(var(--play-inset-y, 0px) - 100% - 14px)));
 }
 
 /* Hai dải bảng điểm hai bên, đồng hồ nằm chính giữa */
@@ -1213,4 +1227,111 @@ body {
         justify-content: flex-end;
     }
     .opt-arena .opt-text { padding: 0 6px 7px; }
+}
+
+/* ---------- Nút bắt đầu phải nằm gọn MỘT dòng ----------
+ * Trên iPhone dựng đứng, "START THE CONTEST" gãy làm hai dòng: nút phình cao
+ * gấp đôi, nhìn như hai nút chồng lên nhau và đè lên ảnh sân chơi ngay dưới.
+ * Cấm xuống dòng, rồi thu chữ + giãn chữ + đệm ngang lại cho vừa máy hẹp nhất.
+ * Đặt cuối tệp để thắng mấy luật !important theo chiều cao ở phía trên. */
+.big-btn { white-space: nowrap; }
+
+@media (max-width: 560px) {
+    .big-btn {
+        font-size: 1rem !important;
+        letter-spacing: 0.2px;
+        padding: 11px 20px !important;
+        gap: 7px;
+    }
+}
+
+/* ---------- Điện thoại: lúc chơi, bảng điểm chỉ còn MẶT và SỐ ----------
+ * Anh Hiếu gửi ảnh chơi 4 bé trên iPhone: bốn thẻ điểm tràn vào giữa, "1:30"
+ * của đồng hồ chồng lên số 0 của bé. Thủ phạm là min-width:230px của thẻ cộng
+ * min-width:62px của con số — bốn thẻ đòi hơn 900px trong khi màn hình dọc chỉ
+ * có 393px, mà chúng không co lại được nên đè lên nhau.
+ *
+ * Bỏ mấy cái min-width là hết chồng. Nhưng thẻ hẹp lại thì tên "KID 1", chữ
+ * phím và dòng "Streak: 0" nhét vào cũng chẳng đọc nổi — mà lúc đang phi tiêu
+ * bé chỉ liếc mặt con vật của mình với con số, không ai đứng đọc chữ. Nên trên
+ * điện thoại thẻ chỉ giữ đúng hai thứ đó; màu viền vẫn phân biệt được ai là ai.
+ *
+ * Áp cả khi màn hình THẤP: điện thoại nằm ngang tuy rộng 852px nhưng bốn thẻ
+ * cỡ cũ vẫn không đủ chỗ, mà chiều cao thì càng ít nên chữ càng phải bớt. */
+@media (max-width: 760px), (max-height: 560px) {
+    .hud-overlay { padding: 7px; }
+    .hud-top { transform: translateY(max(0px, calc(var(--play-inset-y, 0px) - 100% - 7px))); }
+
+    .hud-top { align-items: center; gap: 6px; }
+    .score-strip { gap: 5px; }
+
+    /* Thẻ THÔI kéo giãn cho đầy hàng. Kéo giãn thì mỗi thẻ thành một thanh dài
+       vắt ngang sân, che mất bóng bay phía sau mà bên trong chỉ có một cái mặt
+       với một con số. Để thẻ co đúng bằng nội dung, hai thẻ nép về hai mép,
+       giữa sân trống hẳn ra. */
+    .score-strip .score-card { flex: 0 0 auto; max-width: none; }
+
+    .score-card {
+        min-width: 0;
+        gap: 7px;
+        padding: 4px 9px;
+        border-radius: 12px;
+    }
+
+    /* Tên bé, phím bấm, chuỗi bụp liên tiếp — bỏ hết trong lúc chơi. */
+    .score-info { display: none; }
+
+    .score-avatar { font-size: 1.3rem; }
+
+    .score-number {
+        font-size: 1.5rem;
+        min-width: 26px;
+    }
+
+    /* Đồng hồ bỏ chữ "VERSUS": tên chế độ bé vừa tự chọn ở màn ngay trước đó. */
+    .clock-label { display: none; }
+    .clock-box { padding: 3px 12px; border-radius: 12px; }
+    .clock-time { font-size: 1.6rem; }
+
+    /* Dòng nhắc cách chơi thu lại một dòng mảnh. Nội dung của nó trên máy cảm
+       ứng cũng đã ngắn hẳn (xem updateHint trong game.js). */
+    .control-hint {
+        font-size: 0.72rem;
+        padding: 4px 12px;
+        border-radius: 10px;
+    }
+}
+
+/* ---------- Cầm ngang điện thoại: sân chơi là chính ----------
+ * Anh Hiếu: "không gian chơi là chính, text nào không quan trọng thì bỏ đi".
+ *
+ * Xoay ngang, cả màn hình chỉ cao hơn 400 điểm ảnh mà thanh nút, hai lớp đệm
+ * và khoảng cách giữa chúng đã ăn mất một phần tư. Sân giữ tỉ lệ 1240×720 nên
+ * mất chiều cao là mất luôn chiều rộng — thu mấy khoảng thừa lại thì sân to lên
+ * thấy rõ. Tên game trong thanh nút cũng bỏ: bé đang cầm máy chơi rồi, không
+ * cần ai nhắc mình đang chơi game gì.
+ *
+ * Chỉ theo CHIỀU CAO, không theo chiều rộng: iPad nằm ngang vẫn cao hơn 480
+ * điểm ảnh nên giữ nguyên đầy đủ. */
+@media (max-height: 480px) {
+    .app-wrapper {
+        padding: 6px 10px 8px;
+        gap: 7px;
+    }
+
+    .unified-nav { padding: 5px 9px; }
+    .brand-title { display: none; }
+    .btn { padding: 7px 11px; }
+}
+
+/* ---------- Dòng nhắc tự mờ đi ----------
+ * flashHint() trong game.js gắn .hint-gone sau 8 giây đầu mỗi ván, và chỉ làm
+ * vậy trên máy cảm ứng. Mờ chứ không gỡ khỏi trang, để lần sau hiện lại không
+ * phải dựng lại chữ. */
+.control-hint {
+    transition: opacity 0.5s ease;
+}
+
+.control-hint.hint-gone {
+    opacity: 0;
 }
