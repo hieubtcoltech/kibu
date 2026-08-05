@@ -165,15 +165,26 @@
                          bãi biển sẽ không chọn được. -->
                     <div class="setup-block">
                         <div class="setup-label"><i class="fa-solid fa-location-dot"></i> WHERE TO PLAY</div>
-                        <div class="opt-row small cols-2">
-                            <button class="opt sel" data-arena="fair">
-                                <span class="opt-icon">🎪</span>
-                                <span class="opt-name">FAIRGROUND</span>
+                        <!-- Ảnh xem trước là ảnh CHỤP TỪ CHÍNH MÀN CHƠI, không phải
+                             hình minh hoạ vẽ riêng. Bé thấy đúng cái mình sắp vào,
+                             và không có chuyện ảnh một đằng game một nẻo về sau. -->
+                        <div class="opt-row arena-row cols-2">
+                            <button class="opt opt-arena sel" data-arena="fair">
+                                <picture>
+                                    <source srcset="/darts-game/arena-fair.webp" type="image/webp">
+                                    <img src="/darts-game/arena-fair.jpg" alt="" class="opt-thumb"
+                                         width="400" height="240" loading="lazy" decoding="async">
+                                </picture>
+                                <span class="opt-name">🎪 FAIRGROUND</span>
                                 <span class="opt-desc">Calm air</span>
                             </button>
-                            <button class="opt" data-arena="beach">
-                                <span class="opt-icon">🏖️</span>
-                                <span class="opt-name">BEACH</span>
+                            <button class="opt opt-arena" data-arena="beach">
+                                <picture>
+                                    <source srcset="/darts-game/arena-beach.webp" type="image/webp">
+                                    <img src="/darts-game/arena-beach.jpg" alt="" class="opt-thumb"
+                                         width="400" height="240" loading="lazy" decoding="async">
+                                </picture>
+                                <span class="opt-name">🏖️ BEACH</span>
                                 <span class="opt-desc">Windy! Harder</span>
                             </button>
                         </div>
