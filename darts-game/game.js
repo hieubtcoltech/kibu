@@ -1276,11 +1276,24 @@
             /* 0.66 chứ không phải 0.78: chỗ cũ nằm khuất sau bảng điểm của bé
              * ngồi ngoài cùng bên phải. */
             const sunX = W * 0.66, sunY = 84, sunR = 15;
-            for (let i = 4; i >= 1; i--) {
-                ctx.fillStyle = `rgba(255,250,225,${0.045 * i})`;
-                ctx.beginPath(); ctx.arc(sunX, sunY, sunR + i * 16, 0, TAU); ctx.fill();
-            }
-            ctx.fillStyle = '#fffdf0';
+
+            /* MỘT quầng sáng bằng chuyển sắc, không phải BỐN vòng tròn chồng
+             * lên nhau.
+             *
+             * Anh Hiếu: "không cần nhiều vòng ánh sáng đâu". Bốn hình tròn xếp
+             * chồng thì mỗi chỗ giao nhau là một mép nhìn thấy được — ra bốn
+             * cái vành đồng tâm chứ không ra ánh sáng. Đây đúng là lỗi em từng
+             * mắc bên Tháp Khối với cái đèn trần, và lại mắc lại ở đây. Một
+             * chuyển sắc toả dần thì không có mép nào cả. */
+            const halo = ctx.createRadialGradient(sunX, sunY, sunR * 0.6, sunX, sunY, sunR * 4.2);
+            halo.addColorStop(0, 'rgba(255,248,214,0.30)');
+            halo.addColorStop(1, 'rgba(255,248,214,0)');
+            ctx.fillStyle = halo;
+            ctx.beginPath(); ctx.arc(sunX, sunY, sunR * 4.2, 0, TAU); ctx.fill();
+
+            /* Vàng ngà chứ không trắng tinh: trắng tinh thì lẫn vào mây, mà
+             * mây thì trắng và ở ngay cạnh. */
+            ctx.fillStyle = '#fff6d2';
             ctx.beginPath(); ctx.arc(sunX, sunY, sunR, 0, TAU); ctx.fill();
 
             // --- MÂY: trôi chậm, quay vòng theo bề ngang cả màn ---
