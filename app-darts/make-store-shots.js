@@ -41,6 +41,38 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
+/* ---------------------------------------------------------------- KIỂU -----
+ * `node make-store-shots.js`          → kiểu 'plain'  (mặc định)
+ * `node make-store-shots.js device`   → kiểu 'device'
+ *
+ * VÌ SAO MẶC ĐỊNH LÀ KIỂU KHÔNG VẼ MÁY. Anh Hiếu lo Apple từ chối vì khung máy
+ * vẽ không giống máy thật. Tra lại thì có hai điều luật khác nhau, và chỗ đáng
+ * lo không nằm ở chỗ anh nghĩ:
+ *
+ *   · Điều 2.3.3 của App Review nói về NỘI DUNG MÀN HÌNH: ảnh phải là app thật
+ *     đang chạy, không phải hình dựng. Điều này cho phép rõ ràng việc thêm chữ,
+ *     thêm nền và thêm khung máy. Khung máy KHÔNG phải thứ làm app bị từ chối.
+ *
+ *   · Nhưng bộ Marketing Resources and Identity Guidelines lại nói: hễ đã bày
+ *     máy Apple ra thì phải dùng ẢNH CHÍNH THỨC của Apple, để nguyên không sửa,
+ *     không cắt xén, không che khuất, và hình dáng phải đúng. Cái khung em vẽ
+ *     bằng CSS là hình phỏng lại, mà kiểu 'device' còn cho máy tràn ra ngoài
+ *     mép — tức là cắt xén. Chỗ ấy mới là chỗ vênh với luật.
+ *
+ * Nên cách chắc chắn nhất không phải là vẽ máy cho thật giống, mà là ĐỪNG BÀY
+ * MÁY RA. Kiểu 'plain' chỉ có nền màu, chữ, và chính màn hình app bo góc đúng
+ * độ cong màn hình thật. Không có mẩu phần cứng Apple nào trong ảnh nên không
+ * có gì để vênh, mà nhìn vẫn ra một tấm quảng bá tử tế — rất nhiều app lớn
+ * đang làm đúng như vậy.
+ *
+ * Kiểu 'device' vẫn giữ cho ai muốn, và đã sửa hai chỗ: số đo lấy theo máy
+ * thật, và KHÔNG cho tràn mép nữa — đã bày máy ra thì phải bày trọn vẹn.
+ */
+const MODE = (process.argv[2] || 'plain').toLowerCase();
+if (!['plain', 'device'].includes(MODE)) {
+    throw new Error(`Kiểu "${MODE}" không có. Chỉ nhận 'plain' (mặc định) hoặc 'device'.`);
+}
+
 const OUT = path.join(__dirname, 'screenshots');
 const FONTS = path.join(__dirname, 'vendor', 'fonts');
 const TMP = path.join(__dirname, 'build', 'store-tmp');
@@ -102,6 +134,30 @@ const SKINS = {
     '7-ketqua': ['#132b1c', '#060f0a', '#5ee06a']
 };
 
+/* ------------------------------------------------------- số đo máy thật ----
+ * Mọi số ghi theo TỈ LỆ so với CẠNH NGẮN của ảnh chụp, không ghi bằng pixel:
+ * cùng một bộ số dùng được cho cả bản 6.9" lẫn bản 6.5" thu nhỏ, và cho cả ảnh
+ * dựng đứng lẫn ảnh nằm ngang.
+ *
+ * Gốc số (quy ra pixel rồi chia cho cạnh ngắn):
+ *   iPhone 16 Pro Max — màn 1320 × 2868 px, tức 440 × 956 pt ở tỉ lệ 3x
+ *       bo góc màn hình  55 pt = 165 px  → 0,125
+ *       đảo động     125 × 36 pt = 375 × 108 px → 0,284 × 0,082
+ *       mép trên đảo động 11 pt = 33 px  → 0,025
+ *   iPad Pro 13" M4 — màn 2064 × 2752 px, tức 1032 × 1376 pt ở tỉ lệ 2x
+ *       bo góc màn hình  30 pt = 60 px   → 0,029
+ *       không có đảo động
+ *
+ * NÓI THẲNG: hai con số bo góc (55pt và 30pt) là số em lấy theo tài liệu quen
+ * dùng chứ không tự đo được trên máy — iOS không mở API nào đọc ra độ cong màn
+ * hình. Lệch vài pt thì mắt không thấy, nhưng nếu anh có số chính xác thì sửa
+ * đúng ở bảng này, không phải mò trong đống CSS bên dưới.
+ */
+const DEVICES = {
+    phone: { corner: 0.125, bezel: 0.030, island: { w: 0.284, h: 0.082, edge: 0.025 } },
+    pad: { corner: 0.029, bezel: 0.026, island: null }
+};
+
 const b64 = f => fs.readFileSync(f).toString('base64');
 
 /* Phông nhúng thẳng vào trang. Chỉ lấy đúng hai tệp cần: Baloo 2 cho tiêu đề,
@@ -137,7 +193,12 @@ function page(shot, W, H, lang, fonts) {
        cùng một công thức ra chữ to tướng ở bản nằm ngang và chữ tí xíu ở bản
        dựng đứng. */
     const u = Math.min(W, H) / 100;
-    const pad = shot.pad;
+    const dev = DEVICES[shot.kind];
+    const short = Math.min(shot.w, shot.h);      // cạnh ngắn của ảnh chụp, gốc mọi tỉ lệ
+    const framed = MODE === 'device';
+    /* Kiểu 'plain' không có thân máy nên viền bằng 0 — chỉ còn đúng cái màn
+       hình, bo góc theo độ cong màn thật. */
+    const bezelR = framed ? dev.bezel : 0;
 
     /* ---- CỠ KHUNG MÁY TÍNH BẰNG SỐ, KHÔNG PHÓ MẶC CHO FLEX ----
      *
@@ -149,7 +210,6 @@ function page(shot, W, H, lang, fonts) {
      * Biết đủ số đo rồi thì tính thẳng ra: chừa chỗ cho chữ, phần còn lại đem
      * lồng khung máy vào sao cho vừa cả bề ngang lẫn bề cao, lấy cạnh nào chật
      * hơn làm chuẩn. */
-    const bezel = pad.bezel * u;
     const padX = (side ? 5 : 6) * u;
     const padY = (side ? 6 : 7) * u;
     const gap = (side ? 4 : 5) * u;
@@ -159,10 +219,22 @@ function page(shot, W, H, lang, fonts) {
     const wordsW = side ? Math.round(W * 0.36) : W - 2 * padX;
     const aspect = shot.w / shot.h;
 
+    /* Viền tính từ bề rộng màn hình sẽ vẽ ra, mà bề rộng ấy lại còn tuỳ viền —
+       nên giải một vòng: ước bằng chỗ trống rồi tính lại. Sai số vài pixel ở
+       bước ước không ảnh hưởng, vì bước sau mới là bước chốt. */
+    const guessW = side ? (W - 2 * padX - wordsW - gap) : (W - 2 * padX);
+    const bezel = Math.round(bezelR * Math.min(guessW, guessW / aspect));
+
     let screenW, screenH;
-    if (side) {
-        const availW = W - 2 * padX - wordsW - gap;
-        const availH = H - 2 * padY;
+    /* ĐÃ BÀY MÁY RA THÌ BÀY TRỌN VẸN.
+     *
+     * Kiểu 'plain' cho phép ảnh tràn xuống mép dưới, vì tràn thì hình to hẳn
+     * lên mà ở đó chẳng có phần cứng Apple nào để mà cắt. Kiểu 'device' thì
+     * KHÔNG: bộ Identity Guidelines cấm cắt xén hay che khuất máy Apple, nên
+     * cái máy phải nằm gọn trong khung, dù có phải nhỏ đi. */
+    if (side || framed) {
+        const availW = side ? W - 2 * padX - wordsW - gap : W - 2 * padX;
+        const availH = side ? H - 2 * padY : H - padY - wordsBox - gap - padY;
         screenW = Math.min(availW - 2 * bezel, (availH - 2 * bezel) * aspect);
     } else {
         /* CHO KHUNG MÁY TRÀN XUỐNG MÉP DƯỚI.
@@ -188,6 +260,18 @@ function page(shot, W, H, lang, fonts) {
     screenW = Math.round(screenW);
     screenH = Math.round(screenW / aspect);
     const outerW = Math.round(screenW + 2 * bezel), outerH = Math.round(screenH + 2 * bezel);
+
+    /* Quy bảng DEVICES ra pixel của tấm đang vẽ. Nhân theo CẠNH NGẮN của màn
+       hình vẽ ra, vì bảng ấy cũng ghi theo cạnh ngắn — nhờ vậy bo góc và đảo
+       động giữ đúng tỉ lệ dù ảnh nằm ngang hay dựng đứng, to hay nhỏ. */
+    const shortPx = Math.min(screenW, screenH);
+    const rScreen = Math.round(dev.corner * shortPx);
+    const rOuter = rScreen + bezel;
+    const isl = dev.island ? {
+        w: Math.round(dev.island.w * shortPx),
+        h: Math.round(dev.island.h * shortPx),
+        edge: Math.round(dev.island.edge * shortPx)
+    } : null;
 
     return `<!doctype html><meta charset="utf-8"><style>
 ${fonts}
@@ -247,49 +331,50 @@ p {
     background: ${glow};
     box-shadow: 0 0 ${2 * u}px ${glow}aa;
 }
-/* --- KHUNG MÁY ---
+/* --- MÀN HÌNH, và THÂN MÁY nếu chọn kiểu 'device' ---
    Vẽ bằng CSS chứ không dán ảnh khung có sẵn: khỏi phải kéo tệp ở đâu về, và
-   quan trọng hơn là khỏi dính giấy phép của ảnh khung người khác vẽ. */
+   khỏi dính giấy phép của ảnh khung người khác vẽ. Mọi số đo quy từ bảng
+   DEVICES, nhân theo cạnh ngắn của màn hình đang vẽ. */
 .phone {
     position: relative;
     flex: 0 0 auto;
     width: ${outerW}px;
     height: ${outerH}px;
-    padding: ${bezel}px;
-    border-radius: ${pad.radius * u}px;
+    ${framed ? `padding: ${bezel}px;
+    border-radius: ${rOuter}px;
     background: linear-gradient(150deg, #3a3d4a 0%, #0a0b10 26%, #0a0b10 74%, #2e313c 100%);
     box-shadow:
         0 ${3 * u}px ${9 * u}px rgba(0,0,0,0.55),
         0 ${0.9 * u}px ${2 * u}px rgba(0,0,0,0.4),
-        inset 0 0 0 ${0.22 * u}px rgba(255,255,255,0.16);
+        inset 0 0 0 ${Math.max(1, Math.round(0.22 * u))}px rgba(255,255,255,0.16);`
+            : `filter: drop-shadow(0 ${3 * u}px ${8 * u}px rgba(0,0,0,0.55));`}
     display: flex;
 }
 .screen {
     position: relative;
     flex: 1;
-    border-radius: ${(pad.radius - pad.bezel * 0.72) * u}px;
+    border-radius: ${rScreen}px;
     overflow: hidden;
     background: #070914;
+    ${framed ? '' : `box-shadow: inset 0 0 0 ${Math.max(1, Math.round(0.18 * u))}px rgba(255,255,255,0.14);`}
 }
 /* fill chứ KHÔNG cover. Khung màn hình đã cắt đúng tỉ lệ tấm ảnh rồi nên hai
    bên khớp nhau, mà cover thì hễ lệch một pixel là nó phóng to lên và XÉN mất
    mép — bản đầu mất cả logo kibu với thẻ điểm hai bên. */
 .screen img { display: block; width: 100%; height: 100%; object-fit: fill; }
-/* Đảo động. Chỉ vẽ ở khung điện thoại — iPad không có, vẽ vào là sai máy.
+/* Đảo động. Chỉ có ở iPhone — iPad không có, vẽ vào là sai máy.
    Máy cầm ngang thì đảo động nằm ở CẠNH TRÁI và dựng đứng, không phải trên
    đỉnh: nó gắn cứng vào thân máy, máy xoay thì nó xoay theo. Vẽ trên đỉnh ở
-   ảnh nằm ngang là ai cầm iPhone cũng thấy sai. */
-.island {
+   ảnh nằm ngang là ai cầm iPhone cũng thấy sai ngay. */
+${isl ? `.island {
     position: absolute;
     background: #000;
     ${aspect > 1
-            ? `left: ${pad.islandTop * u}px; top: 50%; transform: translateY(-50%);
-       width: ${pad.islandH * u}px; height: ${pad.islandW * u}px;
-       border-radius: ${pad.islandH * u}px;`
-            : `top: ${pad.islandTop * u}px; left: 50%; transform: translateX(-50%);
-       width: ${pad.islandW * u}px; height: ${pad.islandH * u}px;
-       border-radius: ${pad.islandH * u}px;`}
-}
+                ? `left: ${isl.edge}px; top: 50%; transform: translateY(-50%);
+       width: ${isl.h}px; height: ${isl.w}px; border-radius: ${isl.h}px;`
+                : `top: ${isl.edge}px; left: 50%; transform: translateX(-50%);
+       width: ${isl.w}px; height: ${isl.h}px; border-radius: ${isl.h}px;`}
+}` : ''}
 /* Gờ sáng hắt chéo trên mặt kính, cho ra tấm KÍNH chứ không phải tờ giấy dán */
 .glare {
     position: absolute; inset: 0;
@@ -305,7 +390,7 @@ p {
 <div class="phone">
     <div class="screen">
         <img src="data:image/png;base64,${shot.data}">
-        ${pad.island ? '<div class="island"></div>' : ''}
+        ${isl ? '<div class="island"></div>' : ''}
         <div class="glare"></div>
     </div>
 </div>`;
@@ -328,6 +413,7 @@ function build() {
     if (!fs.existsSync(OUT)) {
         throw new Error('Chưa có thư mục screenshots/. Chạy `npm run shots` trước để chụp ảnh thô đã.');
     }
+    const framedMode = MODE === 'device';
     const fonts = fontCss();
     fs.rmSync(TMP, { recursive: true, force: true });
     fs.mkdirSync(TMP, { recursive: true });
@@ -340,7 +426,10 @@ function build() {
         console.log(`\n── bộ tiếng ${lang === 'en' ? 'Anh' : 'Việt'} ──`);
         for (const dir of dirs) {
             const src = path.join(OUT, dir);
-            const dst = path.join(OUT, 'store-' + lang, dir);
+            /* Hai kiểu ra hai thư mục khác nhau. Bản đầu cả hai cùng ghi vào
+               store-<tiếng>, nên chạy kiểu sau là xoá sạch kiểu trước — dựng
+               xong cả hai mà chỉ còn một bộ trên đĩa. */
+            const dst = path.join(OUT, (framedMode ? 'store-device-' : 'store-') + lang, dir);
             fs.rmSync(dst, { recursive: true, force: true });
             fs.mkdirSync(dst, { recursive: true });
 
@@ -349,13 +438,9 @@ function build() {
                 const file = path.join(src, f);
                 const { w, h } = pngSize(file);
                 const name = f.replace(/\.png$/, '');
-                const shot = {
-                    name, w, h, data: b64(file),
-                    /* iPad bo góc nông và không có đảo động; iPhone thì ngược lại. */
-                    pad: isPad
-                        ? { bezel: 1.5, radius: 3.4, island: false, islandTop: 0, islandW: 0, islandH: 0 }
-                        : { bezel: 1.3, radius: 6.2, island: true, islandTop: 1.5, islandW: 15, islandH: 3.4 }
-                };
+                /* Số đo lấy nguyên từ bảng DEVICES ở đầu tệp, không rải rác
+                   mỗi chỗ một ít nữa. Sửa máy mới thì sửa đúng một nơi. */
+                const shot = { name, w, h, data: b64(file), kind: isPad ? 'pad' : 'phone' };
                 const html = path.join(TMP, `${lang}-${dir}-${name}.html`);
                 fs.writeFileSync(html, page(shot, w, h, lang, fonts));
 

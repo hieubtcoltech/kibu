@@ -145,10 +145,30 @@ thi, 4 bé, sân biển, sân vũ trụ, chơi một mình, săn bóng vàng, b�
 Ra ảnh đúng cái màn hình máy, không hơn.
 
 **`npm run store-shots`** biến mỗi ảnh thô thành một tấm quảng bá: nền màu hợp
-với cảnh, khung máy vẽ bằng CSS (bo góc, đảo động, gờ kính, bóng đổ), và một
-câu nói rõ tính năng. Ra hai bộ Anh–Việt vì App Store Connect cho gắn ảnh riêng
-theo ngôn ngữ. Sửa lời trong bảng `WORDS`, đổi màu nền trong bảng `SKINS` ở
-`make-store-shots.js`.
+với cảnh, một tiêu đề lớn nói rõ tính năng, và chính màn hình app bo góc đúng
+độ cong màn thật. Ra hai bộ Anh–Việt vì App Store Connect cho gắn ảnh riêng
+theo ngôn ngữ. Sửa lời trong bảng `WORDS`, đổi màu nền trong bảng `SKINS`, đổi
+số đo máy trong bảng `DEVICES` — cả ba đều ở đầu `make-store-shots.js`.
+
+#### Có nên vẽ khung điện thoại quanh ảnh không?
+
+`npm run store-shots:device` dựng thêm bộ **có khung máy** vào
+`screenshots/store-device-en|vi/`. Nhưng **mặc định là bộ KHÔNG có khung**, vì
+hai điều luật khác nhau nói hai chuyện:
+
+- **App Review 2.3.3** nói về *nội dung màn hình*: ảnh phải là app thật đang
+  chạy. Điều này **cho phép rõ ràng** thêm chữ, thêm nền và thêm khung máy —
+  khung máy không phải thứ làm app bị từ chối.
+- **Marketing Resources and Identity Guidelines** thì nói: hễ đã bày máy Apple
+  ra thì phải dùng **ảnh chính thức của Apple**, để nguyên, không cắt xén,
+  không che khuất, hình dáng phải đúng. Khung vẽ bằng CSS là hình phỏng lại, nên
+  chỗ vênh nằm ở đây chứ không ở 2.3.3.
+
+Nên cách chắc chắn nhất không phải là vẽ máy cho thật giống, mà là **đừng bày
+máy ra**. Bộ mặc định chỉ có nền, chữ và màn hình app — không có mẩu phần cứng
+Apple nào để mà vênh, và nhìn vẫn ra một tấm quảng bá tử tế. Bộ có khung vẫn để
+đó, đã sửa cho lấy số đo theo máy thật và **không cho tràn mép** nữa (đã bày máy
+thì phải bày trọn vẹn).
 
 > **Nên nộp bộ NẰM NGANG** (`iphone-6.9`, `ipad-13`). Trò này chơi ngang là
 > chính; ở bản dựng đứng thì sân chơi co lại thành một dải giữa hai vùng đen,
