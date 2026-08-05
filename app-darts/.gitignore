@@ -7,4 +7,11 @@ www/
 # vendor/ thì NGƯỢC LẠI: có trong git. Phông chữ với bộ icon tải một lần rồi
 # thôi, để đó thì máy khác dựng được app mà không cần mạng.
 
+# Tệp .ipa và archive: dựng lại bằng `npm run ipa` bất cứ lúc nào.
+build/
+
+# Ảnh chụp App Store: 21 MB ảnh mà repo này lại tự deploy lên máy chủ web,
+# đẩy lên đó là thừa. Cần thì chạy lại `npm run shots`.
+screenshots/
+
 .DS_Store

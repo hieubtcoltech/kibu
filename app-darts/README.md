@@ -78,27 +78,42 @@ mặc định theo ngôn ngữ máy, bấm lá cờ để đổi.
 
 ---
 
+## Dựng tệp .ipa để nộp
+
+```bash
+npm run ipa
+```
+
+Ra `build/ipa/App.ipa`. Lệnh này tự dựng lại `www/`, archive bản Release và ký
+bằng chứng chỉ **Apple Distribution** (Xcode tự xin chứng chỉ và hồ sơ cấp phép
+nhờ `-allowProvisioningUpdates`).
+
+Đã cấu hình sẵn, theo đúng lối của dự án CardyCat:
+
+| | |
+|---|---|
+| Bundle ID | `com.kibu.BalloonDarts` |
+| Team | `S8S7RJA9P9` — Roxwin Vietnam Technologies Company Limited |
+| Ký | Automatic |
+
+Đổi bundle id thì sửa `appId` trong [`capacitor.config.json`](capacitor.config.json)
+**và** `PRODUCT_BUNDLE_IDENTIFIER` trong `ios/App/App.xcodeproj` cho khớp nhau.
+
+Kiểm lại tệp .ipa trước khi nộp:
+
+```bash
+unzip -q build/ipa/App.ipa -d /tmp/ipa && codesign -dvvv /tmp/ipa/Payload/App.app
+# phải thấy: Authority=Apple Distribution: …
+```
+
+**Nộp bản mới** thì tăng `CURRENT_PROJECT_VERSION` (Build) trong Xcode → target
+App → General. App Store Connect từ chối thẳng bản trùng số dựng.
+
+---
+
 ## Còn lại phải làm bằng tay (cần tài khoản Apple của anh)
 
-Phần code đã xong. Mấy bước dưới đây em không làm thay được vì cần tài khoản và
-chữ ký của anh.
-
-### 1. Tài khoản
-
-- Đăng ký **Apple Developer Program** — 99 USD/năm, duyệt 1–2 ngày:
-  <https://developer.apple.com/programs/>
-
-### 2. Ký ứng dụng (trong Xcode)
-
-Mở `ios/App/App.xcodeproj` → chọn target **App** → tab **Signing & Capabilities**:
-
-- Tích **Automatically manage signing**
-- **Team**: chọn team của anh
-- **Bundle Identifier**: hiện là `com.kibugames.balloondarts`. Đổi thì sửa
-  `appId` trong [`capacitor.config.json`](capacitor.config.json) rồi chạy
-  `npm run sync`, đừng sửa trong Xcode (lần sync sau sẽ bị ghi đè).
-
-### 3. Tạo app trong App Store Connect
+### 1. Tạo app trong App Store Connect
 
 <https://appstoreconnect.apple.com> → **My Apps** → **+** → New App
 
@@ -106,12 +121,12 @@ Mở `ios/App/App.xcodeproj` → chọn target **App** → tab **Signing & Capab
 |---|---|
 | Tên | Balloon Darts (tên phải chưa ai lấy) |
 | Ngôn ngữ chính | English (thêm Vietnamese ở phần Localizations) |
-| Bundle ID | com.kibugames.balloondarts |
+| Bundle ID | com.kibu.BalloonDarts |
 | SKU | balloon-darts |
 | Danh mục | Games → Casual (danh mục phụ: Family) |
 | Xếp hạng độ tuổi | 4+ |
 
-### 4. Ảnh chụp màn hình (bắt buộc)
+### 2. Ảnh chụp màn hình (bắt buộc)
 
 App chạy cả iPhone lẫn iPad nên phải nộp **cả hai bộ**:
 
@@ -127,7 +142,7 @@ xcrun simctl io booted screenshot anh.png
 Nên chụp 3–5 ảnh: màn chọn chế độ, lúc 2 bé đang thi, màn kết quả, sân biển.
 Anh bảo em một tiếng là em chụp trọn bộ cho.
 
-### 5. Quyền riêng tư
+### 3. Quyền riêng tư
 
 - **App Privacy** trong App Store Connect: chọn **"Data Not Collected"** — app
   không thu thập gì thật, điểm cao nhất chỉ nằm trong máy.
@@ -135,13 +150,22 @@ Anh bảo em một tiếng là em chụp trọn bộ cho.
   vào. Trang `kibugames.com/about` chưa đủ, cần một trang riêng nói rõ "không
   thu thập dữ liệu". Em viết cho anh trang đó nếu anh muốn.
 
-### 6. Nộp
+### 4. Nộp tệp .ipa
 
-Trong Xcode: **Product → Destination → Any iOS Device**, rồi **Product →
-Archive** → **Distribute App** → **App Store Connect** → **Upload**.
+Tạo app trong App Store Connect **trước**, rồi mới nộp — không có bản ghi app
+thì tệp lên tới nơi bị trả về.
 
-Nộp bản mới thì tăng số ở Xcode → target App → tab General:
-`Version` (1.0 → 1.1) và `Build` (1 → 2). Build phải luôn tăng.
+- **Transporter** (tải free trên Mac App Store): kéo `build/ipa/App.ipa` vào,
+  bấm Deliver. Cách dễ nhất.
+- Hoặc dòng lệnh:
+  ```bash
+  xcrun altool --upload-app -f build/ipa/App.ipa -t ios \
+      -u <apple-id> -p <mật-khẩu-riêng-cho-ứng-dụng>
+  ```
+  Mật khẩu riêng lấy ở <https://appleid.apple.com> → Sign-In and Security →
+  App-Specific Passwords. Đừng dùng mật khẩu Apple ID thật.
+
+Bản dựng lên tới nơi mất 5–15 phút mới hiện trong TestFlight.
 
 ---
 
@@ -174,6 +198,8 @@ app-darts/
 ├── build-www.js          dựng www/ từ ../darts-game — đọc tệp này trước khi sửa gì
 ├── fetch-vendor.js       tải phông chữ / bộ icon / lá cờ về vendor/ (chạy một lần)
 ├── make-icons.js         icon 1024 + màn hình chờ, từ icon của game
+├── make-ipa.js           archive + ký + xuất .ipa để nộp store
+├── ExportOptions.plist   cấu hình xuất: nộp App Store, ký tự động
 ├── capacitor.config.json tên app, bundle id, màu nền
 ├── src/
 │   ├── app.css           lề tai thỏ, chống kéo trang, nút đổi ngôn ngữ trên nav

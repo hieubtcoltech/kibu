@@ -431,11 +431,15 @@ async function handle(req, res) {
         }
     }
 
+    /* Trang tĩnh nào ứng với tệp nào. Thêm trang mới thì thêm một dòng ở đây
+     * và một nhánh trong routes.js — hai chỗ, không hơn. */
+    const PAGE_FILE = { about: 'about.html', privacy: 'privacy.html' };
+
     const route = ROUTES.parse(pathname);
     if (route) {
         const pagePath = route.kind === 'game'
             ? path.join(ROOT, route.dir, 'index.html')
-            : path.join(ROOT, route.kind === 'about' ? 'about.html' : 'index.html');
+            : path.join(ROOT, PAGE_FILE[route.kind] || 'index.html');
         try {
             /* Trang HTML dựng lại theo ngôn ngữ nên đi lối RIÊNG, không qua
              * phần phục vụ tệp tĩnh. Em thêm phần nén ở dưới ấy, đo i18n.js

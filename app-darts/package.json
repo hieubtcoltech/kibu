@@ -8,7 +8,9 @@
     "sync": "npm run build && npx cap sync",
     "ios": "npm run sync && npx cap open ios",
     "icons": "node make-icons.js && npx @capacitor/assets generate --ios --iosProject ios/App",
-    "vendor": "node fetch-vendor.js"
+    "vendor": "node fetch-vendor.js",
+    "ipa": "npm run sync && node make-ipa.js",
+    "shots": "node make-shots.js"
   },
   "engines": {
     "node": ">=18"

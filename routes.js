@@ -63,6 +63,7 @@
         var lang = parts[0];
         if (parts.length === 1) return { lang: lang, kind: 'home' };
         if (parts.length === 2 && parts[1] === 'about') return { lang: lang, kind: 'about' };
+        if (parts.length === 2 && parts[1] === 'privacy') return { lang: lang, kind: 'privacy' };
         if (parts.length === 3 && parts[1] === 'g' && bySlug[parts[2]]) {
             return { lang: lang, kind: 'game', slug: parts[2], dir: bySlug[parts[2]].dir };
         }
@@ -73,6 +74,7 @@
     function bare(route) {
         if (!route) return '/';
         if (route.kind === 'about') return '/about';
+        if (route.kind === 'privacy') return '/privacy';
         if (route.kind === 'game') return '/g/' + route.slug;
         return '/';
     }
@@ -89,6 +91,7 @@
         var p = String(pathname || '').replace(/index\.html$/, '');
         if (p === '/' || p === '') return '/';
         if (p === '/about.html' || p === '/about' || p === '/about/') return '/about';
+        if (p === '/privacy.html' || p === '/privacy' || p === '/privacy/') return '/privacy';
         var m = p.match(/^\/([^/]+)\/?$/);
         if (m && byDir[m[1]]) return '/g/' + byDir[m[1]].slug;
         var g = p.match(/^\/g\/([^/]+)\/?$/);

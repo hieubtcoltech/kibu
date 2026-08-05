@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<!-- Trang này TỰ LO hai thứ tiếng: data-kibu-i18n="off" tắt bộ dịch tự động của
+     i18n.js, chỉ giữ lại nút cờ. Lý do: bộ dịch làm việc theo kiểu thay từng
+     mảnh chữ khớp trong từ điển chung — hợp với chữ trong game, nhưng với văn
+     bản pháp lý thì một mảnh dịch trượt là câu đổi nghĩa. Ở đây cả bản tiếng
+     Việt lẫn tiếng Anh đều viết tay, hiện đúng một bản theo ngôn ngữ đang chọn. -->
+<html lang="en" data-kibu-i18n="off">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - KIBU Games</title>
+
+    <meta name="description"
+        content="KIBU Games privacy policy: no accounts, no ads, no selling data. Our iOS games collect nothing at all.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/en/privacy">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/en/privacy">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/privacy">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/privacy">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/en/privacy">
+    <meta property="og:title" content="Privacy Policy - KIBU Games">
+    <meta property="og:description" content="No accounts, no ads, no selling data. Our iOS games collect nothing at all.">
+    <meta property="og:image" content="https://kibugames.com/og-image.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+        media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
+
+    <style>
+        :root {
+            --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+            --font-main: 'Nunito', system-ui, sans-serif;
+            --bg-poki: #0f172a;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-poki);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px 40px;
+        }
+
+        .poki-navbar {
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .poki-logo img { height: 44px; display: block; }
+
+        .back-btn {
+            font-family: var(--font-display);
+            font-size: 0.95rem;
+            font-weight: 800;
+            padding: 10px 22px;
+            border-radius: 50px;
+            background: #1e293b;
+            color: #38bdf8;
+            border: 2px solid #334155;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+        }
+
+        .back-btn:hover { background: #334155; border-color: #38bdf8; }
+
+        .doc {
+            width: 100%;
+            max-width: 900px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 24px;
+            padding: 40px;
+        }
+
+        .doc-title {
+            font-family: var(--font-display);
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 6px;
+        }
+
+        .doc-date { color: #94a3b8; font-size: 0.9rem; margin-bottom: 28px; }
+
+        /* Câu tóm tắt — thứ duy nhất nhiều phụ huynh đọc, nên tách hẳn ra. */
+        .doc-lead {
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            border-radius: 16px;
+            padding: 18px 20px;
+            font-size: 1.05rem;
+            line-height: 1.65;
+            margin-bottom: 32px;
+        }
+
+        .doc h2 {
+            font-family: var(--font-display);
+            font-size: 1.35rem;
+            font-weight: 800;
+            margin: 30px 0 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .doc h2:first-of-type { margin-top: 0; }
+
+        .doc p, .doc li { line-height: 1.75; color: #cbd5e1; }
+        .doc p { margin-bottom: 12px; }
+        .doc ul { margin: 0 0 12px 22px; }
+        .doc li { margin-bottom: 7px; }
+        .doc b { color: #fff; }
+        .doc a { color: #38bdf8; }
+
+        .doc table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+            font-size: 0.95rem;
+        }
+
+        .doc th, .doc td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid #334155;
+            color: #cbd5e1;
+            vertical-align: top;
+        }
+
+        .doc th { color: #fff; font-weight: 800; font-family: var(--font-display); }
+
+        @media (max-width: 600px) {
+            .doc { padding: 24px 18px; border-radius: 18px; }
+            .doc-title { font-size: 1.6rem; }
+            .doc table, .doc thead, .doc tbody, .doc tr, .doc th, .doc td { display: block; }
+            .doc th { border: none; padding-bottom: 2px; }
+            .doc td { padding-top: 0; }
+        }
+
+        [data-lang] { display: none; }
+        [data-lang].on { display: block; }
+    </style>
+
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <script type="module" src="/analytics.js"></script>
+
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+
+<body>
+    <header class="poki-navbar">
+        <a href="/" class="poki-logo"><img src="/logo.svg" alt="KIBU Games"></a>
+        <a href="/" class="back-btn"><i class="fa-solid fa-arrow-left"></i> <span data-back>Play Games</span></a>
+    </header>
+
+    <main class="doc">
+        <!-- ==================== TIẾNG VIỆT ==================== -->
+        <div data-lang="vi">
+            <h1 class="doc-title">Chính sách quyền riêng tư</h1>
+            <p class="doc-date">Cập nhật lần cuối: 5 tháng 8, 2026</p>
+
+            <p class="doc-lead">
+                KIBU Games là sân chơi cho trẻ em. Chúng tôi <b>không yêu cầu đăng ký tài khoản</b>,
+                <b>không hỏi tên, tuổi, email hay số điện thoại</b> của ai, <b>không có quảng cáo</b>,
+                <b>không bán dữ liệu</b> cho bất kỳ ai. Riêng các <b>ứng dụng iOS</b> của chúng tôi
+                thì <b>không gửi bất cứ thứ gì ra khỏi máy</b> — tắt mạng vẫn chơi được bình thường.
+            </p>
+
+            <h2><i class="fa-solid fa-mobile-screen" style="color:#4ade80"></i> Ứng dụng trên App Store</h2>
+            <p>
+                Áp dụng cho <b>Balloon Darts: Kids Party</b> và các ứng dụng KIBU Games khác trên App Store.
+            </p>
+            <p>
+                Toàn bộ trò chơi nằm sẵn trong gói cài đặt. Ứng dụng <b>không kết nối máy chủ nào</b>,
+                <b>không có công cụ đo đếm</b>, <b>không có quảng cáo</b>, <b>không mua bán trong ứng dụng</b>,
+                và <b>không có liên kết dẫn ra ngoài</b>.
+            </p>
+            <p>
+                Thứ duy nhất được lưu là <b>điểm cao nhất</b> và <b>ngôn ngữ đang chọn</b>. Hai thứ này
+                nằm trong bộ nhớ riêng của ứng dụng <b>trên chính máy của bé</b>, không ai khác đọc được,
+                và xoá ứng dụng là mất theo.
+            </p>
+            <p>
+                Khi bé bấm nút "Chia sẻ" ở màn hình kết quả, iOS mở khay chia sẻ của hệ thống. Nội dung
+                gửi đi chỉ là dòng chữ khoe điểm, và chỉ gửi khi bé tự chọn nơi gửi. Chúng tôi không
+                nhìn thấy gì trong đó.
+            </p>
+
+            <h2><i class="fa-solid fa-globe" style="color:#38bdf8"></i> Website kibugames.com</h2>
+            <p>Trang web thì có vài thứ được ghi nhận, và đây là toàn bộ danh sách:</p>
+            <table>
+                <thead>
+                    <tr><th>Cái gì</th><th>Để làm gì</th><th>Giữ bao lâu</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Google Analytics</b> (GA4)</td>
+                        <td>Đếm lượt xem trang và game nào hay được mở, để biết nên làm thêm game kiểu gì.
+                            Google tự ghi nhận loại thiết bị, trình duyệt, khu vực đại khái (cấp thành phố)
+                            và một mã ngẫu nhiên của trình duyệt.</td>
+                        <td>Theo mặc định của Google</td>
+                    </tr>
+                    <tr>
+                        <td><b>Số người đang chơi</b></td>
+                        <td>Con số nhỏ ở chân trang. Mỗi tab tự sinh một mã ngẫu nhiên rồi báo về mỗi 20 giây.
+                            Mã đó không gắn với ai và không được ghi ra đĩa.</td>
+                        <td>45 giây</td>
+                    </tr>
+                    <tr>
+                        <td><b>Số lượt chơi từng game</b></td>
+                        <td>Một con số cộng dồn cho mỗi game mỗi ngày. Không kèm bất cứ thông tin nào về người chơi.</td>
+                        <td>Vô thời hạn (chỉ là con số)</td>
+                    </tr>
+                    <tr>
+                        <td><b>Bộ nhớ trong trình duyệt</b></td>
+                        <td>Điểm cao nhất và ngôn ngữ đang chọn. Nằm trên máy của bé, không gửi đi đâu.</td>
+                        <td>Tới khi xoá dữ liệu duyệt web</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>
+                Máy chủ <b>không ghi nhật ký địa chỉ IP</b> và không lưu lịch sử truy cập của ai.
+            </p>
+
+            <h2><i class="fa-solid fa-child-reaching" style="color:#fbbf24"></i> Trẻ em</h2>
+            <p>
+                Sản phẩm của chúng tôi dành cho trẻ em, nên chúng tôi <b>cố tình không thu thập thông tin
+                cá nhân</b> — không có ô nào để nhập tên, không có đăng nhập, không có trò chuyện, không có
+                nội dung do người dùng đăng lên. Không có thông tin cá nhân nào được thu thập thì cũng
+                không có gì để lộ ra.
+            </p>
+            <p>
+                Nếu quý phụ huynh cho rằng con mình bằng cách nào đó đã gửi thông tin cá nhân cho chúng tôi,
+                xin liên hệ theo địa chỉ bên dưới — chúng tôi sẽ xoá ngay.
+            </p>
+
+            <h2><i class="fa-solid fa-handshake" style="color:#c084fc"></i> Bên thứ ba</h2>
+            <p>
+                Trên website, dịch vụ bên thứ ba duy nhất là <b>Google Analytics</b> (qua Firebase) — xem
+                <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">chính sách quyền
+                riêng tư của Google</a>. Trang web cũng nạp phông chữ từ Google Fonts và bộ biểu tượng từ
+                cdnjs.
+            </p>
+            <p>
+                <b>Ứng dụng iOS không dùng bên thứ ba nào cả</b> — phông chữ và biểu tượng đều nằm sẵn
+                trong gói cài đặt.
+            </p>
+
+            <h2><i class="fa-solid fa-pen" style="color:#f472b6"></i> Thay đổi</h2>
+            <p>
+                Khi sửa chính sách này, chúng tôi đổi ngày ở đầu trang. Nếu có thay đổi đáng kể về những gì
+                được thu thập, chúng tôi sẽ nói rõ ngay tại đây.
+            </p>
+
+            <h2><i class="fa-solid fa-envelope" style="color:#38bdf8"></i> Liên hệ</h2>
+            <p>Có câu hỏi gì về quyền riêng tư, xin cứ nhắn cho chúng tôi:</p>
+            <ul>
+                <li>Facebook: <a href="https://www.facebook.com/kibugames.official/" target="_blank" rel="noopener">facebook.com/kibugames.official</a></li>
+                <li>Telegram: <a href="https://t.me/coolkitty007" target="_blank" rel="noopener">t.me/coolkitty007</a></li>
+                <li>WhatsApp: <a href="https://wa.me/84988100942" target="_blank" rel="noopener">+84 988 100 942</a></li>
+            </ul>
+        </div>
+
+        <!-- ==================== ENGLISH ==================== -->
+        <div data-lang="en">
+            <h1 class="doc-title">Privacy Policy</h1>
+            <p class="doc-date">Last updated: 5 August 2026</p>
+
+            <p class="doc-lead">
+                KIBU Games is a playground for kids. We <b>never ask anyone to sign up</b>, we
+                <b>never ask for a name, age, email or phone number</b>, we run <b>no ads</b>, and we
+                <b>sell nothing to anyone</b>. Our <b>iOS apps</b> go further: they
+                <b>send nothing off the device at all</b> and play perfectly with the network switched off.
+            </p>
+
+            <h2><i class="fa-solid fa-mobile-screen" style="color:#4ade80"></i> Our App Store apps</h2>
+            <p>
+                This covers <b>Balloon Darts: Kids Party</b> and any other KIBU Games app on the App Store.
+            </p>
+            <p>
+                The whole game ships inside the app. It <b>contacts no server</b>, contains
+                <b>no analytics</b>, <b>no advertising</b>, <b>no in-app purchases</b> and
+                <b>no links that leave the app</b>.
+            </p>
+            <p>
+                The only things saved are the <b>high score</b> and the <b>chosen language</b>. Both live in
+                the app's own storage <b>on the child's device</b>, are readable by nobody else, and are gone
+                when the app is deleted.
+            </p>
+            <p>
+                Tapping "Share" on the results screen opens the system share sheet. The only thing handed to
+                it is a sentence about the score, and only once the child picks where to send it. We never
+                see any of it.
+            </p>
+
+            <h2><i class="fa-solid fa-globe" style="color:#38bdf8"></i> The kibugames.com website</h2>
+            <p>The website does record a few things. This is the complete list:</p>
+            <table>
+                <thead>
+                    <tr><th>What</th><th>Why</th><th>Kept for</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Google Analytics</b> (GA4)</td>
+                        <td>Counts page views and which games get opened, so we know what to build next.
+                            Google records device type, browser, rough area (city level) and a random
+                            browser identifier.</td>
+                        <td>Google's default retention</td>
+                    </tr>
+                    <tr>
+                        <td><b>Players-online counter</b></td>
+                        <td>The small number in the footer. Each tab makes up a random id and pings every
+                            20 seconds. The id belongs to nobody and is never written to disk.</td>
+                        <td>45 seconds</td>
+                    </tr>
+                    <tr>
+                        <td><b>Play counts per game</b></td>
+                        <td>One running total per game per day. Nothing about the player is attached.</td>
+                        <td>Indefinitely (it is just a number)</td>
+                    </tr>
+                    <tr>
+                        <td><b>Browser storage</b></td>
+                        <td>High scores and the chosen language. Stays on the child's device, never sent anywhere.</td>
+                        <td>Until browsing data is cleared</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p>Our server <b>keeps no IP address logs</b> and stores no browsing history for anyone.</p>
+
+            <h2><i class="fa-solid fa-child-reaching" style="color:#fbbf24"></i> Children</h2>
+            <p>
+                Our products are made for children, so we <b>deliberately collect no personal information</b>
+                — there is no field to type a name into, no login, no chat, and no user-posted content.
+                Personal information we never collect is personal information that cannot leak.
+            </p>
+            <p>
+                If you are a parent and believe your child has somehow sent us personal information, please
+                contact us at the addresses below and we will delete it straight away.
+            </p>
+
+            <h2><i class="fa-solid fa-handshake" style="color:#c084fc"></i> Third parties</h2>
+            <p>
+                On the website the only third-party service is <b>Google Analytics</b> (through Firebase) —
+                see <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's
+                privacy policy</a>. The site also loads fonts from Google Fonts and icons from cdnjs.
+            </p>
+            <p>
+                <b>The iOS apps use no third parties at all</b> — fonts and icons are bundled inside the app.
+            </p>
+
+            <h2><i class="fa-solid fa-pen" style="color:#f472b6"></i> Changes</h2>
+            <p>
+                When this policy changes we update the date at the top. If what we collect ever changes
+                meaningfully, we will say so plainly right here.
+            </p>
+
+            <h2><i class="fa-solid fa-envelope" style="color:#38bdf8"></i> Contact</h2>
+            <p>Any question about privacy, just message us:</p>
+            <ul>
+                <li>Facebook: <a href="https://www.facebook.com/kibugames.official/" target="_blank" rel="noopener">facebook.com/kibugames.official</a></li>
+                <li>Telegram: <a href="https://t.me/coolkitty007" target="_blank" rel="noopener">t.me/coolkitty007</a></li>
+                <li>WhatsApp: <a href="https://wa.me/84988100942" target="_blank" rel="noopener">+84 988 100 942</a></li>
+            </ul>
+        </div>
+    </main>
+
+    <footer class="poki-footer">
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> <a href="/" class="footer-home">KIBU Games</a>
+            - 100% Free games built by Bon &amp; Tin with love for kids. <a href="/about">About Us</a></p>
+        <div class="footer-tools">
+            <a class="footer-contact is-facebook" href="https://www.facebook.com/kibugames.official/"
+                target="_blank" rel="noopener" title="Follow on Facebook" aria-label="Follow on Facebook">
+                <i class="fa-brands fa-facebook-f"></i>
+            </a>
+            <a class="footer-contact is-telegram" href="https://t.me/coolkitty007"
+                target="_blank" rel="noopener" title="Chat on Telegram" aria-label="Chat on Telegram">
+                <i class="fa-brands fa-telegram"></i>
+            </a>
+            <a class="footer-contact is-whatsapp" href="https://wa.me/84988100942"
+                target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+                <i class="fa-brands fa-whatsapp"></i>
+            </a>
+            <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+            <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        /* Hiện đúng một bản ngôn ngữ. i18n.js chạy trước script này (thẻ thường
+           trong <head>) nên KibuI18n.lang đã có sẵn; thiếu thì tự đọc từ đường
+           dẫn /vi/ | /en/ rồi mới tới ngôn ngữ của máy. */
+        (function () {
+            var lang = (window.KibuI18n && window.KibuI18n.lang)
+                || (location.pathname.split('/')[1] === 'vi' ? 'vi' : null)
+                || ((navigator.language || 'en').toLowerCase().indexOf('vi') === 0 ? 'vi' : 'en');
+
+            document.documentElement.lang = lang;
+            var box = document.querySelector('[data-lang="' + lang + '"]');
+            (box || document.querySelector('[data-lang="en"]')).classList.add('on');
+
+            var back = document.querySelector('[data-back]');
+            if (back && lang === 'vi') back.textContent = 'Chơi Game';
+            if (lang === 'vi') document.title = 'Chính sách quyền riêng tư - KIBU Games';
+        })();
+    </script>
+</body>
+
+</html>

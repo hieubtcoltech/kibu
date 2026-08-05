@@ -37,6 +37,24 @@
       <priority>0.8</priority>
    </url>
    <url>
+      <loc>https://kibugames.com/vi/privacy</loc>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/privacy"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/privacy"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/privacy"/>
+      <lastmod>2026-08-05</lastmod>
+      <changefreq>yearly</changefreq>
+      <priority>0.3</priority>
+   </url>
+   <url>
+      <loc>https://kibugames.com/en/privacy</loc>
+      <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/privacy"/>
+      <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/privacy"/>
+      <xhtml:link rel="alternate" hreflang="x-default" href="https://kibugames.com/en/privacy"/>
+      <lastmod>2026-08-05</lastmod>
+      <changefreq>yearly</changefreq>
+      <priority>0.3</priority>
+   </url>
+   <url>
       <loc>https://kibugames.com/vi/g/fruit-crush</loc>
       <xhtml:link rel="alternate" hreflang="vi" href="https://kibugames.com/vi/g/fruit-crush"/>
       <xhtml:link rel="alternate" hreflang="en" href="https://kibugames.com/en/g/fruit-crush"/>

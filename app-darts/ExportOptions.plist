@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Cấu hình xuất tệp .ipa để nộp App Store. Dùng bởi `npm run ipa`.
+     Ký tự động: Xcode tự xin chứng chỉ Apple Distribution và profile cho
+     com.kibugames.BalloonDarts, miễn là tài khoản Apple đã đăng nhập trong
+     Xcode (Settings → Accounts). -->
+<plist version="1.0">
+<dict>
+	<key>method</key>
+	<string>app-store-connect</string>
+	<key>teamID</key>
+	<string>S8S7RJA9P9</string>
+	<key>signingStyle</key>
+	<string>automatic</string>
+	<key>destination</key>
+	<string>export</string>
+	<!-- Nộp cả bảng ký hiệu để báo cáo sự cố trên App Store Connect đọc được
+	     tên hàm, thay vì một đống địa chỉ bộ nhớ. -->
+	<key>uploadSymbols</key>
+	<true/>
+	<!-- Bitcode đã bị Apple bỏ từ Xcode 14, khai false cho khỏi cảnh báo. -->
+	<key>compileBitcode</key>
+	<false/>
+</dict>
+</plist>
