@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Máy soát đường bay theo từng sân — Phi Tiêu Bóng Bay</title>
+<style>
+    body { font: 15px/1.6 ui-monospace, Menlo, monospace; background: #0e1b26; color: #d8e6ef; margin: 0; padding: 20px; }
+    h1 { font-size: 17px; color: #7bdcff; }
+    pre { background: #132534; border-radius: 10px; padding: 14px 16px; white-space: pre-wrap; }
+    .ok { color: #7ce0a8; } .bad { color: #ff9a9a; }
+    iframe { position: absolute; left: -3000px; width: 1240px; height: 720px; border: 0; }
+</style>
+</head>
+<body>
+<h1>Máy soát đường bay của mũi tiêu ở ba sân</h1>
+<pre id="o">đang chạy…</pre>
+<iframe id="f" src="./"></iframe>
+<script>
+/* Ba sân giờ mỗi sân một trọng lực và một sức cản riêng. Nhìn ảnh chụp không
+   biết được đường bay cong hay thẳng — phải đo bằng số. Máy này soi bốn điều:
+
+   1. Hội chợ và bãi biển phải bay Y HỆT nhau khi không có gió. Bãi biển chỉ
+      khác ở chỗ có gió, không được lẫn thêm gì khác vào.
+   2. Ngoài vũ trụ mũi tiêu phải bay XA HƠN và TỤT XUỐNG ÍT HƠN — đó chính là
+      cái "ít trọng lực" đã hứa với bé ngay trên nút chọn sân.
+   3. ĐƯỜNG CHẤM DỰ ĐOÁN phải bám sát đường bay thật ở CẢ BA sân. Cùng bộ số
+      trọng lực nằm ở hai chỗ trong mã, sửa một chỗ quên chỗ kia thì bé ngắm
+      theo đường chấm rồi ném trượt mà không hiểu vì sao.
+   4. Ở sân vũ trụ mũi tiêu không được cắm xuống đất sớm hơn hai sân kia.
+
+   Cách dùng: mở /darts-game/check-flight.html trên máy chạy web. */
+document.getElementById('f').addEventListener('load', function () {
+    (function wait() {
+        var D = document.getElementById('f').contentWindow.dartsGame;
+        if (!(D && D.flight)) return setTimeout(wait, 60);
+
+        var ARENAS = ['fair', 'beach', 'space'], bad = [], L = [], m = {};
+
+        ARENAS.forEach(function (a) {
+            var r = D.flight(a);
+            var p = r.path, last = p[p.length - 1];
+            var peak = p.reduce(function (s, q) { return Math.min(s, q.y); }, 1e9);
+            var g = D.guidePath(a);
+
+            /* Khoảng lệch lớn nhất giữa đường chấm và đường bay thật, đo theo
+               chiều dọc tại cùng một hoành độ — đó mới là cái bé nhìn thấy. */
+            var gap = 0;
+            g.forEach(function (q) {
+                if (q.x > last.x) return;
+                for (var i = 1; i < p.length; i++) {
+                    if (p[i].x >= q.x) {
+                        var t = (q.x - p[i - 1].x) / ((p[i].x - p[i - 1].x) || 1);
+                        var yy = p[i - 1].y + (p[i].y - p[i - 1].y) * t;
+                        gap = Math.max(gap, Math.abs(yy - q.y));
+                        break;
+                    }
+                }
+            });
+
+            /* ĐỘ CAO KHI ĐÃ ĐI NGANG ĐƯỢC 600px — đây mới là con số nói đúng
+               cái "bay thẳng hơn". Đo quãng đi ngang lúc mũi tiêu rời khung thì
+               ngoài vũ trụ lại ra số NHỎ hơn, mà không phải vì nó bay dở: nó
+               vọt lên rồi ra khỏi mép TRÊN trước khi kịp đi xa ngang. So ở cùng
+               một khoảng ngang thì mới so được táo với táo. */
+            var h600 = null;
+            for (var j = 1; j < p.length; j++) {
+                if (p[j].x >= 600) {
+                    var t2 = (600 - p[j - 1].x) / ((p[j].x - p[j - 1].x) || 1);
+                    h600 = p[0].y - (p[j - 1].y + (p[j].y - p[j - 1].y) * t2);
+                    break;
+                }
+            }
+
+            m[a] = { far: last.x, rise: p[0].y - peak, h600: h600, stuck: r.stuck, gap: gap };
+            L.push('  ' + a.padEnd(6) +
+                ' vống lên ' + String(Math.round(m[a].rise)).padStart(4) + 'px' +
+                '   cao hơn tay ném ' + String(h600 === null ? '—' : Math.round(h600)).padStart(4) + 'px khi đã đi ngang 600px' +
+                '   ' + (r.stuck ? 'cắm xuống đất  ' : 'ra khỏi mép trên') +
+                '   lệch với đường chấm ' + gap.toFixed(1) + 'px');
+        });
+
+        if (Math.abs(m.fair.far - m.beach.far) > 0.5)
+            bad.push('hội chợ và bãi biển bay khác nhau dù không có gió (' + m.fair.far.toFixed(0) + ' với ' + m.beach.far.toFixed(0) + ')');
+        if (m.space.rise < m.fair.rise * 1.5)
+            bad.push('ngoài vũ trụ vống lên ' + m.space.rise.toFixed(0) + 'px, chưa hơn nổi một rưỡi lần hội chợ');
+        if (m.space.h600 === null || m.fair.h600 === null)
+            bad.push('có sân mũi tiêu không đi nổi 600px ngang, không so được');
+        else if (m.space.h600 < m.fair.h600 + 120)
+            bad.push('đi ngang 600px thì vũ trụ chỉ cao hơn hội chợ ' + (m.space.h600 - m.fair.h600).toFixed(0) + 'px, chưa ra dáng ít trọng lực');
+        if (m.space.stuck && !m.fair.stuck)
+            bad.push('ngoài vũ trụ mà mũi tiêu lại cắm đất trong khi ở hội chợ thì không');
+        ARENAS.forEach(function (a) {
+            if (m[a].gap > 26) bad.push('sân ' + a + ': đường chấm dự đoán lệch khỏi đường bay thật tới ' + m[a].gap.toFixed(0) + 'px');
+        });
+
+        var el = document.getElementById('o');
+        el.textContent = 'ném cùng một góc 41 độ, cùng lực 0,8, tắt gió:\n' + L.join('\n') + '\n\n' +
+            (bad.length
+                ? 'KHÔNG ĐẠT — ' + bad.length + ' lỗi\n  · ' + bad.join('\n  · ')
+                : 'ĐẠT — hai sân cũ không đổi gì, vũ trụ bay xa hơn hẳn, và đường chấm bám sát đường bay thật ở cả ba sân.');
+        el.className = bad.length ? 'bad' : 'ok';
+        document.title = bad.length ? 'KHONG DAT' : 'DAT';
+    })();
+});
+window.onerror = function (e, u, l, c, err) {
+    document.getElementById('o').textContent = 'LỖI: ' + e + '\n' + ((err && err.stack) || '');
+    document.title = 'LOI';
+};
+</script>
+</body>
+</html>

@@ -144,10 +144,10 @@
     }
 
     /* ------------------------------------------------------------------ *
-     * HAI SÂN CHƠI
+     * BA SÂN CHƠI
      *
      * Anh Hiếu: "thêm màn chơi ở bãi biển đi để thêm hấp dẫn và độ khó vì ở
-     * biển có gió".
+     * biển có gió". Rồi sau: "hãy thêm màn chơi ở ngoài vũ trụ đi".
      *
      * Em tách SÂN ra khỏi CHẾ ĐỘ chứ không nhập làm một. Chế độ là luật tính
      * điểm (đấu 90 giây, săn bóng vàng, tập ném); sân là nơi chơi. Nhập lại thì
@@ -157,10 +157,27 @@
      * windAdd cộng THÊM vào gió của mức khó. Nên bãi biển ở mức Dễ vẫn dễ hơn
      * hội chợ ở mức Khó — bé mới chơi vẫn ra biển được, chỉ là phải học ngắm
      * lệch theo gió.
+     *
+     * BA SÂN KHÔNG XẾP THEO THANG DỄ - KHÓ, mà mỗi sân hỏng một luật khác nhau:
+     *
+     *   hội chợ  — đủ cả trọng lực và không khí, đường bay cong như mọi khi
+     *   bãi biển — thêm gió, phải ngắm lệch
+     *   vũ trụ   — trọng lực còn một phần ba, gần như không có không khí cản,
+     *              nên mũi tiêu bay THẲNG và không chậm lại
+     *
+     * Vũ trụ dễ ngắm hơn hẳn, nên phải lấy lại chỗ khác chứ không thì nó thành
+     * sân "ăn gian": bóng bay lên nhanh hơn 1,3 lần (không có không khí cản thì
+     * khí heli kéo lên nhanh hơn), và có chú phi hành gia trôi ngang mà bắn
+     * nhầm là mất điểm. Đổi lại: ngắm dễ, nhưng đích chạy nhanh và phải nhìn kỹ.
+     *
+     * grav/drag/rise là HỆ SỐ NHÂN vào hằng số gốc, không phải giá trị thay
+     * thế. Để bằng 1 là sân ấy giữ đúng vật lý cũ — nhờ vậy thêm sân mới không
+     * đụng gì tới hai sân đang chạy.
      * ------------------------------------------------------------------ */
     const ARENAS = {
-        fair: { key: 'fair', name: 'FAIRGROUND', windAdd: 0, gust: false },
-        beach: { key: 'beach', name: 'BEACH', windAdd: 0.62, gust: true }
+        fair: { key: 'fair', name: 'FAIRGROUND', windAdd: 0, windMul: 1, gust: false, grav: 1, drag: 1, rise: 1, hazard: null },
+        beach: { key: 'beach', name: 'BEACH', windAdd: 0.62, windMul: 1, gust: true, grav: 1, drag: 1, rise: 1, hazard: 'gull' },
+        space: { key: 'space', name: 'OUTER SPACE', windAdd: 0, windMul: 0, gust: false, grav: 0.34, drag: 0.30, rise: 1.28, hazard: 'astro' }
     };
 
     const MODES = {
@@ -361,7 +378,10 @@
             this.kind = kind;
             this.r = kind.r;
             this.x = x; this.baseX = x; this.y = y;
-            this.vy = rnd(kind.vy[0], kind.vy[1]) * diff.rise;
+            /* Sân cũng có tiếng nói ở đây, không riêng mức khó. Ngoài vũ trụ
+             * không có không khí cản nên khí heli kéo quả bóng lên nhanh hơn —
+             * và đó là chỗ lấy lại độ khó cho cái sân dễ ngắm ấy. */
+            this.vy = rnd(kind.vy[0], kind.vy[1]) * diff.rise * Game.arenaCfg.rise;
             this.swayA = rnd(8, 22);            // biên độ đung đưa sang hai bên
             this.swayW = rnd(0.7, 1.5);         // nhịp đung đưa
             this.swayP = rnd(0, TAU);
@@ -774,6 +794,125 @@
     }
 
     // =========================================================
+    //  PHI HÀNH GIA — chỉ có ngoài vũ trụ, bắn nhầm là mất điểm
+    //
+    //  Cùng vai với con hải âu ở bãi biển: một thứ ĐANG SỐNG trôi ngang màn,
+    //  bé phải nhìn kỹ mà tránh. Không có nó thì sân vũ trụ chỉ còn là sân dễ
+    //  nhất — trọng lực yếu làm đường ném gần như thẳng, ngắm đâu trúng đấy.
+    //
+    //  Vì sao chọn phi hành gia chứ không phải thiên thạch: bé phải hiểu NGAY
+    //  vì sao trúng nó lại bị trừ điểm. Ném vào hòn đá thì chẳng có gì sai cả,
+    //  còn ném vào người thì đứa trẻ nào cũng biết là không nên.
+    //
+    //  Chỗ dễ nhầm là cái mũ: nó tròn và sáng, mà quả bóng cũng tròn và sáng.
+    //  Ba dấu hiệu tách nó ra, đều là thứ mắt bắt được mà không cần nhìn kỹ:
+    //  kính mũ VÀNG SẪM chiếm gần hết mặt trước (bóng không có mảng tối nào),
+    //  có tay chân thò ra bốn phía, và nó TRÔI NGANG chứ không bay lên.
+    // =========================================================
+    const ASTRO_PTS = -5;              // đúng bằng con hải âu và quả bom
+
+    class Astro {
+        constructor(x0, x1) {
+            this.dir = Math.random() < 0.5 ? 1 : -1;
+            this.x = this.dir > 0 ? x0 - 60 : x1 + 60;
+            this.y = rnd(120, 330);
+            /* Trôi chậm hơn hải âu: ngoài vũ trụ không có gì đẩy, người ta trôi
+               theo quán tính. Chậm thì cũng công bằng hơn — mũi tiêu ở đây bay
+               thẳng và nhanh, con mồi mà cũng nhanh nữa thì thành ép uổng. */
+            this.sp = rnd(34, 62);
+            this.r = 22;               // bán kính va chạm, ôm cả mũ lẫn ba lô
+            this.t = rnd(0, 6);
+            this.spin = rnd(-0.5, 0.5);
+            this.alive = true;
+            this.dead = false;         // trúng phi tiêu thì xoay tít bắn đi
+            this.vy = 0;
+        }
+
+        update(dt, wind, x0, x1) {
+            this.t += dt;
+            if (this.dead) {
+                /* KHÔNG rơi xuống đất như con hải âu. Ngoài vũ trụ thì trúng
+                 * cái gì là văng đi theo hướng ấy mãi, và đó chính là chỗ bé
+                 * học được một điều thật về vũ trụ. */
+                this.spin += 3.4 * dt;
+                this.x += this.dir * 96 * dt;
+                this.vy = lerp(this.vy, -34, dt * 2);
+                this.y += this.vy * dt;
+                if (this.y < -60 || this.x < x0 - 140 || this.x > x1 + 140) this.alive = false;
+                return;
+            }
+            this.x += this.dir * this.sp * dt;
+            this.y += Math.sin(this.t * 0.8) * 11 * dt;
+            this.spin += 0.22 * dt;
+            if (this.x < x0 - 90 || this.x > x1 + 90) this.alive = false;
+        }
+
+        draw(ctx) {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(Math.sin(this.t * 0.6) * 0.12 + (this.dead ? this.spin : 0));
+            ctx.scale(this.dir, 1);
+
+            const suit = '#eef2f7', suitDark = '#a9b6c6', trim = '#ff8a3d';
+
+            // dây nối về tàu, mảnh thôi cho khỏi rối
+            if (!this.dead) {
+                ctx.strokeStyle = 'rgba(220,232,245,0.35)';
+                ctx.lineWidth = 1.3;
+                ctx.beginPath();
+                ctx.moveTo(-13, 6);
+                ctx.quadraticCurveTo(-40, 14 + Math.sin(this.t * 1.4) * 6, -70, 8);
+                ctx.stroke();
+            }
+
+            // ba lô dưỡng khí
+            ctx.fillStyle = suitDark;
+            ctx.beginPath(); ctx.roundRect(-19, -11, 12, 22, 4); ctx.fill();
+
+            // tay và chân — bốn cái thò ra, đây là thứ nói "người" chứ không phải bóng
+            ctx.strokeStyle = suit;
+            ctx.lineWidth = 7;
+            ctx.lineCap = 'round';
+            const sw = Math.sin(this.t * 1.6) * 5;
+            ctx.beginPath();
+            ctx.moveTo(-2, -2); ctx.lineTo(15, -12 + sw);        // tay trước
+            ctx.moveTo(-4, 0); ctx.lineTo(-14, -12 - sw);        // tay sau
+            ctx.moveTo(-2, 8); ctx.lineTo(13, 17 - sw);          // chân trước
+            ctx.moveTo(-5, 9); ctx.lineTo(-12, 19 + sw);         // chân sau
+            ctx.stroke();
+
+            // thân
+            ctx.fillStyle = suit;
+            ctx.beginPath(); ctx.roundRect(-11, -10, 20, 22, 8); ctx.fill();
+            ctx.fillStyle = trim;
+            ctx.fillRect(-11, 2, 20, 3);
+
+            /* Mũ: vỏ trắng, kính chiếm gần hết mặt trước.
+             *
+             * Kính XANH BĂNG, KHÔNG phải vàng. Bản đầu em vẽ kính vàng như mũ
+             * phi hành gia thật, dựng ảnh so cạnh quả bóng thì lộ ngay một cái
+             * bẫy: ở chế độ Săn Bóng Vàng bé đang quét mắt tìm đúng những vòng
+             * tròn vàng, mà cái kính lại là một vòng tròn vàng. Đổi sang xanh
+             * thì không còn quả bóng nào trong game trùng màu với nó nữa. */
+            ctx.fillStyle = suit;
+            ctx.beginPath(); ctx.arc(2, -17, 12.5, 0, TAU); ctx.fill();
+            ctx.fillStyle = '#0d2438';
+            ctx.beginPath(); ctx.arc(4.5, -17, 8.6, 0, TAU); ctx.fill();
+            const vis = ctx.createLinearGradient(-4, -25, 12, -9);
+            vis.addColorStop(0, '#a9ecff');
+            vis.addColorStop(0.55, '#2f7fbf');
+            vis.addColorStop(1, '#123a63');
+            ctx.fillStyle = vis;
+            ctx.beginPath(); ctx.arc(4.5, -17, 8, 0, TAU); ctx.fill();
+            // một vệt sáng hắt trên kính
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.beginPath(); ctx.ellipse(1.5, -20.5, 3.2, 1.9, -0.5, 0, TAU); ctx.fill();
+
+            ctx.restore();
+        }
+    }
+
+    // =========================================================
     //  Mũi phi tiêu
     // =========================================================
     class Dart {
@@ -804,17 +943,23 @@
             const steps = clamp(Math.ceil(sp0 * dt / 6), 1, 16);
             const h = dt / steps;
 
+            /* Trọng lực và không khí của SÂN, không phải hằng số chết. Ngoài vũ
+             * trụ trọng lực còn một phần ba và gần như không có gì cản, nên mũi
+             * tiêu bay thẳng băng và không chậm lại. Ở hai sân kia hệ số bằng 1,
+             * tức đúng y như cũ. */
+            const A = Game.arenaCfg;
+
             for (let s = 0; s < steps; s++) {
                 const px = this.tipX, py = this.tipY;
 
                 const sp = Math.hypot(this.vx, this.vy);
                 if (sp > 1) {
                     // Cản không khí: a = 0,032 · v²  (v tính bằng m/s)
-                    const a = DRAG_K * sp * sp / PPM;
+                    const a = DRAG_K * A.drag * sp * sp / PPM;
                     this.vx -= this.vx / sp * a * h;
                     this.vy -= this.vy / sp * a * h;
                 }
-                this.vy += G * h;
+                this.vy += G * A.grav * h;
                 this.vx += wind * WIND_DART * h;
                 this.x += this.vx * h;
                 this.y += this.vy * h;
@@ -1093,12 +1238,16 @@
             // Bóng bay vẫn bay lên kể cả lúc đếm ngược cho sinh động
             for (const b of this.balloons) b.update(dt, wind, this.x0 + 6, this.x1 - 6);
 
-            /* HẢI ÂU chỉ có ở bãi biển, và thưa thôi. Dày quá thì bé không dám
-             * ném nữa — cái phạt phải làm bé NHÌN KỸ, không phải làm bé sợ. */
-            if (Game.arena === 'beach' && playing) {
+            /* VẬT CẢN theo sân, và thưa thôi. Dày quá thì bé không dám ném nữa —
+             * cái phạt phải làm bé NHÌN KỸ, không phải làm bé sợ.
+             *
+             * Hội chợ không có gì cả, bãi biển có hải âu, vũ trụ có phi hành
+             * gia. Cùng một ô chứa và cùng một luật trừ điểm, chỉ khác hình. */
+            const hz = Game.arenaCfg.hazard;
+            if (hz && playing) {
                 this.gullT -= dt;
                 if (this.gullT <= 0 && this.gulls.length < 2) {
-                    this.gulls.push(new Gull(this.x0, this.x1));
+                    this.gulls.push(hz === 'astro' ? new Astro(this.x0, this.x1) : new Gull(this.x0, this.x1));
                     this.gullT = rnd(5.5, 11);
                 }
             }
@@ -1194,31 +1343,36 @@
             this.state = 'aim';
         }
 
-        /* BẮN NHẦM HẢI ÂU.
+        /* BẮN NHẦM VẬT CẢN — con hải âu ở bãi biển, chú phi hành gia ngoài vũ trụ.
          *
          * Trừ đúng 5 điểm — xoá luôn chuỗi bắn trúng, vì chuỗi là
          * phần thưởng cho sự cẩn thận mà cú này thì không cẩn thận.
          *
-         * Vẽ búi lông trắng bay ra chứ không vẽ mảnh bóng vỡ: bé phải nhận ra
-         * mình vừa bắn trúng CON CHIM, không phải nổ nhầm quả bóng nào. */
-        onGull(g) {
-            this.score += GULL_PTS;
+         * Vẽ búi mảnh vụn bay ra chứ không vẽ mảnh bóng vỡ, và mỗi sân một màu
+         * riêng: bé phải nhận ra mình vừa bắn trúng CON CHIM hay CHÚ PHI HÀNH
+         * GIA, chứ không tưởng là nổ nhầm quả bóng nào. */
+        onHazard(g) {
+            const astro = g instanceof Astro;
+            this.score += astro ? ASTRO_PTS : GULL_PTS;
             this.bombs++;
             this.streak = 0;
             this.onFire = false;
             this.shake = 14;
+            const col = astro
+                ? { base: '#a9ecff', light: '#e4f8ff' }      // mảnh kính mũ xanh băng
+                : { base: '#ffffff', light: '#e8eef6' };     // búi lông trắng
             for (let i = 0; i < 14; i++) {
-                this.shreds.push(new Shred(g.x, g.y, { base: '#ffffff', light: '#e8eef6' }, 12));
+                this.shreds.push(new Shred(g.x, g.y, col, 12));
             }
-            this.addFx('🐦 -5', '#ffd0d0', g.x, g.y, 26);
+            this.addFx(astro ? '🧑‍🚀 -5' : '🐦 -5', '#ffd0d0', g.x, g.y, 26);
             Sfx.bomb();
             Game.bumpCard(this.idx);
         }
 
         /* Một quả bóng vừa bị đâm trúng: dựng cả chùm hiệu ứng nổ.
-         * Con hải âu cũng đi qua đây — nó không có .kind nên rẽ nhánh ngay. */
+         * Vật cản cũng đi qua đây — chúng không có .kind nên rẽ nhánh ngay. */
         onPop(b, mode) {
-            if (b instanceof Gull) return this.onGull(b);
+            if (b instanceof Gull || b instanceof Astro) return this.onHazard(b);
             const k = b.kind, r = b.r;
             this.pendingHits++;
 
@@ -1374,6 +1528,7 @@
              * thứ cần rung. Cái phông sau lưng thì đứng yên cũng đúng hơn:
              * quả bóng nổ chứ có phải cả gian hàng nổ đâu. */
             if (Game.arena === 'beach') this.drawBeach(ctx, time);
+            else if (Game.arena === 'space') this.drawSpace(ctx, time);
             else this.drawBooth(ctx, time);
 
             if (this.shake > 0.4) ctx.translate(rnd(-this.shake, this.shake), rnd(-this.shake, this.shake));
@@ -1556,6 +1711,297 @@
              * hình trang trí, mà giờ hải âu là vật BẮN TRÚNG ĐƯỢC nên phải là
              * vật thật, có toạ độ và có va chạm — xem lớp Gull. Để cả hai thì
              * bé ném vào con vẽ trang trí rồi không hiểu vì sao không ăn gì. */
+        }
+
+        /* ------------------------------------------------------------------ *
+         * SÂN NGOÀI VŨ TRỤ
+         *
+         * Anh Hiếu: "hãy thêm màn chơi ở ngoài vũ trụ đi".
+         *
+         * Bé đứng trên một mặt trăng xám, sau lưng là trời sao, Trái Đất treo
+         * đằng xa và một hành tinh có vành.
+         *
+         * BÀI HỌC TỪ CÁI MẶT TRỜI Ở BÃI BIỂN chi phối toàn bộ chỗ này. Hôm ấy
+         * em vẽ mặt trời to bằng quả bóng và vàng đúng màu bóng vàng, anh Hiếu
+         * nhìn là ném luôn mũi tiêu vào. Ở đây có tới hai quả cầu treo trên
+         * trời nên nguy cơ ấy gấp đôi, và em chặn bằng số đo cụ thể:
+         *
+         *   quả bóng trong game có bán kính từ 18 tới 36 pixel
+         *   → Trái Đất để 54, TO HƠN HẲN quả bóng lớn nhất, lại có lục địa,
+         *     có mảng tối bên rìa và có vành khí quyển sáng
+         *   → hành tinh kia chỉ 24, nằm gọn trong khoảng dễ nhầm, NÊN nó phải
+         *     có VÀNH. Một quả cầu đeo vành thì không thể là quả bóng bay được.
+         *
+         * Cả hai đều ĐỨNG YÊN, mà bóng thì bay lên — chỉ riêng điều đó thôi
+         * cũng đủ để mắt tách ra sau một giây.
+         *
+         * Trời sao, sao băng và hai hành tinh đều đặt theo W của cả màn chứ
+         * không theo khoảnh: bốn bé cùng ngước lên MỘT bầu trời, không phải bốn.
+         * ------------------------------------------------------------------ */
+        drawSpace(ctx, time) {
+            const x0 = this.x0, x1 = this.x1, w = this.w;
+            const HORIZON = GROUND_Y - 26;         // mép mặt trăng, hơi cao hơn chỗ đứng
+
+            // --- KHOẢNG KHÔNG: đen tuyền ở đỉnh, ngả tím dần về phía mặt đất ---
+            const sky = ctx.createLinearGradient(0, 0, 0, HORIZON);
+            sky.addColorStop(0, '#05060f');
+            sky.addColorStop(0.55, '#0b0f24');
+            sky.addColorStop(1, '#1d1636');
+            ctx.fillStyle = sky;
+            ctx.fillRect(x0, 0, w, HORIZON);
+
+            /* --- TINH VÂN: hai vệt sáng mờ, KHÔNG viền ---
+             * Cùng cái bẫy đã mắc hai lần rồi (quầng mặt trời ở biển, đèn trần
+             * bên Tháp Khối): xếp mấy hình tròn mờ chồng lên nhau thì mỗi chỗ
+             * giao nhau lộ ra một cái mép, ra hình chứ không ra sương. Một
+             * chuyển sắc toả dần thì không có mép nào. */
+            for (const n of [
+                { x: W * 0.30, y: 210, r: 230, c: '124,60,190' },
+                { x: W * 0.74, y: 150, r: 190, c: '30,120,170' }
+            ]) {
+                const g2 = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+                g2.addColorStop(0, `rgba(${n.c},0.20)`);
+                g2.addColorStop(0.55, `rgba(${n.c},0.08)`);
+                g2.addColorStop(1, `rgba(${n.c},0)`);
+                ctx.fillStyle = g2;
+                ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, TAU); ctx.fill();
+            }
+
+            /* --- TRỜI SAO ---
+             * Chỗ sao lấy từ chỉ số ngôi sao chứ không phải Math.random(): bốc
+             * ngẫu nhiên thì mỗi khung hình cả bầu trời nhảy chỗ một lần, thành
+             * ra nhiễu hạt chứ không thành sao. Đây đúng cái bẫy của mấy hạt
+             * cát ở bãi biển, chỉ khác là trên trời thì lộ hơn nhiều.
+             *
+             * Sao to nhất 1,7px — nhỏ hơn quả bóng bé nhất tới hơn mười lần,
+             * không có cách nào nhầm được. */
+            for (let i = 0; i < 150; i++) {
+                const sx = ((i * 71 + (i * i) % 37) * 13) % W;
+                const sy = ((i * 149 + (i % 11) * 53) % (HORIZON - 20)) + 6;
+                if (sx < x0 - 4 || sx > x1 + 4) continue;
+                const tw = 0.45 + 0.55 * Math.sin(time * (1.1 + (i % 5) * 0.42) + i);
+                const sr = 0.6 + (i % 4) * 0.37;
+                ctx.fillStyle = `rgba(255,253,244,${(0.30 + 0.55 * tw).toFixed(3)})`;
+                ctx.beginPath(); ctx.arc(sx, sy, sr, 0, TAU); ctx.fill();
+            }
+
+            /* --- TRÁI ĐẤT và HÀNH TINH CÓ VÀNH ---
+             * Cả hai treo ở khoảng y = 175..215 chứ không sát đỉnh màn, vì thanh
+             * điểm của các bé phủ hết dải y = 20..86 của mặt tranh. Bản đầu em
+             * để Trái Đất ở y=150: chụp ảnh ra thì cái thẻ điểm của Kid 1 cắt
+             * mất một góc hành tinh. Đúng lỗi đã mắc với mặt trời ngoài bãi
+             * biển, chỉ khác là lần ấy vướng theo chiều ngang. */
+            this.drawEarth(ctx, W * 0.15, 215, 54, time);
+            this.drawRinged(ctx, W * 0.80, 175, 24);
+
+            /* --- SAO BĂNG ---
+             * Tính theo GIỜ chứ không nuôi trạng thái riêng, cùng lối với đàn cá
+             * heo ngoài biển: cùng một giây thì khoảnh của mọi bé thấy đúng một
+             * ngôi sao băng ấy. Tạm dừng rồi chơi tiếp cũng không đẻ ra vệt nào
+             * đứt quãng giữa chừng. */
+            const PER = 4.7, DUR = 0.55;
+            for (const k of [Math.floor(time / PER), Math.floor(time / PER) - 1]) {
+                const u = (time - k * PER) / DUR;
+                if (u < 0 || u > 1) continue;
+                const h1 = (Math.sin(k * 12.9898) * 43758.5453) % 1;
+                const h2 = (Math.sin(k * 78.233) * 43758.5453) % 1;
+                const sx = (Math.abs(h1) * W * 1.2) - W * 0.1;
+                const sy = 30 + Math.abs(h2) * 200;
+                const len = 120, fade = Math.sin(u * Math.PI);
+                const hx = sx + u * 320, hy = sy + u * 190;
+                if (hx < x0 - len || hx > x1 + len) continue;
+                const tr = ctx.createLinearGradient(hx, hy, hx - len * 0.55, hy - len * 0.33);
+                tr.addColorStop(0, `rgba(255,255,255,${(0.85 * fade).toFixed(3)})`);
+                tr.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.strokeStyle = tr;
+                ctx.lineWidth = 2.1;
+                ctx.beginPath();
+                ctx.moveTo(hx, hy);
+                ctx.lineTo(hx - len * 0.55, hy - len * 0.33);
+                ctx.stroke();
+            }
+
+            /* --- DÃY NÚI XA trên mặt trăng ---
+             * Sẫm hơn mặt đất và không có chi tiết: ở xa thì mắt chỉ thấy hình
+             * cắt, và chính chỗ thiếu chi tiết ấy tạo ra chiều sâu. */
+            ctx.fillStyle = '#241c33';
+            ctx.beginPath();
+            ctx.moveTo(x0, HORIZON);
+            for (let x = x0; x <= x1; x += 24) {
+                const k = Math.sin(x * 0.017) * 16 + Math.sin(x * 0.041 + 1.7) * 9;
+                ctx.lineTo(x, HORIZON - 26 - k);
+            }
+            ctx.lineTo(x1, HORIZON); ctx.closePath(); ctx.fill();
+
+            // --- MẶT TRĂNG: đất xám, sáng dần về phía chân trời ---
+            const soil = ctx.createLinearGradient(0, HORIZON, 0, H);
+            soil.addColorStop(0, '#6d6a7d');
+            soil.addColorStop(0.35, '#514e60');
+            soil.addColorStop(1, '#2f2c3b');
+            ctx.fillStyle = soil;
+            ctx.fillRect(x0, HORIZON, w, H - HORIZON);
+            // vệt sáng ngay mép chân trời, chỗ ánh sao hắt vào
+            ctx.fillStyle = 'rgba(220,214,255,0.16)';
+            ctx.fillRect(x0, HORIZON, w, 3);
+
+            /* --- HỐ VA CHẠM ---
+             * Đặt tay theo công thức, không bốc ngẫu nhiên — cùng lý do với
+             * trời sao. Mỗi hố một vành sáng phía trên và lòng tối phía dưới,
+             * đúng chiều ánh sáng từ Trái Đất hắt xuống. */
+            for (let i = 0; i < 9; i++) {
+                const cx = x0 + ((i * 197) % Math.max(1, w - 40)) + 20;
+                const cy = HORIZON + 12 + ((i * 43) % Math.max(1, H - HORIZON - 22));
+                const cr = 7 + (i % 4) * 5;
+                ctx.fillStyle = 'rgba(20,17,30,0.42)';
+                ctx.beginPath(); ctx.ellipse(cx, cy, cr, cr * 0.42, 0, 0, TAU); ctx.fill();
+                ctx.strokeStyle = 'rgba(226,220,255,0.20)';
+                ctx.lineWidth = 1.4;
+                ctx.beginPath(); ctx.ellipse(cx, cy - 1.6, cr, cr * 0.42, 0, Math.PI, TAU); ctx.stroke();
+            }
+
+            // --- TÀU ĐÁP và LÁ CỜ ở mép khoảnh, cho mặt trăng này có người tới ---
+            this.drawLander(ctx, x0 + w * 0.15, HORIZON + 16, time);
+        }
+
+        /* Trái Đất nhìn từ mặt trăng: nửa sáng nửa tối, có lục địa, có vành khí
+         * quyển xanh. Vẽ ĐỦ ba thứ ấy mới ra hành tinh — thiếu cái nào cũng
+         * thành một quả cầu xanh trơn, tức là thành quả bóng bay. */
+        drawEarth(ctx, cx, cy, r, time) {
+            // vành khí quyển toả ra ngoài
+            const air = ctx.createRadialGradient(cx, cy, r * 0.92, cx, cy, r * 1.5);
+            air.addColorStop(0, 'rgba(96,178,255,0.34)');
+            air.addColorStop(1, 'rgba(96,178,255,0)');
+            ctx.fillStyle = air;
+            ctx.beginPath(); ctx.arc(cx, cy, r * 1.5, 0, TAU); ctx.fill();
+
+            ctx.save();
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.clip();
+
+            // đại dương
+            const sea = ctx.createLinearGradient(cx - r, cy - r, cx + r, cy + r);
+            sea.addColorStop(0, '#3f8fd8');
+            sea.addColorStop(0.6, '#1d5c9e');
+            sea.addColorStop(1, '#0d3667');
+            ctx.fillStyle = sea;
+            ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+
+            // lục địa: mấy mảng bo tròn, đặt tay cho ra hình chứ không đối xứng
+            ctx.fillStyle = '#3f9b5c';
+            for (const c of [
+                [-0.42, -0.34, 0.44, 0.30], [0.10, -0.52, 0.30, 0.20],
+                [0.24, 0.12, 0.42, 0.34], [-0.30, 0.42, 0.34, 0.22],
+                [-0.62, 0.16, 0.22, 0.26]
+            ]) {
+                ctx.beginPath();
+                ctx.ellipse(cx + c[0] * r, cy + c[1] * r, c[2] * r, c[3] * r, c[0], 0, TAU);
+                ctx.fill();
+            }
+            // mây trắng vắt ngang, trôi rất chậm
+            ctx.fillStyle = 'rgba(255,255,255,0.34)';
+            for (let i = 0; i < 3; i++) {
+                const cyy = cy + (i - 1) * r * 0.52;
+                const off = ((time * 3 + i * 40) % (r * 2.6)) - r * 1.3;
+                ctx.beginPath();
+                ctx.ellipse(cx + off, cyy, r * 0.52, r * 0.13, 0.2, 0, TAU);
+                ctx.fill();
+            }
+
+            /* Mảng tối bên rìa phải: đây mới là thứ nói "quả cầu" thay vì "cái
+             * đĩa tròn". Quả bóng bay trong game sáng đều từ trên xuống, hành
+             * tinh thì tối dần về phía khuất mặt trời. */
+            const dark = ctx.createLinearGradient(cx - r * 0.2, cy, cx + r, cy);
+            dark.addColorStop(0, 'rgba(0,0,0,0)');
+            dark.addColorStop(1, 'rgba(0,0,10,0.72)');
+            ctx.fillStyle = dark;
+            ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
+            ctx.restore();
+        }
+
+        /* Hành tinh có vành. Bán kính 24 nằm gọn trong khoảng của quả bóng bay
+         * (18 - 36), nên CÁI VÀNH không phải đồ trang trí mà là thứ duy nhất
+         * giữ cho bé khỏi ném mũi tiêu vào nó. Vẽ vành sau thân, rồi vẽ lại
+         * khúc vành phía trước đè lên — có thế nó mới quấn quanh chứ không dán
+         * bẹp lên trước mặt. */
+        drawRinged(ctx, cx, cy, r) {
+            const TILT = -0.42;
+
+            ctx.save();
+            ctx.translate(cx, cy); ctx.rotate(TILT);
+            ctx.strokeStyle = 'rgba(224,186,140,0.55)';
+            ctx.lineWidth = 4.4;
+            ctx.beginPath(); ctx.ellipse(0, 0, r * 2.05, r * 0.62, 0, 0, TAU); ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,226,182,0.30)';
+            ctx.lineWidth = 1.8;
+            ctx.beginPath(); ctx.ellipse(0, 0, r * 2.42, r * 0.75, 0, 0, TAU); ctx.stroke();
+            ctx.restore();
+
+            const body = ctx.createLinearGradient(cx - r, cy - r, cx + r * 0.7, cy + r);
+            body.addColorStop(0, '#f0c98a');
+            body.addColorStop(0.55, '#c99050');
+            body.addColorStop(1, '#6b4520');
+            ctx.fillStyle = body;
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.fill();
+            // mấy dải mây ngang, cho ra hành tinh khí chứ không phải hòn bi
+            ctx.save();
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.clip();
+            ctx.fillStyle = 'rgba(255,240,214,0.20)';
+            for (let i = -2; i <= 2; i++) {
+                ctx.fillRect(cx - r, cy + i * r * 0.34 - 1.6, r * 2, 3.2);
+            }
+            ctx.restore();
+
+            // khúc vành đi qua TRƯỚC mặt hành tinh
+            ctx.save();
+            ctx.translate(cx, cy); ctx.rotate(TILT);
+            ctx.strokeStyle = 'rgba(236,200,152,0.75)';
+            ctx.lineWidth = 4.4;
+            ctx.beginPath(); ctx.ellipse(0, 0, r * 2.05, r * 0.62, 0, 0.12, Math.PI - 0.12); ctx.stroke();
+            ctx.restore();
+        }
+
+        /* Tàu đáp và lá cờ — vai trò y hệt cái ô dù ngoài bãi biển: nói cho bé
+         * biết nơi này có người đã tới, chứ không phải một mặt phẳng trống.
+         * Lá cờ CỨNG ĐỜ, không phất: ngoài vũ trụ không có không khí thì lấy gì
+         * mà thổi. Chi tiết ấy đúng với chính cái luật vật lý mà cả sân này
+         * đang chạy — mũi tiêu không bị cản, thì lá cờ cũng không bị thổi. */
+        drawLander(ctx, x, y, time) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // bóng đổ trên đất
+            ctx.fillStyle = 'rgba(12,10,20,0.42)';
+            ctx.beginPath(); ctx.ellipse(0, 16, 34, 7, 0, 0, TAU); ctx.fill();
+
+            // ba chân chống
+            ctx.strokeStyle = '#8e8aa0';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(-13, -8); ctx.lineTo(-24, 14);
+            ctx.moveTo(13, -8); ctx.lineTo(24, 14);
+            ctx.moveTo(0, -6); ctx.lineTo(2, 15);
+            ctx.stroke();
+
+            // thân tàu bọc giấy vàng chống nhiệt
+            ctx.fillStyle = '#d8b45c';
+            ctx.beginPath(); ctx.roundRect(-17, -26, 34, 20, 5); ctx.fill();
+            ctx.fillStyle = '#9c8038';
+            ctx.fillRect(-17, -12, 34, 4);
+            ctx.fillStyle = '#b9c3d4';
+            ctx.beginPath(); ctx.roundRect(-11, -37, 22, 12, 4); ctx.fill();
+            // ô cửa sổ, hắt sáng nhè nhẹ theo nhịp
+            ctx.fillStyle = `rgba(126,220,255,${(0.55 + 0.35 * Math.sin(time * 2)).toFixed(3)})`;
+            ctx.beginPath(); ctx.arc(0, -31, 3.6, 0, TAU); ctx.fill();
+
+            // cột cờ và lá cờ căng cứng
+            ctx.strokeStyle = '#cdd4e2';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(30, 14); ctx.lineTo(30, -34); ctx.stroke();
+            ctx.fillStyle = '#e8455f';
+            ctx.beginPath();
+            ctx.moveTo(30, -34); ctx.lineTo(54, -30); ctx.lineTo(54, -17); ctx.lineTo(30, -21);
+            ctx.closePath(); ctx.fill();
+            ctx.restore();
         }
 
         /* --- ĐÀN CÁ HEO và VÂY CÁ MẬP ---
@@ -2035,13 +2481,17 @@
                 ctx.save();
                 ctx.fillStyle = `rgba(${c.glow},0.5)`;
                 const h = 1 / 90;
+                /* Cùng trọng lực và cùng sức cản với Dart.step. Quên chỗ này là
+                 * đường chấm chỉ một đằng còn mũi tiêu bay một nẻo — mà đường
+                 * chấm chính là thứ bé tin để ngắm. */
+                const A = Game.arenaCfg;
                 for (let i = 0; i < 78; i++) {
                     const sp = Math.hypot(pvx, pvy);
                     if (sp > 1) {
-                        const a = DRAG_K * sp * sp / PPM;
+                        const a = DRAG_K * A.drag * sp * sp / PPM;
                         pvx -= pvx / sp * a * h; pvy -= pvy / sp * a * h;
                     }
-                    pvy += G * h;
+                    pvy += G * A.grav * h;
                     pvx += Game.wind * WIND_DART * h;
                     px += pvx * h; py += pvy * h;
                     if (py > GROUND_Y || px < this.x0 || px > this.x1 || py < 0) break;
@@ -2775,9 +3225,17 @@
             /* Gió của sân CỘNG THÊM vào gió của mức khó, và bãi biển thì giật
              * từng cơn dù chơi ở mức nào. Cộng chứ không thay: bé chọn mức Dễ
              * ra biển vẫn thấy dễ hơn mức Khó ở hội chợ. */
+            /* windMul NHÂN vào sau cùng, và chỉ sân vũ trụ để 0.
+             *
+             * Không có chỗ này thì mức Vừa vẫn kèm sẵn 0,28 gió, và ngoài vũ
+             * trụ vẫn thấy mũi tên gió chạy ngang — trong khi cả cái sân ấy
+             * dựng trên đúng một điều: ở đó không có không khí. Chụp ảnh xem
+             * trước mới lòi ra, vì cái bảng WIND nằm chình ình giữa màn. Cùng
+             * một luật mà lá cờ thì cứng đờ còn quả bóng thì bị thổi bay là bé
+             * thấy sai ngay, dù không gọi tên được sai ở đâu. */
             const a2 = this.arenaCfg;
-            const windMax = d.wind + a2.windAdd;
-            const gusty = d.gust || a2.gust;
+            const windMax = (d.wind + a2.windAdd) * a2.windMul;
+            const gusty = (d.gust || a2.gust) && a2.windMul > 0;
             this.windT -= dt;
             if (this.windT <= 0) {
                 this.windTarget = rnd(-1, 1) * windMax;
@@ -2840,6 +3298,11 @@
 
         /* Lá cờ báo gió: nghiêng theo chiều gió, gió mạnh thì bay căng hơn */
         drawWindFlag(ctx) {
+            /* Sân không có gió thì giấu hẳn cái bảng, đừng để nó đứng đó với
+               mũi tên dài bằng không. Phải xét riêng: mức Vừa và mức Khó lúc
+               nào cũng mang sẵn một ít gió, nên dòng kiểm bên dưới không bắt
+               được sân vũ trụ. */
+            if (this.arenaCfg.windMul === 0) return;
             if (Math.abs(this.wind) < 0.02 && this.diffCfg.wind === 0) return;
             const w = this.wind;
             ctx.save();
@@ -2931,10 +3394,15 @@
         /* Thả một con hải âu vào khoảnh của bé, và bắn trúng nó — để máy soát
            và máy chụp ảnh dựng được tình huống mà không phải ngồi chờ con chim
            tự bay ra rồi ném cho trúng. */
+        /* Thả VẬT CẢN của sân đang chơi: hải âu ở bãi biển, phi hành gia ngoài
+           vũ trụ. Tên hàm giữ nguyên là spawnGull vì máy soát và máy chụp ảnh
+           đang gọi bằng tên ấy — đổi tên thì được cái sạch chữ mà hỏng mất mấy
+           chỗ gọi, không đáng. */
         spawnGull(i = 0) {
             const b = Game.booths[i];
             if (!b) return null;
-            const g = new Gull(b.x0, b.x1);
+            const g = Game.arenaCfg.hazard === 'astro'
+                ? new Astro(b.x0, b.x1) : new Gull(b.x0, b.x1);
             g.x = b.cx; g.y = 260; g.dir = 1;
             b.gulls.push(g);
             return g;
@@ -2948,6 +3416,55 @@
             b.onPop(g, Game.modeCfg);
             return { before, after: { score: b.score, streak: b.streak, bombs: b.bombs } };
         },
+        /* BAY THỬ MỘT MŨI TIÊU TRONG ỐNG NGHIỆM.
+         *
+         * Ba sân giờ mỗi sân một trọng lực và một sức cản khác nhau, mà cái đó
+         * thì nhìn ảnh chụp không thấy được — đường bay cong hay thẳng phải đo
+         * bằng số. Tệ hơn: cùng bộ số ấy nằm ở HAI chỗ (Dart.step vẽ đường bay
+         * thật, drawAim vẽ đường chấm dự đoán). Sửa một chỗ quên chỗ kia thì
+         * đường chấm chỉ một đằng mũi tiêu bay một nẻo, mà bé thì tin đường
+         * chấm. check-flight.html soi đúng hai chỗ ấy.
+         *
+         * Chạy tách hẳn khỏi ván chơi: không gió, không bóng, không vòng vẽ —
+         * nên kết quả lặp lại y hệt nhau lần nào cũng thế. */
+        flight(arena, angle = 0.72, power = 0.8, dt = 1 / 240, steps = 2000) {
+            const keep = Game.arena;
+            Game.arena = arena;
+            const speed = lerp(SPEED_MIN, SPEED_MAX, power);
+            const dx = Math.cos(angle), dy = -Math.sin(angle);
+            const d = new Dart(0, THROW_Y, dx * speed, dy * speed, PLAYERS[0]);
+            const path = [{ x: 0, y: THROW_Y }];
+            for (let i = 0; i < steps && d.alive && !d.stuck; i++) {
+                d.step(dt, 0, [], -1e6, 1e6, null);
+                path.push({ x: d.x, y: d.y });
+            }
+            Game.arena = keep;
+            return { path, stuck: d.stuck, alive: d.alive };
+        },
+
+        /* Đường CHẤM DỰ ĐOÁN vẽ trên màn, tính lại đúng bằng công thức trong
+           drawAim. Máy soát đặt nó cạnh đường bay thật ở trên để bắt lúc hai
+           chỗ lệch nhau. */
+        guidePath(arena, angle = 0.72, power = 0.8) {
+            const A = ARENAS[arena] || ARENAS.fair;
+            const speed = lerp(SPEED_MIN, SPEED_MAX, power);
+            const dx = Math.cos(angle), dy = -Math.sin(angle);
+            let px = 0, py = THROW_Y, pvx = dx * speed, pvy = dy * speed;
+            const h = 1 / 90, path = [{ x: px, y: py }];
+            for (let i = 0; i < 78; i++) {
+                const sp = Math.hypot(pvx, pvy);
+                if (sp > 1) {
+                    const a = DRAG_K * A.drag * sp * sp / PPM;
+                    pvx -= pvx / sp * a * h; pvy -= pvy / sp * a * h;
+                }
+                pvy += G * A.grav * h;
+                px += pvx * h; py += pvy * h;
+                path.push({ x: px, y: py });
+                if (py > GROUND_Y) break;
+            }
+            return path;
+        },
+
         fakeFinish(rows) {
             Game.build(rows.length);
             rows.forEach((t, i) => {

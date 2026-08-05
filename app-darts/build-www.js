@@ -34,7 +34,8 @@ const SRC = path.join(__dirname, 'src');
 const GAME_ASSETS = [
     'game.js', 'style.css', 'icon.jpg', 'icon.webp',
     'arena-fair.jpg', 'arena-fair.webp', 'arena-fair-512.jpg', 'arena-fair-512.webp',
-    'arena-beach.jpg', 'arena-beach.webp', 'arena-beach-512.jpg', 'arena-beach-512.webp'
+    'arena-beach.jpg', 'arena-beach.webp', 'arena-beach-512.jpg', 'arena-beach-512.webp',
+    'arena-space.jpg', 'arena-space.webp', 'arena-space-512.jpg', 'arena-space-512.webp'
 ];
 
 function copy(from, to) {

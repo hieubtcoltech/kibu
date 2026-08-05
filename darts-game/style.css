@@ -535,6 +535,7 @@ body {
    style gắn trên thẻ đè cả luật responsive bên dưới, hàng độ khó cứ giữ 4 cột
    trên điện thoại và đẩy trang rộng ra ngoài màn hình. */
 .opt-row.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.opt-row.cols-3 { grid-template-columns: repeat(3, 1fr); }
 .opt-row.cols-4 { grid-template-columns: repeat(4, 1fr); }
 
 .opt {
@@ -891,10 +892,14 @@ body {
     .final-grid { grid-template-columns: 1fr; }
     .setup-grid { grid-template-columns: 1fr; }
     /* Điện thoại: mọi hàng chọn đều xếp dọc một cột, kể cả hàng đã khai báo
-       số cột cụ thể ở trên (cols-2 / cols-4) — cùng độ "nặng ký" nên dòng sau
-       thắng. */
+       số cột cụ thể ở trên (cols-2 / cols-3 / cols-4) — cùng độ "nặng ký" nên
+       dòng sau thắng.
+       Phải kể ĐÍCH DANH từng lớp cols-*: chỉ viết .opt-row thôi thì nó nhẹ ký
+       hơn .opt-row.cols-3 ở trên, và hàng chọn sân giữ nguyên ba cột trên
+       điện thoại — ba tấm ảnh nhét vào màn 360px thì chẳng còn nhìn ra gì. */
     .opt-row,
     .opt-row.cols-2,
+    .opt-row.cols-3,
     .opt-row.cols-4 { grid-template-columns: 1fr; }
     .opt { flex-direction: row; justify-content: flex-start; gap: 9px; text-align: left; }
     .opt-desc { flex: 1; }
