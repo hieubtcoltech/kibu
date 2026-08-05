@@ -35,7 +35,22 @@
     const GROUND_Y = 656;                  // mặt đất bé đứng
     const THROW_Y = 546;                   // khớp vai
     const ARM = M(0.55);                   // tầm với của cánh tay
-    const BAL_TOP = 88;                    // bóng bay cao quá đây là thoát mất
+    const BAL_TOP = 88;                    // mốc thả quả bóng đầu ván, dưới thanh điểm
+    /* MỐC THOÁT: RA HẲN NGOÀI KHUNG MỚI TÍNH LÀ MẤT.
+     *
+     * Anh Hiếu: "bóng tại sao bay gần lên top màn hình đã mất ngay rồi, phải
+     * bay hẳn ra ngoài khung trò chơi mới coi như mất chứ".
+     *
+     * Đúng. Trước em lấy chung một mốc 88 cho cả hai việc: chỗ thả bóng lúc
+     * mở ván, VÀ chỗ coi là bóng đã thoát. Cái mốc 88 ấy đặt dưới thanh điểm
+     * là hợp lý cho việc thả, nhưng đem dùng làm mốc thoát thì quả bóng biến
+     * mất khi vẫn còn nằm gọn trong khung — bé đang ngắm thì nó bốc hơi.
+     *
+     * Hai việc khác nhau thì phải hai con số. Giờ bóng chỉ mất khi đáy nó đã
+     * lên trên mép khung. Nó sẽ trôi qua sau thanh điểm ở đỉnh màn, mà như thế
+     * mới đúng: thanh điểm là lớp phủ nổi trên gian hàng, bóng đi sau lưng nó
+     * là chuyện thường. */
+    const BAL_GONE = -6;
     const BAL_BOT = 500;                   // bóng bay xuất hiện từ đây
 
     /* Hai mốc của cảnh biển. Trước nằm trong hàm vẽ nền, giờ đưa ra ngoài vì
@@ -387,7 +402,7 @@
             }
             this.squash = Math.max(0, this.squash - dt * 2.4);
             if (this.kind.bomb) this.fuse += dt;
-            if (this.y + this.r < BAL_TOP) this.alive = false;   // bay thoát mất
+            if (this.y + this.r < BAL_GONE) this.alive = false;   // ra hẳn ngoài khung mới là thoát
         }
 
         draw(ctx, time) {

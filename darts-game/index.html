@@ -171,21 +171,31 @@
                         <div class="opt-row arena-row cols-2">
                             <button class="opt opt-arena sel" data-arena="fair">
                                 <picture>
-                                    <source srcset="/darts-game/arena-fair.webp" type="image/webp">
+                                    <source type="image/webp" sizes="360px"
+                                            srcset="/darts-game/arena-fair-512.webp 512w, /darts-game/arena-fair.webp 1024w">
                                     <img src="/darts-game/arena-fair.jpg" alt="" class="opt-thumb"
-                                         width="480" height="256" loading="lazy" decoding="async">
+                                         sizes="360px"
+                                         srcset="/darts-game/arena-fair-512.jpg 512w, /darts-game/arena-fair.jpg 1024w"
+                                         width="1024" height="512" loading="lazy" decoding="async">
                                 </picture>
-                                <span class="opt-name">🎪 FAIRGROUND</span>
-                                <span class="opt-desc">Calm air</span>
+                                <span class="opt-text">
+                                    <span class="opt-name">🎪 FAIRGROUND</span>
+                                    <span class="opt-desc">Calm air</span>
+                                </span>
                             </button>
                             <button class="opt opt-arena" data-arena="beach">
                                 <picture>
-                                    <source srcset="/darts-game/arena-beach.webp" type="image/webp">
+                                    <source type="image/webp" sizes="360px"
+                                            srcset="/darts-game/arena-beach-512.webp 512w, /darts-game/arena-beach.webp 1024w">
                                     <img src="/darts-game/arena-beach.jpg" alt="" class="opt-thumb"
-                                         width="480" height="256" loading="lazy" decoding="async">
+                                         sizes="360px"
+                                         srcset="/darts-game/arena-beach-512.jpg 512w, /darts-game/arena-beach.jpg 1024w"
+                                         width="1024" height="512" loading="lazy" decoding="async">
                                 </picture>
-                                <span class="opt-name">🏖️ BEACH</span>
-                                <span class="opt-desc">Windy! Harder</span>
+                                <span class="opt-text">
+                                    <span class="opt-name">🏖️ BEACH</span>
+                                    <span class="opt-desc">Windy! Harder</span>
+                                </span>
                             </button>
                         </div>
                     </div>

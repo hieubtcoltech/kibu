@@ -1134,45 +1134,83 @@ body {
    được, nhưng rồi cảnh trong game đổi mà hình minh hoạ đứng yên — bé chọn một
    đằng vào chơi một nẻo. Ảnh thật thì không bao giờ lệch. */
 .opt-arena {
-    /* Ảnh không còn dán vào mép nút nữa nên trả lại đệm quanh, không thì ảnh
-       nhỏ nằm lọt thỏm giữa một cái nút rỗng trông rất chông chênh. */
-    padding: 10px 10px 11px;
+    /* ẢNH PHỦ KÍN CẢ NÚT, CHỮ ĐÈ LÊN TRÊN.
+       Anh Hiếu: "e thu nhỏ quá rồi, hãy cho thumbnail full background rồi cho
+       chữ lên trên, ảnh sắc nét nhé".
+
+       Lượt trước em hiểu "nhỏ thôi cho gọn" thành thu ô lại còn 152px, ra một
+       tấm ảnh tem thư nằm lọt thỏm giữa nút. Ý anh là cái HÀNG gọn lại chứ
+       không phải cái ẢNH bé đi. Giờ ảnh chính là nền của nút, chữ nằm đè lên
+       dải tối ở đáy — hàng vẫn thấp mà ảnh thì to hết cỡ có thể. */
+    position: relative;
+    padding: 0;
     overflow: hidden;
     gap: 0;
+    aspect-ratio: 2 / 1;
+    justify-content: flex-end;
+    border-radius: 14px;
 }
 
-/* NHỎ LẠI, THẤP XUỐNG, MÀ PHẢI NÉT.
-   Anh Hiếu: "vẽ phần thumbnail nhỏ thôi nhưng sắc nét, thu height lại cho
-   gọn gàng nhé".
-
-   Ba việc, làm cả ba:
-   - Chặn bề ngang ở 152px và canh giữa, thay vì kéo căng hết bề rộng nút.
-   - Khung dẹt lại 15/8 thay vì 5/3, nên cao chỉ còn 81px so với 120px.
-   - Tệp nguồn NGƯỢC LẠI, to lên: 480px cho ô 152px, tức hơn ba lần. Nhỏ trên
-     màn mà nét thì tệp phải to hơn ô, chứ không phải nhỏ theo. Thu tệp theo
-     cho "nhẹ" là đúng cái lỗi em vừa mắc ở icon trang chủ. */
-.opt-thumb {
+.opt-arena picture {
+    position: absolute;
+    inset: 0;
     display: block;
+}
+
+.opt-thumb {
     width: 100%;
-    max-width: 152px;
-    margin-inline: auto;
-    height: auto;
-    aspect-ratio: 15 / 8;
+    height: 100%;
     object-fit: cover;
-    border-radius: 12px;
+    display: block;
     /* Ảnh chìm xuống một chút khi chưa chọn, sáng hẳn lên khi chọn — mắt bắt
        được lựa chọn hiện tại mà không cần đọc viền. */
-    filter: saturate(0.7) brightness(0.72);
+    filter: saturate(0.7) brightness(0.6);
     transition: filter 0.2s ease, transform 0.2s ease;
 }
 
-.opt-arena.sel .opt-thumb { filter: none; }
-.opt-arena:hover .opt-thumb { filter: saturate(0.9) brightness(0.88); }
+.opt-arena.sel .opt-thumb { filter: saturate(1.05) brightness(0.92); }
+.opt-arena:hover .opt-thumb { filter: saturate(0.95) brightness(0.8); }
 
-.opt-arena .opt-name { margin-top: 8px; }
-.opt-arena .opt-desc { margin-top: 1px; }
+/* Dải tối vuốt dần ở đáy. Không có nó thì chữ trắng rơi trúng chỗ trời sáng
+   hoặc chỗ cát vàng là mất hút — mà chỗ ấy đổi theo từng sân, không đoán được.
+   Vuốt dần chứ không phủ đều, để phần trên của ảnh vẫn nguyên màu. */
+.opt-arena::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 62%;
+    background: linear-gradient(to top, rgba(6, 12, 20, 0.92) 0%, rgba(6, 12, 20, 0.72) 38%, rgba(6, 12, 20, 0) 100%);
+    pointer-events: none;
+}
+
+.opt-arena .opt-text {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    width: 100%;
+    padding: 0 8px 9px;
+    text-align: center;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.opt-arena .opt-name { color: #fff; }
+.opt-arena .opt-desc { color: #d5dde6; }
+.opt-arena.sel .opt-desc { color: #ffd9a6; }
 
 @media (max-width: 560px) {
-    /* Máy hẹp thì ô còn chật hơn, cho ảnh bé thêm chút nữa cho cân với chữ. */
-    .opt-thumb { max-width: 130px; }
+    /* Máy hẹp thì ô hẹp theo, để ảnh cao hơn một chút cho cảnh còn đọc được.
+       Phải chép lại flex-direction và justify-content ở đây vì trên máy hẹp có
+       luật cũ đổi mọi .opt thành hàng NGANG — cùng độ ưu tiên nên nó vẫn ăn,
+       và chữ không tài nào xuống đáy ảnh được. Đo mới thấy: trên máy tính chữ
+       nằm đúng đáy, trên điện thoại nó dạt lên lưng chừng bên trái. */
+    .opt-arena {
+        aspect-ratio: 16 / 9;
+        flex-direction: column;
+        justify-content: flex-end;
+    }
+    .opt-arena .opt-text { padding: 0 6px 7px; }
 }
