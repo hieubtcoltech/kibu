@@ -850,8 +850,16 @@
                 g.closePath();
                 g.fillPath();
 
-                /* --- khung ảnh treo tường bên phải --- */
-                var px = W * 0.80, py = H * 0.20, pw = W * 0.13, ph = H * 0.16;
+                /* --- khung ảnh treo tường bên phải ---
+                 * Treo HẲN dưới đồng hồ, không được chạm vào. Bán kính đồng hồ
+                 * tính theo BỀ NGANG còn chỗ treo tranh tính theo CHIỀU CAO, nên
+                 * màn càng rộng đồng hồ càng to xuống mà tranh vẫn đứng yên —
+                 * trên màn 16:10 hai thứ ấy dính vào nhau. Lấy đáy đồng hồ (kể
+                 * cả bóng đổ, thò xuống thêm 0,12 bán kính) làm mốc rồi chừa một
+                 * khoảng thở, thế thì tỉ lệ nào cũng cách nhau. */
+                var clockR = W * 0.052, clockCY = H * 0.115;
+                var px = W * 0.80, pw = W * 0.13, ph = H * 0.16;
+                var py = Math.max(H * 0.20, clockCY + clockR * 1.12 + H * 0.045);
                 g.fillStyle(0x000000, 0.24);
                 g.fillRect(px + 5, py + 6, pw, ph);
                 g.fillStyle(room.accent, 0.55);
@@ -909,8 +917,8 @@
 
                 /* --- ĐỒNG HỒ TREO TƯỜNG góc phải, chạy giờ thật --- */
                 g.save();
-                g.translateCanvas(W * 0.90, H * 0.115);
-                A.drawClock(g, W * 0.052, room, new Date());
+                g.translateCanvas(W * 0.90, clockCY);
+                A.drawClock(g, clockR, room, new Date());
                 g.restore();
 
                 /* --- cây cảnh góc phải --- */
