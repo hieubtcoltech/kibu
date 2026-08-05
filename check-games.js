@@ -144,8 +144,20 @@ if (warn.length) {
  * Hai câu hỏi ấy khác nhau, và chính chỗ khác nhau ấy làm mất một ô gạch. */
 {
     const home = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-    const refs = [...home.matchAll(/(?:src|srcset)="(\/[^"]+\.(?:jpg|png|webp|svg))"/g)]
-        .map(m => m[1])
+    /* Phải đọc được CẢ srcset nhiều nguồn.
+     *
+     * Bản đầu em bắt trọn cả thuộc tính rồi đòi nó kết thúc bằng đuôi ảnh —
+     * đúng với src="/a/icon.jpg", nhưng srcset thì là một DANH SÁCH kèm khổ:
+     *   srcset="/a/icon.webp 400w, /a/icon-800.webp 800w"
+     * Không khớp mẫu nào cả, nên lúc em đổi ô gạch sang srcset thì số đường dẫn
+     * máy soát nhìn thấy tụt từ 55 xuống 28 — mà nó vẫn báo ĐẠT. Máy soát tự
+     * mù đi một nửa mà không kêu tiếng nào, đúng kiểu hỏng nguy hiểm nhất.
+     *
+     * Giờ quét mọi đường dẫn ảnh trong cả hai thuộc tính, không quan tâm chúng
+     * đứng một mình hay nằm trong danh sách. */
+    const attrs = [...home.matchAll(/(?:src|srcset)="([^"]+)"/g)].map(m => m[1]);
+    const refs = attrs
+        .flatMap(v => [...v.matchAll(/\/[^\s,"]+\.(?:jpg|jpeg|png|webp|svg|ico)/g)].map(m => m[0]))
         .filter(u => !u.startsWith('//'));
     const missing = [...new Set(refs)].filter(u => !fs.existsSync(path.join(ROOT, u.slice(1))));
     console.log(`  ảnh trang chủ: ${new Set(refs).size} đường dẫn, ${missing.length} cái không có tệp`);

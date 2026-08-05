@@ -72,11 +72,58 @@ function tileHtml(g) {
         : fs.existsSync(path.join(dir, 'icon.png')) ? 'icon.png' : null;
     if (!base) throw new Error(`${g.dir}: không có icon.jpg lẫn icon.png`);
 
-    const src = `                <img src="/${g.dir}/${base}" alt="" class="tile-img" width="400" height="400"
+    /* HAI CỠ ẢNH, để trình duyệt TỰ CHỌN cái vừa đủ nét.
+     *
+     * Anh Hiếu: "ảnh game icon nào hiển thị ở grid 2x2 thì đang bị mờ do em mới
+     * tối ưu... đó là bộ mặt của game mà".
+     *
+     * Đo ra đúng: hai ô "HOT" hiện ở 398px, tức là cần 796px trên màn nét đôi,
+     * mà em lại thu mọi ảnh xuống còn 400px. Hai mươi lăm ô nhỏ thì 400px vừa
+     * đủ, riêng hai ô to thì mờ hẳn — và em đã đo tổng dung lượng mà không đo
+     * TỪNG CỠ Ô.
+     *
+     * Chữa bằng srcset kèm khổ thật (400w và 800w) và sizes khai đúng bề rộng
+     * ô ấy chiếm trên màn. Trình duyệt nhân với độ nét màn hình rồi tự lấy tệp
+     * nhỏ nhất còn đủ nét: ô nhỏ vẫn lấy bản 400, chỉ ô to mới kéo bản 800.
+     * Không phải chọn giữa "nét" và "nhẹ" nữa — được cả hai. */
+    const big = /tile-hot/.test(g.tile || '');
+    const sizes = big ? '(max-width: 560px) 88vw, 400px' : '(max-width: 560px) 44vw, 200px';
+    /* BA BẬC: 400 · 600 · 800.
+     *
+     * Hai bậc thôi thì màn 3× — tức là phần lớn điện thoại — rơi vào cảnh khó
+     * xử: ô nhỏ 164px cần 492px, bản 400 thì thiếu mà bản 800 thì thừa gấp đôi
+     * số byte. Thêm bậc 600 vào giữa là máy nào cũng lấy đúng cái vừa đủ.
+     * Tệp nằm trên đĩa thì không tốn gì; chỉ băng thông mới tốn, mà băng thông
+     * thì trình duyệt tự chọn tiết kiệm nhất.
+     *
+     * Riêng hai ô HOT còn thêm bậc 1024: chúng hiện ở 398px, mà 398 × 3 là
+     * 1193 — bậc 800 vẫn thiếu. Đo mới biết, chứ nhìn thì không ai thấy.
+     *
+     * Bậc nào KHÔNG CÓ TỆP thì bỏ qua, và tệp chỉ tạo khi ảnh gốc thật sự đủ
+     * lớn. Ảnh gốc của basketball-game chỉ 768px nên nó dừng ở bậc 800 — làm
+     * thêm bậc 1024 cho nó chỉ là phóng to một tấm ảnh không còn chi tiết,
+     * tốn byte mà không thêm được một nét nào, lại còn khai gian với trình
+     * duyệt là mình có 1024px. */
+    const widths = [400, 600, 800, 1024];
+    const jpgList = widths
+        .map(px => ({ px, f: px === 400 ? base : base.replace('.', `-${px}.`) }))
+        .filter(v => fs.existsSync(path.join(dir, v.f)))
+        .map(v => `/${g.dir}/${v.f} ${v.px}w`);
+    const webpList = widths
+        .map(px => ({ px, f: px === 400 ? 'icon.webp' : `icon-${px}.webp` }))
+        .filter(v => fs.existsSync(path.join(dir, v.f)))
+        .map(v => `/${g.dir}/${v.f} ${v.px}w`);
+
+    const jpgSet = jpgList.length > 1 ? ` srcset="${jpgList.join(', ')}" sizes="${sizes}"` : '';
+    const webpSet = webpList.length > 1
+        ? `srcset="${webpList.join(', ')}" sizes="${sizes}"`
+        : `srcset="/${g.dir}/icon.webp"`;
+
+    const src = `                <img src="/${g.dir}/${base}"${jpgSet} alt="" class="tile-img" width="400" height="400"
                          ${prio} decoding="async">`;
     const img = hasWebp
         ? `<picture>
-                    <source srcset="/${g.dir}/icon.webp" type="image/webp">
+                    <source ${webpSet} type="image/webp">
                 ${src}
                 </picture>`
         : src.trim();
