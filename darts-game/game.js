@@ -2667,7 +2667,7 @@
 
                 const r = rankOf[i];
                 e.medal.textContent = this.playerCount > 1 ? (MEDALS[r] || '') : '';
-                e.box.style.order = r;
+                e.box.style.order = i;
             });
 
             // Một bé thì không có kẻ thắng người thua — chỉ có thành tích để khoe
