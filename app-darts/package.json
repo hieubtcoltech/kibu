@@ -10,7 +10,8 @@
     "icons": "node make-icons.js && npx @capacitor/assets generate --ios --iosProject ios/App",
     "vendor": "node fetch-vendor.js",
     "ipa": "npm run sync && node make-ipa.js",
-    "shots": "node make-shots.js"
+    "shots": "node make-shots.js",
+    "store-shots": "node make-store-shots.js"
   },
   "engines": {
     "node": ">=18"

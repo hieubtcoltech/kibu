@@ -41,14 +41,19 @@ const APP_ID = 'com.kibu.BalloonDarts';
 
 /* Mốc thời gian khớp với các setTimeout trong src/shots-scenes.js: chụp vào
    giữa quãng mỗi cảnh, sau khi đếm ngược 3 giây đã xong. */
+/* Mỗi cảnh dựng ở mốc T trong src/shots-scenes.js, máy bấm ở T + 6,5 giây.
+   Sáu rưỡi chứ không phải năm rưỡi như trước: đếm ngược mất 3 giây, rồi bóng
+   còn phải bay lên cho kín màn. Bấm sớm quá thì ảnh ra một sân gần như trống,
+   nhìn không ra trò chơi có gì để bắn. */
 const SHOTS = [
     { at: 2000, name: '0-menu', ipadOnly: true },   // màn chọn chế độ
-    { at: 9500, name: '1-duel' },                   // 2 bé, hội chợ
-    { at: 17500, name: '2-fourkids' },              // 4 bé
-    { at: 25500, name: '3-beach' },                 // bãi biển
-    { at: 33500, name: '4-solo' },                  // một bé
-    { at: 41500, name: '5-golden' },                // săn bóng vàng
-    { at: 46500, name: '6-ketqua', ipadOnly: true } // bảng kết quả
+    { at: 10500, name: '1-duel' },                  // 2 bé, hội chợ
+    { at: 18500, name: '2-fourkids' },              // 4 bé
+    { at: 26500, name: '3-beach' },                 // bãi biển
+    { at: 34500, name: '4-space' },                 // ngoài vũ trụ
+    { at: 42500, name: '5-solo' },                  // một bé
+    { at: 50500, name: '6-golden' },                // săn bóng vàng
+    { at: 54500, name: '7-ketqua', ipadOnly: true } // bảng kết quả
 ];
 
 /* Hai màn có BẢNG (chọn chế độ, kết quả) chỉ chụp trên iPad. Bảng cao hơn màn
@@ -147,10 +152,31 @@ function shootOn(device, outDir, rotate) {
     sleep(1500);                       // trang nạp xong, đồng hồ trong shots-scenes.js bắt đầu chạy
 
     const isPad = device === IPAD;
-    let clock = 0;
+    /* MỐC THỜI GIAN ĐO TỪ LÚC MỞ APP, KHÔNG PHẢI CỘNG DỒN CÁC LẦN CHỜ.
+     *
+     * Bản trước cộng dồn: chờ đủ khoảng cách giữa hai mốc rồi coi như đã tới
+     * mốc sau. Nhưng giữa hai lần chờ còn có việc phải làm — `simctl io
+     * screenshot` mất non một giây, xoay ảnh bằng sips thêm một quãng nữa, và
+     * mỗi lần gọi sleep lại đẻ ra một tiến trình node. Chỗ ấy không ai trừ đi,
+     * nên máy chụp TỤT LẠI mỗi tấm một ít, dồn tới tấm thứ năm thì lệch vài
+     * giây — đủ để bấm máy vào cảnh SAU cảnh đang cần.
+     *
+     * Lỗi này lộ ra khi thêm sân vũ trụ thành tám tấm: tấm "4-space" chụp
+     * đúng lúc màn hình đang đếm ngược của ván MỘT BÉ ở hội chợ. Nhìn ảnh mới
+     * biết, chứ script vẫn báo chụp xong đủ tám tấm.
+     *
+     * Đo từ một mốc gốc thì mỗi lần chờ tự bù lại phần đã trôi, và có trôi bao
+     * nhiêu cũng không dồn sang tấm sau. */
+    /* Gốc đặt SAU quãng nghỉ 1500ms ở trên, đúng chỗ mà bản cũ bắt đầu đếm.
+       Lần đầu em trừ 1500 đi cho "về đúng lúc mở app" — hoá ra sớm mất hơn một
+       giây so với kịch bản, và ảnh chụp ra điểm số còn 0 vì cảnh chưa kịp đặt
+       điểm. Kịch bản chạy theo lúc TRANG NẠP XONG chứ không theo lúc mở app,
+       mà hai mốc ấy cách nhau đúng quãng nghỉ này. */
+    const t0 = Date.now();
     for (const s of SHOTS) {
-        sleep(s.at - clock);
-        clock = s.at;
+        const late = (Date.now() - t0) - s.at;
+        if (late > 800) console.log(`  ⚠ trễ ${(late / 1000).toFixed(1)}s so với mốc ${s.name}`);
+        sleep(s.at - (Date.now() - t0));
         if (s.ipadOnly && !isPad) continue;
         const out = path.join(dir, s.name + '.png');
         if (rotate) {

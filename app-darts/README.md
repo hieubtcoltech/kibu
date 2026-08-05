@@ -133,14 +133,30 @@ App chạy cả iPhone lẫn iPad nên phải nộp **cả hai bộ**:
 - iPhone 6.9" — 1320 × 2868 (hoặc 1290 × 2796)
 - iPad 13" — 2064 × 2752
 
-Chụp bằng máy giả lập: chạy app rồi `Cmd + S` trong Simulator, hoặc
+Hai lệnh, chạy theo thứ tự:
 
 ```bash
-xcrun simctl io booted screenshot anh.png
+npm run shots          # chụp ảnh THÔ trên máy giả lập → screenshots/<cỡ máy>/
+npm run store-shots    # bọc thành ảnh QUẢNG BÁ     → screenshots/store-en|vi/
 ```
 
-Nên chụp 3–5 ảnh: màn chọn chế độ, lúc 2 bé đang thi, màn kết quả, sân biển.
-Anh bảo em một tiếng là em chụp trọn bộ cho.
+**`npm run shots`** tự dựng cảnh rồi bấm máy đúng mốc: màn chọn chế độ, 2 bé
+thi, 4 bé, sân biển, sân vũ trụ, chơi một mình, săn bóng vàng, bảng kết quả.
+Ra ảnh đúng cái màn hình máy, không hơn.
+
+**`npm run store-shots`** biến mỗi ảnh thô thành một tấm quảng bá: nền màu hợp
+với cảnh, khung máy vẽ bằng CSS (bo góc, đảo động, gờ kính, bóng đổ), và một
+câu nói rõ tính năng. Ra hai bộ Anh–Việt vì App Store Connect cho gắn ảnh riêng
+theo ngôn ngữ. Sửa lời trong bảng `WORDS`, đổi màu nền trong bảng `SKINS` ở
+`make-store-shots.js`.
+
+> **Nên nộp bộ NẰM NGANG** (`iphone-6.9`, `ipad-13`). Trò này chơi ngang là
+> chính; ở bản dựng đứng thì sân chơi co lại thành một dải giữa hai vùng đen,
+> đúng như app thật nhưng lên store trông trống trải. Bộ dựng đứng vẫn dựng ra
+> đủ, cần thì dùng.
+
+Cả hai lệnh đều cần Google Chrome (bộ ghép ảnh dựng bằng trình duyệt) và máy
+giả lập iPhone 16 Pro Max + iPad Pro 13" trong Xcode.
 
 ### 3. Quyền riêng tư
 
