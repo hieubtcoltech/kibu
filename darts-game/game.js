@@ -98,6 +98,26 @@
         return str;
     }
 
+    /* ------------------------------------------------------------------ *
+     * HAI SÂN CHƠI
+     *
+     * Anh Hiếu: "thêm màn chơi ở bãi biển đi để thêm hấp dẫn và độ khó vì ở
+     * biển có gió".
+     *
+     * Em tách SÂN ra khỏi CHẾ ĐỘ chứ không nhập làm một. Chế độ là luật tính
+     * điểm (đấu 90 giây, săn bóng vàng, tập ném); sân là nơi chơi. Nhập lại thì
+     * bé muốn săn bóng vàng ở bãi biển sẽ không chọn được, mà hai thứ ấy vốn
+     * không liên quan gì tới nhau.
+     *
+     * windAdd cộng THÊM vào gió của mức khó. Nên bãi biển ở mức Dễ vẫn dễ hơn
+     * hội chợ ở mức Khó — bé mới chơi vẫn ra biển được, chỉ là phải học ngắm
+     * lệch theo gió.
+     * ------------------------------------------------------------------ */
+    const ARENAS = {
+        fair: { key: 'fair', name: 'FAIRGROUND', windAdd: 0, gust: false },
+        beach: { key: 'beach', name: 'BEACH', windAdd: 0.62, gust: true }
+    };
+
     const MODES = {
         versus: { key: 'versus', name: 'VERSUS', time: 90, mult: 1, alive: 5 },
         sniper: { key: 'sniper', name: 'GOLDEN BALLOON HUNT', time: 60, mult: 2, alive: 4, small: true },
@@ -1049,7 +1069,8 @@
             ctx.clip();
             if (this.shake > 0.4) ctx.translate(rnd(-this.shake, this.shake), rnd(-this.shake, this.shake));
 
-            this.drawBooth(ctx, time);
+            if (Game.arena === 'beach') this.drawBeach(ctx, time);
+            else this.drawBooth(ctx, time);
             for (const b of this.balloons) b.draw(ctx, time);
             for (const a of this.necks) a.draw(ctx);
             for (const a of this.shreds) a.draw(ctx);
@@ -1060,6 +1081,246 @@
             if (this.state !== 'fly' && !this.outcome) this.drawAim(ctx, time);
             this.drawFx(ctx);
             this.drawConfetti(ctx);
+            ctx.restore();
+        }
+
+        /* ------------------------------------------------------------------ *
+         * SÂN BÃI BIỂN
+         *
+         * Anh Hiếu tả: bãi biển, sóng biển, trời nắng xanh, xa xa có đảo dừa.
+         *
+         * Vẽ theo LỚP từ xa tới gần, mỗi lớp một sắc độ nhạt dần về phía chân
+         * trời — đó là cách mắt đọc ra khoảng cách mà không cần phối cảnh:
+         *     trời → mặt trời → mây → đảo dừa → biển xa → sóng → cát ướt → cát khô
+         *
+         * Mỗi bé một khoảnh bãi riêng nhưng CÙNG một đường chân trời và cùng
+         * một mặt trời: bốn khoảnh phải ghép lại thành một bãi biển liền, chứ
+         * không phải bốn bức tranh dán cạnh nhau. Nên mọi mốc ngang đều tính
+         * theo W (cả màn) chứ không theo x0 của riêng khoảnh.
+         * ------------------------------------------------------------------ */
+        drawBeach(ctx, time) {
+            const x0 = this.x0, x1 = this.x1, w = this.w;
+            const SEA_Y = 300;                 // chân trời
+            const WET_Y = GROUND_Y - 74;       // mép nước liếm lên cát
+
+            // --- TRỜI ---
+            const sky = ctx.createLinearGradient(0, 0, 0, SEA_Y);
+            sky.addColorStop(0, '#2f8fd6');
+            sky.addColorStop(0.55, '#7ec8ee');
+            sky.addColorStop(1, '#cfeaf7');
+            ctx.fillStyle = sky;
+            ctx.fillRect(x0, 0, w, SEA_Y);
+
+            // --- MẶT TRỜI: chung cho cả màn, nên đặt theo W ---
+            const sunX = W * 0.74, sunY = 112;
+            for (let i = 5; i >= 1; i--) {
+                ctx.fillStyle = `rgba(255,245,190,${0.05 * i})`;
+                ctx.beginPath(); ctx.arc(sunX, sunY, 34 + i * 22, 0, TAU); ctx.fill();
+            }
+            /* Mặt trời phải ĐẬM hơn nền trời rõ rệt. Bản đầu em dùng vàng rất
+             * nhạt, đặt trên trời xanh nhạt thì nó nhoè đi gần như không thấy
+             * — mà mặt trời là thứ nói lên "trời nắng" trong cả bức tranh. */
+            const sunG = ctx.createRadialGradient(sunX, sunY, 4, sunX, sunY, 34);
+            sunG.addColorStop(0, '#fffbe6');
+            sunG.addColorStop(0.6, '#ffe066');
+            sunG.addColorStop(1, '#ffc93c');
+            ctx.fillStyle = sunG;
+            ctx.beginPath(); ctx.arc(sunX, sunY, 34, 0, TAU); ctx.fill();
+
+            // --- MÂY: trôi chậm, quay vòng theo bề ngang cả màn ---
+            for (let i = 0; i < 5; i++) {
+                const cx = ((i * 317 + time * 9) % (W + 260)) - 130;
+                const cy = 58 + (i % 3) * 34;
+                const cs = 26 + (i % 2) * 12;
+                ctx.fillStyle = 'rgba(255,255,255,0.85)';
+                ctx.beginPath();
+                ctx.arc(cx, cy, cs, 0, TAU);
+                ctx.arc(cx + cs * 0.85, cy + 5, cs * 0.72, 0, TAU);
+                ctx.arc(cx - cs * 0.85, cy + 7, cs * 0.62, 0, TAU);
+                ctx.fill();
+            }
+
+            // --- ĐẢO DỪA xa xa, ngồi ngay trên đường chân trời ---
+            this.drawIsland(ctx, W * 0.30, SEA_Y, 1.0);
+            this.drawIsland(ctx, W * 0.62, SEA_Y, 0.66);
+
+            // --- BIỂN: nhiều dải, càng gần bờ càng nhạt và càng xanh lục ---
+            const sea = ctx.createLinearGradient(0, SEA_Y, 0, WET_Y);
+            sea.addColorStop(0, '#1d5f96');
+            sea.addColorStop(0.45, '#1f86b4');
+            sea.addColorStop(0.82, '#3fb9c4');
+            sea.addColorStop(1, '#8fe0d8');
+            ctx.fillStyle = sea;
+            /* Tô biển XUỐNG QUÁ mép nước 30px. Bản đầu em tô đúng tới WET_Y,
+             * mà dải bọt sóng lại bắt đầu ở WET_Y+12 — chừa ra một khe 12px
+             * không ai tô, và nền đen của canvas lọt lên thành một vạch đen
+             * chạy ngang cả bãi biển. Cát ướt vẽ đè lên sau nên phần thừa này
+             * không ai thấy. */
+            ctx.fillRect(x0, SEA_Y, w, WET_Y + 30 - SEA_Y);
+
+            // vệt nắng loang trên mặt nước, ngay dưới mặt trời
+            const glare = ctx.createLinearGradient(sunX - 60, SEA_Y, sunX + 60, WET_Y);
+            glare.addColorStop(0, 'rgba(255,255,255,0)');
+            glare.addColorStop(0.5, 'rgba(255,250,210,0.22)');
+            glare.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = glare;
+            ctx.fillRect(x0, SEA_Y, w, WET_Y - SEA_Y);
+
+            /* --- SÓNG ---
+             * Mỗi hàng sóng là một đường lượn chạy ngang, hàng càng gần bờ thì
+             * càng to, càng thưa và càng chạy nhanh. Chính chênh lệch tốc độ ấy
+             * làm mặt biển có chiều sâu; cho tất cả chạy cùng tốc độ thì thành
+             * một tấm giấy dán tường có hoa văn. */
+            for (let r = 0; r < 7; r++) {
+                const k = r / 6;
+                const y = SEA_Y + 16 + Math.pow(k, 1.6) * (WET_Y - SEA_Y - 24);
+                const amp = 1.4 + k * 4.5;
+                const len = 46 + k * 90;
+                const speed = 14 + k * 52;
+                ctx.strokeStyle = `rgba(255,255,255,${(0.18 + k * 0.42).toFixed(3)})`;
+                ctx.lineWidth = 1.2 + k * 2.6;
+                ctx.beginPath();
+                for (let x = x0 - 20; x <= x1 + 20; x += 8) {
+                    const yy = y + Math.sin((x + time * speed) / len * TAU) * amp;
+                    if (x === x0 - 20) ctx.moveTo(x, yy); else ctx.lineTo(x, yy);
+                }
+                ctx.stroke();
+            }
+
+            // --- BỌT SÓNG ở mép nước, phập phồng theo nhịp thở của biển ---
+            const surf = Math.sin(time * 1.15) * 8;
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            ctx.beginPath();
+            ctx.moveTo(x0, WET_Y + 12);
+            for (let x = x0; x <= x1; x += 10) {
+                ctx.lineTo(x, WET_Y + surf + Math.sin((x + time * 60) / 52) * 5);
+            }
+            ctx.lineTo(x1, WET_Y + 26);
+            ctx.lineTo(x0, WET_Y + 26);
+            ctx.closePath();
+            ctx.fill();
+
+            // --- CÁT ƯỚT: sẫm hơn và bóng, vì nước vừa rút ---
+            const wet = ctx.createLinearGradient(0, WET_Y + 16, 0, GROUND_Y);
+            wet.addColorStop(0, '#c8ab7d');
+            wet.addColorStop(1, '#e0c79a');
+            ctx.fillStyle = wet;
+            ctx.fillRect(x0, WET_Y + 16, w, GROUND_Y - WET_Y - 16);
+
+            // --- CÁT KHÔ, chỗ bé đứng ---
+            const dry = ctx.createLinearGradient(0, GROUND_Y, 0, H);
+            dry.addColorStop(0, '#f0dcae');
+            dry.addColorStop(1, '#d8bd88');
+            ctx.fillStyle = dry;
+            ctx.fillRect(x0, GROUND_Y, w, H - GROUND_Y);
+
+            /* hạt cát lấm tấm — đặt tay theo công thức chứ không ngẫu nhiên,
+             * không thì mỗi khung hình cát lại nhảy chỗ và nhìn như nhiễu */
+            for (let i = 0; i < 90; i++) {
+                const gx = x0 + ((i * 137) % w);
+                const gy = GROUND_Y + 6 + ((i * 53) % (H - GROUND_Y - 8));
+                ctx.fillStyle = i % 3 ? 'rgba(255,255,255,0.28)' : 'rgba(150,110,60,0.22)';
+                ctx.fillRect(gx, gy, 2, 2);
+            }
+
+            // --- Ô DÙ và khăn tắm ở mép khoảnh, cho ra bãi biển có người ---
+            this.drawParasol(ctx, x0 + w * 0.14, GROUND_Y + 6, w);
+
+            // --- HẢI ÂU lượn ngang trời ---
+            for (let i = 0; i < 3; i++) {
+                const bx = ((i * 431 + time * 26) % (W + 200)) - 100;
+                const by = 130 + (i % 2) * 46 + Math.sin(time * 0.9 + i) * 9;
+                const flap = 4 + Math.sin(time * 5 + i * 2) * 4;
+                ctx.strokeStyle = 'rgba(40,60,80,0.55)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(bx - 11, by);
+                ctx.quadraticCurveTo(bx - 5, by - flap, bx, by);
+                ctx.quadraticCurveTo(bx + 5, by - flap, bx + 11, by);
+                ctx.stroke();
+            }
+        }
+
+        /* Đảo dừa xa: một mô đất, vài thân dừa cong và tán lá xoè.
+         * fade nhỏ hơn 1 thì đảo lùi ra xa — nhạt đi và bé lại. */
+        drawIsland(ctx, cx, seaY, scale) {
+            const s = scale, a = 0.55 + 0.45 * s;
+            ctx.save();
+            ctx.globalAlpha = a;
+
+            // mô cát
+            ctx.fillStyle = '#e8d09a';
+            ctx.beginPath();
+            ctx.ellipse(cx, seaY + 2, 62 * s, 12 * s, 0, 0, TAU);
+            ctx.fill();
+            ctx.fillStyle = '#7bbf6a';
+            ctx.beginPath();
+            ctx.ellipse(cx, seaY - 4 * s, 40 * s, 12 * s, 0, 0, TAU);
+            ctx.fill();
+
+            // hai ba cây dừa
+            const palms = [[-16, 1.0], [8, 0.82], [24, 0.62]];
+            for (const [dx, ps] of palms) {
+                const bx = cx + dx * s, by = seaY - 6 * s;
+                const hgt = 42 * s * ps;
+                ctx.strokeStyle = '#8a6236';
+                ctx.lineWidth = Math.max(1.5, 3.4 * s * ps);
+                ctx.beginPath();
+                ctx.moveTo(bx, by);
+                ctx.quadraticCurveTo(bx + 6 * s * ps, by - hgt * 0.6, bx + 11 * s * ps, by - hgt);
+                ctx.stroke();
+
+                const tx = bx + 11 * s * ps, ty = by - hgt;
+                ctx.fillStyle = '#3f9c52';
+                for (let f = 0; f < 5; f++) {
+                    const ang = -Math.PI * (0.18 + f * 0.16);
+                    const fl = 20 * s * ps;
+                    ctx.beginPath();
+                    ctx.moveTo(tx, ty);
+                    ctx.quadraticCurveTo(
+                        tx + Math.cos(ang) * fl * 0.6, ty + Math.sin(ang) * fl * 0.6 - 5 * s,
+                        tx + Math.cos(ang) * fl, ty + Math.sin(ang) * fl + 5 * s);
+                    ctx.quadraticCurveTo(
+                        tx + Math.cos(ang) * fl * 0.55, ty + Math.sin(ang) * fl * 0.55 + 3 * s,
+                        tx, ty);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#6b4a24';
+                ctx.beginPath(); ctx.arc(tx + 2 * s, ty + 3 * s, 2.4 * s * ps, 0, TAU); ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        /* Ô dù sọc cắm trên cát. Nghiêng theo GIÓ THẬT của ván chơi — nhìn cái
+         * dù là đoán được gió đang thổi bên nào, khỏi phải đọc con số nào. */
+        drawParasol(ctx, x, y, w) {
+            const tilt = clamp(Game.wind * 0.16, -0.34, 0.34);
+            const r = Math.max(26, w * 0.10);
+            ctx.save();
+            ctx.translate(x, y);
+
+            ctx.fillStyle = 'rgba(90,60,30,0.22)';
+            ctx.beginPath();
+            ctx.ellipse(0, 4, r * 0.9, r * 0.20, 0, 0, TAU);
+            ctx.fill();
+
+            ctx.rotate(tilt);
+            ctx.strokeStyle = '#a8763f';
+            ctx.lineWidth = 4;
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(0, -r * 1.75); ctx.stroke();
+
+            const top = -r * 1.75;
+            for (let i = 0; i < 8; i++) {
+                const a0 = Math.PI + i * (Math.PI / 8), a1 = a0 + Math.PI / 8;
+                ctx.fillStyle = i % 2 ? '#ff5f6d' : '#fff3e6';
+                ctx.beginPath();
+                ctx.moveTo(0, top);
+                ctx.arc(0, top, r, a0, a1);
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.fillStyle = '#ffd166';
+            ctx.beginPath(); ctx.arc(0, top, 4, 0, TAU); ctx.fill();
             ctx.restore();
         }
 
@@ -1428,6 +1689,7 @@
         state: 'menu',              // menu | countdown | playing | over | paused
         playerCount: 2,
         mode: 'versus',
+        arena: 'fair',
         diff: 'normal',
         control: 'sweep',
         guideOn: true,
@@ -1444,6 +1706,7 @@
             return this.guideOn ? d : Object.assign({}, d, { guide: false });
         },
         get modeCfg() { return MODES[this.mode]; },
+        get arenaCfg() { return ARENAS[this.arena] || ARENAS.fair; },
 
         keyLabel(i) { return KEYLABEL[KEYSETS[this.playerCount][i]] || '?'; },
 
@@ -1605,6 +1868,7 @@
             };
             sel('[data-players]', 'players', v => this.build(+v));
             sel('[data-mode]', 'mode', v => { this.mode = v; });
+            sel('[data-arena]', 'arena', v => { this.arena = v; });
             sel('[data-diff]', 'diff', v => { this.diff = v; });
             sel('[data-ctrl]', 'ctrl', v => { this.control = v; this.updateHint(); });
 
@@ -1966,12 +2230,18 @@
             const m = this.modeCfg, d = this.diffCfg;
 
             // Gió đổi hướng từ từ, chế độ siêu khó thì giật từng cơn
+            /* Gió của sân CỘNG THÊM vào gió của mức khó, và bãi biển thì giật
+             * từng cơn dù chơi ở mức nào. Cộng chứ không thay: bé chọn mức Dễ
+             * ra biển vẫn thấy dễ hơn mức Khó ở hội chợ. */
+            const a2 = this.arenaCfg;
+            const windMax = d.wind + a2.windAdd;
+            const gusty = d.gust || a2.gust;
             this.windT -= dt;
             if (this.windT <= 0) {
-                this.windTarget = rnd(-1, 1) * d.wind;
-                this.windT = d.gust ? rnd(1.1, 2.4) : rnd(2.5, 5);
+                this.windTarget = rnd(-1, 1) * windMax;
+                this.windT = gusty ? rnd(1.1, 2.4) : rnd(2.5, 5);
             }
-            this.wind = lerp(this.wind, this.windTarget, clamp(dt * (d.gust ? 2.4 : 0.9), 0, 1));
+            this.wind = lerp(this.wind, this.windTarget, clamp(dt * (gusty ? 2.4 : 0.9), 0, 1));
 
             if (this.state === 'countdown') {
                 const prev = Math.ceil(this.countdown);
