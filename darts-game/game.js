@@ -1217,10 +1217,27 @@
             ctx.beginPath();
             ctx.rect(this.x0, 0, this.w, H);
             ctx.clip();
-            if (this.shake > 0.4) ctx.translate(rnd(-this.shake, this.shake), rnd(-this.shake, this.shake));
 
+            /* NỀN VẼ TRƯỚC, KHÔNG RUNG THEO.
+             *
+             * Anh Hiếu: "ở chế độ nhiều người chơi, khi bóng nổ thì có viền đen
+             * ở khu vực phân chia khu vực chơi của mỗi người chơi".
+             *
+             * Đúng, và nguyên do nằm ở thứ tự hai dòng trên. Em cắt khung theo
+             * làn (clip) rồi mới dịch cả toạ độ đi để tạo cú rung. Khung cắt
+             * thì đứng yên, còn cái nền vẽ trong hệ toạ độ đã dịch nên nó
+             * TRƯỢT KHỎI mép khung — hở ra một dải rộng đúng bằng biên độ
+             * rung, và chỗ hở ấy không ai tô nên lộ nền đen của canvas. Bóng nổ
+             * là lúc rung mạnh nhất, nên bé thấy đúng vào lúc ấy.
+             *
+             * Chữa bằng cách vẽ nền TRƯỚC khi dịch. Cú rung vẫn còn nguyên cho
+             * bóng, phi tiêu, mảnh vỡ và cả bé đang ném — mà đó mới là những
+             * thứ cần rung. Cái phông sau lưng thì đứng yên cũng đúng hơn:
+             * quả bóng nổ chứ có phải cả gian hàng nổ đâu. */
             if (Game.arena === 'beach') this.drawBeach(ctx, time);
             else this.drawBooth(ctx, time);
+
+            if (this.shake > 0.4) ctx.translate(rnd(-this.shake, this.shake), rnd(-this.shake, this.shake));
             for (const b of this.balloons) b.draw(ctx, time);
             for (const a of this.necks) a.draw(ctx);
             for (const g of this.gulls) g.draw(ctx);
