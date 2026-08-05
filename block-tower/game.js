@@ -1246,26 +1246,6 @@
             else document.body.classList.add('playing');
         });
 
-        /* Nút bấm to dưới màn cho bé chơi bằng điện thoại — ngón cái với tới
-         * được, và không che mất cái giếng. */
-        var pad = el('touchpad');
-        if (pad) {
-            pad.addEventListener('pointerdown', function (ev) {
-                var b = ev.target.closest('.pad-btn');
-                if (!b || G.mode !== 'play' || !UI.scene) return;
-                sfx.wake();
-                var act = b.getAttribute('data-act');
-                if (act === 'left') UI.scene.tryMove(-1);
-                else if (act === 'right') UI.scene.tryMove(1);
-                else if (act === 'turn') UI.scene.tryRotate(1);
-                else if (act === 'drop') UI.scene.hardDrop();
-                else if (act === 'soft') G.soft = true;
-                ev.preventDefault();
-            });
-            pad.addEventListener('pointerup', function () { G.soft = false; });
-            pad.addEventListener('pointerleave', function () { G.soft = false; });
-        }
-
         var soundBtn = el('btn-sound'), icon = el('sound-icon');
         function paintSound() {
             icon.className = 'fa-solid ' + (sfx.on ? 'fa-volume-high' : 'fa-volume-xmark');

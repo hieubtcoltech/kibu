@@ -552,9 +552,7 @@ function run(win) {
             bad.push('bảng điểm chật: chữ bên trong rộng ' + hud.scrollWidth + 'px mà chỗ chỉ có ' + hud.clientWidth + 'px');
         if (dd.documentElement.scrollWidth > 391)
             bad.push('cả trang rộng ' + dd.documentElement.scrollWidth + 'px, tràn khỏi màn 390px');
-        var pad = dd.getElementById('touchpad').getBoundingClientRect();
-        if (pad.width < 200) bad.push('hàng nút bấm chỉ rộng ' + Math.round(pad.width) + 'px');
-        say('    ' + (bad.length ? bad.join('; ') : 'gọn gàng, hàng nút rộng ' + Math.round(pad.width) + 'px'),
+        say('    ' + (bad.length ? bad.join('; ') : 'gọn gàng'),
             bad.length ? 'bad' : 'ok');
         bad.forEach(function (b) { fail('màn 390px: ' + b); });
         finish();

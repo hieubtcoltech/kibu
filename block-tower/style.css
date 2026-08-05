@@ -184,9 +184,13 @@ body {
 }
 
 /* ---------------- Bảng điểm ---------------- */
+/* Trải kín mặt tranh chứ KHÔNG chỉ cao bằng nội dung. Ô NEXT bên trong đặt
+   top theo phần trăm (--well-top), mà phần trăm ấy tính theo chiều cao của
+   chính khung này — để nó cao bằng nội dung thì 13% ra vỏn vẹn 6px và ô NEXT
+   trôi lên tận mép trên, không ngang miệng giếng. */
 .hud {
     position: absolute;
-    left: 0; right: 0; top: 0;
+    inset: 0;
     display: flex;
     align-items: flex-start;
     gap: 8px;
@@ -289,45 +293,6 @@ body {
     text-transform: uppercase;
     white-space: nowrap;
 }
-
-/* ---------------- Hàng nút dưới đáy ---------------- */
-.touchpad {
-    position: absolute;
-    left: 0; right: 0; bottom: 0;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    padding: 10px 12px 12px;
-    z-index: 5;
-    /* Chỉ hiện khi đang chơi — bảng chào che hết thì mấy nút này thò ra dưới
-       trông rất lôi thôi. */
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
-}
-
-body.playing .touchpad { opacity: 1; pointer-events: auto; }
-
-.pad-btn {
-    width: 62px;
-    height: 54px;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    background: rgba(12, 18, 34, 0.78);
-    color: #dbe6f5;
-    font-size: 1.35rem;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.1s ease, background 0.15s ease;
-}
-
-.pad-btn:active { transform: scale(0.94); background: rgba(255, 255, 255, 0.16); }
-.pad-turn { color: var(--azure); border-color: rgba(46, 168, 255, 0.45); }
-.pad-drop { color: var(--gold); border-color: rgba(255, 201, 60, 0.45); }
 
 /* ---------------- Bảng phủ ---------------- */
 .screen {
@@ -555,7 +520,6 @@ body.playing .touchpad { opacity: 1; pointer-events: auto; }
     .hud-next { padding: 4px 5px; }
     .next-piece { grid-template-columns: repeat(4, 7px); grid-template-rows: repeat(2, 7px); }
     .next-piece.up { grid-template-columns: repeat(4, 10px); grid-template-rows: repeat(2, 10px); }
-    .pad-btn { width: 56px; height: 50px; font-size: 1.2rem; }
 }
 
 /* Điện thoại xoay ngang: màn chỉ cao chừng 420px mà thanh trên với chân trang
@@ -567,8 +531,6 @@ body.playing .touchpad { opacity: 1; pointer-events: auto; }
     .brand-img { width: 26px; height: 26px; }
     .btn { min-height: 38px; padding: 6px 10px; }
     .site-footer { display: none; }
-    .pad-btn { width: 52px; height: 42px; }
-    .touchpad { padding: 6px 10px 8px; }
 }
 
 /* Trên máy có cảm ứng, bảng chọn hay dài hơn màn hình và nút BẮT ĐẦU trôi
