@@ -51,19 +51,40 @@ function tileHtml(g) {
      *
      * width/height khai sẵn để trình duyệt chừa đúng chỗ, khỏi giật bố cục.
      */
-    const eager = g.eager;
-    const prio = eager
-        ? 'fetchpriority="high"'
-        : 'loading="lazy"';
+    const prio = g.eager ? 'fetchpriority="high"' : 'loading="lazy"';
+
+    /* PHẢI HỎI ĐĨA XEM TỆP CÓ THẬT KHÔNG, không được đoán theo tên.
+     *
+     * Anh Hiếu báo mất hẳn ảnh của game tictactoe. Nguyên do là em: game ấy chỉ
+     * có icon.png, không có icon.jpg, và bản trước em cứ thế viết cứng cả
+     * icon.webp lẫn icon.jpg vào thẻ.
+     *
+     * Chỗ chết người nằm ở <picture>: khi trình duyệt đã CHỌN một <source> mà
+     * tệp ấy 404 thì nó KHÔNG rơi về <img> nữa. Cái onerror trên <img> — thứ
+     * xưa nay vẫn đỡ cho trường hợp png — không bao giờ được gọi. Ô gạch trống
+     * trơn mà không có lỗi nào trên bảng điều khiển.
+     *
+     * Nên giờ hỏi thẳng đĩa: có webp thì mới thêm <source>, và <img> trỏ đúng
+     * đuôi tệp đang có. */
+    const dir = path.join(__dirname, g.dir);
+    const hasWebp = fs.existsSync(path.join(dir, 'icon.webp'));
+    const base = fs.existsSync(path.join(dir, 'icon.jpg')) ? 'icon.jpg'
+        : fs.existsSync(path.join(dir, 'icon.png')) ? 'icon.png' : null;
+    if (!base) throw new Error(`${g.dir}: không có icon.jpg lẫn icon.png`);
+
+    const src = `                <img src="/${g.dir}/${base}" alt="" class="tile-img" width="400" height="400"
+                         ${prio} decoding="async">`;
+    const img = hasWebp
+        ? `<picture>
+                    <source srcset="/${g.dir}/icon.webp" type="image/webp">
+                ${src}
+                </picture>`
+        : src.trim();
+
     return `            <a href="/g/${g.slug}" class="poki-tile ${g.tile}"
                 data-topics="${g.topics.join(' ')}"
                 data-keywords="${esc(kw)}">${badge}
-                <picture>
-                    <source srcset="/${g.dir}/icon.webp" type="image/webp">
-                    <img src="/${g.dir}/icon.jpg" alt="" class="tile-img" width="400" height="400"
-                         ${prio} decoding="async"
-                         onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}">
-                </picture>
+                ${img}
                 <div class="tile-label">${esc(g.en)}</div>
             </a>`;
 }

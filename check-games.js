@@ -130,7 +130,29 @@ console.log('');
 if (warn.length) {
     console.log('nhắc nhở (không chặn):');
     warn.forEach(w => console.log('  · ' + w));
-    console.log('');
+    /* ---- MỌI ẢNH TRANG CHỦ TRỎ TỚI ĐỀU PHẢI CÓ THẬT ----
+ *
+ * Anh Hiếu báo mất hẳn ảnh của game tictactoe. Nguyên do: game ấy chỉ có
+ * icon.png, mà em lại viết cứng icon.jpg và icon.webp vào thẻ ô gạch.
+ *
+ * Chỗ chết người là <picture>: khi trình duyệt đã CHỌN một <source> mà tệp ấy
+ * 404 thì nó KHÔNG rơi về <img> nữa — cái onerror xưa nay vẫn đỡ cho trường
+ * hợp png không bao giờ được gọi. Ô gạch trống trơn, mà bảng điều khiển không
+ * báo lỗi nào, và phép soát cũ vẫn xanh vì nó chỉ hỏi "thư mục có icon nào
+ * không", chứ không hỏi "cái ảnh trang chủ ĐANG TRỎ TỚI có tồn tại không".
+ *
+ * Hai câu hỏi ấy khác nhau, và chính chỗ khác nhau ấy làm mất một ô gạch. */
+{
+    const home = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const refs = [...home.matchAll(/(?:src|srcset)="(\/[^"]+\.(?:jpg|png|webp|svg))"/g)]
+        .map(m => m[1])
+        .filter(u => !u.startsWith('//'));
+    const missing = [...new Set(refs)].filter(u => !fs.existsSync(path.join(ROOT, u.slice(1))));
+    console.log(`  ảnh trang chủ: ${new Set(refs).size} đường dẫn, ${missing.length} cái không có tệp`);
+    missing.forEach(u => fails.push(`trang chủ trỏ tới ${u} nhưng không có tệp ấy trên đĩa`));
+}
+
+console.log('');
 }
 if (fails.length) {
     console.log('KHÔNG ĐẠT:');
