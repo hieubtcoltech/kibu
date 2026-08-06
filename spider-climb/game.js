@@ -1549,12 +1549,21 @@
         } else if (P.state === 'jump') {
             Sfx.ambient(0.018, 520);
         } else {
-            /* Lúc leo nền chỉ còn là tiếng ù trầm của phố, rất mỏng, và mỏng
-             * dần theo độ cao. Tiếng của việc LEO là tiếng bám tay chứ không
-             * phải tiếng ồn — ồn không kể được mình đang leo nhanh hay chậm,
-             * còn nhịp tay thì kể được. */
-            Sfx.ambient(0.008 + 0.012 * (fastNow ? 1 : 0) + 0.006 * city,
-                240 + 90 * city);
+            /* Nền đổi TÍNH CHẤT theo độ cao, không chỉ đổi to nhỏ.
+             *
+             * Dưới phố: cắt ở 280 Hz — tiếng ù trầm của xe cộ, cộng với mấy
+             * cái còi ở trên. Lên cao: cửa cắt mở dần tới 900 Hz và mức hạ
+             * xuống, nên cùng một nguồn ồn ấy mỏng dần lại thành tiếng gió.
+             *
+             * Chỗ nối là một phép trộn tuyến tính theo mét, nên không có mốc
+             * nào để tai bắt được là "vừa đổi tiếng" — leo một lúc rồi ngẩng
+             * lên mới nhận ra phố đã ở lại phía dưới. Đó là điều duy nhất
+             * đáng làm ở đây; đổi đánh cái thì thà đừng đổi.
+             *
+             * Tiếng của việc LEO vẫn là tiếng bám tay chứ không phải tiếng
+             * ồn — ồn không kể được mình đang leo nhanh hay chậm. */
+            Sfx.ambient(0.007 + 0.009 * city + 0.010 * (fastNow ? 1 : 0),
+                280 + 620 * (1 - city));
         }
 
         collide(dt);

@@ -1344,10 +1344,23 @@ let comps = 0, lastComp = null;
      * mà bò lên quá 400 Hz lúc đang bám tường thì tai nghe ra sóng biển chứ
      * không ra thành phố — đúng chỗ bản trước hỏng. */
     ok(S.amb.f.type === 'lowpass', `nền lọc kiểu "${S.amb.f.type}" — phải lọc thấp thì mới ra tiếng phố`);
-    P.state = 'cling'; P.vy = 0; step(1);
-    ok(S.amb.f.frequency.value < 400,
-        `nền lúc leo cắt ở ${Math.round(S.amb.f.frequency.value)} Hz — cao thế thì nghe ra tiếng sóng biển`);
-    /* Còi xe phải TẮT HẲN khi lên cao, không thì trên tầng mây vẫn nghe phố. */
+
+    /* Nền phải ĐỔI TÍNH CHẤT theo độ cao: dưới phố là tiếng ù trầm, lên cao
+     * mỏng dần thành tiếng gió. Đo ở hai độ cao rồi so, chứ soát một mốc thì
+     * không bắt được cái quan trọng nhất — rằng nó có chuyển hay không. */
+    function bedAt(metres) {
+        P.state = 'cling'; P.vy = 0;
+        G.maxY = 900 + metres * R.PX_PER_M;
+        step(1);
+        return { cut: S.amb.f.frequency.value, lvl: S.amb.g.gain.value };
+    }
+    const low = bedAt(30), highUp = bedAt(3000);
+    ok(low.cut < 400,
+        `nền dưới phố cắt ở ${Math.round(low.cut)} Hz — cao thế thì nghe ra tiếng sóng biển`);
+    ok(highUp.cut > low.cut * 2,
+        `lên 3 000 m mà cửa cắt mới ${Math.round(highUp.cut)} Hz so với ${Math.round(low.cut)} Hz — nền chưa chuyển sang tiếng gió`);
+    ok(highUp.lvl < low.lvl,
+        `lên cao mà nền vẫn to bằng dưới phố (${highUp.lvl.toFixed(3)} so với ${low.lvl.toFixed(3)})`);
     ok(lvl.horn > 0, 'còi xe không sinh ra nút nào');
     for (const k of ['bump', 'land', 'webHit']) {
         ok(lvl[k] > bedFall * 1.8,
@@ -1358,7 +1371,7 @@ let comps = 0, lastComp = null;
     ok(S.master.gain.value === 0, 'tắt tiếng mà núm tổng vẫn mở — nền gió sẽ thổi tiếp');
     S.toggle();
 
-    console.log(`  âm thanh: nền lọc thấp ${Math.round(S.amb.f.frequency.value)} Hz · còi xe ${lvl.horn.toFixed(3)} · núm tổng ${masterVol} · nền leo ${bedClimb.toFixed(3)} · nền rơi ${bedFall.toFixed(3)} · bám tay ${lvl.step.toFixed(3)} · xu ${lvl.coin.toFixed(3)} · đụng ${lvl.bump.toFixed(3)}`);
+    console.log(`  âm thanh: nền phố ${Math.round(low.cut)} Hz/${low.lvl.toFixed(3)} → gió ${Math.round(highUp.cut)} Hz/${highUp.lvl.toFixed(3)} · còi xe ${lvl.horn.toFixed(3)} · núm tổng ${masterVol} · nền leo ${bedClimb.toFixed(3)} · nền rơi ${bedFall.toFixed(3)} · bám tay ${lvl.step.toFixed(3)} · xu ${lvl.coin.toFixed(3)} · đụng ${lvl.bump.toFixed(3)}`);
     delete global.window.AudioContext;
     S.ctx = null; S.amb = null;
 }
