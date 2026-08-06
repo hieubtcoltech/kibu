@@ -1276,7 +1276,13 @@ let comps = 0, lastComp = null;
         const from = stub.gains.length;
         fn();
         let peak = 0;
-        for (let i = from; i < stub.gains.length; i++) peak = Math.max(peak, stub.gains[i].gain.value);
+        for (let i = from; i < stub.gains.length; i++) {
+            /* Chỉ tính nút NỐI THẲNG RA NÚM TỔNG. Mấy nút trộn bên trong một
+             * tiếng (hai cao độ của cái còi chẳng hạn) để ở mức 1 là chuyện
+             * bình thường — đo nhầm vào đấy thì phép soát kêu oan. */
+            if (stub.gains[i]._to.indexOf(S.master) < 0) continue;
+            peak = Math.max(peak, stub.gains[i].gain.value);
+        }
         return peak;
     }
     const oneShot = {
@@ -1284,6 +1290,7 @@ let comps = 0, lastComp = null;
         bump: () => S.bump(), land: () => S.land(), webHit: () => S.webHit(),
         web: () => S.web(), jump: () => S.jump(), power: () => S.power(),
         wings: () => S.wings(), gust: () => S.gust(), shock: () => S.shock(),
+        horn: () => S.horn(0.05, 0.2, 380, 0),
         thunder: () => S.thunder(), glassBreak: () => S.glassBreak(),
         glassTick: () => S.glassTick(), boltStrike: () => S.boltStrike(),
         boltCharge: () => S.boltCharge(), laserFire: () => S.laserFire(),
@@ -1318,6 +1325,15 @@ let comps = 0, lastComp = null;
     /* Lúc rơi: gió được phép dâng lên, nhưng mấy tiếng CẦN NGHE trong lúc rơi
      * — đụng phải, bám lại được, tơ dính — vẫn phải trội hơn hẳn. */
     ok(bedFall < 0.09, `gió lúc rơi lên tới ${bedFall.toFixed(3)} — to quá, nó nuốt mọi tiếng khác`);
+    /* Nền phải là tiếng ù TRẦM, không phải ồn dải cao chạy liên tục. Cửa cắt
+     * mà bò lên quá 400 Hz lúc đang bám tường thì tai nghe ra sóng biển chứ
+     * không ra thành phố — đúng chỗ bản trước hỏng. */
+    ok(S.amb.f.type === 'lowpass', `nền lọc kiểu "${S.amb.f.type}" — phải lọc thấp thì mới ra tiếng phố`);
+    P.state = 'cling'; P.vy = 0; step(1);
+    ok(S.amb.f.frequency.value < 400,
+        `nền lúc leo cắt ở ${Math.round(S.amb.f.frequency.value)} Hz — cao thế thì nghe ra tiếng sóng biển`);
+    /* Còi xe phải TẮT HẲN khi lên cao, không thì trên tầng mây vẫn nghe phố. */
+    ok(lvl.horn > 0, 'còi xe không sinh ra nút nào');
     for (const k of ['bump', 'land', 'webHit']) {
         ok(lvl[k] > bedFall * 1.8,
             `gió lúc rơi ${bedFall.toFixed(3)} so với tiếng "${k}" ${lvl[k].toFixed(3)} — đang rơi thì không nghe được gì nữa`);
@@ -1327,7 +1343,7 @@ let comps = 0, lastComp = null;
     ok(S.master.gain.value === 0, 'tắt tiếng mà núm tổng vẫn mở — nền gió sẽ thổi tiếp');
     S.toggle();
 
-    console.log(`  âm thanh: núm tổng ${masterVol} · nền leo ${bedClimb.toFixed(3)} · nền rơi ${bedFall.toFixed(3)} · bám tay ${lvl.step.toFixed(3)} · xu ${lvl.coin.toFixed(3)} · đụng ${lvl.bump.toFixed(3)}`);
+    console.log(`  âm thanh: nền lọc thấp ${Math.round(S.amb.f.frequency.value)} Hz · còi xe ${lvl.horn.toFixed(3)} · núm tổng ${masterVol} · nền leo ${bedClimb.toFixed(3)} · nền rơi ${bedFall.toFixed(3)} · bám tay ${lvl.step.toFixed(3)} · xu ${lvl.coin.toFixed(3)} · đụng ${lvl.bump.toFixed(3)}`);
     delete global.window.AudioContext;
     S.ctx = null; S.amb = null;
 }

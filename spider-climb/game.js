@@ -209,9 +209,18 @@
                 src.buffer = this.noise;
                 src.loop = true;
                 var f = this.ctx.createBiquadFilter();
-                f.type = 'bandpass';
-                f.frequency.value = 420;
-                f.Q.value = 0.6;
+                /* LỌC THẤP, không phải lọc dải.
+                 *
+                 * Bản trước lọc dải Q 0,6 — rộng đến mức gần như không lọc gì,
+                 * nên nền giữ nguyên phần ồn cao. Mà ồn dải cao chạy liên tục
+                 * thì tai gọi tên nó là SÓNG BIỂN, đúng thứ anh Hiếu nghe
+                 * thấy. Cắt phần cao đi thì cùng một nguồn ồn ấy hoá thành
+                 * tiếng ù trầm của phố xá — và lúc rơi, mở cửa cắt lên cao,
+                 * nó thành tiếng gió táp. Một nguồn, hai câu chuyện, khác nhau
+                 * mỗi chỗ cửa cắt. */
+                f.type = 'lowpass';
+                f.frequency.value = 300;
+                f.Q.value = 0.7;
                 var g = this.ctx.createGain();
                 g.gain.value = 0;
                 src.connect(f); f.connect(g); g.connect(this.master);
@@ -308,6 +317,49 @@
         laserCharge: function () { this.tone(600, 1700, 0.55, 'sawtooth', 0.032); },
         laserFire: function () { this.hit(0.2, 0.13, 2400, 'bandpass'); this.tone(1800, 400, 0.16, 'square', 0.055); },
         gust: function () { this.hit(0.85, 0.10, 700, 'bandpass'); },
+
+        /* CÒI XE DƯỚI PHỐ.
+         *
+         * Còi ô-tô thật là HAI cao độ kêu cùng lúc, cách nhau chừng một quãng
+         * ba — một cao độ thôi thì ra tiếng kèn đồ chơi, không ra cái xe.
+         *
+         * Và nó phải bị lọc mất phần chói: người chơi đang ở trên cao, tiếng
+         * còi vọng lên đã đi qua cả trăm mét không khí với mấy bức tường, thứ
+         * nào cũng ăn phần cao trước. Còi mà nghe trong veo thì tai đặt cái xe
+         * ngay cạnh mình, hỏng mất độ cao vừa leo được. */
+        horn: function (vol, dur, base, delay) {
+            if (!this.ready()) return;
+            var t = this.ctx.currentTime + (delay || 0);
+            var g = this.ctx.createGain();
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.linearRampToValueAtTime(vol, t + 0.03);
+            g.gain.setValueAtTime(vol, t + dur);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur + 0.18);
+            var f = this.ctx.createBiquadFilter();
+            f.type = 'lowpass';
+            f.frequency.value = 1300;
+            f.connect(g); g.connect(this.master);
+            var pair = [1, 1.26], types = ['sawtooth', 'square'];
+            for (var i = 0; i < 2; i++) {
+                var o = this.ctx.createOscillator();
+                o.type = types[i];
+                o.frequency.value = base * pair[i];
+                var og = this.ctx.createGain();
+                og.gain.value = i ? 0.45 : 1;
+                o.connect(og); og.connect(f);
+                o.start(t); o.stop(t + dur + 0.25);
+            }
+        },
+        /* Ba kiểu bấm còi, vì phố thật không ai bấm giống ai: một cái cộc lốc,
+         * hai cái sốt ruột, và một cái dài của người đang cáu. */
+        cityHorn: function (near) {
+            var vol = 0.05 * near;
+            var base = 330 + Math.random() * 150;
+            var r = Math.random();
+            if (r < 0.5) this.horn(vol, 0.2, base, 0);
+            else if (r < 0.85) { this.horn(vol, 0.14, base, 0); this.horn(vol, 0.16, base, 0.26); }
+            else this.horn(vol * 1.1, 0.7, base, 0);
+        },
         /* Cánh chim bồ câu bung ra: hai tiếng phành phạch ngắn, đục, không có
          * cao độ — nghe là biết có cái gì vừa bật lên khỏi gờ ngay cạnh mình. */
         wings: function () {
@@ -398,6 +450,7 @@
         stats: null,
         power: { shield: 0, magnet: 0, x2: 0, slow: 0 },
         sprint300: 0,
+        hornT: 4,             // bao lâu nữa thì có một cái còi xe dưới phố
         gustSeen: null,
         deaths: {},
         bolt: null, boltT: 0, farBolt: null, farBoltT: 0,
@@ -456,7 +509,7 @@
         G.livesLost = 0;
         G.maxY = START_Y; G.zone = 0; G.zoneBannerT = 0;
         G.revived = false; G.freeze = 0; G.shake = 0; G.flash = 0;
-        G.sprint300 = 0; G.gustSeen = null; G.deaths = {};
+        G.sprint300 = 0; G.gustSeen = null; G.deaths = {}; G.hornT = 4;
         G.bolt = null; G.boltT = R.BOLT_GRACE; G.farBolt = null; G.farBoltT = 0;
         G.fws.length = 0; G.fwT = 1.5;
         G.power = { shield: 0, magnet: 0, x2: 0, slow: 0 };
@@ -1456,6 +1509,15 @@
          * phố, bò nhanh thì rít lên, còn rơi thì ù hẳn — và đó cũng chính là
          * TIẾNG BÁO RƠI mà bản thiết kế đòi, khỏi cần thêm tiếng nào nữa. */
         var high = R.curve(metresNow(), 4000);
+        /* CÒI XE THƯA THỚT. Càng lên cao càng thưa và càng nhỏ, tới quãng
+         * 1 400 m thì tắt hẳn — trên tầng mây không ai còn nghe thấy phố nữa,
+         * và cái im lặng ấy chính là phần thưởng của việc leo. */
+        var city = clamp(1 - metresNow() / 1400, 0, 1);
+        G.hornT -= dt;
+        if (G.hornT <= 0) {
+            G.hornT = 3.5 + Math.random() * 7;
+            if (city > 0.06 && Math.random() < city) Sfx.cityHorn(city);
+        }
         if (P.state === 'fall') {
             /* Gió rơi vẫn phải là TIẾNG BÁO RƠI, nên nó vẫn dâng theo tốc độ —
              * nhưng đỉnh hạ từ 0,15 xuống 0,066. Cũ thì nó to gấp mười hai lần
@@ -1463,14 +1525,16 @@
              * gấp chừng ba, vẫn thừa để giật mình mà không nuốt mất mọi tiếng
              * khác đúng lúc đang cần nghe chúng nhất. */
             var vv = Math.min(1, Math.abs(P.vy) / R.FALL_MAX_V);
-            Sfx.ambient(0.026 + 0.040 * vv, 700 + 900 * vv);
+            Sfx.ambient(0.022 + 0.034 * vv, 620 + 800 * vv);
         } else if (P.state === 'jump') {
-            Sfx.ambient(0.020, 620);
+            Sfx.ambient(0.018, 520);
         } else {
-            /* Lúc leo nền chỉ còn là hơi thở rất mỏng. Tiếng của việc leo là
-             * tiếng BÁM TAY, không phải tiếng ồn — ồn không kể được là mình
-             * đang leo nhanh hay chậm, còn nhịp tay thì kể được. */
-            Sfx.ambient(0.009 + 0.014 * (fastNow ? 1 : 0) + 0.007 * high, 330 + 160 * high);
+            /* Lúc leo nền chỉ còn là tiếng ù trầm của phố, rất mỏng, và mỏng
+             * dần theo độ cao. Tiếng của việc LEO là tiếng bám tay chứ không
+             * phải tiếng ồn — ồn không kể được mình đang leo nhanh hay chậm,
+             * còn nhịp tay thì kể được. */
+            Sfx.ambient(0.008 + 0.012 * (fastNow ? 1 : 0) + 0.006 * city,
+                240 + 90 * city);
         }
 
         collide(dt);
