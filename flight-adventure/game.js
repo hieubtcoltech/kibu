@@ -462,9 +462,9 @@
          * Không còn bị giới hạn bởi trục Z nữa, bé có thể lái máy bay lượn vòng
          * tròn 360 độ tự do, bay ngược về Hà Nội hoặc đi bất cứ đâu. */
         if (!P.onGround) {
-            P.heading -= P.turn * 1.35 * dt; // Tốc độ xoay hướng khi bay
+            P.heading += P.turn * 1.35 * dt; // Tốc độ xoay hướng khi bay
         } else {
-            P.heading -= P.turn * 0.65 * dt; // Tốc độ xoay hướng khi lăn bánh
+            P.heading += P.turn * 0.65 * dt; // Tốc độ xoay hướng khi lăn bánh
         }
         if (P.heading > Math.PI) P.heading -= Math.PI * 2;
         if (P.heading < -Math.PI) P.heading += Math.PI * 2;
@@ -579,7 +579,7 @@
          * Máy bay thật nghiêng cánh để rẽ, nên cú nghiêng chính là cú rẽ đang
          * diễn ra — vẽ nó bằng một biến riêng thì có ngày hai thứ lệch nhau và
          * mắt thấy máy bay nghiêng sang trái mà nó bay sang phải. */
-        P.bank = lerp(P.bank, clamp(P.vz / R.LAT_SPEED, -1, 1), clamp(dt * 4, 0, 1));
+        P.bank = lerp(P.bank, -P.turn * 0.42, clamp(dt * 6, 0, 1));
 
         syncHud(false);
     }
