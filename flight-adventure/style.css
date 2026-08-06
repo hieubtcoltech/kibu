@@ -245,7 +245,7 @@ body {
 .guide {
     position: absolute;
     left: 50%;
-    bottom: 122px;
+    bottom: 152px;
     transform: translateX(-50%) translateY(10px);
     padding: 10px 20px;
     border-radius: 16px;
@@ -712,7 +712,7 @@ body {
     .hud-chip.chip-soft { min-width: 58px; }
     .progress { top: 46px; width: min(70%, 340px); }
     .pg-city { font-size: 0.64rem; }
-    .guide { font-size: 0.82rem; padding: 8px 14px; bottom: 104px; }
+    .guide { font-size: 0.82rem; padding: 8px 14px; bottom: 126px; }
 
     .round-btn { width: 48px; height: 48px; font-size: 1.3rem; }
     .touch-btn { width: 60px; height: 60px; border-radius: 18px; font-size: 1.4rem; }

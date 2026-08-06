@@ -844,15 +844,20 @@
      * định máy bay có va không, nên mắt và mã không bao giờ lệch nhau. */
     var TERRAIN_COL = 10;
 
+    /* Màu mặt đất từng vùng: đỉnh sáng, chân tối. Thành phố KHÔNG phải màu
+     * xám bê-tông — nhìn từ trên cao xuống một thành phố Việt Nam thì thứ
+     * chiếm gần hết mặt đất vẫn là cây và ruộng, nhà chỉ là mấy chấm mọc lên
+     * giữa đó. Bản đầu em tô xám cả dải, và trên máy thật nó ra một tấm bê-tông
+     * trải dài từ Hà Nội tới Đà Nẵng. */
     function terrainColour(kind) {
         return {
-            city: ['#7d8fa0', '#5d6d7d'],
-            fields: ['#8fd06a', '#5fa246'],
-            hills: ['#6fbb5e', '#3f8a44'],
-            mountains: ['#7f8f9e', '#4d5b6b'],
-            coast: ['#e8d8a8', '#c9b585'],
+            city: ['#a9c19a', '#6d8f68'],
+            fields: ['#a8dc7c', '#5fa246'],
+            hills: ['#7cc667', '#3f8a44'],
+            mountains: ['#94a58f', '#4d5b4b'],
+            coast: ['#f0dfb0', '#cfae7c'],
             sea: ['#3fa9d8', '#1f7fae']
-        }[kind] || ['#8fd06a', '#5fa246'];
+        }[kind] || ['#a8dc7c', '#5fa246'];
     }
 
     function drawTerrain() {
@@ -863,15 +868,18 @@
         /* dải sau (mờ, lệch lên) tạo chiều sâu cho dãy núi */
         for (var pass = 0; pass < 2; pass++) {
             var back = pass === 0;
+            var topY = H;
             ctx.beginPath();
-            ctx.moveTo(-20, GROUND_Y + 100);
+            ctx.moveTo(-20, H + 20);
             for (var i = 0; i <= cols; i++) {
                 var wx = x0 + i * TERRAIN_COL / PPM;
                 var g = R.groundAt(rt, wx);
                 if (back) g = g * 1.28 + 60;
-                ctx.lineTo(i * TERRAIN_COL - 20, sy(g));
+                var py = sy(g);
+                if (py < topY) topY = py;
+                ctx.lineTo(i * TERRAIN_COL - 20, py);
             }
-            ctx.lineTo(W + 40, GROUND_Y + 100);
+            ctx.lineTo(W + 40, H + 20);
             ctx.closePath();
 
             var seg = R.segmentAt(rt, P.x);
@@ -879,9 +887,14 @@
             var cn = terrainColour(seg.next.kind);
             var top = seg.k > 0 ? mix(c[0], cn[0], seg.k) : c[0];
             var bot = seg.k > 0 ? mix(c[1], cn[1], seg.k) : c[1];
-            var grad = ctx.createLinearGradient(0, sy(2200), 0, GROUND_Y + 60);
-            grad.addColorStop(0, back ? fade(top, 0.5) : top);
-            grad.addColorStop(1, back ? fade(bot, 0.5) : bot);
+            /* Dải màu chạy từ ĐỈNH THẬT của mặt đất trong khung hình này xuống
+             * đáy màn. Bản đầu em neo nó ở độ cao 2 200 m cố định, nên lúc bay
+             * qua đồng bằng — nơi mặt đất chỉ cao vài chục mét — cả dải nằm ở
+             * mãi đuôi màu và mặt đất ra một mảng tối đều tịt, không còn thấy
+             * đâu là sườn đâu là chân. */
+            var grad = ctx.createLinearGradient(0, topY - 6, 0, GROUND_Y + 80);
+            grad.addColorStop(0, back ? fade(top, 0.55) : top);
+            grad.addColorStop(1, back ? fade(bot, 0.55) : bot);
             ctx.fillStyle = grad;
             ctx.fill();
         }
@@ -923,13 +936,28 @@
             var r1 = hash(idx, 2), r2 = hash(idx, 3);
 
             if (kind === 'city') {
-                var bh = (14 + r1 * 46);
-                ctx.fillStyle = r2 > 0.7 ? '#9aa9b8' : '#8393a4';
-                ctx.fillRect(px - 5, py - bh, 10 + r2 * 6, bh);
-                ctx.fillStyle = 'rgba(255,240,190,0.75)';
-                for (var wI = 0; wI < 3; wI++) {
-                    if (hash(idx, wI + 9) > 0.55) continue;
-                    ctx.fillRect(px - 2, py - bh + 6 + wI * 9, 2.5, 3);
+                /* Ba khối nhà một cụm, cao thấp khác nhau, có mái sẫm và một
+                 * vệt bóng dưới chân. Bản đầu mỗi chỗ đúng một khối chữ nhật
+                 * xám nhạt, và trên máy thật chúng ra mấy cái cọc cắm rời rạc
+                 * chứ không ra một thành phố. */
+                var nb = 2 + (r1 > 0.6 ? 1 : 0);
+                for (var bI = 0; bI < nb; bI++) {
+                    var bw = 8 + hash(idx, bI + 21) * 7;
+                    var bh = 16 + hash(idx, bI + 31) * 52;
+                    var bx = px - 14 + bI * 13;
+                    ctx.fillStyle = 'rgba(40,55,70,0.22)';
+                    ctx.fillRect(bx - 2, py - 1, bw + 5, 4);
+                    ctx.fillStyle = hash(idx, bI + 41) > 0.5 ? '#dfe7ee' : '#c3cfda';
+                    ctx.fillRect(bx, py - bh, bw, bh);
+                    ctx.fillStyle = '#8a97a6';
+                    ctx.fillRect(bx, py - bh, bw, 3);
+                    ctx.fillStyle = 'rgba(120,150,180,0.55)';
+                    for (var wI = 0; wI < 4; wI++) {
+                        var wy2 = py - bh + 8 + wI * 11;
+                        if (wy2 > py - 5) break;
+                        if (hash(idx, bI * 7 + wI + 9) > 0.6) continue;
+                        ctx.fillRect(bx + 2, wy2, bw - 4, 3);
+                    }
                 }
             } else if (kind === 'fields') {
                 ctx.fillStyle = r1 > 0.5 ? '#79bd52' : '#96d76e';
@@ -963,10 +991,16 @@
         var y = sy(rw.y);
         var a = sx(rw.x0), b = sx(rw.x1);
         if (b < -80 || a > W + 80) return;
-        ctx.fillStyle = '#4a4f57';
-        ctx.fillRect(a, y - 3, b - a, 11);
-        ctx.fillStyle = 'rgba(255,255,255,0.9)';
-        for (var x = a + 24; x < b - 24; x += 46) ctx.fillRect(x, y + 1, 22, 2);
+        /* Bãi cỏ sân bay quanh đường băng: không có nó thì dải bê-tông trôi lơ
+         * lửng trên nền đồng ruộng và mắt không đọc ra "đây là một sân bay". */
+        ctx.fillStyle = '#8fae7c';
+        ctx.fillRect(a - 40, y - 2, b - a + 80, 20);
+        ctx.fillStyle = '#565c66';
+        ctx.fillRect(a, y - 5, b - a, 15);
+        ctx.fillStyle = '#6d747f';
+        ctx.fillRect(a, y - 5, b - a, 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        for (var x = a + 24; x < b - 24; x += 46) ctx.fillRect(x, y + 1, 24, 2.6);
         /* Đèn đầu đường băng: bốn chấm sáng nhấp nháy so le. Bản mô tả gọi
          * chúng là thứ dẫn đường, nên chúng phải là thứ SÁNG NHẤT trong khung
          * hình lúc hạ cánh — mắt trẻ con đi theo chỗ sáng nhất. */

@@ -57,7 +57,12 @@
      * phải suy từ con số nào cả. */
     var PPM = 0.9;                 // điểm ảnh mỗi mét, chiều ngang
     var VPM = 0.115;               // điểm ảnh mỗi mét, chiều đứng
-    var GROUND_Y = 512;            // độ cao 0 nằm ở đây trên màn hình
+    /* Độ cao 0 nằm ở đây trên màn hình. Đặt ở 512 thì dải mặt đất chỉ còn 88
+     * điểm ảnh — nhìn trên máy thật ra một vệt xám mỏng dưới đáy, và cả khung
+     * hình thành ra một bầu trời rỗng. Hạ xuống 468 thì mặt đất được 132 điểm
+     * ảnh, đủ chỗ cho nhà cửa, sông và bãi biển hiện ra thành hình. Trần bay
+     * 3 400 m vẫn nằm gọn trong màn (y = 77). */
+    var GROUND_Y = 468;
 
     /* ------------------------------------------------------------------ *
      * 2. HẰNG SỐ BAY
