@@ -201,6 +201,11 @@
         gem: function () { this.tone(880, 1760, 0.12, 'sine', 0.055); this.tone(1320, 2200, 0.16, 'sine', 0.035, 0.05); },
         power: function () { this.tone(520, 1040, 0.14, 'square', 0.04); this.tone(780, 1560, 0.16, 'sine', 0.03, 0.06); },
         bump: function () { this.hit(0.16, 0.14, 380, 'lowpass'); this.tone(180, 70, 0.18, 'square', 0.05); },
+        glassTick: function () { this.hit(0.05, 0.05, 5200, 'highpass'); },
+        glassBreak: function () {
+            this.hit(0.42, 0.14, 4200, 'highpass');
+            this.tone(2400, 500, 0.3, 'triangle', 0.045);
+        },
         shock: function () { this.hit(0.22, 0.10, 3200, 'highpass'); this.tone(120, 60, 0.2, 'sawtooth', 0.045); },
         lose: function () { this.tone(400, 90, 0.42, 'sawtooth', 0.06); this.hit(0.35, 0.09, 500, 'lowpass'); },
         over: function () { this.tone(420, 110, 0.55, 'triangle', 0.06); this.tone(300, 80, 0.7, 'sine', 0.04, 0.1); },
@@ -282,7 +287,7 @@
     var P = {
         side: SIDE_L, x: 0, y: START_Y, vx: 0, vy: 0,
         state: 'cling', face: 1, anim: 0,
-        crack: 0, invuln: 0, boost: 0,
+        crack: 0, glassOn: null, glassT: 0, invuln: 0, boost: 0,
         fastKey: false, fastTouch: false,
         web: R.WEB_MAX, webT: 0, webShot: null, catchFail: 0
     };
@@ -335,7 +340,7 @@
 
         P.side = SIDE_L; P.y = START_Y; P.vx = 0; P.vy = 0;
         P.state = 'cling'; P.face = 1; P.anim = 0;
-        P.crack = 0; P.invuln = 1.2; P.boost = 0;
+        P.crack = 0; P.glassOn = null; P.glassT = 0; P.invuln = 1.2; P.boost = 0;
         P.fastKey = false; P.fastTouch = false;
         P.web = R.WEB_MAX; P.webT = 0; P.webShot = null; P.catchFail = 0;
         P.x = G.world.wallX(SIDE_L, P.y) + R.PLAYER_R;
@@ -862,8 +867,32 @@
             var speed = d.climb * (fast ? R.CLIMB_BOOST : 1) * (G.power.slow > 0 ? 0.82 : 1);
             var surf = w.surfaceAt(P.side, P.y);
             if (surf && surf.kind === 'glass') {
-                speed = R.GLASS_SLIDE;
-                if (Math.random() < dt * 14) addPart(P.x, P.y, (Math.random() - 0.5) * 40, -40, 0.4, 'rgba(200,240,255,0.8)', 2, 'dot');
+                /* Leo qua kính nhanh như tường thường — cái phải trả không phải
+                 * tốc độ mà là HẠN CHÓT: mép trên ô kính. Bò tới sát mép là cả
+                 * tấm vỡ. */
+                if (P.glassOn !== surf) { P.glassOn = surf; P.glassT = 0; }
+                P.glassT += dt;
+                var toTop = surf.y1 - P.y;
+                /* surf.warn để phần vẽ biết rạn tới đâu — 0 là còn lành, 1 là
+                 * sắp vỡ. Vết rạn lan ra chính là lời báo trước. */
+                surf.warn = clamp(1 - toTop / R.GLASS_WARN, 0, 1);
+                if (surf.warn > 0) {
+                    if (Math.random() < dt * (6 + surf.warn * 26)) {
+                        addPart(P.x, P.y + 8, (Math.random() - 0.5) * 60, -70,
+                            0.35, 'rgba(210,245,255,0.9)', 2, 'dot');
+                    }
+                    if (Math.random() < dt * (2 + surf.warn * 9)) Sfx.glassTick();
+                }
+                /* Ân huệ ngắn tính từ lúc VỪA BÁM VÀO: nhảy trúng ô kính sát
+                 * mép trên thì vẫn phải có một nhịp để phản ứng, chứ vỡ ngay
+                 * lúc chạm tay là chết mà không kịp làm gì. */
+                if (toTop <= 10 && P.glassT > R.GLASS_GRACE) {
+                    surf.dead = true;
+                    P.glassOn = null;
+                    Sfx.glassBreak();
+                    burst(P.x, P.y, 22, 'rgba(200,240,255,0.95)', 240, 'spark');
+                    bumpOff('GLASS!');
+                }
             } else if (surf && surf.kind === 'cracked') {
                 P.crack += dt;
                 if (P.crack > R.CRACK_HOLD) {
@@ -872,7 +901,7 @@
                     bumpOff('CRACK!');
                     burst(P.x, P.y, 16, '#d8c9a8', 180, 'dust');
                 }
-            } else P.crack = 0;
+            } else { P.crack = 0; P.glassOn = null; }
 
             P.y += speed * dt;
             P.anim += dt * (speed > 0 ? 7 : 3) * (fast ? 1.6 : 1);
@@ -1335,6 +1364,47 @@
                 }
                 ctx.strokeStyle = 'rgba(255,255,255,0.9)';
                 ctx.strokeRect(x, yA, wdt, yB - yA);
+
+                /* VẠCH HẠN CHÓT ở mép trên. Đây là phần bắt buộc, không phải
+                 * trang trí: mối nguy nào cũng phải báo trước, mà hạn chót của
+                 * ô kính lại vô hình — không vẽ ra thì nó thành cái bẫy đúng
+                 * kiểu bản thiết kế cấm. Sọc chéo vàng đen đọc được từ xa, và
+                 * nhìn một cái là biết còn bao nhiêu chỗ để leo. */
+                var warnH = Math.min(R.GLASS_WARN, s.y1 - s.y0);
+                var wTop = sy(s.y1), wBot = sy(s.y1 - warnH);
+                ctx.save();
+                ctx.beginPath(); ctx.rect(x, wTop, wdt, wBot - wTop); ctx.clip();
+                ctx.globalAlpha = 0.5;
+                ctx.fillStyle = '#f2b616';
+                ctx.fillRect(x, wTop, wdt, wBot - wTop);
+                ctx.fillStyle = '#22262e';
+                for (var d3 = -(wBot - wTop); d3 < wdt + 20; d3 += 22) {
+                    ctx.beginPath();
+                    ctx.moveTo(x + d3, wTop); ctx.lineTo(x + d3 + 10, wTop);
+                    ctx.lineTo(x + d3 + 10 + (wBot - wTop), wBot);
+                    ctx.lineTo(x + d3 + (wBot - wTop), wBot);
+                    ctx.closePath(); ctx.fill();
+                }
+                ctx.restore();
+
+                /* Vết rạn lan ra khi người nhện vào quãng báo động */
+                if (s.warn > 0.02) {
+                    ctx.save();
+                    ctx.globalAlpha = Math.min(1, s.warn * 1.3);
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    var cx = x + wdt / 2, cy = sy(s.y1 - warnH * 0.5);
+                    for (var r2 = 0; r2 < 9; r2++) {
+                        var ang = (r2 / 9) * 6.284 + hash2(Math.round(s.y0), r2) * 0.6;
+                        var len = 12 + s.warn * (36 + hash2(r2, 2) * 30);
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cx + Math.cos(ang) * len * 0.5, cy + Math.sin(ang) * len * 0.5);
+                        ctx.lineTo(cx + Math.cos(ang + 0.25) * len, cy + Math.sin(ang + 0.25) * len);
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
             } else if (s.kind === 'cracked') {
                 ctx.fillStyle = 'rgba(210,190,150,0.55)';
                 ctx.fillRect(x, yA, wdt, yB - yA);

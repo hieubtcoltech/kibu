@@ -67,7 +67,21 @@
      * cho cú nhảy đẹp, và nó tự khép vòng: nhảy giỏi thì lên nhanh, lên nhanh
      * thì điểm cao, chứ không cần thêm nút nào để bấm. */
     var CLIMB_BOOST = 1.55;
-    var GLASS_SLIDE = -120;        // trên kính thì tụt xuống thay vì leo lên
+    /* KÍNH: leo bình thường, nhưng MÉP TRÊN của ô kính là hạn chót.
+     *
+     * Bản đầu kính làm tụt xuống. Chạy thử thì nó chỉ là một đoạn bực mình chứ
+     * không phải một quyết định: đằng nào cũng phải nhảy, chỉ là nhảy muộn hơn.
+     * Nay leo qua kính nhanh như thường, nhưng bò tới sát mép trên là cả tấm
+     * vỡ và rơi — nên câu hỏi thành "nhảy đi lúc nào", và người chơi NHÌN THẤY
+     * hạn chót của mình từ xa thay vì đoán theo đồng hồ trong đầu.
+     *
+     * Đổi này còn lật ngược ý nghĩa nút LEO NHANH, và đó là chỗ hay nhất: trên
+     * tấm nứt thì leo nhanh là lối thoát, còn trên kính thì leo nhanh đẩy mình
+     * tới hạn chót sớm hơn. Cùng một nút, hai mặt tường, hai câu trả lời trái
+     * ngược. */
+    var GLASS_WARN = 160;          // vào quãng này tính từ mép trên thì kính rạn
+    var GLASS_GRACE = 0.35;        // vừa bám vào thì luôn có bấy nhiêu giây để phản ứng
+    var GLASS_MIN_H = 240;         // ô kính không được ngắn hơn, không thì hạn chót tới ngay
     var JUMP_VX = 760;             // tốc độ ngang lúc nhảy, KHÔNG đổi theo khe
     var JUMP_VY = 320;             // vọt lên lúc rời tường
     var GRAVITY = 1460;            // trọng lực trong CÚ NHẢY — nặng cho cú bay gọn
@@ -611,7 +625,7 @@
                  * còn nguyên bên kia, chỉ là không có gì. */
                 var side = w.rng.chance(0.5) ? SIDE_L : SIDE_R;
                 var kind = d.m > 900 ? w.rng.pick(['glass', 'cracked']) : 'glass';
-                if (w.surface(side, y + 170, 300, kind)) {
+                if (w.surface(side, y + 170, Math.max(GLASS_MIN_H, 300), kind)) {
                     w.coinRun(side === SIDE_L ? 0.09 : 0.91, y + 190, 6, 52, 0);
                     w.pickup(w.rng.chance(0.3) ? 'gem' : 'x2', side === SIDE_L ? 0.09 : 0.91, y + 510);
                 }
@@ -624,7 +638,7 @@
             id: 'glass-run', intensity: 2, minM: 400, weight: 7,
             build: function (w, y, d) {
                 var side = w.rng.chance(0.5) ? SIDE_L : SIDE_R;
-                w.surface(side, y + 160, 300 + 120 * curve(d.m, 3000), 'glass');
+                w.surface(side, y + 160, Math.max(GLASS_MIN_H, 300 + 120 * curve(d.m, 3000)), 'glass');
                 w.coinRun(side === SIDE_L ? 0.9 : 0.1, y + 200, 4, 60, 0);
                 return 620;
             }
@@ -801,7 +815,7 @@
             id: 'storm-combo', intensity: 4, minM: 5000, weight: 5,
             build: function (w, y, d) {
                 w.mover('laser', { y: y + 250, period: 3.3 * d.window, charge: 1.05 * d.window, fire: 0.45 });
-                w.surface(w.rng.chance(0.5) ? SIDE_L : SIDE_R, y + 470, 260, 'glass');
+                w.surface(w.rng.chance(0.5) ? SIDE_L : SIDE_R, y + 470, GLASS_MIN_H + 20, 'glass');
                 w.mover('drone', { y: y + 640, period: 2.9 / d.moverSpeed, span: 1 });
                 w.pickup('gem', 0.5, y + 560);
                 w.pickup('shield', 0.5, y + 760);
@@ -1041,7 +1055,8 @@
         CLEAR: CLEAR, SAME_SIDE_MIN: SAME_SIDE_MIN, SURFACE_CLEAR: SURFACE_CLEAR,
         MIN_WINDOW: MIN_WINDOW,
         CLIMB_BASE: CLIMB_BASE, CLIMB_MAX: CLIMB_MAX, CLIMB_BOOST: CLIMB_BOOST,
-        GLASS_SLIDE: GLASS_SLIDE, JUMP_VX: JUMP_VX, JUMP_VY: JUMP_VY,
+        GLASS_WARN: GLASS_WARN, GLASS_GRACE: GLASS_GRACE, GLASS_MIN_H: GLASS_MIN_H,
+        JUMP_VX: JUMP_VX, JUMP_VY: JUMP_VY,
         GRAVITY: GRAVITY, FALL_GRAVITY: FALL_GRAVITY, FALL_MAX_V: FALL_MAX_V,
         FALL_DRIFT: FALL_DRIFT, CAM_ANCHOR: CAM_ANCHOR, PLAYER_R: PLAYER_R,
         CRACK_HOLD: CRACK_HOLD, WEB_MAX: WEB_MAX, WEB_RECHARGE: WEB_RECHARGE,

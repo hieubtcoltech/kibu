@@ -186,6 +186,40 @@ function step(n) {
     return true;
 }
 
+
+/* ĐỢI CÓ HẠN. Máy soát mà treo vô tận thì tệ hơn máy soát báo hỏng: báo hỏng
+ * thì biết đường sửa, còn treo thì chỉ thấy nó đứng im và không biết vì sao.
+ * Mọi chỗ "đợi người nhện bám lại tường" đều phải qua đây — lượt chơi có thể
+ * kết thúc giữa chừng, và lúc ấy điều kiện đợi không bao giờ đúng nữa. */
+function waitCling(maxFrames, restedToo) {
+    for (let i = 0; i < (maxFrames || 400); i++) {
+        if (G.phase !== 'play') return false;
+        if (P.state === 'cling' && (!restedToo || P.boost <= 0)) return true;
+        step(1);
+    }
+    return false;
+}
+
+/* Đợi tới lúc người nhện bám TƯỜNG TRƠN — không kính, không tấm nứt, không dây
+ * điện, và phía trên cũng quang một quãng.
+ *
+ * Cần riêng một hàm vì phép đo tốc độ leo phải chạy trên nền sạch. Bản trước
+ * đo bừa ở chỗ nào cũng được, rồi đúng lần chạy này rơi trúng một ô kính: giữa
+ * lúc đo thì tấm kính vỡ, người nhện rơi, và phép soát kết luận "phím lên chưa
+ * làm gì". Kết luận sai, mà sai vì chỗ đo chứ không vì cái đang đo. */
+function restOnPlainWall(maxFrames) {
+    for (let i = 0; i < (maxFrames || 900); i++) {
+        if (G.phase !== 'play') return false;
+        const w = G.world;
+        if (P.state === 'cling' && P.boost <= 0 &&
+            !w.surfaceAt(P.side, P.y) &&
+            !w.surfaceAt(P.side, P.y + 240) &&
+            !w.blockerAt(P.side, P.y + 240)) return true;
+        step(1);
+    }
+    return false;
+}
+
 /* ------------------------------------------------------------------ *
  * 4. CON BỌ BIẾT CHƠI
  *    Nó không giỏi, và cố ý không giỏi: một con bọ hoàn hảo thì không
@@ -219,7 +253,15 @@ function botThink() {
         const ahead = P.y + 150;
         const blocked = !w.canCling(P.side, ahead);
         const surf = w.surfaceAt(P.side, P.y);
-        const bad = surf && (surf.kind === 'glass' || surf.kind === 'cracked');
+        /* Kính và tấm nứt phải xử khác nhau, vì luật của chúng ngược nhau:
+         * kính có hạn chót ở MÉP TRÊN nên phải rời sớm, còn tấm nứt phạt việc
+         * nán lại nên chỉ cần đừng dừng. Con bọ dùng chung một cách xử cho cả
+         * hai thì nó chết trên kính suốt, và con số nó đo ra là con số của một
+         * con bọ không biết chơi chứ không phải của game. */
+        const glassSoon = surf && surf.kind === 'glass' &&
+            (surf.y1 - P.y) < R.GLASS_WARN * 1.15;
+        const bad = surf && surf.kind === 'cracked';
+        if (glassSoon && w.canCling(1 - P.side, P.y + 20)) { D.tap(); return; }
 
         /* Sai lầm phải tính THEO LẦN RA QUYẾT ĐỊNH, không theo khung hình.
          *
@@ -383,9 +425,9 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 
     /* mũi tên về phía tường ĐỐI DIỆN thì phải bay sang */
     for (const [key, want] of [['ArrowRight', 1], ['ArrowLeft', 0]]) {
-        while (P.state !== 'cling') step(1);
+        waitCling(400);
         if (P.side === want) { press(key === 'ArrowRight' ? 'ArrowLeft' : 'ArrowRight'); step(24); }
-        while (P.state !== 'cling') step(1);
+        waitCling(400);
         const from = P.side;
         press(key);
         ok(P.state === 'jump', `bấm ${key} khi đang bám tường ${from} mà không nhảy`);
@@ -394,7 +436,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 
     /* mũi tên về phía tường ĐANG BÁM thì phải im — nhảy đi rồi nhảy về là mất
      * chuỗi liên hoàn vì một cú bấm mà ý người chơi rõ ràng là "ở yên" */
-    while (P.state !== 'cling') step(1);
+    waitCling(400);
     const stay = P.side === 0 ? 'ArrowLeft' : 'ArrowRight';
     press(stay);
     ok(P.state === 'cling', `bấm ${stay} khi đang bám đúng tường ấy mà vẫn nhảy đi`);
@@ -402,7 +444,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
     /* PHÍM CÁCH LÀ BẮN TƠ. Soát bằng số tơ còn lại chứ không bằng "có ném lỗi
      * không" — đổi ý nghĩa một phím là loại thay đổi mà mọi thứ vẫn chạy êm ru
      * dù nó nối vào nhầm chỗ. Và nó KHÔNG được làm người nhện rời tường. */
-    while (P.state !== 'cling') step(1);
+    waitCling(400);
     /* Đặt sẵn một con máy bay ngay trước mặt. Không có mục tiêu thì fireWeb()
      * không tiêu đạn, và phép soát sẽ "đạt" mà chẳng chứng minh được gì —
      * đúng kiểu phép soát tự an ủi mình. */
@@ -429,7 +471,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
          * sai, mà sai vì phép đo chứ không vì mã game: hai nguồn tăng tốc dùng
          * chung một hệ số nên khi cái kia đang bật thì cái này không thêm được
          * gì để mà thấy. */
-        while (P.state !== 'cling' || P.boost > 0) step(1);
+        ok(restOnPlainWall(), 'không tìm được quãng tường trơn nào để đo tốc độ leo');
         if (holdUp) press('ArrowUp');
         const y0 = P.y;
         for (let i = 0; i < frames && P.state === 'cling'; i++) step(1);
@@ -443,7 +485,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
         `giữ mũi tên lên chỉ leo được ${quick.toFixed(0)} so với ${slow.toFixed(0)} khi không giữ — phím ấy chưa làm gì`);
 
     /* và nó KHÔNG được làm người nhện rời tường */
-    while (P.state !== 'cling') step(1);
+    restOnPlainWall();
     press('ArrowUp');
     step(6);
     ok(P.state === 'cling', 'giữ mũi tên lên mà người nhện lại nhảy đi — phím lên không phải phím nhảy');
@@ -454,7 +496,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
     ok(!P.fastKey, 'nhả mũi tên lên rồi mà cờ leo nhanh vẫn bật');
 
     /* lúc rơi, mũi tên chọn được bám vào tường nào */
-    while (P.state !== 'cling') step(1);
+    waitCling(400);
     P.state = 'fall'; P.vy = -100; P.vx = 0; P.web = R.WEB_MAX;
     P.x = 270;
     step(1);
@@ -477,7 +519,58 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 8. NGỒI YÊN THÌ PHẢI CHẾT
+ * 8. Ô KÍNH PHẢI VỠ THẬT KHI BÒ TỚI MÉP TRÊN
+ *    Đây là thứ khó bắt nhất trong đợt sửa này: nếu vế điều kiện viết sai thì
+ *    ô kính chỉ đơn giản là leo qua được, không có gì hỏng, không có gì báo —
+ *    game vẫn chơi ngon lành, chỉ là mất hẳn một loại chướng ngại. Nên đặt
+ *    thẳng người nhện lên ô kính rồi để nó bò tới mép trên và hỏi: có vỡ không.
+ * ------------------------------------------------------------------ */
+{
+    getEl('btn-play').dispatch('click');
+    step(30);
+    waitCling(400);
+
+    const w = G.world;
+    /* Dọn quang chỗ định thử. Phép đặt mặt tường tự từ chối nếu quanh đó đã có
+     * vật cản hay mặt xấu khác — đúng như nó phải làm — nên không dọn thì phép
+     * soát này chỉ đo được sự may rủi của hạt giống. */
+    w.blockers.length = 0;
+    w.surfaces.length = 0;
+    w.movers.length = 0;
+    const pane = w.surface(P.side, P.y + 40, 300, 'glass');
+    ok(!!pane, 'không đặt nổi ô kính để thử');
+    if (pane) {
+        /* leo tự nhiên tới mép trên, không bấm gì cả */
+        let broke = false, warnedBefore = false;
+        for (let i = 0; i < 600 && G.phase === 'play'; i++) {
+            if (P.state === 'cling' && P.y > pane.y0 && (pane.y1 - P.y) < R.GLASS_WARN) {
+                if (pane.warn > 0.05) warnedBefore = true;
+            }
+            step(1);
+            if (pane.dead) { broke = true; break; }
+        }
+        ok(broke, 'bò hết ô kính mà tấm kính không vỡ — cả loại chướng ngại này thành vô hại');
+        ok(warnedBefore, 'kính vỡ mà trước đó không hề rạn — mối nguy không báo trước là bẫy');
+        ok(P.state === 'fall', 'kính vỡ rồi mà người nhện vẫn bám nguyên trên tường');
+    }
+
+    /* và leo qua kính KHÔNG được chậm lại như bản cũ */
+    waitCling(400, true);
+    w.blockers.length = 0;
+    w.surfaces.length = 0;
+    const pane2 = w.surface(P.side, P.y + 30, 400, 'glass');
+    if (pane2) {
+        for (let i = 0; i < 400 && P.y < pane2.y0 + 20 && P.state === 'cling'; i++) step(1);
+        const y0 = P.y;
+        for (let i = 0; i < 20 && P.state === 'cling'; i++) step(1);
+        ok(P.y > y0, 'leo trên kính mà tụt xuống — kính không còn làm trơn tuột nữa');
+    }
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else getEl('btn-nav-menu').dispatch('click');
+}
+
+/* ------------------------------------------------------------------ *
+ * 9. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -493,7 +586,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 9. BA CHẾ ĐỘ
+ * 10. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -517,7 +610,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 10. CỬA HÀNG VÀ NHIỆM VỤ
+ * 11. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');
