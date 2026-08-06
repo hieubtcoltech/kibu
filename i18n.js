@@ -554,6 +554,7 @@
         ['Khu Cao Ốc', 'Skyscraper District'],
         ['Tầng Mây', 'Cloudline', 'f'],
         ['Công Trường Hoàng Hôn', 'Construction Sunset'],
+        ['Phố Đêm Rực Đèn', 'Neon Night City'],
         ['Đêm Giông', 'Night Storm'],
         ['Trời Lạ', 'Sky Fantasy'],
 
@@ -621,6 +622,7 @@
         ['Leo {0} m mà không mất mạng nào', 'Climb {0} m without losing a life'],
         ['Lên tới Tầng Mây', 'Reach the Cloudline zone'],
         ['Lên tới Đêm Giông', 'Reach the Night Storm zone'],
+        ['Lên tới Phố Đêm Rực Đèn', 'Reach the Neon Night City'],
 
         /* chữ nhảy lên trong lúc chơi — ngắn, nên phải khoá exact bằng cờ 'x'
            để chúng không chui vào giữa câu ở trang khác */

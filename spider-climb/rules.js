@@ -108,6 +108,11 @@
      * người chơi có làm gì sai đâu) mà vì hở sườn lâu gần gấp đôi giữa khe. */
 
     /* ---- Ba nhân vật phản diện ---- */
+    /* Gã thò ra cao bấy nhiêu điểm ảnh. Người nhện cao chừng 50, nên 70 là
+     * vừa: nhỉnh hơn một chút cho ra dáng vai u thịt bắp, chứ không phải một
+     * gã khổng lồ. Con số này phải khai ĐÚNG MỘT CHỖ — phép đặt, phép soát và
+     * phần vẽ đều đọc từ đây, mà bài học lệch số của mấy lần trước còn mới. */
+    var THUG_H = 70;
     var THUG_WARN = 0.9;           // cửa sổ lạch cạch bấy nhiêu giây trước khi hắn thò ra
     var THUG_OUT = 1.4;            // rồi hắn chắn tường bấy nhiêu giây
     var RIVAL_SPEED = 132;         // đối thủ tụt xuống nhanh chừng này (điểm ảnh/giây)
@@ -157,19 +162,38 @@
             weather: 'mist'
         },
         {
-            id: 'sunset', from: 3000, to: 5000, name: 'Construction Sunset', icon: '🌇',
+            id: 'sunset', from: 3000, to: 4500, name: 'Construction Sunset', icon: '🌇',
             sky: ['#3a2a63', '#c8584f', '#ffb361'], tower: '#8a6a55', towerDark: '#5f473a',
             win: '#ffd08a', winOff: '#6b4f3f', far: '#7b5566', accent: '#ff9040',
             weather: 'none'
         },
         {
-            id: 'storm', from: 5000, to: 8000, name: 'Night Storm', icon: '⛈️',
-            sky: ['#080d1e', '#132146', '#22355f'], tower: '#2e3a52', towerDark: '#1c2537',
-            win: '#ffe07a', winOff: '#26314a', far: '#1a2440', accent: '#7ec8ff',
-            weather: 'rain'
+            /* PHỐ ĐÊM. Chỗ này trước bỏ trống: leo qua hoàng hôn là vào thẳng
+             * cơn giông, tức là cả game không có lấy một quãng thành phố ban
+             * đêm sáng đèn — mà đó lại đúng là hình ảnh người ta nghĩ tới đầu
+             * tiên khi nghe "người nhện leo toà nhà chọc trời".
+             *
+             * Nó cũng đặt đúng chỗ trong nhịp cảm xúc: sau quãng công trường
+             * ngổn ngang là một quãng đẹp và bình yên, để cơn giông ngay sau đó
+             * đổ xuống cho ra đổ. */
+            id: 'neon', from: 4500, to: 6200, name: 'Neon Night City', icon: '🌃',
+            sky: ['#050a1c', '#0d1a3d', '#2a3f6b'], tower: '#2a3550', towerDark: '#151d2f',
+            win: '#ffe9a8', winOff: '#232c44', far: '#111a33', accent: '#ff56c8',
+            weather: 'none',
+            /* Gần như ô nào cũng sáng — thành phố sầm uất thì nhìn lên là một
+             * tấm lưới đèn, chứ không phải vài ô lác đác. */
+            winLit: 0.82,
+            neon: ['#ff56c8', '#4bd7ff', '#8fff6a', '#ffb03a'],
+            cityLights: 1
         },
         {
-            id: 'sky', from: 8000, to: Infinity, name: 'Sky Fantasy', icon: '🌌',
+            id: 'storm', from: 6200, to: 8500, name: 'Night Storm', icon: '⛈️',
+            sky: ['#080d1e', '#132146', '#22355f'], tower: '#2e3a52', towerDark: '#1c2537',
+            win: '#ffe07a', winOff: '#26314a', far: '#1a2440', accent: '#7ec8ff',
+            weather: 'rain', winLit: 0.66, cityLights: 1
+        },
+        {
+            id: 'sky', from: 8500, to: Infinity, name: 'Sky Fantasy', icon: '🌌',
             sky: ['#120a35', '#3d1f6d', '#6d3f9c'], tower: '#3b2f63', towerDark: '#251d44',
             win: '#c9a6ff', winOff: '#2e2550', far: '#2a1f4d', accent: '#ff7ae0',
             weather: 'aurora'
@@ -494,7 +518,7 @@
         } else if (kind === 'thug') {
             /* Hắn chiếm mặt tường lúc thò ra, nên phải theo đúng luật của vật
              * cản đứng yên: bên kia phải quang suốt quãng ấy. */
-            if (!this.wallFree(m.side, m.y, m.y + 90)) return null;
+            if (!this.wallFree(m.side, m.y, m.y + THUG_H)) return null;
             m.warn = Math.max(0.7, m.warn || THUG_WARN);
             m.out = Math.min(1.6, m.out || THUG_OUT);
             m.period = Math.max(m.warn + m.out + MIN_WINDOW, m.period || 4.2);
@@ -954,7 +978,7 @@
 
         /* ---------- kết hợp, chỉ ở trên cao ---------- */
         {
-            id: 'storm-combo', intensity: 4, minM: 5000, weight: 5,
+            id: 'storm-combo', intensity: 4, minM: 6200, weight: 5,
             build: function (w, y, d) {
                 w.mover('laser', { y: y + 250, period: 3.3 * d.window, charge: 1.05 * d.window, fire: 0.45 });
                 w.surface(w.rng.chance(0.5) ? SIDE_L : SIDE_R, y + 470, GLASS_MIN_H + 20, 'glass');
@@ -965,7 +989,7 @@
             }
         },
         {
-            id: 'sky-gauntlet', intensity: 4, minM: 8000, weight: 5,
+            id: 'sky-gauntlet', intensity: 4, minM: 8500, weight: 5,
             build: function (w, y, d) {
                 var side = w.rng.chance(0.5) ? SIDE_L : SIDE_R;
                 w.blocker(side, y + 200, 130, 'sign');
@@ -1129,7 +1153,8 @@
         { id: 's10', tpl: 'Fire {0} web shots', n: 10, stat: 'webs', coins: 90 },
 
         { id: 'z3', tpl: 'Reach the Cloudline zone', n: 1500, stat: 'metres', coins: 250, gems: 1 },
-        { id: 'z5', tpl: 'Reach the Night Storm zone', n: 5000, stat: 'metres', coins: 700, gems: 3 },
+        { id: 'z5', tpl: 'Reach the Night Storm zone', n: 6200, stat: 'metres', coins: 700, gems: 3 },
+        { id: 'z4b', tpl: 'Reach the Neon Night City', n: 4500, stat: 'metres', coins: 520, gems: 2 },
 
         { id: 'nolife', tpl: 'Climb {0} m without losing a life', n: 400, stat: 'cleanMetres', coins: 220, gems: 1 }
     ];
@@ -1212,7 +1237,7 @@
         makeRng: makeRng, dailySeed: dailySeed,
         World: World, PATTERNS: PATTERNS, moverWindow: moverWindow, FLY_OCC: FLY_OCC,
         THUG_M: THUG_M, RIVAL_M: RIVAL_M, SENTRY_M: SENTRY_M,
-        THUG_WARN: THUG_WARN, THUG_OUT: THUG_OUT, RIVAL_SPEED: RIVAL_SPEED,
+        THUG_H: THUG_H, THUG_WARN: THUG_WARN, THUG_OUT: THUG_OUT, RIVAL_SPEED: RIVAL_SPEED,
         RIVAL_WINDUP: RIVAL_WINDUP, RIVAL_JUMPS: RIVAL_JUMPS,
         SHOT_SPEED: SHOT_SPEED, SHOT_LIVE: SHOT_LIVE,
         MISSIONS: MISSIONS, missionText: missionText, rollMissions: rollMissions,

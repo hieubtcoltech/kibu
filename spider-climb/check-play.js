@@ -716,7 +716,39 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 10. NGỒI YÊN THÌ PHẢI CHẾT
+ * 10. VẼ THỬ MỘT KHUNG HÌNH Ở TỪNG VÙNG
+ *     Mỗi vùng có bầu trời, màu toà nhà, thời tiết và đèn đóm riêng, và mấy
+ *     thứ ấy đi qua những nhánh vẽ khác nhau: sao chỉ ở hai vùng cao nhất, cực
+ *     quang chỉ ở vùng cuối, đèn thành phố chỉ ở hai vùng đêm. Chơi bình thường
+ *     thì con bọ không bao giờ lên tới nơi để những nhánh ấy được chạy.
+ * ------------------------------------------------------------------ */
+{
+    getEl('btn-play').dispatch('click');
+    step(10);
+    const errBefore = frameErrors;
+    for (const z of R.ZONES) {
+        const mid = z.to === Infinity ? z.from + 1500 : (z.from + z.to) / 2;
+        const y = mid * R.PX_PER_M + 900;
+        G.world.cursor = y - 600;
+        G.world.zoneDone = R.ZONES.indexOf(z);
+        P.y = y;
+        P.x = G.world.wallX(P.side, P.y) + R.PLAYER_R;
+        G.maxY = y;
+        G.camY = y + 960 * R.CAM_ANCHOR;
+        G.lives = 9;
+        const before = drawCalls;
+        step(20);
+        ok(drawCalls > before, `ở vùng "${z.name}" không vẽ thêm nét nào`);
+        ok(frameErrors === errBefore, `vẽ vùng "${z.name}" ném lỗi`);
+        if (frameErrors !== errBefore) break;
+    }
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else getEl('btn-nav-menu').dispatch('click');
+    console.log(`  vẽ thử ${R.ZONES.length} vùng: không vùng nào ném lỗi`);
+}
+
+/* ------------------------------------------------------------------ *
+ * 11. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -732,7 +764,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 11. BA CHẾ ĐỘ
+ * 12. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -756,7 +788,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 12. CỬA HÀNG VÀ NHIỆM VỤ
+ * 13. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');

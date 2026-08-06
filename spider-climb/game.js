@@ -858,8 +858,8 @@
              * phải là mối nguy, mà cũng không được là mục tiêu cho tơ — bắn
              * xuyên tường vào một cái cửa sổ đóng thì vô lý. */
             if (thugPhase(m) !== 'out') return null;
-            var tx = G.world.wallX(m.side, m.y + 45);
-            return { x: tx + (m.side === SIDE_L ? 24 : -24), y: m.y + 45, r: 22 };
+            var tx = G.world.wallX(m.side, m.y + R.THUG_H / 2);
+            return { x: tx + (m.side === SIDE_L ? 17 : -17), y: m.y + R.THUG_H / 2, r: 16 };
         }
         if (m.kind === 'rival') {
             var rx = G.world.wallX(m.side, m.ry);
@@ -888,7 +888,7 @@
         for (var i = 0; i < mv.length; i++) {
             var m = mv[i];
             if (m.kind !== 'thug' || m.dead || m.side !== side) continue;
-            if (thugPhase(m) === 'out' && y >= m.y - 6 && y <= m.y + 96) return m;
+            if (thugPhase(m) === 'out' && y >= m.y - 6 && y <= m.y + R.THUG_H + 6) return m;
         }
         return null;
     }
@@ -1376,6 +1376,20 @@
         return mixHex(a, b, zm.k);
     }
 
+    /* Một CON SỐ của vùng, pha trộn ở đoạn giao.
+     *
+     * Cần riêng hàm này cho tỉ lệ ô cửa sáng đèn, và nó cho ra một hiệu ứng đẹp
+     * ngoài dự tính: hàm băm quyết định ô nào sáng là cố định theo toạ độ, nên
+     * khi ngưỡng nhích lên trong quãng giao vùng, các ô cửa lần lượt BẬT SÁNG
+     * chứ không đổi một loạt. Leo vào ranh giới hoàng hôn – phố đêm thì đúng
+     * là nhìn thấy thành phố lên đèn. */
+    function zn(key, dflt) {
+        var zm = zoneMix();
+        var a = zm.z[key] != null ? zm.z[key] : dflt;
+        var b = zm.n[key] != null ? zm.n[key] : dflt;
+        return a + (b - a) * zm.k;
+    }
+
     function drawSky() {
         var g = ctx.createLinearGradient(0, 0, 0, H);
         g.addColorStop(0, zc('sky', 0));
@@ -1429,6 +1443,20 @@
             ctx.restore();
         }
 
+        /* Quầng sáng đô thị hắt lên từ dưới. Nhỏ thôi, nhưng thiếu nó thì
+         * thành phố đêm trông như một tấm bìa đen dán chấm vàng — thứ làm nó
+         * ra đêm THẬT là khoảng trời bị đèn dưới đất nhuộm hồng lên. */
+        var zmg = zoneMix();
+        var glow = (zmg.z.cityLights ? 1 - zmg.k : 0) + (zmg.n.cityLights ? zmg.k : 0);
+        if (glow > 0.01) {
+            var gg = ctx.createLinearGradient(0, H, 0, H * 0.42);
+            gg.addColorStop(0, 'rgba(255,170,90,' + (0.34 * glow) + ')');
+            gg.addColorStop(0.5, 'rgba(255,120,180,' + (0.12 * glow) + ')');
+            gg.addColorStop(1, 'rgba(255,120,180,0)');
+            ctx.fillStyle = gg;
+            ctx.fillRect(0, H * 0.42, W, H * 0.58);
+        }
+
         drawFarSkyline();
         drawClouds();
     }
@@ -1437,6 +1465,10 @@
      * đang lên cao thật, chứ không phải hai bức tường trượt xuống. */
     function drawFarSkyline() {
         var base = H * 0.72 + (G.camY * 0.055) % 240;
+        var zm = zoneMix();
+        /* Thành phố xa có sáng đèn không, và sáng tới mức nào. Đi từ 0 lên 1
+         * trong quãng giao vùng nên đèn dưới phố cũng lên dần theo bầu trời. */
+        var lights = (zm.z.cityLights ? 1 - zm.k : 0) + (zm.n.cityLights ? zm.k : 0);
         ctx.save();
         ctx.fillStyle = zc('far');
         ctx.globalAlpha = 0.55;
@@ -1445,6 +1477,34 @@
             var bw = 44 + hash2(i, 7) * 40;
             var bh = 120 + hash2(i, 8) * 260;
             ctx.fillRect(hx, base - bh, bw, bh + 400);
+        }
+
+        /* ĐÈN CỦA THÀNH PHỐ PHÍA DƯỚI.
+         *
+         * Chỉ là những chấm nhỏ, nhưng chính chúng biến hai hàng khối xám thành
+         * một thành phố đang thức. Vẽ sau phần khối và cắt gọn trong lòng từng
+         * toà, để đèn không lơ lửng ngoài trời. */
+        if (lights > 0.01) {
+            ctx.globalAlpha = lights * 0.85;
+            for (var j = -1; j < 14; j++) {
+                var bx = ((j * 78) - (G.camY * 0.012) % 78);
+                var bw2 = 44 + hash2(j, 7) * 40;
+                var bh2 = 120 + hash2(j, 8) * 260;
+                var top = base - bh2;
+                for (var r = 0; r < 26; r++) {
+                    var ly = top + 10 + r * 13;
+                    if (ly > base + 300) break;
+                    for (var c2 = 0; c2 < 3; c2++) {
+                        var hh2 = hash2(j * 71 + r, c2 * 17);
+                        if (hh2 > 0.55) continue;
+                        /* vài chấm nhấp nháy rất chậm, đủ để thành phố thở */
+                        var tw = hh2 < 0.06 ? (0.45 + 0.55 * Math.abs(Math.sin(G.t * 0.9 + j + r))) : 1;
+                        ctx.globalAlpha = lights * 0.85 * tw;
+                        ctx.fillStyle = hh2 < 0.1 ? '#9fe4ff' : '#ffd98a';
+                        ctx.fillRect(bx + 7 + c2 * (bw2 - 20) / 2.4, ly, 4, 5);
+                    }
+                }
+            }
         }
         ctx.restore();
     }
@@ -1541,6 +1601,10 @@
 
     function drawWindows() {
         var ROW = 62, on = zc('win'), off = zc('winOff');
+        var litRate = zn('winLit', 0.42);
+        var zm = zoneMix();
+        var neon = zm.z.neon || zm.n.neon || null;
+        var neonMix = zm.z.neon ? 1 : zm.k;      // đèn màu hiện dần khi vào vùng
         var y0 = Math.floor((G.camY - H) / ROW) * ROW;
         var y1 = G.camY + ROW;
         ctx.save();
@@ -1551,14 +1615,22 @@
                 var side = s === 0 ? SIDE_L : SIDE_R;
                 var fx = G.world.wallX(side, y);
                 for (var c = 0; c < 3; c++) {
-                    var lit = hash2(row, c * 31 + s * 977) < 0.42;
+                    var h = hash2(row, c * 31 + s * 977);
+                    var lit = h < litRate;
                     var wx = side === SIDE_L ? fx - 34 - c * 32 : fx + 8 + c * 32;
                     if (wx < -30 || wx > W + 30) continue;
-                    ctx.fillStyle = lit ? on : off;
+                    var col = on;
+                    /* Một phần nhỏ ô cửa mang màu đèn neon. Ít thôi — cả toà
+                     * nhà bảy sắc cầu vồng thì loè loẹt, mà quan trọng hơn là
+                     * mối nguy sẽ chìm nghỉm trong đống màu ấy. */
+                    if (lit && neon && h < litRate * 0.16 * neonMix) {
+                        col = neon[Math.floor(hash2(row + 7, c + s * 13) * neon.length) % neon.length];
+                    }
+                    ctx.fillStyle = lit ? col : off;
                     ctx.globalAlpha = lit ? 0.9 : 0.5;
                     ctx.fillRect(wx, syy - 30, 24, 34);
                     if (lit) {
-                        ctx.globalAlpha = 0.16;
+                        ctx.globalAlpha = col === on ? 0.16 : 0.3;
                         ctx.fillRect(wx - 4, syy - 34, 32, 42);
                     }
                 }
@@ -1895,9 +1967,9 @@
      * thì đúng là bất ngờ thật, nhưng là kiểu bất ngờ của một cái bẫy hiện ra
      * từ hư không. Ở đây bất ngờ nằm ở chỗ không biết cửa sổ NÀO sẽ mở. */
     function drawThug(m) {
-        var yy = sy(m.y + 45);
+        var yy = sy(m.y + R.THUG_H / 2);
         if (yy < -90 || yy > H + 90) return;
-        var fx = G.world.wallX(m.side, m.y + 45);
+        var fx = G.world.wallX(m.side, m.y + R.THUG_H / 2);
         var dir = m.side === SIDE_L ? 1 : -1;
         var ph = thugPhase(m);
         var shake = ph === 'warn' ? Math.sin(G.hz * 40) * 2.5 : 0;
@@ -1906,47 +1978,54 @@
         ctx.translate(fx, yy + shake);
         ctx.scale(dir, 1);
 
-        /* khung cửa sổ, hõm vào trong tường */
+        /* Khung cửa sổ và gã bên trong đều dựng theo R.THUG_H, nên chỉnh một
+         * con số là cả hai co giãn theo. Anh Hiếu nói đúng: bản trước hắn to
+         * gấp rưỡi người nhện, nhìn cứ như người thường đứng cạnh trẻ con — mà
+         * ở game này người nhện mới là thước đo mọi thứ. */
+        var hh = R.THUG_H, hw = hh * 0.62;
+
         ctx.fillStyle = '#1d2431';
-        roundRect(ctx, -58, -42, 58, 84, 5); ctx.fill();
-        ctx.strokeStyle = '#68758c'; ctx.lineWidth = 3;
-        roundRect(ctx, -58, -42, 58, 84, 5); ctx.stroke();
+        roundRect(ctx, -hw, -hh / 2, hw, hh, 4); ctx.fill();
+        ctx.strokeStyle = '#68758c'; ctx.lineWidth = 2.5;
+        roundRect(ctx, -hw, -hh / 2, hw, hh, 4); ctx.stroke();
 
         if (ph === 'in') {
             /* bóng người mờ mờ sau kính — đủ để đoán, không đủ để chắc */
             ctx.fillStyle = 'rgba(120,150,190,0.30)';
-            ctx.beginPath(); ctx.arc(-30, -6, 13, 0, 6.284); ctx.fill();
-            ctx.fillRect(-42, 6, 24, 30);
+            ctx.beginPath(); ctx.arc(-hw * 0.5, -hh * 0.1, hh * 0.16, 0, 6.284); ctx.fill();
+            ctx.fillRect(-hw * 0.72, hh * 0.04, hw * 0.46, hh * 0.4);
         } else {
-            /* hai cánh cửa trượt mở */
             var open = ph === 'warn' ? 0.5 : 1;
+            var leafW = hw * 0.46 * (1 - open) + 3;
             ctx.fillStyle = '#33465e';
-            ctx.fillRect(-58, -42, 26 * (1 - open) + 4, 84);
-            ctx.fillRect(-4 - 26 * (1 - open), -42, 26 * (1 - open) + 4, 84);
+            ctx.fillRect(-hw, -hh / 2, leafW, hh);
+            ctx.fillRect(-leafW, -hh / 2, leafW, hh);
         }
 
         if (ph === 'warn') {
-            ctx.fillStyle = '#ffd75e';
-            ctx.font = 'bold 26px Baloo 2, sans-serif';
-            ctx.textAlign = 'center';
+            ctx.save();
             ctx.scale(dir, 1);                      // chữ không được lộn ngược
-            ctx.fillText('!', dir * -28, -50);
-            ctx.scale(dir, 1);
+            ctx.fillStyle = '#ffd75e';
+            ctx.font = 'bold 22px Baloo 2, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('!', dir * -hw * 0.5, -hh * 0.62);
+            ctx.restore();
         }
 
         if (ph === 'out') {
-            /* gã thò hẳn ra khe: vai, đầu, và một cánh tay chìa ra chắn đường */
+            /* Thò hẳn ra khe: vai, đầu, một cánh tay chìa ra chắn đường. Cỡ
+             * ngang người nhện — hơn một chút ở bờ vai, thế thôi. */
             ctx.fillStyle = '#2f3a4e';
-            roundRect(ctx, -34, -6, 62, 44, 12); ctx.fill();      // thân
+            roundRect(ctx, -20, -4, 38, 28, 9); ctx.fill();       // thân
             ctx.fillStyle = '#e8b48c';
-            ctx.beginPath(); ctx.arc(-2, -18, 16, 0, 6.284); ctx.fill();  // đầu
+            ctx.beginPath(); ctx.arc(-1, -13, 10.5, 0, 6.284); ctx.fill();   // đầu
             ctx.fillStyle = '#22303f';
-            roundRect(ctx, -18, -34, 34, 14, 6); ctx.fill();      // mũ
+            roundRect(ctx, -12, -24, 23, 9, 4); ctx.fill();       // mũ
             ctx.fillStyle = '#1b2430';
-            ctx.beginPath(); ctx.arc(3, -20, 2.6, 0, 6.284); ctx.fill();
-            ctx.beginPath(); ctx.arc(-9, -20, 2.6, 0, 6.284); ctx.fill();
-            ctx.strokeStyle = '#e8b48c'; ctx.lineWidth = 11; ctx.lineCap = 'round';
-            ctx.beginPath(); ctx.moveTo(14, 4); ctx.lineTo(44, -8); ctx.stroke();
+            ctx.beginPath(); ctx.arc(2.5, -14, 1.8, 0, 6.284); ctx.fill();
+            ctx.beginPath(); ctx.arc(-5.5, -14, 1.8, 0, 6.284); ctx.fill();
+            ctx.strokeStyle = '#e8b48c'; ctx.lineWidth = 7; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(9, 4); ctx.lineTo(28, -4); ctx.stroke();
         }
         ctx.restore();
     }

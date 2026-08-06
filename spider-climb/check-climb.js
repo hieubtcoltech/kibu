@@ -128,7 +128,7 @@ for (let s = 1; s <= SEEDS; s++) {
     for (const m of w.movers) {
         if (m.kind === 'thug' || m.kind === 'sentry') {
             const a0 = m.kind === 'thug' ? m.y : m.y - 30;
-            const a1 = m.kind === 'thug' ? m.y + 90 : m.y + 30;
+            const a1 = m.kind === 'thug' ? m.y + R.THUG_H : m.y + 30;
             const other = 1 - m.side;
             for (const b of w.blockers) {
                 if (b.side === other && R.overlap(a0 - R.CLEAR, a1 + R.CLEAR, b.y0, b.y1)) {
@@ -231,6 +231,32 @@ for (let s = 1; s <= SEEDS; s++) {
     if (3.4 * dEnd.window - 1.1 * dEnd.window - 0.45 < R.MIN_WINDOW) {
         warn.push('trên 12 000 m, cửa sổ laser đã chạm sàn MIN_WINDOW — chỉnh window nữa là vô ích');
     }
+}
+
+/* ---- 11b. bảng vùng phải liền mạch ----
+ * Mốc mét của các vùng là thứ hay bị sửa tay nhất — thêm một vùng vào giữa là
+ * phải dịch hai vùng kế bên, mà sửa hụt một con số thì hoặc có quãng không
+ * thuộc vùng nào, hoặc hai vùng chồng lên nhau. Cả hai đều không nổ lỗi: game
+ * vẫn chạy, chỉ là leo qua đó thì bầu trời nhảy cóc hoặc đứng im. */
+{
+    for (let i = 0; i < R.ZONES.length; i++) {
+        const z = R.ZONES[i];
+        if (i === 0 && z.from !== 0) fail(`vùng đầu tiên bắt đầu từ ${z.from} m, phải là 0`);
+        if (i > 0 && R.ZONES[i - 1].to !== z.from) {
+            fail(`vùng "${z.name}" bắt đầu ở ${z.from} m nhưng vùng trước kết thúc ở ${R.ZONES[i - 1].to} m`);
+        }
+        if (z.to <= z.from) fail(`vùng "${z.name}" có mốc kết thúc không lớn hơn mốc bắt đầu`);
+        if (i === R.ZONES.length - 1 && z.to !== Infinity) fail('vùng cuối cùng phải kéo tới vô tận');
+        /* tra ngược: đứng ngay mốc và giữa vùng đều phải ra đúng vùng ấy */
+        if (R.zoneAt(z.from) !== z) fail(`đứng đúng mốc ${z.from} m mà không rơi vào "${z.name}"`);
+        const mid = z.to === Infinity ? z.from + 2000 : (z.from + z.to) / 2;
+        if (R.zoneAt(mid) !== z) fail(`giữa vùng "${z.name}" (${mid} m) lại tra ra vùng khác`);
+        for (const k of ['sky', 'tower', 'towerDark', 'win', 'winOff', 'far', 'name', 'icon']) {
+            if (z[k] == null) fail(`vùng "${z.name}" thiếu khai báo "${k}"`);
+        }
+        if (!Array.isArray(z.sky) || z.sky.length !== 3) fail(`vùng "${z.name}" phải có đúng 3 màu trời`);
+    }
+    console.log('  vùng: ' + R.ZONES.map(z => `${z.icon} ${z.name} ${z.from}m`).join(' · '));
 }
 
 /* ---- 12. hàng nội dung tối thiểu của bản thiết kế ---- */
