@@ -360,6 +360,7 @@
         side: SIDE_L, x: 0, y: START_Y, vx: 0, vy: 0,
         state: 'cling', face: 1, anim: 0,
         crack: 0, glassOn: null, glassT: 0, invuln: 0, boost: 0,
+        flight: 0, flightMax: 0.35,
         stepPhase: 0, stepRight: false,
         fastKey: false, fastTouch: false,
         web: R.WEB_MAX, webT: 0, webShot: null, catchFail: 0
@@ -547,8 +548,13 @@
         if (P.state === 'cling') {
             var dir = P.side === SIDE_L ? 1 : -1;
             P.vx = dir * R.JUMP_VX;
-            P.vy = R.JUMP_VY;
+            P.vy = 0;
             P.state = 'jump';
+            P.flight = 0;
+            /* Bay hết bao lâu — dùng để vẽ vòng cung cho đúng nhịp. Khe rộng
+             * thì bay lâu hơn, và đó vẫn là chỗ khó của khe rộng: hở sườn lâu
+             * hơn giữa không trung. */
+            P.flightMax = Math.max(0.12, gapEdges(P.y).g / R.JUMP_VX);
             P.face = dir;
             P.crack = 0;
             G.stats.jumps++;
@@ -1093,7 +1099,9 @@
         var w = G.world;
         var m = metresNow();
         var d = R.difficulty(m);
-        var fastNow = false;
+        /* Tính một lần cho cả khung hình: lúc bay cũng cần biết có đang giữ
+         * nút leo nhanh không, để tốc độ lên cao không đổi giữa chừng. */
+        var fastNow = P.fastKey || P.fastTouch || P.boost > 0;
 
         /* ---- vật phẩm tạm thời ---- */
         ['magnet', 'x2', 'slow'].forEach(function (k) {
@@ -1121,8 +1129,7 @@
         if (P.state === 'cling') {
             /* Leo nhanh đến từ hai nguồn và cùng một hệ số: người chơi tự
              * giữ phím, hoặc quãng thưởng ngắn sau một cú bắt tường đẹp. */
-            var fast = P.fastKey || P.fastTouch || P.boost > 0;
-            fastNow = fast;
+            var fast = fastNow;
             var speed = d.climb * (fast ? R.CLIMB_BOOST : 1) * (G.power.slow > 0 ? 0.82 : 1);
             var surf = w.surfaceAt(P.side, P.y);
             if (surf && surf.kind === 'glass') {
@@ -1197,10 +1204,27 @@
             P.face = P.side === SIDE_L ? 1 : -1;
 
         } else if (P.state === 'jump') {
+            /* ĐANG BAY THÌ VẪN ĐI LÊN ĐÚNG TỐC ĐỘ ĐANG LEO.
+             *
+             * Anh Hiếu nói đúng: bản trước cú nhảy chịu trọng lực như một vật
+             * ném xiên, nên trong 0,34 giây bay ngang, người nhện chỉ lên được
+             * chừng 24 điểm ảnh trong khi bám tường leo thì được 68 — và đoạn
+             * cuối cú bay còn đang TỤT xuống. Máy quay bám theo độ cao ấy, nên
+             * mỗi lần nhảy là cả màn hình khựng một nhịp.
+             *
+             * Chỗ sai không nằm ở con số nào cả, mà ở chỗ để cú nhảy quyết định
+             * độ cao. Nhảy là chuyện ĐI NGANG — đổi tường. Đi lên là việc khác,
+             * và nó phải chạy liên tục không đứt đoạn thì máy quay mới trôi
+             * mượt. Nay hai việc tách hẳn: bay ngang theo vx, còn lên cao vẫn
+             * đúng tốc độ leo, y như lúc đang bám tường.
+             *
+             * Cái vòng cung của cú nhảy không mất — nó chuyển thành phần VẼ
+             * (xem P.arc), lệch nhiều nhất mười mấy điểm ảnh, đủ để mắt thấy
+             * một cú bay chứ không phải một cú trượt ngang. */
             if (wind) P.vx += wind.dir * wind.str * dt;
             P.x += P.vx * dt;
-            P.vy -= R.GRAVITY * dt;
-            P.y += P.vy * dt;
+            P.y += d.climb * (fastNow ? R.CLIMB_BOOST : 1) * (G.power.slow > 0 ? 0.82 : 1) * dt;
+            P.flight += dt;
             P.anim += dt * 10;
 
             var target = P.vx > 0 ? SIDE_R : SIDE_L;
@@ -1212,7 +1236,11 @@
                     P.state = 'cling';
                     P.x = wallHold(target, P.y);
                     P.vx = 0; P.vy = 0; P.crack = 0;
-                    P.boost = 0.75;              // thưởng cho cú bắt tường đẹp
+                    /* Thưởng cho cú bắt tường đẹp. Rút từ 0,75 xuống 0,45 giây kể
+                     * từ khi cú nhảy thôi ăn mất độ cao: nhảy đã không còn phải
+                     * trả giá gì, thưởng dài nữa thì cách chơi tối ưu thành nhảy
+                     * loạn xạ, mà thế là mất luôn phần CHỌN ĐƯỜNG. */
+                    P.boost = 0.45;
                     addCombo(1);
                     G.score += R.SCORE.cleanJump * mul();
                     Sfx.land();
@@ -1225,8 +1253,10 @@
                     bumpOff('NO GRIP');
                 }
             }
-            /* Bay quá lâu mà chưa chạm tường nào (gió thổi ngược) ⇒ rơi */
-            if (P.vy < -520) P.state = 'fall';
+            /* Bay quá lâu mà chưa chạm tường nào — gió ngược đủ mạnh thì đẩy
+             * ngược lại được. Trước chốt bằng vận tốc rơi, nay không còn trọng
+             * lực trong cú nhảy nữa nên phải chốt bằng thời gian. */
+            if (P.flight > 1.3) P.state = 'fall';
 
         } else if (P.state === 'fall') {
             if (wind) P.vx += wind.dir * wind.str * dt * 0.6;
@@ -2466,9 +2496,24 @@
 
     function drawPlayer() {
         var s = suit();
-        var px = P.x, py = sy(P.y);
+        /* VÒNG CUNG CỦA CÚ NHẢY, thuần phần nhìn.
+         *
+         * Độ cao thật của người nhện đi lên đều đặn không đứt đoạn — máy quay
+         * bám vào đó nên nó phải mượt. Còn cái vẻ "bay vọt lên rồi hạ xuống"
+         * thì vẽ riêng ở đây: nhấc hình lên vài chục điểm ảnh giữa cú bay rồi
+         * hạ về, cộng nghiêng người theo hướng bay. Va chạm vẫn tính theo độ
+         * cao thật, nên lệch phải nhỏ — 18 điểm ảnh, trong khoảng mà mắt đọc
+         * là "một cú nhảy" chứ chưa tới mức thấy hình một đằng ăn đòn một nẻo. */
+        var arc = 0, tilt = 0;
+        if (P.state === 'jump' && P.flightMax > 0) {
+            var k = clamp(P.flight / P.flightMax, 0, 1);
+            arc = -Math.sin(k * Math.PI) * 18;
+            tilt = (P.vx > 0 ? 1 : -1) * Math.sin(k * Math.PI) * 0.22;
+        }
+        var px = P.x, py = sy(P.y) + arc;
         ctx.save();
         ctx.translate(px, py);
+        if (tilt) ctx.rotate(tilt);
 
         if (P.invuln > 0 && Math.floor(P.invuln * 12) % 2) ctx.globalAlpha = 0.42;
 
@@ -2539,7 +2584,8 @@
 
         ctx.restore();
 
-        /* Sợi tơ đang bắn */
+        /* Sợi tơ đang bắn — bắn ra từ chỗ NHÌN THẤY, không phải chỗ tính toán,
+         * không thì lúc đang bay sợi tơ mọc ra từ khoảng không dưới bụng. */
         if (P.webShot) {
             ctx.save();
             ctx.strokeStyle = s.web;

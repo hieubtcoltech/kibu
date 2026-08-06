@@ -954,7 +954,47 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 14. NGỒI YÊN THÌ PHẢI CHẾT
+ * 14. TỐC ĐỘ ĐI LÊN KHÔNG ĐƯỢC ĐỔI KHI NHẢY
+ *     Anh Hiếu thấy game khựng mỗi lần nhảy qua lại. Nguyên do là cú nhảy chịu
+ *     trọng lực nên đi lên chậm hẳn, mà máy quay bám theo độ cao ấy. Đo được
+ *     bằng số: leo 30 khung hình bao xa, rồi bay 30 khung hình bao xa. Hai con
+ *     số phải gần bằng nhau — chênh nhiều nghĩa là máy quay có chỗ để khựng.
+ * ------------------------------------------------------------------ */
+{
+    getEl('btn-play').dispatch('click');
+    step(20);
+    G.world.cursor = P.y + 20000;      // khoá bộ sinh cho quãng đo sạch
+    G.world.blockers.length = 0;
+    G.world.surfaces.length = 0;
+    G.world.movers.length = 0;
+
+    ok(restOnPlainWall(), 'không tìm được quãng tường trơn nào để đo');
+    let y0 = P.y;
+    let n = 0;
+    for (; n < 24 && P.state === 'cling'; n++) step(1);
+    const climbed = (P.y - y0) / Math.max(1, n);
+
+    /* nhảy, rồi đo đúng trong lúc còn đang bay */
+    D.tap();
+    ok(P.state === 'jump', 'không nhảy được để đo');
+    y0 = P.y;
+    let m = 0;
+    for (; m < 24 && P.state === 'jump'; m++) step(1);
+    const flew = (P.y - y0) / Math.max(1, m);
+
+    const ratio = flew / Math.max(0.001, climbed);
+    ok(ratio > 0.9 && ratio < 1.1,
+        `đang bay đi lên ${flew.toFixed(1)} điểm ảnh/khung so với ${climbed.toFixed(1)} lúc bám tường ` +
+        `(bằng ${(ratio * 100).toFixed(0)}%) — chênh thế này là máy quay khựng mỗi lần nhảy`);
+    ok(flew > 0, 'đang bay mà độ cao không tăng — cú nhảy đang ăn mất đường lên');
+
+    console.log(`  tốc độ lên: bám tường ${climbed.toFixed(1)} · đang bay ${flew.toFixed(1)} điểm ảnh mỗi khung`);
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else getEl('btn-nav-menu').dispatch('click');
+}
+
+/* ------------------------------------------------------------------ *
+ * 15. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -970,7 +1010,7 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 15. BA CHẾ ĐỘ
+ * 16. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -994,7 +1034,7 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 16. CỬA HÀNG VÀ NHIỆM VỤ
+ * 17. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');

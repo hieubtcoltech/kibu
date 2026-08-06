@@ -83,7 +83,6 @@
     var GLASS_GRACE = 0.35;        // vừa bám vào thì luôn có bấy nhiêu giây để phản ứng
     var GLASS_MIN_H = 240;         // ô kính không được ngắn hơn, không thì hạn chót tới ngay
     var JUMP_VX = 760;             // tốc độ ngang lúc nhảy, KHÔNG đổi theo khe
-    var JUMP_VY = 320;             // vọt lên lúc rời tường
     var GRAVITY = 1460;            // trọng lực trong CÚ NHẢY — nặng cho cú bay gọn
     /* Nhưng lúc RƠI thì nhẹ hơn hẳn, và có tốc độ tối đa.
      *
@@ -105,7 +104,12 @@
     /* Khe rộng nhất chia cho tốc độ ngang ra thời gian bay dài nhất:
      * 336/760 ≈ 0,44 giây. Khe hẹp nhất 190/760 ≈ 0,25 giây. Chính khoảng chênh
      * ấy là "khe rộng khó hơn" — không phải vì nhảy hụt (nhảy hụt là bất công,
-     * người chơi có làm gì sai đâu) mà vì hở sườn lâu gần gấp đôi giữa khe. */
+     * người chơi có làm gì sai đâu) mà vì hở sườn lâu gần gấp đôi giữa khe.
+     *
+     * Cú nhảy KHÔNG có vận tốc dọc riêng, và cũng không chịu trọng lực. Đang
+     * bay thì độ cao vẫn tăng đúng tốc độ leo — nhảy là chuyện đi ngang, đổi
+     * tường; đi lên là việc khác và phải chạy liên tục, vì máy quay bám vào
+     * đó. Vòng cung của cú nhảy nằm ở phần vẽ chứ không ở toạ độ thật. */
 
     /* ---- Ba nhân vật phản diện ---- */
     /* Gã thò ra cao bấy nhiêu điểm ảnh. Người nhện cao chừng 50, nên 70 là
@@ -1253,7 +1257,7 @@
         MIN_WINDOW: MIN_WINDOW,
         CLIMB_BASE: CLIMB_BASE, CLIMB_MAX: CLIMB_MAX, CLIMB_BOOST: CLIMB_BOOST,
         GLASS_WARN: GLASS_WARN, GLASS_GRACE: GLASS_GRACE, GLASS_MIN_H: GLASS_MIN_H,
-        JUMP_VX: JUMP_VX, JUMP_VY: JUMP_VY,
+        JUMP_VX: JUMP_VX,
         GRAVITY: GRAVITY, FALL_GRAVITY: FALL_GRAVITY, FALL_MAX_V: FALL_MAX_V,
         FALL_DRIFT: FALL_DRIFT, CAM_ANCHOR: CAM_ANCHOR, PLAYER_R: PLAYER_R,
         BOLT_WARN: BOLT_WARN, BOLT_HIT: BOLT_HIT, BOLT_R: BOLT_R,
