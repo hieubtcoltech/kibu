@@ -1162,11 +1162,16 @@
         if (pts.length < 2) return;
 
         ctx.save();
-        /* bãi cỏ sân bay quanh nó, không thì dải bê-tông trôi lơ lửng */
-        ctx.fillStyle = '#8fae7c';
-        band(pts, 170);
-        ctx.fillStyle = '#5b626d';
+        /* Bãi cỏ sân bay quanh đường băng, cắt tỉa nên nhạt hơn đồng ruộng —
+         * không có nó thì dải bê-tông trôi lơ lửng giữa cánh đồng. */
+        ctx.fillStyle = '#b9cf9c';
+        band(pts, 200);
+        /* Bê-tông tối hẳn: đây là thứ bé phải nhìn thấy từ xa nhất trong cả
+         * chuyến bay, nên nó phải là mảng tương phản mạnh nhất với nền xanh. */
+        ctx.fillStyle = '#464c56';
         band(pts, RW_HALF);
+        ctx.fillStyle = '#6d747f';
+        band(pts, RW_HALF * 0.92);
         /* vạch tim đứt quãng */
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
         for (var k = 0; k < pts.length - 1; k++) {
@@ -1217,16 +1222,19 @@
         if (G.leg !== 'approach' && G.leg !== 'final') return;
         var rt = G.route;
         ctx.save();
-        for (var i = 0; i < 22; i++) {
-            var wx = Math.ceil((P.x + 300) / 500) * 500 + i * 500;
+        /* Bắt đầu từ 700 m phía trước, không phải 300. Gần hơn thế thì mấy
+         * vòng chồng lên nhau ngay quanh máy bay và đọc ra một cột khói xám
+         * chứ không ra một lối đi. */
+        for (var i = 0; i < 20; i++) {
+            var wx = Math.ceil((P.x + 700) / 600) * 600 + i * 600;
             if (wx > rt.len) break;
             var p = proj(wx, R.glideAlt(rt, wx), 0);
             if (!p || p.x < -60 || p.x > W + 60) continue;
             var tw = 0.4 + 0.6 * Math.abs(Math.sin(G.t * 3 - i * 0.5));
-            ctx.strokeStyle = 'rgba(255,255,255,' + (tw * 0.8 * (1 - haze(p.d))) + ')';
-            ctx.lineWidth = Math.max(1.4, 8 * p.s);
+            ctx.strokeStyle = 'rgba(180,240,255,' + (tw * 0.85 * (1 - haze(p.d))) + ')';
+            ctx.lineWidth = Math.max(1.4, 6 * p.s);
             ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(3, 46 * p.s), 0, 6.284);
+            ctx.arc(p.x, p.y, Math.max(3, 30 * p.s), 0, 6.284);
             ctx.stroke();
         }
         ctx.restore();
