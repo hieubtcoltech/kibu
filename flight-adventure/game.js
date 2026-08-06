@@ -1071,9 +1071,9 @@
     function drawGroundGrid() {
         var rt = G.route;
         ctx.save();
-        ctx.lineWidth = 1.6;
+        ctx.lineWidth = 1.2;
 
-        /* đường dọc, cách nhau 420 m theo chiều ngang */
+        /* đường dọc, cách nhau 560 m theo chiều ngang */
         var GZ = 560;
         var z0 = Math.floor((cam.z - 5200) / GZ) * GZ;
         for (var z = z0; z < cam.z + 5200; z += GZ) {
@@ -1083,23 +1083,29 @@
                 var t = i / 16;
                 var d = 120 + (9000 - 120) * t * t;
                 var wx = cam.x + d;
+                var seg = R.segmentAt(rt, wx).seg;
+                // Không kẻ ô trên mặt biển hoặc đồi núi hiểm trở
+                if (seg.kind === 'sea' || seg.kind === 'mountains') continue;
+
                 var p = proj(wx, R.groundAt(rt, wx), z);
                 if (!p) continue;
                 if (drawn++) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
             }
-            ctx.strokeStyle = 'rgba(255,255,255,0.075)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.03)'; // Cực kỳ mờ và nhẹ nhàng
             ctx.stroke();
         }
 
-        /* đường ngang, cách nhau 900 m theo chiều bay — cái này cho thấy mình
-         * đang TIẾN, và tiến nhanh cỡ nào */
+        /* đường ngang, cách nhau 900 m theo chiều bay */
         var GX = 900;
         var x0 = Math.ceil((cam.x + 180) / GX) * GX;
         for (var wx2 = x0; wx2 < cam.x + 9000; wx2 += GX) {
+            var seg2 = R.segmentAt(rt, wx2).seg;
+            if (seg2.kind === 'sea' || seg2.kind === 'mountains') continue;
+
             var g = R.groundAt(rt, wx2);
             var a = proj(wx2, g, cam.z - 5200), b = proj(wx2, g, cam.z + 5200);
             if (!a || !b) continue;
-            ctx.strokeStyle = 'rgba(255,255,255,' + (0.085 * (1 - haze(wx2 - cam.x))) + ')';
+            ctx.strokeStyle = 'rgba(255,255,255,' + (0.035 * (1 - haze(wx2 - cam.x))) + ')';
             ctx.beginPath();
             ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
             ctx.stroke();
@@ -1925,96 +1931,113 @@
         var mcX = 75;
         var mcY = 85;
         var r = 45;
-        var scale = r / 3200; // Tỷ lệ thu nhỏ (phạm vi vệ tinh quét 3.2 km)
+
+        // Giới hạn tỉ lệ dọc để vẽ vừa vặn toàn bộ tuyến đường 54km
+        var routeLen = 54000;
+        var mapH = r * 1.5; // chiều cao khu vực vẽ bản đồ (~67.5px)
+        
+        function mapXtoY(wx) {
+            // wx = 0 (Hà Nội) -> phía dưới bản đồ (mcY + 31.5px)
+            // wx = 54000 (Đà Nẵng) -> phía trên bản đồ (mcY - 31.5px)
+            return mcY + (r * 0.7) - (clamp(wx, 0, routeLen) / routeLen) * mapH;
+        }
+
+        function mapZtoX(wz) {
+            // Độ lệch ngang Z (tối đa ±8000m) được ánh xạ sang ngang (X) bản đồ (rộng tối đa ±25px)
+            return mcX + (clamp(wz, -8000, 8000) / 8000) * (r * 0.55);
+        }
 
         ctx.save();
         
-        // 1. Cắt khung vẽ theo hình tròn bản đồ
+        // 1. Nền kính mờ & cắt khung vẽ hình tròn bản đồ
         ctx.beginPath();
         ctx.arc(mcX, mcY, r, 0, 6.284);
         ctx.clip();
 
-        // 2. Vẽ thảm thực vật/địa hình dạng vệ tinh quét từ xa dọc trục X (từ P.x - 3.2km đến P.x + 3.2km)
+        // 2. Vẽ toàn bộ địa hình vệ tinh từ đầu đến cuối chặng (Hà Nội -> Đà Nẵng)
         var rt = G.route;
-        var step = 400; // Đo quét mỗi 400 mét thực tế
-        var startWx = Math.floor((P.x - 3600) / step) * step;
         
-        for (var wx = startWx; wx <= P.x + 3600; wx += step) {
-            var seg = R.segmentAt(rt, wx).seg;
+        // Tô một màu nền xanh lá mặc định cho toàn bộ lãnh thổ
+        ctx.fillStyle = '#3f733b';
+        ctx.fillRect(mcX - r, mcY - r, r * 2, r * 2);
+
+        // Vẽ các lát cắt địa chất/thảm thực vật thực tế theo cấu trúc chặng bay
+        var lastX = 0;
+        for (var i = 0; i < rt.segments.length; i++) {
+            var seg = rt.segments[i];
+            var nextX = seg.to;
             var kind = seg.kind;
-            
-            // Bảng màu vệ tinh giả lập không ảnh thực tế
-            var col = '#3f733b'; // Mặc định: Xanh cỏ đồi núi (fields/hills)
-            if (kind === 'city') col = '#64748b';       // Xám bê tông thành phố
-            else if (kind === 'mountains') col = '#1e3f20'; // Xanh thẫm rừng già
-            else if (kind === 'coast') col = '#d9c596';     // Vàng cát bờ biển
-            else if (kind === 'sea') col = '#0f52ba';       // Xanh dương đại dương sâu
-            
+
+            var col = '#3f733b'; // fields/hills (xanh lá cỏ)
+            if (kind === 'city') col = '#64748b';       // xám đô thị
+            else if (kind === 'mountains') col = '#1e3f20'; // xanh thẫm núi rừng
+            else if (kind === 'coast') col = '#d9c596';     // vàng cát biển
+            else if (kind === 'sea') col = '#0f52ba';       // xanh dương biển sâu
+
             ctx.fillStyle = col;
             
-            // Vẽ dải màu địa hình cuộn trôi theo tốc độ di chuyển của máy bay
-            var yTop = mcY - (wx + step - P.x) * scale;
-            var yBot = mcY - (wx - P.x) * scale;
-            ctx.fillRect(mcX - r, yTop, r * 2, (yBot - yTop) + 0.6);
+            // Tọa độ Y trên bản đồ con tương ứng với chặng địa chất này
+            var yBot = mapXtoY(lastX);  // Tọa độ Y đáy chặng (x nhỏ hơn)
+            var yTop = mapXtoY(nextX);  // Tọa độ Y đỉnh chặng (x lớn hơn)
+
+            ctx.fillRect(mcX - r, yTop, r * 2, (yBot - yTop) + 0.5);
+            lastX = nextX;
         }
 
-        // 3. Vẽ sông hồ, thắng cảnh lên nền địa hình vệ tinh
+        // 3. Vẽ trục đường bay trung tâm (đường nét đứt màu trắng chạy thẳng từ Nam ra Bắc)
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(mapZtoX(0), mapXtoY(0));
+        ctx.lineTo(mapZtoX(0), mapXtoY(routeLen));
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset nét liền
+
+        // 4. Vẽ các thắng cảnh dọc tuyến bay (các chấm vàng nhỏ)
+        ctx.fillStyle = '#fbbf24';
         for (var i = 0; i < rt.landmarks.length; i++) {
             var lm = rt.landmarks[i];
-            var lmy = mcY - (lm.at - P.x) * scale;
-            var lmx = mcX + ((lm.z || 0) - P.z) * scale;
-            
-            if (lm.kind === 'lake') {
-                ctx.fillStyle = '#0e7490'; // Hồ nước xanh biếc
-                ctx.beginPath();
-                ctx.arc(lmx, lmy, 110 * scale, 0, 6.284);
-                ctx.fill();
-            } else if (lm.kind === 'river') {
-                ctx.strokeStyle = '#0e7490';
-                ctx.lineWidth = Math.max(2, 60 * scale);
-                ctx.beginPath();
-                ctx.moveTo(lmx - r, lmy + 12);
-                ctx.quadraticCurveTo(lmx, lmy - 8, lmx + r, lmy + 10);
-                ctx.stroke();
-            } else if (lm.kind === 'bridge') {
-                ctx.fillStyle = '#fb923c'; // Cầu màu cam
-                ctx.fillRect(lmx - 10, lmy - 2, 20, 4);
-            }
+            var lmy = mapXtoY(lm.at);
+            var lmx = mapZtoX(lm.z || 0);
+            ctx.beginPath();
+            ctx.arc(lmx, lmy, 2, 0, 6.284);
+            ctx.fill();
         }
 
-        // 4. Vẽ đường băng sân bay xuất phát & đích trên mặt đất vệ tinh
-        var dep = R.departRunway(rt);
-        var arr = R.arriveRunway(rt);
-
-        // Sân bay Nội Bài (HAN)
-        var depRY = mcY - (dep.x0 + dep.x1) / 2 * scale + P.x * scale;
-        var depRX = mcX + (0 - P.z) * scale;
-        ctx.fillStyle = '#1e293b'; // Đường băng nhựa đường tối màu
-        ctx.fillRect(depRX - 2.5, depRY - 12, 5, 24);
-        
-        // Sân bay Đà Nẵng (DAD)
-        var arrRY = mcY - (arr.x0 + arr.x1) / 2 * scale + P.x * scale;
-        var arrRX = mcX + (0 - P.z) * scale;
+        // 5. Vẽ hai đường băng sân bay đại diện
         ctx.fillStyle = '#1e293b';
-        ctx.fillRect(arrRX - 2.5, arrRY - 12, 5, 24);
+        // Sân bay Nội Bài (HAN)
+        ctx.fillRect(mapZtoX(0) - 2, mapXtoY(1300) - 1.5, 4, 3);
+        // Sân bay Đà Nẵng (DAD)
+        ctx.fillRect(mapZtoX(0) - 2, mapXtoY(routeLen - 1300) - 1.5, 4, 3);
 
-        // 5. Vẽ máy bay của trẻ ở tâm bản đồ (giữ la bàn North-up giúp bé định hướng)
+        // Vẽ nhãn sân bay HAN và DAD siêu nhỏ trên bản đồ vệ tinh
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.font = '800 6.5px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('HAN', mapZtoX(0), mapXtoY(0) + 7);
+        ctx.fillText('DAD', mapZtoX(0), mapXtoY(routeLen) - 3);
+
+        // 6. Vẽ vị trí thực tế của máy bay di chuyển dọc chặng bay
+        var planeX = mapZtoX(P.z);
+        var planeY = mapXtoY(P.x);
+
         ctx.save();
-        ctx.translate(mcX, mcY);
+        ctx.translate(planeX, planeY);
         ctx.rotate(P.heading);
         ctx.fillStyle = '#ffffff';
         ctx.strokeStyle = '#1e3a8a';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 0.8;
         ctx.beginPath();
-        // Máy bay quay mũi lên trên khớp với hướng Bắc làm mốc
-        ctx.moveTo(0, -6);
-        ctx.lineTo(-7, 2);
+        ctx.moveTo(0, -5);
+        ctx.lineTo(-6, 2);
         ctx.lineTo(-2, 1);
-        ctx.lineTo(-3, 5);
-        ctx.lineTo(0, 3);
-        ctx.lineTo(3, 5);
+        ctx.lineTo(-2.5, 4);
+        ctx.lineTo(0, 2.5);
+        ctx.lineTo(2.5, 4);
         ctx.lineTo(2, 1);
-        ctx.lineTo(7, 2);
+        ctx.lineTo(6, 2);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -2022,18 +2045,18 @@
 
         ctx.restore(); // Kết thúc clip
 
-        // Vẽ khung viền kim loại cho la bàn bản đồ vệ tinh
+        // Vẽ viền kim loại bảo vệ xung quanh bản đồ vệ tinh
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.lineWidth = 1.8;
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
         ctx.arc(mcX, mcY, r, 0, 6.284);
         ctx.stroke();
 
-        // Đánh dấu hướng Bắc (N) chỉ đường
+        // Đánh dấu hướng Bắc (N) chỉ đường ở đỉnh
         ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.font = '900 8.5px Nunito, sans-serif';
+        ctx.font = '900 8px Nunito, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('N', mcX, mcY - r + 9);
+        ctx.fillText('N', mcX, mcY - r + 8.5);
     }
 
     function draw() {
