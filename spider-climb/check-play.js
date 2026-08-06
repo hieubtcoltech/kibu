@@ -163,6 +163,9 @@ if (!D) { console.log('KHÔNG ĐẠT: thiếu ClimbDebug'); process.exit(1); }
 
 const R = global.window.ClimbRules;
 const G = D.G, P = D.P;
+/* Bắt bảng điểm vẽ lại ngay, bỏ qua bộ nhớ đệm — phép soát bố cục cần
+ * nhìn thấy đúng chuỗi ứng với trạng thái nó vừa đặt vào. */
+const syncHudNow = () => D.hud(true);
 
 /* ------------------------------------------------------------------ *
  * 3. CHẠY KHUNG HÌNH
@@ -380,7 +383,9 @@ ok(seen.overs > 0, 'chưa lần nào hết mạng — màn kết thúc chưa đ�
 /* Bảng điểm HTML có đổi theo không */
 ok(/\d/.test(getEl('hud-height').textContent), 'ô ĐỘ CAO trên bảng điểm không có số');
 ok(/\d/.test(getEl('hud-score').textContent), 'ô ĐIỂM trên bảng điểm không có số');
-ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm trống');
+/* Ô mạng dựng bằng <span> nên đọc innerHTML, không đọc textContent — bộ DOM
+ * giả ở đây không tự suy cái này ra cái kia, mà thật ra trình duyệt thì có. */
+ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm trống');
 
 /* ------------------------------------------------------------------ *
  * 6. MỖI LOẠI MỐI NGUY PHẢI THỰC SỰ GIẾT ĐƯỢC
@@ -894,7 +899,62 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 13. NGỒI YÊN THÌ PHẢI CHẾT
+ * 13. BẢNG ĐIỂM KHÔNG ĐƯỢC NHÚC NHÍCH
+ *     Máy soát này không đo được bố cục thật — nó không có trình duyệt. Nhưng
+ *     nó đo được đúng những THÓI QUEN VIẾT MÃ đã gây ra cái giật trong ảnh anh
+ *     Hiếu gửi, và đó mới là thứ dễ lặp lại: ghép đơn vị vào số nên chuỗi dài
+ *     ra rồi xuống dòng, ẩn ô bằng thuộc tính hidden nên nó mất chỗ và đẩy ô
+ *     bên cạnh, số trái tim vơi đi làm ô hẹp lại.
+ * ------------------------------------------------------------------ */
+{
+    getEl('btn-play').dispatch('click');
+    step(60);
+
+    /* (a) ô độ cao chỉ được chứa CON SỐ. Đơn vị "m" nằm sẵn trong HTML. */
+    const hTxt = getEl('hud-height').textContent;
+    ok(/^[\d,]+$/.test(hTxt),
+        `ô độ cao đang ghi "${hTxt}" — có chữ kèm số là chuỗi dài ra rồi xuống dòng`);
+    ok(/^[\d,]+$/.test(getEl('hud-score').textContent), 'ô điểm có ký tự lạ kèm theo số');
+    ok(/^[\d,]+$/.test(getEl('hud-coins').textContent), 'ô xu có ký tự lạ kèm theo số');
+
+    /* (b) số ký tự của ô mạng và ô tơ phải KHÔNG ĐỔI dù còn mấy mạng, mấy tơ */
+    const shape = (id) => {
+        const h = getEl(id).innerHTML;
+        /* Đếm số hạt và tổng số ĐIỂM MÃ của phần biểu tượng. Đếm điểm mã chứ
+         * không đếm ký tự: ❤️ là hai điểm mã, và chính chỗ chênh một điểm mã
+         * ấy đã làm hàng co lại mỗi lần mất một mạng. */
+        const pips = (h.match(/<span/g) || []).length;
+        const glyphs = [...h.replace(/<[^>]*>/g, '')].length;
+        return pips + ':' + glyphs;
+    };
+    const seenLives = new Set(), seenWeb = new Set();
+    for (let lv = R.LIVES; lv >= 0; lv--) {
+        G.lives = lv;
+        P.web = Math.max(0, lv);
+        syncHudNow();
+        seenLives.add(shape('hud-lives'));
+        seenWeb.add(shape('hud-web'));
+    }
+    ok(seenLives.size === 1,
+        `ô mạng đổi hình dạng khi vơi mạng (${[...seenLives].join(' / ')}) — ô hẹp lại là hai ô bên cạnh dịch theo`);
+    ok(seenWeb.size === 1, `ô tơ đổi hình dạng khi hết tơ (${[...seenWeb].join(' / ')})`);
+
+    /* (c) ô chuỗi liên hoàn ẩn hiện bằng LỚP, không bằng thuộc tính hidden.
+     *     hidden là display:none — ô biến mất khỏi bố cục và mọi thứ dồn lại. */
+    const cb = getEl('hud-combo');
+    G.combo = 0; syncHudNow();
+    const offHidden = cb.hidden, offClass = cb.classList.contains('on');
+    G.combo = 20; syncHudNow();
+    ok(cb.hidden === offHidden, 'ô chuỗi đang ẩn hiện bằng thuộc tính hidden — nó sẽ mất chỗ và đẩy ô khác');
+    ok(cb.classList.contains('on') !== offClass, 'ô chuỗi không đổi lớp khi có chuỗi — vậy nó hiện lên bằng gì?');
+
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else getEl('btn-nav-menu').dispatch('click');
+    console.log('  bảng điểm: ô số không kèm chữ · ô mạng và ô tơ giữ nguyên độ dài · ô chuỗi ẩn hiện bằng lớp');
+}
+
+/* ------------------------------------------------------------------ *
+ * 14. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -910,7 +970,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 14. BA CHẾ ĐỘ
+ * 15. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -934,7 +994,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 15. CỬA HÀNG VÀ NHIỆM VỤ
+ * 16. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');

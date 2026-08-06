@@ -559,9 +559,6 @@
         ['Trời Lạ', 'Sky Fantasy'],
 
         /* bảng điểm trong lúc chơi */
-        ['ĐỘ CAO', 'HEIGHT'],
-        ['XU', 'COINS'],
-        ['CHUỖI', 'COMBO'],
         ['TƠ', 'WEB', 'x'],
         ['Bắn tơ', 'Web shot'],
         ['Độ cao', 'Height'],

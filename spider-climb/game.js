@@ -2649,6 +2649,13 @@
 
     var hudCache = {};
 
+    function setHtml(id, v) {
+        if (hudCache['#' + id] === v) return;
+        hudCache['#' + id] = v;
+        var e = el(id);
+        if (e) e.innerHTML = v;
+    }
+
     function setText(id, v) {
         if (hudCache[id] === v) return;
         hudCache[id] = v;
@@ -2658,33 +2665,47 @@
 
     function syncHud(force) {
         if (force) hudCache = {};
-        setText('hud-height', fmt(metresNow()) + ' m');
+        /* Đơn vị "m" nằm sẵn trong HTML, không ghép vào số. Ghép vào thì lúc
+         * số dài ra, chuỗi "1,389 m" xuống dòng và ô cao gấp đôi — đúng cái
+         * giật anh Hiếu chụp được. */
+        setText('hud-height', fmt(metresNow()));
         setText('hud-score', fmt(G.score));
         setText('hud-coins', fmt(G.coins));
 
-        var lives = '';
-        for (var i = 0; i < (G.mode === 'hardcore' ? 1 : R.LIVES); i++) {
-            lives += i < G.lives ? '❤' : '🖤';
+        /* Mạng và tơ vẽ bằng những ô <span> CÙNG MỘT BIỂU TƯỢNG, cái đã mất
+         * thì mờ đi — chứ không đổi sang biểu tượng khác.
+         *
+         * Bản trước dùng ❤️ cho mạng còn và 🖤 cho mạng đã mất. Trông thì
+         * được, nhưng ❤️ là HAI điểm mã (quả tim cộng dấu báo "vẽ kiểu emoji")
+         * còn 🖤 chỉ một — nên mỗi lần mất một mạng là chuỗi ngắn đi, ô hẹp
+         * lại, và hai ô bên cạnh dịch theo. Đúng kiểu lỗi không ai ngờ tới cho
+         * tới lúc nhìn thấy nó giật. Cùng một biểu tượng thì bề ngang không có
+         * cách nào đổi được nữa. */
+        var lives = '', nLives = G.mode === 'hardcore' ? 1 : R.LIVES;
+        for (var i = 0; i < nLives; i++) {
+            lives += '<span class="pip' + (i < G.lives ? ' on' : '') + '">❤️</span>';
         }
-        setText('hud-lives', lives);
+        setHtml('hud-lives', lives);
 
         var web = '';
-        for (var j = 0; j < R.WEB_MAX; j++) web += j < P.web ? '🕸' : '·';
-        setText('hud-web', web);
+        for (var j = 0; j < R.WEB_MAX; j++) {
+            web += '<span class="pip' + (j < P.web ? ' on' : '') + '">🕸</span>';
+        }
+        setHtml('hud-web', web);
 
-        var cm = R.comboMul(G.combo);
         var cbox = el('hud-combo');
-        if (G.combo >= 3) {
-            cbox.hidden = false;
-            setText('hud-combo-val', 'x' + cm);
-        } else cbox.hidden = true;
+        var on = G.combo >= 3;
+        if (cbox.classList.contains('on') !== on) cbox.classList.toggle('on', on);
+        if (on) setText('hud-combo-val', 'x' + R.comboMul(G.combo));
 
+        /* Vật phẩm: chỉ biểu tượng và số giây, không chữ. Ba cái cùng lúc là
+         * nhiều nhất có thể gặp, vừa đúng một dòng. */
         var chips = [];
         if (G.power.shield > 0) chips.push('🛡');
-        if (G.power.magnet > 0) chips.push('🧲 ' + Math.ceil(G.power.magnet));
-        if (G.power.x2 > 0) chips.push('✖2 ' + Math.ceil(G.power.x2));
-        if (G.power.slow > 0) chips.push('⏳ ' + Math.ceil(G.power.slow));
-        setText('hud-power', chips.join('  '));
+        if (G.power.magnet > 0) chips.push('🧲' + Math.ceil(G.power.magnet));
+        if (G.power.x2 > 0) chips.push('✖2·' + Math.ceil(G.power.x2));
+        if (G.power.slow > 0) chips.push('⏳' + Math.ceil(G.power.slow));
+        setText('hud-power', chips.join(' '));
     }
 
     var screens = ['menu-overlay', 'help-overlay', 'pause-overlay', 'over-overlay', 'shop-overlay', 'missions-overlay'];
@@ -3009,7 +3030,8 @@
          * đáng soát nhất — chỗ ép đổi tường, chỗ bám hụt lúc rơi. Một tệp
          * 1 900 dòng vẽ mỗi giây sáu mươi lần thì thứ đáng sợ không phải luật
          * chơi sai, mà là một dòng ném lỗi ở khung hình thứ mười nghìn. */
-        window.ClimbDebug = { G: G, P: P, tap: doJump, tapDir: doJumpTo, web: fireWeb, start: startRun, R: R, pos: moverPos };
+        window.ClimbDebug = { G: G, P: P, tap: doJump, tapDir: doJumpTo, web: fireWeb,
+            start: startRun, R: R, pos: moverPos, hud: syncHud };
 
         requestAnimationFrame(frame);
     }

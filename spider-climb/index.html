@@ -111,29 +111,22 @@
             <div class="stage">
                 <div id="game-canvas"></div>
 
+                <!-- BẢNG ĐIỂM: mọi ô đều CỐ ĐỊNH CHỖ và CỐ ĐỊNH BỀ NGANG.
+                     Không dùng nhãn chữ nữa — số có sẵn đơn vị "m", còn điểm và
+                     xu thì một cái biểu tượng nói đủ. Nhãn chữ vừa dài vừa phải
+                     dịch, mà bản dịch dài hơn bản gốc là ô vỡ ra hai dòng. -->
                 <div id="hud" class="hud" hidden>
-                    <div class="hud-row">
-                        <div class="hud-box hud-main">
-                            <span class="hud-label">HEIGHT</span>
-                            <b id="hud-height">0 m</b>
-                        </div>
-                        <div class="hud-box">
-                            <span class="hud-label">SCORE</span>
-                            <b id="hud-score">0</b>
-                        </div>
-                        <div class="hud-box">
-                            <span class="hud-label">COINS</span>
-                            <b id="hud-coins">0</b>
-                        </div>
+                    <div class="hud-top">
+                        <span class="hud-chip chip-h"><b id="hud-height">0</b><em>m</em></span>
+                        <span class="hud-chip chip-s"><i>⭐</i><b id="hud-score">0</b></span>
+                        <span class="hud-chip chip-c"><i>🪙</i><b id="hud-coins">0</b></span>
                     </div>
-                    <div class="hud-row hud-row-2">
+                    <div class="hud-sub">
                         <span id="hud-lives" class="hud-lives">❤❤❤</span>
+                        <span id="hud-combo" class="hud-combo"><b id="hud-combo-val">x1</b></span>
                         <span id="hud-web" class="hud-web">🕸🕸🕸</span>
-                        <span id="hud-power" class="hud-power"></span>
                     </div>
-                    <div id="hud-combo" class="hud-combo" hidden>
-                        <span class="hud-label">COMBO</span><b id="hud-combo-val">x1</b>
-                    </div>
+                    <div id="hud-power" class="hud-power"></div>
                     <div id="zone-banner" class="zone-banner"></div>
                 </div>
 

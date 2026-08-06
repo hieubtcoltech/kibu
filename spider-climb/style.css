@@ -181,101 +181,140 @@ body {
 #game-canvas canvas { display: block; touch-action: none; }
 
 /* ---------------- Bảng điểm ---------------- */
-/* Nằm sát mép trên, KHÔNG đè xuống giữa: giữa sân là khe hai toà nhà, cũng
-   chính là chỗ mọi mối nguy bay qua. Bản thiết kế đòi bảng điểm tránh xa đường
-   nhảy, và ở game này đường nhảy đúng là chính giữa màn hình. */
+/* Hai luật cho cả khối này, và cả hai đều là để NÓ ĐỪNG NHÚC NHÍCH.
+   Anh Hiếu gửi ảnh: ô độ cao vỡ làm hai dòng vì chữ "m" rơi xuống, ô xu cũng
+   hai dòng vì bản dịch dài hơn bản gốc, rồi mỗi lần số thêm một chữ số là cả
+   hàng co giãn — mắt đang dán vào khe giữa hai toà nhà mà góc trên cứ giật
+   liên tục thì mệt hơn hẳn một cái bảng điểm xấu.
+
+   1. Bề ngang CỐ ĐỊNH và chữ số dùng bộ đều nhau (tabular-nums), nên 9 với 0
+      rộng bằng nhau và số nhảy thế nào ô cũng không đổi cỡ.
+   2. Mọi ô đều ĐẶT TUYỆT ĐỐI. Ô nào ẩn đi thì ẩn bằng visibility chứ không
+      bằng display, để nó vẫn giữ chỗ và không đẩy ai. */
 .hud {
     position: absolute;
     inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 10px 0;
     pointer-events: none;
     z-index: 4;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
 }
 
 .hud[hidden] { display: none; }
 
-.hud-row {
+.hud-top {
+    position: absolute;
+    top: 8px;
+    left: 0;
+    right: 0;
     display: flex;
-    align-items: flex-start;
-    gap: 7px;
-    width: 100%;
     justify-content: center;
+    gap: 6px;
 }
 
-.hud-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1px;
-    padding: 4px 12px;
+.hud-chip {
+    display: inline-flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+    padding: 5px 10px;
     border-radius: 12px;
     background: rgba(6, 10, 22, 0.62);
     border: 1px solid rgba(255, 255, 255, 0.12);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    white-space: nowrap;
+    line-height: 1.1;
 }
 
-.hud-main { border-color: rgba(255, 215, 94, 0.4); }
-.hud-main b { color: var(--gold); }
+/* Bề ngang tính theo số dài nhất có thể gặp, cộng chút dư. Đặt bằng min-width
+   chứ không width để lỡ có ai leo tới trăm nghìn mét thì ô nở ra chứ không
+   cắt cụt mất số. */
+.chip-h { min-width: 92px; border-color: rgba(255, 215, 94, 0.4); }
+.chip-s { min-width: 104px; }
+.chip-c { min-width: 72px; }
 
-.hud-label {
+.hud-chip b {
     font-family: var(--font-display);
-    font-size: 0.58rem;
+    font-size: 1.15rem;
     font-weight: 800;
-    letter-spacing: 1.4px;
-    color: #93a3bd;
-}
-
-.hud-box b {
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    font-weight: 800;
-    line-height: 1;
     color: #fff;
 }
 
-.hud-row-2 {
-    gap: 12px;
-    font-size: 0.95rem;
-    letter-spacing: 2px;
-    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
-}
+.chip-h b { color: var(--gold); }
 
-.hud-web { letter-spacing: 3px; }
-
-.hud-power {
+.hud-chip em {
+    font-style: normal;
     font-family: var(--font-display);
+    font-size: 0.72rem;
     font-weight: 800;
-    font-size: 0.82rem;
-    letter-spacing: 0.5px;
-    color: var(--lime);
+    color: #93a3bd;
 }
 
-/* Hệ số nhân: to, ngay dưới bảng điểm, và chỉ hiện khi đã có chuỗi ≥3 — hiện
-   suốt thì thành một con số x1 nằm chết trên màn, chẳng ai nhìn nữa. */
-.hud-combo {
+.hud-chip i { font-style: normal; font-size: 0.9rem; }
+
+/* Hàng dưới: mạng bên trái, chuỗi ở giữa, tơ bên phải. Ba ô chia đều bề ngang
+   nên số trái tim vơi đi cũng không kéo hai ô kia dịch chỗ. */
+.hud-sub {
     position: absolute;
-    top: 96px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 46px;
+    left: 12px;
+    right: 12px;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    font-size: 0.85rem;
 }
 
-.hud-combo[hidden] { display: none; }
+.hud-lives { flex: 1; text-align: left; }
+.hud-web { flex: 1; text-align: right; }
+
+/* Mỗi ô mạng, mỗi ô tơ là một hạt cùng cỡ. Cái đã mất chỉ mờ đi và xám lại,
+   vẫn giữ nguyên chỗ — có vậy hàng mới đứng im khi vơi dần. */
+.pip {
+    display: inline-block;
+    width: 1.15em;
+    text-align: center;
+    opacity: 0.28;
+    filter: grayscale(1);
+    transition: opacity 0.15s ease, filter 0.15s ease;
+}
+
+.pip.on { opacity: 1; filter: none; }
+
+/* Hệ số nhân: một con số nhỏ ở giữa, KHÔNG phải chữ to giữa sân như trước.
+   Chỗ giữa sân là đường bay của mọi mối nguy — che vào đấy là che đúng thứ
+   người chơi cần nhìn. Ẩn bằng visibility để nó luôn giữ chỗ. */
+.hud-combo {
+    flex: 0 0 auto;
+    min-width: 44px;
+    text-align: center;
+    visibility: hidden;
+}
+
+.hud-combo.on { visibility: visible; }
 
 .hud-combo b {
     font-family: var(--font-display);
-    font-size: 1.9rem;
+    font-size: 1.15rem;
     font-weight: 800;
-    line-height: 1;
     color: var(--gold);
+}
+
+/* Vật phẩm đang có tác dụng: nằm riêng một chỗ, hiện ra hay biến mất cũng
+   không đụng tới ai. */
+.hud-power {
+    position: absolute;
+    top: 72px;
+    right: 12px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.78rem;
+    letter-spacing: 0.5px;
+    color: var(--lime);
+    text-align: right;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
 }
 
 /* Dải báo vùng mới. Nằm ở 30% chiều cao chứ không giữa màn — giữa màn là chỗ
@@ -767,12 +806,16 @@ body {
         min-height: 42px;
         gap: 5px;
     }
-    .hud-box { padding: 3px 9px; }
-    .hud-box b { font-size: 1.02rem; }
+    .hud-chip { padding: 4px 8px; gap: 3px; }
+    .hud-chip b { font-size: 1rem; }
+    .chip-h { min-width: 80px; }
+    .chip-s { min-width: 92px; }
+    .chip-c { min-width: 64px; }
+    .hud-sub { top: 40px; font-size: 0.78rem; }
+    .hud-combo b { font-size: 1rem; }
+    .hud-power { top: 64px; font-size: 0.72rem; }
     .touch-btn { width: 74px; height: 74px; }
     .touch-ico { font-size: 1.6rem; }
-    .hud-combo { top: 84px; }
-    .hud-combo b { font-size: 1.6rem; }
 }
 
 /* Điện thoại xoay ngang: màn chỉ cao chừng 420px mà thanh trên với chân trang
