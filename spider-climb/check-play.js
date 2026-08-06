@@ -1048,7 +1048,77 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 16. NGỒI YÊN THÌ PHẢI CHẾT
+ * 16. NHÃN NÚT PHẢI VỪA NÚT — KỂ CẢ BẢN TIẾNG VIỆT
+ *     Đây là gốc rễ của cái vỡ dòng anh Hiếu chụp được, và nó nằm ở chỗ không
+ *     ai nhìn: trang viết bằng tiếng Anh, nút trông vừa vặn, rồi bản dịch dài
+ *     hơn hai ba chữ là vỡ. "Daily Climb" 11 ký tự thành "Leo Hằng Ngày" 13 —
+ *     đủ để nút cao gấp rưỡi nút bên cạnh và cả bảng chọn dài thêm cả trăm
+ *     điểm ảnh.
+ *
+ *     Nên soát bản DỊCH chứ không soát bản gốc. Và soát ở đây chứ không đợi
+ *     nhìn thấy trên điện thoại, vì lần sau thêm một cái nút nữa thì cũng
+ *     chẳng ai nhớ ra chuyện này.
+ * ------------------------------------------------------------------ */
+{
+    const fs = require('fs');
+    const html = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+    const dict = fs.readFileSync(path.join(__dirname, '..', 'i18n.js'), 'utf8');
+
+    /* CHỈ soát những nút phải CHIA NHAU MỘT HÀNG — nút chiếm trọn bề ngang thì
+     * nhãn dài mấy cũng chẳng sao. Gọi tên từng nút chứ không lọc theo lớp:
+     * lọc theo lớp thì "KEEP CLIMBING" 13 ký tự ở màn tạm dừng cũng bị lôi vào
+     * dù nó nằm một mình cả hàng, và một phép soát hay kêu oan thì rồi sẽ bị
+     * cho qua cả lúc nó kêu đúng.
+     *
+     * Giới hạn suy từ bề ngang thật trên màn 360 điểm ảnh:
+     *   bốn nút phụ  (330 − 24 khe) / 4 = 76, trừ đệm còn 70 điểm ảnh chữ.
+     *                Chữ 0,62rem ≈ 9,9 px, mỗi ký tự chừng 5,4 → 12 ký tự.
+     *   ba nút cuối  (330 − 12) / 3 ≈ 106, chữ 0,72rem → 16 ký tự. */
+    const LIMIT = {
+        'btn-daily': 12, 'btn-hardcore': 12, 'btn-shop': 12, 'btn-missions': 12,
+        'btn-revive': 16, 'btn-again': 16, 'btn-over-menu': 16
+    };
+
+    const viOf = (en) => {
+        const esc = en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const m = dict.match(new RegExp("\\['([^']+)', '" + esc + "'"));
+        return m ? m[1] : null;
+    };
+
+    const buttons = [...html.matchAll(/<button[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g)];
+    ok(buttons.length > 6, 'không đọc được cái nút nào từ index.html');
+
+    let checked = 0, worst = '';
+    for (const [, id, inner] of buttons) {
+        if (!LIMIT[id]) continue;
+        const en = inner.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        if (!en || !/[A-Za-z]/.test(en)) continue;
+        const vi = viOf(en);
+        const longest = vi && vi.length > en.length ? vi : en;
+        checked++;
+        if (longest.length > LIMIT[id]) {
+            ok(false, `nhãn nút #${id} là "${longest}", dài ${longest.length} ký tự nhưng nút ` +
+                `chỉ vừa ${LIMIT[id]} — trên điện thoại nó vỡ dòng` +
+                (vi && vi !== en ? ` (bản gốc "${en}" thì vừa, bản dịch mới vỡ)` : ''));
+        }
+        if (longest.length > worst.length) worst = longest;
+    }
+    ok(checked === Object.keys(LIMIT).length,
+        `soát được ${checked}/${Object.keys(LIMIT).length} nhãn nút — có cái đã đổi mã hoặc bị xoá`);
+
+    /* Bốn nút phụ phải nằm trên ĐÚNG MỘT hàng */
+    const rows = [...html.matchAll(/<div class="mode-row">([\s\S]*?)<\/div>/g)];
+    ok(rows.length === 1, `có ${rows.length} hàng nút phụ — gộp về một hàng thì bảng chọn mới đủ ngắn`);
+    if (rows[0]) {
+        const n = (rows[0][1].match(/<button/g) || []).length;
+        ok(n <= 4, `hàng nút phụ có ${n} nút, quá bốn thì trên màn hẹp không nút nào đọc được`);
+    }
+
+    console.log(`  nhãn nút: soát ${checked} cái cả hai thứ tiếng · dài nhất "${worst}" (${worst.length} ký tự)`);
+}
+
+/* ------------------------------------------------------------------ *
+ * 17. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -1064,7 +1134,7 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 17. BA CHẾ ĐỘ
+ * 18. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -1088,7 +1158,7 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 18. CỬA HÀNG VÀ NHIỆM VỤ
+ * 19. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');

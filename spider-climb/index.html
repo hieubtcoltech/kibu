@@ -158,13 +158,13 @@
                          gọn: có vậy sáu dòng dịch trong i18n.js mới dùng chung được
                          cho cả dải này, dải báo vùng mới và màn kết thúc. -->
                     <div class="zone-strip">
-                        <span class="zn z1">🌅 Street Morning</span>
-                        <span class="zn z2">🏙️ Skyscraper District</span>
-                        <span class="zn z3">☁️ Cloudline</span>
-                        <span class="zn z4">🌇 Construction Sunset</span>
-                        <span class="zn z5b">🌃 Neon Night City</span>
-                        <span class="zn z5">⛈️ Night Storm</span>
-                        <span class="zn z6">🌌 Sky Fantasy</span>
+                        <span class="zn z1">🌅<b>Street Morning</b></span>
+                        <span class="zn z2">🏙️<b>Skyscraper District</b></span>
+                        <span class="zn z3">☁️<b>Cloudline</b></span>
+                        <span class="zn z4">🌇<b>Construction Sunset</b></span>
+                        <span class="zn z5b">🌃<b>Neon Night City</b></span>
+                        <span class="zn z5">⛈️<b>Night Storm</b></span>
+                        <span class="zn z6">🌌<b>Sky Fantasy</b></span>
                     </div>
 
                     <div class="wallet">
@@ -176,13 +176,15 @@
 
                     <button id="btn-play" class="big-btn"><i class="fa-solid fa-play"></i> START CLIMBING</button>
 
+                    <!-- Bốn nút phụ trên MỘT hàng, nhãn một từ. Trước là hai hàng
+                         với nhãn "Daily Climb" — trên điện thoại nó vỡ làm hai
+                         dòng, nút cao gấp rưỡi nút bên cạnh, và cả bảng chọn dài
+                         thêm cả trăm điểm ảnh. -->
                     <div class="mode-row">
-                        <button id="btn-daily" class="mode-btn"><i class="fa-solid fa-calendar-day"></i> Daily Climb</button>
-                        <button id="btn-hardcore" class="mode-btn"><i class="fa-solid fa-fire"></i> Hardcore</button>
-                    </div>
-                    <div class="mode-row">
-                        <button id="btn-shop" class="mode-btn"><i class="fa-solid fa-shirt"></i> Suits</button>
-                        <button id="btn-missions" class="mode-btn"><i class="fa-solid fa-list-check"></i> Missions</button>
+                        <button id="btn-daily" class="mode-btn"><i class="fa-solid fa-calendar-day"></i> <span>Daily</span></button>
+                        <button id="btn-hardcore" class="mode-btn"><i class="fa-solid fa-fire"></i> <span>Hardcore</span></button>
+                        <button id="btn-shop" class="mode-btn"><i class="fa-solid fa-shirt"></i> <span>Suits</span></button>
+                        <button id="btn-missions" class="mode-btn"><i class="fa-solid fa-list-check"></i> <span>Missions</span></button>
                     </div>
 
                     <div class="mission-box">
@@ -190,16 +192,6 @@
                         <div id="menu-missions" class="mission-list"></div>
                     </div>
 
-                    <div class="records">
-                        <span class="box-title">YOUR RECORDS</span>
-                        <div class="rec-grid">
-                            <div class="rec"><span>Longest combo</span><b id="rec-combo">x0</b></div>
-                            <div class="rec"><span>Drones webbed</span><b id="rec-drones">0</b></div>
-                            <div class="rec"><span>Fastest to 300 m</span><b id="rec-sprint">—</b></div>
-                            <div class="rec"><span>Daily Climb best</span><b id="rec-daily">0 m</b></div>
-                            <div class="rec"><span>Hardcore best</span><b id="rec-hard">0 m</b></div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -252,6 +244,19 @@
                     <h2 class="panel-title">MISSIONS</h2>
                     <p class="panel-desc">Finish one and a new one takes its place.</p>
                     <div id="mission-list" class="mission-list"></div>
+                    <!-- Kỷ lục dời từ màn chào sang đây. Màn chào chỉ nên trả lời
+                         đúng một câu: bấm vào đâu để chơi. Mọi thứ khác đẩy nút
+                         BẮT ĐẦU trôi khỏi màn hình điện thoại. -->
+                    <div class="records">
+                        <span class="box-title">YOUR RECORDS</span>
+                        <div class="rec-grid">
+                            <div class="rec"><span>Longest combo</span><b id="rec-combo">x0</b></div>
+                            <div class="rec"><span>Drones webbed</span><b id="rec-drones">0</b></div>
+                            <div class="rec"><span>Fastest to 300 m</span><b id="rec-sprint">—</b></div>
+                            <div class="rec"><span>Daily Climb best</span><b id="rec-daily">0 m</b></div>
+                            <div class="rec"><span>Hardcore best</span><b id="rec-hard">0 m</b></div>
+                        </div>
+                    </div>
                     <button id="btn-missions-back" class="big-btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> BACK</button>
                 </div>
             </div>

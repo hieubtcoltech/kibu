@@ -462,7 +462,12 @@ body {
     border-radius: 999px;
     color: #0d1220;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
+
+.zn b { font-weight: 800; }
 
 .z1 { background: linear-gradient(135deg, #ffd9a0, #ffb861); }
 .z2 { background: linear-gradient(135deg, #a9d8f5, #4bd7ff); }
@@ -492,18 +497,24 @@ body {
 
 .w-item b { color: #fff; }
 
+/* Bốn nút phụ trên MỘT hàng và KHÔNG BAO GIỜ xuống dòng. Nhãn dài thì chữ nhỏ
+   lại chứ nút không được cao lên — một nút cao hơn ba nút kia là cả hàng lệch,
+   mà lệch thì mắt đọc ra "hỏng" chứ không đọc ra "khác". */
 .mode-row {
     display: flex;
     gap: 8px;
     width: 100%;
+    flex-wrap: nowrap;
 }
 
 .mode-btn {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
+    white-space: nowrap;
     font-family: var(--font-display);
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     font-weight: 700;
-    padding: 11px 10px;
+    padding: 10px 6px;
     min-height: 46px;
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.16);
@@ -513,7 +524,7 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 6px;
     transition: all 0.18s ease;
 }
 
@@ -789,6 +800,46 @@ body {
 
 /* ---------------- Màn nhỏ ---------------- */
 @media (max-width: 760px) {
+    /* MÀN CHÀO TRÊN ĐIỆN THOẠI chỉ nên trả lời đúng một câu: bấm vào đâu để
+       chơi. Ảnh anh Hiếu gửi cho thấy nút BẮT ĐẦU LEO bị đẩy lên quá nửa màn,
+       ví tiền thì khuất hẳn phía trên, còn hai phần ba chiều cao còn lại là
+       chữ — bảng nhiệm vụ với bảng kỷ lục. Cả hai đều hay, chỉ là không phải
+       thứ cần đọc trước khi chơi ván đầu.
+
+       Nên ở đây: bỏ bảng nhiệm vụ (vẫn còn nguyên sau nút Nhiệm Vụ), cắt lời
+       giới thiệu còn hai dòng, dải bảy vùng chỉ còn biểu tượng, và bốn nút phụ
+       xếp biểu tượng trên chữ dưới cho vừa một hàng. */
+    #menu-overlay .mission-box { display: none; }
+
+    #menu-overlay .panel-desc {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        font-size: 0.88rem;
+    }
+
+    .zn b { display: none; }
+    .zn { font-size: 1rem; padding: 4px 9px; gap: 0; }
+
+    .mode-btn {
+        flex-direction: column;
+        gap: 3px;
+        font-size: 0.62rem;
+        letter-spacing: 0;
+        padding: 8px 3px;
+        min-height: 52px;
+    }
+
+    .mode-btn i { font-size: 1.05rem; }
+
+    .panel { gap: 10px; }
+    .zone-strip { gap: 5px; }
+    .wallet { gap: 6px; }
+    .w-item { font-size: 0.82rem; padding: 5px 10px; }
+    .mission-text { font-size: 0.82rem; }
+    .rec { font-size: 0.76rem; padding: 6px 9px; }
+
     .app-wrapper { padding: 8px 8px 10px; gap: 8px; }
     .unified-nav { padding: 8px 10px; border-radius: 16px; gap: 8px; }
     .brand-title { font-size: 1.1rem; }
