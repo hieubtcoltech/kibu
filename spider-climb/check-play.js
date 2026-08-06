@@ -748,7 +748,84 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 11. NGỒI YÊN THÌ PHẢI CHẾT
+ * 11. SÉT Ở ĐÊM GIÔNG PHẢI ĐÁNH TRÚNG — VÀ PHẢI NÉ ĐƯỢC
+ *     Hai vế, và vế thứ hai mới khó. Một tia sét luôn trúng thì không phải mối
+ *     nguy mà là một khoản thuế; một tia không bao giờ trúng thì chỉ là hiệu
+ *     ứng. Nên soát cả hai: cứ leo đều thì dính, mà nhảy sang tường kia thì
+ *     thoát. Đó chính là điều luật "thua phải hiểu được vì sao" của bản thiết
+ *     kế, viết thành mã.
+ * ------------------------------------------------------------------ */
+{
+    const stormZone = R.ZONES.findIndex(z => z.weather === 'rain');
+    ok(stormZone >= 0, 'không tìm thấy vùng nào có giông');
+
+    function intoStorm() {
+        getEl('btn-play').dispatch('click');
+        step(10);
+        const y = (R.ZONES[stormZone].from + 300) * R.PX_PER_M + 900;
+        /* Đẩy con trỏ sinh màn lên thật cao rồi mới dọn tường: có vậy bộ sinh
+         * mới không đẻ thêm vật cản ngay trên đầu trong lúc thử. Bản trước
+         * không làm thế, và cứ ba lần thì một lần người nhện nhảy sang tường
+         * kia rồi đâm phải một cục điều hoà vừa mọc ra — phép soát ghi sổ đó
+         * là "sét đánh trúng". */
+        G.world.cursor = y + 6000;
+        G.world.zoneDone = stormZone;
+        G.world.blockers.length = 0;
+        G.world.surfaces.length = 0;
+        G.world.movers.length = 0;
+        P.y = y; P.state = 'cling';
+        P.x = G.world.wallX(P.side, P.y) + R.PLAYER_R;
+        P.invuln = 0; P.web = R.WEB_MAX;
+        G.maxY = y;
+        G.camY = y + 960 * R.CAM_ANCHOR;
+        G.zone = stormZone;
+        G.power.shield = 0;
+        G.lives = 9;
+        G.bolt = null;
+        G.boltT = 0.05;                 // gọi tia xuống ngay, khỏi đợi
+        step(4);
+    }
+
+    /* Đếm THẲNG số lần sét đánh trúng, đừng suy từ "có rơi không".
+     *
+     * Bản đầu em lấy P.state === 'fall' làm dấu hiệu trúng sét, và phép soát
+     * báo hỏng oan: bộ sinh vẫn đẻ vật cản mới ngay trên đầu người chơi trong
+     * lúc thử, nên nhảy sang tường kia rồi đâm phải một cục điều hoà cũng ra
+     * 'fall'. Suy gián tiếp thì mỗi nguyên nhân khác đều thành một lời buộc
+     * tội sai — mà lời buộc tội sai còn tệ hơn không soát, vì nó khiến người
+     * ta đi sửa đúng chỗ đang lành. */
+    const zaps = () => G.deaths['zap'] || 0;
+
+    /* (a) cứ leo đều thì phải dính */
+    intoStorm();
+    ok(!!G.bolt, 'ở Đêm Giông mà không có tia sét nào nhắm tới');
+    for (let i = 0; i < 200 && G.phase === 'play' && !zaps(); i++) {
+        P.invuln = 0;
+        if (P.state === 'fall') { P.state = 'cling'; P.vy = 0; }   // bỏ qua cú ngã vì lý do khác
+        step(1);
+    }
+    ok(zaps() > 0, 'cứ leo đều dưới cơn giông mà sét không đánh trúng — tia sét chỉ là hiệu ứng');
+
+    /* (b) nhảy sang tường kia thì phải thoát */
+    intoStorm();
+    const before = zaps();
+    if (G.bolt) {
+        /* nhảy ngay lúc thấy vòng sáng, đúng cách người chơi sẽ làm */
+        D.tap();
+        for (let i = 0; i < 200 && G.phase === 'play' && G.bolt; i++) {
+            P.invuln = 0;
+            step(1);
+        }
+    }
+    ok(zaps() === before, 'nhảy sang tường kia rồi mà sét vẫn đánh trúng — vậy thì né kiểu gì cũng chết');
+
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else getEl('btn-nav-menu').dispatch('click');
+    console.log('  sét Đêm Giông: đứng nguyên thì dính, nhảy đi thì thoát');
+}
+
+/* ------------------------------------------------------------------ *
+ * 12. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -764,7 +841,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 12. BA CHẾ ĐỘ
+ * 13. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -788,7 +865,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 13. CỬA HÀNG VÀ NHIỆM VỤ
+ * 14. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');

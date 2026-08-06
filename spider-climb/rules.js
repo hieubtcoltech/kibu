@@ -128,6 +128,24 @@
     var SHOT_SPEED = 430;          // đạn rô-bốt gác bay ngang
     var SHOT_LIVE = 0.9;           // và sống được bấy nhiêu giây
 
+    /* ---- Sét ở vùng Đêm Giông ----
+     *
+     * Tia sét KHÔNG đánh vào chỗ người chơi đang đứng — nó đánh vào chỗ người
+     * chơi SẼ tới nếu cứ leo đều như thế. Nghe thì ác, nhưng chính chỗ ấy làm
+     * nó thành một mối nguy chơi được: đứng yên leo tiếp là dính, muốn né thì
+     * phải ĐỔI một thứ gì đó — nhảy sang tường kia, hoặc bấm leo nhanh cho vượt
+     * qua. Đánh vào chỗ hiện tại thì người chơi tự leo ra khỏi đó, tia sét
+     * thành trò trang trí; đánh mà không báo trước thì thành xổ số.
+     *
+     * 1,15 giây báo trước là con số quan trọng nhất ở đây: đủ để nhìn thấy
+     * vòng sáng, hiểu ra nó đang nhắm đâu, rồi kịp bấm một cái. */
+    var BOLT_WARN = 1.15;          // giây vòng ngắm nhấp nháy trước khi sét giáng
+    var BOLT_HIT = 0.22;           // giây tia sét ở lại trên màn
+    var BOLT_R = 46;               // bán kính ăn đòn
+    var BOLT_GAP_MIN = 5.5;        // giãn cách hai tia, ngắn nhất
+    var BOLT_GAP_MAX = 9.5;        // và dài nhất
+    var BOLT_GRACE = 3.5;          // vừa vào vùng giông thì được yên bấy nhiêu giây
+
     var CRACK_HOLD = 1.25;         // bám tấm nứt quá ngần này giây thì vỡ
     var WEB_MAX = 3;               // số lần bắn tơ giữ trong người
     var WEB_RECHARGE = 6.2;        // giây nạp lại một lần bắn
@@ -1229,6 +1247,8 @@
         JUMP_VX: JUMP_VX, JUMP_VY: JUMP_VY,
         GRAVITY: GRAVITY, FALL_GRAVITY: FALL_GRAVITY, FALL_MAX_V: FALL_MAX_V,
         FALL_DRIFT: FALL_DRIFT, CAM_ANCHOR: CAM_ANCHOR, PLAYER_R: PLAYER_R,
+        BOLT_WARN: BOLT_WARN, BOLT_HIT: BOLT_HIT, BOLT_R: BOLT_R,
+        BOLT_GAP_MIN: BOLT_GAP_MIN, BOLT_GAP_MAX: BOLT_GAP_MAX, BOLT_GRACE: BOLT_GRACE,
         CRACK_HOLD: CRACK_HOLD, WEB_MAX: WEB_MAX, WEB_RECHARGE: WEB_RECHARGE,
         WEB_RANGE: WEB_RANGE, LIVES: LIVES, NEAR_MISS_PX: NEAR_MISS_PX,
         SIDE_L: SIDE_L, SIDE_R: SIDE_R,

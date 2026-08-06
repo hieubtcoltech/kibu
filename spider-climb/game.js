@@ -268,6 +268,18 @@
         laserFire: function () { this.hit(0.2, 0.09, 2400, 'bandpass'); this.tone(1800, 400, 0.16, 'square', 0.035); },
         gust: function () { this.hit(0.85, 0.07, 700, 'bandpass'); },
         thunder: function () { this.hit(0.9, 0.13, 260, 'lowpass'); },
+        /* Tiếng nạp của tia nhắm vào mình: rít lên dần, nghe là biết ngẩng lên
+         * tìm vòng sáng. Khác hẳn tiếng ục ục của sấm xa, để hai thứ không lẫn
+         * vào nhau — mà không lẫn mới là điều quan trọng nhất ở đây. */
+        boltCharge: function () {
+            this.tone(320, 1500, 1.0, 'sawtooth', 0.022);
+            this.hit(0.9, 0.03, 3000, 'highpass');
+        },
+        boltStrike: function () {
+            this.hit(0.16, 0.20, 6000, 'highpass');
+            this.hit(1.1, 0.16, 220, 'lowpass', 0.04);
+            this.tone(180, 50, 0.5, 'sawtooth', 0.06);
+        },
         zone: function () {
             var f = [523, 659, 784, 1047];
             for (var i = 0; i < f.length; i++) this.tone(f[i], f[i] * 1.5, 0.2, 'triangle', 0.045, i * 0.09);
@@ -340,7 +352,8 @@
         power: { shield: 0, magnet: 0, x2: 0, slow: 0 },
         sprint300: 0,
         gustSeen: null,
-        deaths: {}
+        deaths: {},
+        bolt: null, boltT: 0, farBolt: null, farBoltT: 0
     };
 
     var P = {
@@ -392,6 +405,7 @@
         G.maxY = START_Y; G.zone = 0; G.zoneBannerT = 0;
         G.revived = false; G.freeze = 0; G.shake = 0; G.flash = 0;
         G.sprint300 = 0; G.gustSeen = null; G.deaths = {};
+        G.bolt = null; G.boltT = R.BOLT_GRACE; G.farBolt = null; G.farBoltT = 0;
         G.power = { shield: 0, magnet: 0, x2: 0, slow: 0 };
         G.stats = {
             metres: 0, coins: 0, gems: 0, jumps: 0, drones: 0, foes: 0, gusts: 0,
@@ -1213,10 +1227,7 @@
             if (G.zoneBannerT <= 0) el('zone-banner').classList.remove('show');
         }
 
-        /* ---- sét ở vùng giông ---- */
-        if (R.ZONES[G.zone].weather === 'rain' && Math.random() < dt * 0.14) {
-            G.flash = 0.45; Sfx.thunder();
-        }
+        stepStorm(dt, d);
 
         stepMovers(dt * (G.power.slow > 0 ? 0.42 : 1));
         /* Nền gió đổi theo việc đang làm: bám tường thì chỉ là hơi thở của thành
@@ -1235,6 +1246,171 @@
         collide(dt);
         stepParticles(dt);
         syncHud(false);
+    }
+
+    /* ========================================================================
+     *  CƠN GIÔNG
+     * ------------------------------------------------------------------------
+     *  Hai thứ khác hẳn nhau, cố ý để chung một chỗ vì chúng kể chung một câu
+     *  chuyện: chớp xa ngoài chân trời chỉ để nhìn, còn tia giáng xuống người
+     *  nhện thì phải né. Cái thứ nhất làm cái thứ hai đáng tin — mắt đã quen
+     *  thấy sét loé ngoài xa rồi thì lúc nó nhắm vào mình, người chơi hiểu
+     *  ngay chuyện gì đang tới.
+     * ======================================================================*/
+    function stepStorm(dt, d) {
+        var stormy = R.ZONES[G.zone].weather === 'rain';
+
+        /* ---- chớp xa: chỉ có hình và tiếng ---- */
+        if (stormy) {
+            G.farBoltT -= dt;
+            if (G.farBoltT <= 0) {
+                G.farBoltT = 2.2 + Math.random() * 4.5;
+                G.farBolt = { life: 0.5, x: 40 + Math.random() * (W - 80), seed: Math.random() * 1000 };
+                G.flash = 0.4;
+                Sfx.thunder();
+            }
+        }
+        if (G.farBolt) {
+            G.farBolt.life -= dt;
+            if (G.farBolt.life <= 0) G.farBolt = null;
+        }
+
+        if (!stormy) { G.bolt = null; return; }
+
+        /* ---- tia nhắm vào người nhện ---- */
+        if (!G.bolt) {
+            G.boltT -= dt;
+            /* Không giáng lúc người chơi đang rơi hay vừa hồi sinh: lúc ấy họ
+             * đã trả giá rồi, đánh thêm chỉ là dồn người ta vào chân tường. */
+            if (G.boltT <= 0 && P.state === 'cling' && P.invuln <= 0) {
+                var fastNow2 = P.fastKey || P.fastTouch || P.boost > 0;
+                var sp = d.climb * (fastNow2 ? R.CLIMB_BOOST : 1);
+                G.bolt = {
+                    t: 0,
+                    side: P.side,
+                    /* nhắm vào chỗ SẼ tới nếu cứ leo đều như thế */
+                    y: P.y + sp * R.BOLT_WARN,
+                    seed: Math.random() * 1000,
+                    done: false
+                };
+                Sfx.boltCharge();
+            }
+        } else {
+            var b = G.bolt;
+            b.t += dt;
+            if (b.t > R.BOLT_WARN && !b.done) {
+                b.done = true;
+                var bx = G.world.wallX(b.side, b.y) + (b.side === SIDE_L ? 20 : -20);
+                G.flash = 0.85;
+                G.shake = Math.max(G.shake, 16);
+                Sfx.boltStrike();
+                burst(bx, b.y, 26, '#dff2ff', 300, 'spark');
+                if (Math.hypot(bx - P.x, b.y - P.y) < R.BOLT_R + R.PLAYER_R * 0.5) {
+                    if (G.power.shield > 0) {
+                        G.power.shield = 0;
+                        P.invuln = 1.4;
+                        pop(P.x, P.y - 26, 'SHIELD!', '#8ef0ff');
+                    } else if (P.invuln <= 0 && P.state !== 'fall') {
+                        /* Không giết ngay — hất văng khỏi tường. Rơi vẫn cứu
+                         * được bằng tơ, nên cái mất là độ cao với chuỗi liên
+                         * hoàn. Sét mà giết luôn thì vùng này thành ra thi xem
+                         * ai may, chứ không phải ai né giỏi.
+                         *
+                         * Và ĐANG RƠI thì tha. Không phải vì luật vật lý — tia
+                         * sét thì cần gì biết ai đang rơi — mà vì đánh người
+                         * vừa ngã là dồn người ta vào chân tường: mất tường,
+                         * mất độ cao, rồi mất thêm một cú hất nữa. Cùng lý do
+                         * mà tia không bao giờ khởi động lúc người chơi đang
+                         * rơi, chỉ là ở đầu bên kia của một giây rưỡi. */
+                        bumpOff('LIGHTNING!');
+                        P.vy = -280;
+                        G.deaths['zap'] = (G.deaths['zap'] || 0) + 1;
+                    }
+                }
+            }
+            if (b.t > R.BOLT_WARN + R.BOLT_HIT) {
+                G.bolt = null;
+                G.boltT = R.BOLT_GAP_MIN + Math.random() * (R.BOLT_GAP_MAX - R.BOLT_GAP_MIN);
+            }
+        }
+    }
+
+    /* Một đường sét gãy khúc từ (x0,y0) xuống (x1,y1). Dùng chung cho cả chớp
+     * xa lẫn tia giáng, chỉ khác bề dày và độ lệch. */
+    function boltPath(x0, y0, x1, y1, seg, spread, seed) {
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        for (var i = 1; i < seg; i++) {
+            var t = i / seg;
+            var jx = (hash2(Math.round(seed) + i, i * 13) - 0.5) * spread;
+            ctx.lineTo(x0 + (x1 - x0) * t + jx, y0 + (y1 - y0) * t);
+        }
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+    }
+
+    function drawStorm() {
+        /* chớp xa — vẽ sau hàng nhà nền, nên nó nằm phía sau hai toà tháp */
+        if (G.farBolt) {
+            var a = clamp(G.farBolt.life / 0.5, 0, 1);
+            ctx.save();
+            ctx.globalAlpha = a * 0.85;
+            ctx.strokeStyle = '#dff2ff';
+            ctx.lineWidth = 2.5;
+            boltPath(G.farBolt.x, 0, G.farBolt.x + 40, H * 0.68, 9, 46, G.farBolt.seed);
+            ctx.globalAlpha = a * 0.3;
+            ctx.lineWidth = 8;
+            boltPath(G.farBolt.x, 0, G.farBolt.x + 40, H * 0.68, 9, 46, G.farBolt.seed);
+            ctx.restore();
+        }
+    }
+
+    /* Tia nhắm vào người nhện. Vẽ SAU hai toà tháp và sau người nhện, vì nó
+     * phải là thứ nổi nhất trên màn lúc ấy. */
+    function drawBolt() {
+        var b = G.bolt;
+        if (!b) return;
+        var bx = G.world.wallX(b.side, b.y) + (b.side === SIDE_L ? 20 : -20);
+        var by = sy(b.y);
+        if (by < -200 || by > H + 200) return;
+
+        if (b.t <= R.BOLT_WARN) {
+            /* BÁO TRƯỚC. Vòng sáng co dần vào đúng chỗ sắp bị đánh, cộng một
+             * vạch dẫn từ trên trời xuống — nhìn một cái là biết nó nhắm đâu,
+             * và biết mình còn bao lâu. */
+            var k = b.t / R.BOLT_WARN;
+            ctx.save();
+            ctx.globalAlpha = 0.35 + 0.45 * Math.abs(Math.sin(G.t * 26));
+            ctx.strokeStyle = '#8fe4ff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 10]);
+            ctx.beginPath(); ctx.moveTo(bx, 0); ctx.lineTo(bx, by); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(bx, by, R.BOLT_R * (1.9 - 0.9 * k), 0, 6.284);
+            ctx.stroke();
+            ctx.globalAlpha = 0.22 + 0.3 * k;
+            ctx.fillStyle = '#8fe4ff';
+            ctx.beginPath(); ctx.arc(bx, by, R.BOLT_R * 0.5, 0, 6.284); ctx.fill();
+            ctx.restore();
+            if (Math.random() < 0.3) {
+                addPart(bx + (Math.random() - 0.5) * 60, b.y + (Math.random() - 0.5) * 60,
+                    0, 60, 0.3, '#bfeaff', 2, 'spark');
+            }
+        } else {
+            /* GIÁNG XUỐNG */
+            var a2 = clamp(1 - (b.t - R.BOLT_WARN) / R.BOLT_HIT, 0, 1);
+            ctx.save();
+            ctx.globalAlpha = a2;
+            ctx.strokeStyle = 'rgba(150,220,255,0.8)';
+            ctx.lineWidth = 20;
+            boltPath(bx - 10, 0, bx, by, 11, 60, b.seed);
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 7;
+            boltPath(bx - 10, 0, bx, by, 11, 60, b.seed);
+            ctx.restore();
+        }
     }
 
     function collide(dt) {
@@ -1458,6 +1634,7 @@
         }
 
         drawFarSkyline();
+        drawStorm();
         drawClouds();
     }
 
@@ -2400,6 +2577,7 @@
         drawPickups();
         drawMovers();
         if (G.phase !== 'menu') drawPlayer();
+        drawBolt();
         drawParticles();
         drawWeather();
         drawDangerEdge();
