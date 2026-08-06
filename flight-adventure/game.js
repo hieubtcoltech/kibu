@@ -259,6 +259,7 @@
         leg: 'ready',
         msg: '', msgT: 0, msgKey: '',
         auto: false,          // nút "bay giúp con"
+        manualLock: false,    // người chơi đã chủ động tắt auto-help trong chuyến này
         helped: false,        // đã phải đỡ một tay lần nào chưa
         circled: 0,
         unsafePitchT: 0,      // giữ chúi mũi quá lâu thì trò chơi cầm tay
@@ -337,7 +338,7 @@
         G.phase = 'fly';
         G.leg = 'ready';
         G.t = 0;
-        G.auto = false; G.helped = false; G.circled = 0;
+        G.auto = false; G.manualLock = false; G.helped = false; G.circled = 0;
         G.unsafePitchT = 0; G.unsafeTurnT = 0;
         G.stars = 0; G.rings = 0;
         G.shots = [];
@@ -629,7 +630,7 @@
     }
 
     function turnAutoHelp(key, text) {
-        if (G.auto) return;
+        if (G.auto || G.manualLock) return;
         G.auto = true;
         G.helped = true;
         G.unsafePitchT = 0;
@@ -797,7 +798,7 @@
          * thành một cái bẫy lịch sự: bé không thua, mà cũng không bao giờ
          * xong. Máy soát bắt đúng chỗ này — con bọ giữ nút kéo lên bay vòng
          * suốt mười phút mà không ai dừng nó lại. */
-        if (G.circled >= R.CIRCLE_GIVE_UP) {
+        if (G.circled >= R.CIRCLE_GIVE_UP && !G.manualLock) {
             G.auto = true;
             G.helped = true;
             setAutoBtn();
@@ -2225,7 +2226,7 @@
         var topH = clamp(H * 0.07, 30, 50);
         var deckY = H - dashH;
         var cx = W / 2;
-        var bankTilt = P.bank * 0.42;
+        var bankTilt = -P.bank * 0.42;
 
         ctx.save();
         ctx.translate(W / 2, H / 2);
@@ -2277,21 +2278,6 @@
             [W - sideW * 0.5, deckY + 8],
             [W, deckY + 30]
         ], 'rgba(11, 22, 36, 0.58)', 'rgba(4, 10, 18, 0.98)');
-
-        var centerW = clamp(W * 0.018, 5, 13);
-        var centerGrad = ctx.createLinearGradient(cx - centerW, 0, cx + centerW, 0);
-        centerGrad.addColorStop(0, 'rgba(7, 15, 25, 0.08)');
-        centerGrad.addColorStop(0.45, 'rgba(5, 10, 18, 0.44)');
-        centerGrad.addColorStop(0.55, 'rgba(5, 10, 18, 0.52)');
-        centerGrad.addColorStop(1, 'rgba(7, 15, 25, 0.08)');
-        ctx.fillStyle = centerGrad;
-        ctx.beginPath();
-        ctx.moveTo(cx - centerW * 0.48, topH * 0.72);
-        ctx.lineTo(cx + centerW * 0.48, topH * 0.72);
-        ctx.lineTo(cx + centerW * 0.9, deckY + 4);
-        ctx.lineTo(cx - centerW * 0.9, deckY + 4);
-        ctx.closePath();
-        ctx.fill();
 
         /* Gợi ý phản chiếu trên kính, rất nhẹ để không che đường băng. */
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
@@ -3060,13 +3046,19 @@
             /* Bật nút phép là nhận một bàn tay đỡ, và tấm huy hiệu phải nói
              * đúng như thế — không phải để chê, mà để tấm huy hiệu "tự bay
              * được" còn giữ được giá trị của nó. */
-            if (G.auto) G.helped = true;
+            if (G.auto) {
+                G.manualLock = false;
+                G.helped = true;
+            } else {
+                G.manualLock = true;
+            }
             setAutoBtn();
             say('auto', G.auto ? T('Auto-help is on. Enjoy the view!') : T('You are flying again!'), 2.6);
         });
         el('btn-land').addEventListener('click', function (e) {
             e.preventDefault();
             G.auto = true;
+            G.manualLock = false;
             G.helped = true;
             setAutoBtn();
             say('landing', T('Landing help is on. Hold on!'), 3);
