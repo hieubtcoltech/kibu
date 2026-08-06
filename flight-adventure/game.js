@@ -1347,7 +1347,7 @@
      * không có một dòng nào chỉnh tay theo khoảng cách. */
     function drawGroundProps() {
         var rt = G.route;
-        var STEP = 330;                         // mét giữa hai cụm theo chiều bay
+        var STEP = 410;                         // mét giữa hai cụm theo chiều bay
         var x0 = Math.ceil((cam.x + 200) / STEP) * STEP;
         var list = [];
 
@@ -1392,55 +1392,14 @@
             drawCityFeature(o, r1, r2);
             var n = 2 + (r1 > 0.55 ? 1 : 0);
             for (var b = 0; b < n; b++) {
-                var bw = (28 + hash(idx, b + 21) * 28) * s;
-                var bh = (70 + hash(idx, b + 31) * 220) * s;
-                var bx = p.x + (b - 1) * 36 * s;
-                if (bh < 0.6) continue;
-
-                // Cửa sổ kính phản quang gradient cho nhà cao tầng hiện đại
-                var bGrad = ctx.createLinearGradient(bx, p.y - bh, bx + bw, p.y);
-                if (hash(idx, b + 41) > 0.5) {
-                    bGrad.addColorStop(0, '#2563eb'); // xanh dương sapphire sang trọng
-                    bGrad.addColorStop(0.5, '#1d4ed8');
-                    bGrad.addColorStop(1, '#1e3a8a');
-                } else {
-                    bGrad.addColorStop(0, '#475569'); // màu thép xám hiện đại
-                    bGrad.addColorStop(0.5, '#334155');
-                    bGrad.addColorStop(1, '#1e293b');
-                }
-                ctx.fillStyle = bGrad;
-                ctx.fillRect(bx, p.y - bh, bw, bh);
-
-                // Đường viền sáng bóng bẩy dọc cạnh trái nhà
-                ctx.fillStyle = 'rgba(255,255,255,0.18)';
-                ctx.fillRect(bx, p.y - bh, bw * 0.12, bh);
-
-                // Cột thu lôi / Anten trên đỉnh tòa nhà
-                if (hash(idx, b + 51) > 0.62) {
-                    ctx.strokeStyle = '#94a3b8';
-                    ctx.lineWidth = Math.max(1, 1.2 * s);
-                    ctx.beginPath();
-                    ctx.moveTo(bx + bw * 0.5, p.y - bh);
-                    ctx.lineTo(bx + bw * 0.5, p.y - bh - 16 * s);
-                    ctx.stroke();
-                    // Đèn cảnh báo nhấp nháy đỏ trên đỉnh anten
-                    ctx.fillStyle = '#ef4444';
-                    ctx.beginPath();
-                    ctx.arc(bx + bw * 0.5, p.y - bh - 16 * s, Math.max(1.5, 2.5 * s), 0, 6.284);
-                    ctx.fill();
-                }
-
-                // Vẽ các ô cửa sổ sáng đèn lung linh
-                ctx.fillStyle = '#fef08a'; // màu vàng ấm áp
-                var rows = Math.floor(bh / (14 * s));
-                var cols = Math.floor(bw / (10 * s));
-                for (var r = 1; r < rows - 1; r++) {
-                    if (hash(idx, b * 3 + r) > 0.45) continue; // chọn ngẫu nhiên các tầng sáng đèn
-                    for (var c = 1; c < cols - 1; c++) {
-                        if (hash(idx, b * 7 + c + r) > 0.5) continue;
-                        ctx.fillRect(bx + c * 10 * s, p.y - bh + r * 14 * s, 3.5 * s, 5 * s);
-                    }
-                }
+                var bxM = (b - 1) * 82 + (hash(idx, b + 61) - 0.5) * 20;
+                var bzM = (hash(idx, b + 63) - 0.5) * 90;
+                var bwM = 64 + hash(idx, b + 21) * 54;
+                var bdM = 54 + hash(idx, b + 27) * 50;
+                var bhM = 55 + hash(idx, b + 31) * 150;
+                drawMapBlock(o, bxM, bzM, bwM, bdM, bhM,
+                    hash(idx, b + 41) > 0.5 ? '#2563eb' : '#475569',
+                    hash(idx, b + 47) > 0.5 ? '#93c5fd' : '#cbd5e1');
             }
         } else if (o.kind === 'fields') {
             // Thảm cỏ ruộng xanh mướt bo tròn
@@ -1607,96 +1566,122 @@
         ctx.restore();
     }
 
+    function groundProj(o, dx, dz, up) {
+        var wx = o.wx + dx;
+        return proj(wx, R.groundAt(G.route, wx) + (up || 0), o.z + dz);
+    }
+
+    function drawGroundPoly(o, pts, fill, stroke, width) {
+        var out = [];
+        for (var i = 0; i < pts.length; i++) {
+            var q = groundProj(o, pts[i][0], pts[i][1], pts[i][2] || 0);
+            if (!q) return false;
+            out.push(q);
+        }
+        ctx.beginPath();
+        ctx.moveTo(out[0].x, out[0].y);
+        for (var k = 1; k < out.length; k++) ctx.lineTo(out[k].x, out[k].y);
+        ctx.closePath();
+        if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+        if (stroke) {
+            ctx.strokeStyle = stroke;
+            ctx.lineWidth = width || 1;
+            ctx.stroke();
+        }
+        return true;
+    }
+
+    function drawGroundLine(o, pts, stroke, width, dash) {
+        var started = false;
+        ctx.save();
+        if (dash) ctx.setLineDash(dash);
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = width || 1;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        for (var i = 0; i < pts.length; i++) {
+            var q = groundProj(o, pts[i][0], pts[i][1], pts[i][2] || 0);
+            if (!q) continue;
+            if (started) ctx.lineTo(q.x, q.y); else { ctx.moveTo(q.x, q.y); started = true; }
+        }
+        if (started) ctx.stroke();
+        ctx.restore();
+    }
+
+    function drawMapBlock(o, cx, cz, w, d, h, wall, roof) {
+        var x0 = cx - w * 0.5, x1 = cx + w * 0.5;
+        var z0 = cz - d * 0.5, z1 = cz + d * 0.5;
+        var g0 = [
+            groundProj(o, x0, z0, 0),
+            groundProj(o, x1, z0, 0),
+            groundProj(o, x1, z1, 0),
+            groundProj(o, x0, z1, 0)
+        ];
+        var t0 = [
+            groundProj(o, x0, z0, h),
+            groundProj(o, x1, z0, h),
+            groundProj(o, x1, z1, h),
+            groundProj(o, x0, z1, h)
+        ];
+        for (var i = 0; i < 4; i++) if (!g0[i] || !t0[i]) return;
+
+        function face(a, b, c, d, col) {
+            ctx.fillStyle = col;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y);
+            ctx.closePath(); ctx.fill();
+        }
+
+        ctx.save();
+        ctx.globalAlpha *= 0.96;
+        face(g0[0], g0[1], t0[1], t0[0], mix(wall, '#0f172a', 0.22));
+        face(g0[1], g0[2], t0[2], t0[1], mix(wall, '#0f172a', 0.34));
+        face(g0[2], g0[3], t0[3], t0[2], mix(wall, '#0f172a', 0.18));
+        face(g0[3], g0[0], t0[0], t0[3], mix(wall, '#0f172a', 0.28));
+        face(t0[0], t0[1], t0[2], t0[3], roof);
+        ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(t0[0].x, t0[0].y);
+        for (var k = 1; k < 4; k++) ctx.lineTo(t0[k].x, t0[k].y);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+    }
+
     function drawCityFeature(o, r1, r2) {
         var p = o.p, idx = o.idx, s = p.s;
         if (s < 0.012) return;
 
         if (r2 < 0.2) {
-            ctx.fillStyle = 'rgba(52, 211, 153, 0.78)';
-            ctx.beginPath();
-            ctx.ellipse(p.x - 44 * s, p.y + 8 * s, 86 * s, 24 * s, -0.08, 0, 6.284);
-            ctx.fill();
-            ctx.strokeStyle = 'rgba(254, 243, 199, 0.75)';
-            ctx.lineWidth = Math.max(1, 3 * s);
-            ctx.beginPath();
-            ctx.moveTo(p.x - 96 * s, p.y + 6 * s);
-            ctx.quadraticCurveTo(p.x - 44 * s, p.y - 8 * s, p.x + 10 * s, p.y + 12 * s);
-            ctx.stroke();
-            ctx.fillStyle = '#38bdf8';
-            ctx.beginPath();
-            ctx.ellipse(p.x - 18 * s, p.y + 5 * s, 22 * s, 8 * s, 0, 0, 6.284);
-            ctx.fill();
+            drawGroundPoly(o, [[-135, -90], [75, -74], [118, 78], [-112, 96]], 'rgba(52, 211, 153, 0.78)', 'rgba(240,253,244,0.35)', 1);
+            drawGroundPoly(o, [[-54, -28], [22, -22], [32, 18], [-44, 26]], '#38bdf8', 'rgba(255,255,255,0.42)', 1);
+            drawGroundLine(o, [[-128, 42], [-62, -8], [18, 0], [104, -52]], 'rgba(254, 243, 199, 0.75)', Math.max(1, 3 * s));
         } else if (r2 < 0.38) {
-            var hw = 62 * s, hh = 34 * s;
-            ctx.fillStyle = '#f8fafc';
-            ctx.fillRect(p.x - hw * 0.5, p.y - hh, hw, hh);
-            ctx.fillStyle = '#0ea5e9';
-            ctx.fillRect(p.x - hw * 0.52, p.y - hh - 7 * s, hw * 1.04, 8 * s);
-            ctx.fillStyle = '#ef4444';
-            ctx.fillRect(p.x - 5 * s, p.y - hh + 8 * s, 10 * s, 22 * s);
-            ctx.fillRect(p.x - 12 * s, p.y - hh + 15 * s, 24 * s, 8 * s);
-            ctx.fillStyle = '#bae6fd';
-            for (var h = -1; h <= 1; h += 2) ctx.fillRect(p.x + h * 18 * s, p.y - hh + 10 * s, 8 * s, 8 * s);
+            drawMapBlock(o, 0, 0, 110, 78, 30, '#f8fafc', '#dbeafe');
+            drawGroundPoly(o, [[-16, -14, 32], [16, -14, 32], [16, 14, 32], [-16, 14, 32]], '#ef4444', null, 0);
+            drawGroundPoly(o, [[-34, -5, 33], [34, -5, 33], [34, 5, 33], [-34, 5, 33]], '#ef4444', null, 0);
         } else if (r2 < 0.56) {
-            var sw = 74 * s, sh = 28 * s;
-            ctx.fillStyle = '#fde68a';
-            ctx.fillRect(p.x - sw * 0.5, p.y - sh, sw, sh);
-            ctx.fillStyle = '#f97316';
-            ctx.beginPath();
-            ctx.moveTo(p.x - sw * 0.55, p.y - sh);
-            ctx.lineTo(p.x, p.y - sh - 16 * s);
-            ctx.lineTo(p.x + sw * 0.55, p.y - sh);
-            ctx.closePath();
-            ctx.fill();
-            ctx.strokeStyle = '#64748b';
-            ctx.lineWidth = Math.max(1, 2 * s);
-            ctx.beginPath();
-            ctx.moveTo(p.x + sw * 0.36, p.y - sh - 2 * s);
-            ctx.lineTo(p.x + sw * 0.36, p.y - sh - 28 * s);
-            ctx.stroke();
-            ctx.fillStyle = '#ef4444';
-            ctx.fillRect(p.x + sw * 0.36, p.y - sh - 28 * s, 16 * s, 9 * s);
-            ctx.fillStyle = '#60a5fa';
-            for (var c = -2; c <= 2; c++) ctx.fillRect(p.x + c * 12 * s - 3 * s, p.y - sh + 10 * s, 6 * s, 6 * s);
+            drawGroundPoly(o, [[-116, -86], [112, -86], [112, 74], [-116, 74]], 'rgba(187, 247, 208, 0.38)', 'rgba(255,255,255,0.18)', 1);
+            drawMapBlock(o, -34, -8, 86, 58, 24, '#fde68a', '#f97316');
+            drawMapBlock(o, 58, 12, 62, 44, 18, '#fef3c7', '#f59e0b');
+            drawGroundLine(o, [[88, -56, 4], [88, -98, 4]], '#64748b', Math.max(1, 2 * s));
+            drawGroundPoly(o, [[88, -98, 4], [122, -88, 4], [88, -78, 4]], '#ef4444', null, 0);
         } else if (r2 < 0.74) {
-            var fw = 112 * s, fh = 48 * s;
-            ctx.fillStyle = '#22c55e';
-            ctx.fillRect(p.x - fw * 0.5, p.y - fh * 0.5, fw, fh);
-            ctx.strokeStyle = 'rgba(255,255,255,0.78)';
-            ctx.lineWidth = Math.max(1, 2 * s);
-            ctx.strokeRect(p.x - fw * 0.42, p.y - fh * 0.38, fw * 0.84, fh * 0.76);
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y - fh * 0.38);
-            ctx.lineTo(p.x, p.y + fh * 0.38);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 10 * s, 0, 6.284);
-            ctx.stroke();
+            drawGroundPoly(o, [[-135, -76], [135, -76], [135, 76], [-135, 76]], '#22c55e', 'rgba(255,255,255,0.75)', Math.max(1, 1.8 * s));
+            drawGroundPoly(o, [[-112, -58], [112, -58], [112, 58], [-112, 58]], null, 'rgba(255,255,255,0.8)', Math.max(1, 1.6 * s));
+            drawGroundLine(o, [[0, -58], [0, 58]], 'rgba(255,255,255,0.76)', Math.max(1, 1.5 * s));
+            drawGroundPoly(o, [[-24, -18], [24, -18], [24, 18], [-24, 18]], null, 'rgba(255,255,255,0.72)', Math.max(1, 1.2 * s));
         } else {
-            var roadW = 120 * s;
-            ctx.strokeStyle = 'rgba(51, 65, 85, 0.82)';
-            ctx.lineWidth = Math.max(3, 18 * s);
-            ctx.beginPath();
-            ctx.moveTo(p.x - roadW, p.y + 10 * s);
-            ctx.lineTo(p.x + roadW, p.y - 8 * s);
-            ctx.stroke();
-            ctx.strokeStyle = 'rgba(255,255,255,0.55)';
-            ctx.lineWidth = Math.max(1, 2 * s);
-            ctx.setLineDash([8 * s, 8 * s]);
-            ctx.beginPath();
-            ctx.moveTo(p.x - roadW, p.y + 10 * s);
-            ctx.lineTo(p.x + roadW, p.y - 8 * s);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            drawGroundLine(o, [[-150, 48], [-60, 18], [34, -8], [150, -46]], 'rgba(51, 65, 85, 0.84)', Math.max(4, 24 * s));
+            drawGroundLine(o, [[-150, 48], [-60, 18], [34, -8], [150, -46]], 'rgba(255,255,255,0.58)', Math.max(1, 2 * s), [8 * s, 8 * s]);
             var move = (G.t * (18 + hash(idx, 88) * 16) + idx * 13) % 190;
             for (var car = 0; car < 2; car++) {
                 var u = ((move + car * 95) / 190) * 2 - 1;
-                var cx = p.x + u * roadW;
-                var cy = p.y + s - u * 9 * s;
-                ctx.fillStyle = car ? '#f97316' : '#38bdf8';
-                ctx.fillRect(cx - 7 * s, cy - 4 * s, 14 * s, 8 * s);
-                ctx.fillStyle = '#e0f2fe';
-                ctx.fillRect(cx - 3 * s, cy - 5 * s, 6 * s, 3 * s);
+                var x = u * 150;
+                var z = 4 - u * 47;
+                drawGroundPoly(o, [[x - 13, z - 7, 3], [x + 13, z - 7, 3], [x + 13, z + 7, 3], [x - 13, z + 7, 3]],
+                    car ? '#f97316' : '#38bdf8', 'rgba(15,23,42,0.28)', 1);
             }
         }
     }
