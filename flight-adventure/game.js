@@ -1824,14 +1824,8 @@
         ctx.translate(p.x, p.y);
         ctx.rotate(-P.bank * 0.5);
 
-        /* Bóng mờ nhẹ của máy bay */
-        ctx.save();
-        ctx.globalAlpha = 0.15;
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.ellipse(0, s * 0.08, s * 1.35, s * 0.38, 0, 0, 6.284);
-        ctx.fill();
-        ctx.restore();
+
+
 
         /* Vệt khói hai đầu cánh khi bay nhanh */
         if (P.spd > R.SPD_CRUISE * 0.85 && !P.onGround) {
