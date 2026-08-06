@@ -1197,6 +1197,142 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
+ * ÂM THANH: CÂN BẰNG
+ * ------------------------------------------------------------------
+ *  Quãng chơi thử ở trên cố ý chạy KHÔNG có AudioContext, để soát đường
+ *  trình duyệt chặn tiếng. Ở đây thì ngược lại: dựng một máy âm thanh giả,
+ *  cho Sfx chạy thật vào đó, rồi ĐO.
+ *
+ *  Đo cái gì: không phải "tiếng nào to bao nhiêu" — chuyện ấy là gu. Đo cái
+ *  hỏng được mà không ai thấy, là TỈ LỆ giữa nền và tiếng. Nền gió chạy liên
+ *  tục, mấy tiếng kia chỉ chớp vài chục mili giây; nền mà bò lên ngang tiếng
+ *  thì tai không nghe ra tiếng nữa, dù mã vẫn gọi đủ. Đúng cái bệnh anh Hiếu
+ *  nghe thấy: rơi thì gió gào, ăn xu thì lí nhí.
+ * ------------------------------------------------------------------ */
+
+function audioStub() {
+    const gains = [];
+    function param(v) {
+        return {
+            value: v == null ? 0 : v,
+            setValueAtTime(x) { this.value = x; },
+            linearRampToValueAtTime(x) { this.value = x; },
+            /* cú tắt dần cuối tiếng không tính là mức của tiếng ấy */
+            exponentialRampToValueAtTime() { },
+            setTargetAtTime(x) { this.value = x; },
+            cancelScheduledValues() { }
+        };
+    }
+    /* Nhớ luôn cái gì nối vào cái gì. Nút nào cũng dựng đúng mà quên nối một
+     * đoạn thì cả game im ru, và không phép soát mức nào bắt được. */
+    const node = (extra) => Object.assign({
+        _to: [], connect(x) { this._to.push(x); }, disconnect() { }
+    }, extra);
+    return {
+        gains,
+        ctx: {
+            state: 'running', currentTime: 0, sampleRate: 44100, destination: node({}),
+            resume() { },
+            createGain() { const g = node({ gain: param(1) }); gains.push(g); return g; },
+            createBufferSource() { return node({ buffer: null, loop: false, start() { }, stop() { } }); },
+            createOscillator() { return node({ type: '', frequency: param(0), start() { }, stop() { } }); },
+            createBuffer(ch, n) { return { getChannelData: () => new Float32Array(n) }; },
+            createBiquadFilter() { return node({ type: '', frequency: param(0), Q: param(0) }); },
+            createDynamicsCompressor() {
+                lastComp = node({
+                    threshold: param(0), knee: param(0), ratio: param(0),
+                    attack: param(0), release: param(0)
+                });
+                comps++;
+                return lastComp;
+            }
+        }
+    };
+}
+
+let comps = 0, lastComp = null;
+{
+    const stub = audioStub();
+    global.window.AudioContext = function () { return stub.ctx; };
+    const S = D.Sfx;
+    S.ctx = null; S.amb = null; S.on = true;
+    S.wake();
+
+    ok(S.ctx === stub.ctx, 'Sfx.wake() không dựng nổi máy âm thanh giả');
+    ok(comps === 1, 'không có cái nén ở đầu ra — thiếu nó thì nâng tổng lên là vỡ tiếng');
+    ok(lastComp && S.master._to.indexOf(lastComp) >= 0,
+        'núm tổng không nối vào cái nén — nén dựng ra rồi bỏ đấy');
+    ok(lastComp && lastComp._to.indexOf(stub.ctx.destination) >= 0,
+        'cái nén không nối ra loa — cả game sẽ im ru');
+    ok(S.master._to.indexOf(stub.ctx.destination) < 0,
+        'núm tổng nối thẳng ra loa BÊN CẠNH đường qua nén — tiếng đi hai đường, cộng lại là vỡ');
+    ok(lastComp.ratio.value > 1.5 && lastComp.threshold.value < 0,
+        `cái nén đặt sai: tỉ lệ ${lastComp.ratio.value}, ngưỡng ${lastComp.threshold.value}`);
+    const masterVol = S.master.gain.value;
+    ok(masterVol > 0.6 && masterVol <= 1, `núm tổng ${masterVol} — ngoài khoảng nghe được`);
+
+    /* Mức của một tiếng: nút gain nào sinh ra trong lúc gọi nó, lấy cái to nhất. */
+    function levelOf(fn) {
+        const from = stub.gains.length;
+        fn();
+        let peak = 0;
+        for (let i = from; i < stub.gains.length; i++) peak = Math.max(peak, stub.gains[i].gain.value);
+        return peak;
+    }
+    const oneShot = {
+        step: () => S.step(true), coin: () => S.coin(3), gem: () => S.gem(),
+        bump: () => S.bump(), land: () => S.land(), webHit: () => S.webHit(),
+        web: () => S.web(), jump: () => S.jump(), power: () => S.power(),
+        wings: () => S.wings(), gust: () => S.gust(), shock: () => S.shock(),
+        thunder: () => S.thunder(), glassBreak: () => S.glassBreak(),
+        glassTick: () => S.glassTick(), boltStrike: () => S.boltStrike(),
+        boltCharge: () => S.boltCharge(), laserFire: () => S.laserFire(),
+        laserCharge: () => S.laserCharge(), lose: () => S.lose(), over: () => S.over(),
+        save: () => S.save(), zone: () => S.zone(), record: () => S.record()
+    };
+    const lvl = {};
+    for (const k in oneShot) {
+        lvl[k] = levelOf(oneShot[k]);
+        ok(lvl[k] > 0, `tiếng "${k}" không sinh ra nút nào — gọi vào hư không`);
+        ok(lvl[k] * masterVol < 0.25, `tiếng "${k}" ở mức ${lvl[k]} — nhân núm tổng vào là vỡ`);
+    }
+
+    /* Nền gió ở hai trạng thái. Đọc thẳng từ vòng chơi thật chứ không chép
+     * lại công thức — chép thì máy soát chỉ soát chính nó. */
+    function bedIn(prep) {
+        prep();
+        step(1);
+        return S.amb ? S.amb.g.gain.value : -1;
+    }
+    getEl('btn-play').dispatch('click');
+    const bedClimb = bedIn(() => { P.state = 'cling'; P.vy = 0; });
+    const bedFall = bedIn(() => { P.state = 'fall'; P.vy = -R.FALL_MAX_V; });
+
+    ok(bedClimb >= 0 && bedFall >= 0, 'nền gió không chạy — Sfx.ambient chưa dựng nguồn');
+    /* Lúc leo: nền phải chui hẳn xuống dưới tiếng bám tay, không thì cả quãng
+     * leo chỉ còn tiếng ù. */
+    ok(lvl.step > bedClimb * 1.5,
+        `nền lúc leo ${bedClimb.toFixed(3)} so với tiếng bám tay ${lvl.step.toFixed(3)} — nền át mất nhịp tay`);
+    ok(lvl.coin > bedClimb * 2.5,
+        `nền lúc leo ${bedClimb.toFixed(3)} so với tiếng xu ${lvl.coin.toFixed(3)} — ăn xu mà không nghe thấy`);
+    /* Lúc rơi: gió được phép dâng lên, nhưng mấy tiếng CẦN NGHE trong lúc rơi
+     * — đụng phải, bám lại được, tơ dính — vẫn phải trội hơn hẳn. */
+    ok(bedFall < 0.09, `gió lúc rơi lên tới ${bedFall.toFixed(3)} — to quá, nó nuốt mọi tiếng khác`);
+    for (const k of ['bump', 'land', 'webHit']) {
+        ok(lvl[k] > bedFall * 1.8,
+            `gió lúc rơi ${bedFall.toFixed(3)} so với tiếng "${k}" ${lvl[k].toFixed(3)} — đang rơi thì không nghe được gì nữa`);
+    }
+    /* Tắt tiếng phải tắt cả nền, không chỉ mấy tiếng bắn một phát. */
+    S.on = true; S.toggle();
+    ok(S.master.gain.value === 0, 'tắt tiếng mà núm tổng vẫn mở — nền gió sẽ thổi tiếp');
+    S.toggle();
+
+    console.log(`  âm thanh: núm tổng ${masterVol} · nền leo ${bedClimb.toFixed(3)} · nền rơi ${bedFall.toFixed(3)} · bám tay ${lvl.step.toFixed(3)} · xu ${lvl.coin.toFixed(3)} · đụng ${lvl.bump.toFixed(3)}`);
+    delete global.window.AudioContext;
+    S.ctx = null; S.amb = null;
+}
+
+/* ------------------------------------------------------------------ *
  * KẾT QUẢ
  * ------------------------------------------------------------------ */
 console.log(`  chim đậu bị đánh động: ${flushSeen} con bay ra · ${flushCross} khung hình cắt ngang lối leo`);

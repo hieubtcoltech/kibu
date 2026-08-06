@@ -125,6 +125,24 @@
      *  trước khi thổi. Nghe tiếng là biết ngẩng lên nhìn đâu.
      * ======================================================================*/
 
+    /* CÂN BẰNG ÂM LƯỢNG — cả bảng để ở một chỗ.
+     *
+     * Anh Hiếu nghe ra đúng bệnh: leo thì im, rơi thì gió gào, ăn xu với đụng
+     * người thì lí nhí. Nhưng nguyên do KHÔNG phải từng tiếng chỉnh sai to
+     * nhỏ — nó là NỀN ÁT TIẾNG. Nền gió là ồn dải rộng chạy liên tục, còn xu
+     * và cú đụng là chớp ngắn vài chục mili giây. Ồn dải rộng che mất chớp
+     * ngắn, và chữa bằng cách vặn to cái bị che thì chỉ ồn thêm chứ không rõ
+     * thêm. Phải hạ CÁI NỀN xuống trước.
+     *
+     * Ba việc, đúng thứ tự:
+     *   1. hạ nền gió — lúc rơi hạ hơn một nửa
+     *   2. nâng những tiếng KỂ CHUYỆN: bám tay, xu, đụng, bám lại
+     *   3. thêm một cái nén ở đầu ra, để nâng tổng lên mà không vỡ tiếng
+     *
+     * Một con số cho núm tổng, dùng ở cả chỗ dựng lẫn chỗ bật tắt. Trước đây
+     * số 0,5 nằm ở hai nơi — kiểu sai chỉ lộ ra khi sửa đúng một nơi. */
+    var MASTER_VOL = 0.85;
+
     var Sfx = {
         on: true, ctx: null, master: null, noise: null,
 
@@ -141,8 +159,25 @@
                 if (!AC) return;
                 this.ctx = new AC();
                 this.master = this.ctx.createGain();
-                this.master.gain.value = this.on ? 0.5 : 0;
-                this.master.connect(this.ctx.destination);
+                this.master.gain.value = this.on ? MASTER_VOL : 0;
+                /* CÁI NÉN Ở ĐẦU RA.
+                 *
+                 * Không có nó thì muốn nghe rõ tiếng xu phải vặn núm tổng lên,
+                 * mà vặn tổng lên thì lúc sét đánh — ba tiếng chồng nhau —
+                 * là vỡ. Có nó thì mấy cú đỉnh tự bị ghìm lại, còn khoảng
+                 * giữa, chỗ chứa gần hết câu chuyện, được đẩy lên. Nó cũng
+                 * làm mỗi cú đụng tự dìm nền gió xuống một nhịp, nên tiếng
+                 * đụng bật ra khỏi nền thay vì chìm trong đó. */
+                if (this.ctx.createDynamicsCompressor) {
+                    var comp = this.ctx.createDynamicsCompressor();
+                    comp.threshold.value = -20;
+                    comp.knee.value = 14;
+                    comp.ratio.value = 3.2;
+                    comp.attack.value = 0.004;
+                    comp.release.value = 0.2;
+                    this.master.connect(comp);
+                    comp.connect(this.ctx.destination);
+                } else this.master.connect(this.ctx.destination);
                 var n = Math.floor(this.ctx.sampleRate * 0.6);
                 var buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
                 var d = buf.getChannelData(0);
@@ -155,7 +190,7 @@
             /* Vặn cả núm tổng, không chỉ đặt cờ. Nền gió là một nguồn chạy liên
              * tục, nó không đi qua ready() như mấy tiếng bắn một phát — chỉ đặt
              * cờ thì tắt tiếng xong gió vẫn thổi. */
-            if (this.master) this.master.gain.value = this.on ? 0.5 : 0;
+            if (this.master) this.master.gain.value = this.on ? MASTER_VOL : 0;
             try { localStorage.setItem(SOUND_KEY, this.on ? '1' : '0'); } catch (e) { }
             return this.on;
         },
@@ -227,8 +262,8 @@
             src.start(t); src.stop(t + dur + 0.02);
         },
 
-        jump: function () { this.tone(340, 620, 0.11, 'triangle', 0.05); },
-        land: function () { this.hit(0.09, 0.10, 1400, 'lowpass'); this.tone(520, 300, 0.07, 'sine', 0.035); },
+        jump: function () { this.tone(340, 620, 0.11, 'triangle', 0.075); },
+        land: function () { this.hit(0.09, 0.15, 1400, 'lowpass'); this.tone(520, 300, 0.07, 'sine', 0.055); },
 
         /* TIẾNG BÁM TAY.
          *
@@ -246,53 +281,59 @@
         step: function (right) {
             if (!this.ready()) return;
             var f = right ? 132 : 108;
-            this.tone(f, f * 0.72, 0.055, 'sine', 0.030);
-            this.hit(0.045, 0.020, 620, 'lowpass');
+            this.tone(f, f * 0.72, 0.055, 'sine', 0.058);
+            this.hit(0.045, 0.040, 620, 'lowpass');
         },
-        web: function () { this.tone(1500, 260, 0.16, 'sawtooth', 0.035); this.hit(0.1, 0.05, 2600, 'highpass'); },
-        webHit: function () { this.hit(0.14, 0.11, 900, 'lowpass'); this.tone(300, 90, 0.16, 'square', 0.04); },
-        coin: function (n) { this.tone(880 + Math.min(9, n || 0) * 46, 1320, 0.075, 'triangle', 0.042); },
-        gem: function () { this.tone(880, 1760, 0.12, 'sine', 0.055); this.tone(1320, 2200, 0.16, 'sine', 0.035, 0.05); },
-        power: function () { this.tone(520, 1040, 0.14, 'square', 0.04); this.tone(780, 1560, 0.16, 'sine', 0.03, 0.06); },
-        bump: function () { this.hit(0.16, 0.14, 380, 'lowpass'); this.tone(180, 70, 0.18, 'square', 0.05); },
-        glassTick: function () { this.hit(0.05, 0.05, 5200, 'highpass'); },
+        web: function () { this.tone(1500, 260, 0.16, 'sawtooth', 0.052); this.hit(0.1, 0.075, 2600, 'highpass'); },
+        webHit: function () { this.hit(0.14, 0.15, 900, 'lowpass'); this.tone(300, 90, 0.16, 'square', 0.06); },
+        /* Xu: thêm một cái tách sáng ở đầu tiếng. Chuông không thôi thì bị nền
+         * gió nuốt mất phần đầu, mà phần đầu mới là phần tai dùng để nhận ra
+         * đây là tiếng gì. */
+        coin: function (n) {
+            this.hit(0.028, 0.06, 5200, 'highpass');
+            this.tone(880 + Math.min(9, n || 0) * 46, 1320, 0.075, 'triangle', 0.10);
+        },
+        gem: function () { this.tone(880, 1760, 0.12, 'sine', 0.10); this.tone(1320, 2200, 0.16, 'sine', 0.065, 0.05); },
+        power: function () { this.tone(520, 1040, 0.14, 'square', 0.07); this.tone(780, 1560, 0.16, 'sine', 0.055, 0.06); },
+        bump: function () { this.hit(0.16, 0.20, 380, 'lowpass'); this.tone(180, 70, 0.18, 'square', 0.09); },
+        glassTick: function () { this.hit(0.05, 0.07, 5200, 'highpass'); },
         glassBreak: function () {
-            this.hit(0.42, 0.14, 4200, 'highpass');
-            this.tone(2400, 500, 0.3, 'triangle', 0.045);
+            this.hit(0.42, 0.18, 4200, 'highpass');
+            this.tone(2400, 500, 0.3, 'triangle', 0.07);
         },
-        shock: function () { this.hit(0.22, 0.10, 3200, 'highpass'); this.tone(120, 60, 0.2, 'sawtooth', 0.045); },
-        lose: function () { this.tone(400, 90, 0.42, 'sawtooth', 0.06); this.hit(0.35, 0.09, 500, 'lowpass'); },
-        over: function () { this.tone(420, 110, 0.55, 'triangle', 0.06); this.tone(300, 80, 0.7, 'sine', 0.04, 0.1); },
-        save: function () { this.tone(300, 900, 0.15, 'triangle', 0.05); },
-        laserCharge: function () { this.tone(600, 1700, 0.55, 'sawtooth', 0.02); },
-        laserFire: function () { this.hit(0.2, 0.09, 2400, 'bandpass'); this.tone(1800, 400, 0.16, 'square', 0.035); },
-        gust: function () { this.hit(0.85, 0.07, 700, 'bandpass'); },
+        shock: function () { this.hit(0.22, 0.14, 3200, 'highpass'); this.tone(120, 60, 0.2, 'sawtooth', 0.07); },
+        lose: function () { this.tone(400, 90, 0.42, 'sawtooth', 0.095); this.hit(0.35, 0.13, 500, 'lowpass'); },
+        over: function () { this.tone(420, 110, 0.55, 'triangle', 0.095); this.tone(300, 80, 0.7, 'sine', 0.065, 0.1); },
+        save: function () { this.tone(300, 900, 0.15, 'triangle', 0.08); },
+        laserCharge: function () { this.tone(600, 1700, 0.55, 'sawtooth', 0.032); },
+        laserFire: function () { this.hit(0.2, 0.13, 2400, 'bandpass'); this.tone(1800, 400, 0.16, 'square', 0.055); },
+        gust: function () { this.hit(0.85, 0.10, 700, 'bandpass'); },
         /* Cánh chim bồ câu bung ra: hai tiếng phành phạch ngắn, đục, không có
          * cao độ — nghe là biết có cái gì vừa bật lên khỏi gờ ngay cạnh mình. */
         wings: function () {
-            this.hit(0.12, 0.075, 900, 'bandpass');
-            this.hit(0.14, 0.06, 700, 'bandpass', 0.11);
+            this.hit(0.12, 0.10, 900, 'bandpass');
+            this.hit(0.14, 0.08, 700, 'bandpass', 0.11);
         },
-        thunder: function () { this.hit(0.9, 0.13, 260, 'lowpass'); },
+        thunder: function () { this.hit(0.9, 0.16, 260, 'lowpass'); },
         /* Tiếng nạp của tia nhắm vào mình: rít lên dần, nghe là biết ngẩng lên
          * tìm vòng sáng. Khác hẳn tiếng ục ục của sấm xa, để hai thứ không lẫn
          * vào nhau — mà không lẫn mới là điều quan trọng nhất ở đây. */
         boltCharge: function () {
-            this.tone(320, 1500, 1.0, 'sawtooth', 0.022);
-            this.hit(0.9, 0.03, 3000, 'highpass');
+            this.tone(320, 1500, 1.0, 'sawtooth', 0.035);
+            this.hit(0.9, 0.045, 3000, 'highpass');
         },
         boltStrike: function () {
-            this.hit(0.16, 0.20, 6000, 'highpass');
-            this.hit(1.1, 0.16, 220, 'lowpass', 0.04);
-            this.tone(180, 50, 0.5, 'sawtooth', 0.06);
+            this.hit(0.16, 0.22, 6000, 'highpass');
+            this.hit(1.1, 0.18, 220, 'lowpass', 0.04);
+            this.tone(180, 50, 0.5, 'sawtooth', 0.09);
         },
         zone: function () {
             var f = [523, 659, 784, 1047];
-            for (var i = 0; i < f.length; i++) this.tone(f[i], f[i] * 1.5, 0.2, 'triangle', 0.045, i * 0.09);
+            for (var i = 0; i < f.length; i++) this.tone(f[i], f[i] * 1.5, 0.2, 'triangle', 0.07, i * 0.09);
         },
         record: function () {
             var f = [659, 784, 988, 1319];
-            for (var i = 0; i < f.length; i++) this.tone(f[i], f[i], 0.16, 'square', 0.04, i * 0.07);
+            for (var i = 0; i < f.length; i++) this.tone(f[i], f[i], 0.16, 'square', 0.065, i * 0.07);
         }
     };
 
@@ -1416,12 +1457,20 @@
          * TIẾNG BÁO RƠI mà bản thiết kế đòi, khỏi cần thêm tiếng nào nữa. */
         var high = R.curve(metresNow(), 4000);
         if (P.state === 'fall') {
+            /* Gió rơi vẫn phải là TIẾNG BÁO RƠI, nên nó vẫn dâng theo tốc độ —
+             * nhưng đỉnh hạ từ 0,15 xuống 0,066. Cũ thì nó to gấp mười hai lần
+             * nền lúc leo, tức là mỗi lần trượt tay tai bị đấm một cái; nay
+             * gấp chừng ba, vẫn thừa để giật mình mà không nuốt mất mọi tiếng
+             * khác đúng lúc đang cần nghe chúng nhất. */
             var vv = Math.min(1, Math.abs(P.vy) / R.FALL_MAX_V);
-            Sfx.ambient(0.05 + 0.10 * vv, 700 + 900 * vv);
+            Sfx.ambient(0.026 + 0.040 * vv, 700 + 900 * vv);
         } else if (P.state === 'jump') {
-            Sfx.ambient(0.035, 620);
+            Sfx.ambient(0.020, 620);
         } else {
-            Sfx.ambient(0.012 + 0.022 * (fastNow ? 1 : 0) + 0.012 * high, 330 + 160 * high);
+            /* Lúc leo nền chỉ còn là hơi thở rất mỏng. Tiếng của việc leo là
+             * tiếng BÁM TAY, không phải tiếng ồn — ồn không kể được là mình
+             * đang leo nhanh hay chậm, còn nhịp tay thì kể được. */
+            Sfx.ambient(0.009 + 0.014 * (fastNow ? 1 : 0) + 0.007 * high, 330 + 160 * high);
         }
 
         collide(dt);
@@ -3482,7 +3531,8 @@
          * 1 900 dòng vẽ mỗi giây sáu mươi lần thì thứ đáng sợ không phải luật
          * chơi sai, mà là một dòng ném lỗi ở khung hình thứ mười nghìn. */
         window.ClimbDebug = { G: G, P: P, tap: doJump, tapDir: doJumpTo, web: fireWeb,
-            start: startRun, R: R, pos: moverPos, hud: syncHud, flock: flock, perchN: perchN };
+            start: startRun, R: R, pos: moverPos, hud: syncHud, flock: flock, perchN: perchN,
+            Sfx: Sfx };
 
         requestAnimationFrame(frame);
     }
