@@ -94,7 +94,7 @@
     var ROTATE_SPD = 78;           // đủ nhanh thì mới nhấc mũi lên được
     var TOUCHDOWN_SPD = 96;        // chậm hơn ngần này thì bánh chạm đất êm
 
-    var CLIMB_RATE = 34;           // m/s khi kéo hết cần LÊN
+    var CLIMB_RATE = 75;           // m/s khi kéo hết cần LÊN (tăng tốc độ leo lề để dễ đạt trần bay)
     /* Xuống nhanh hơn lên, và xuống KHÔNG cần đà.
      *
      * Máy soát bắt được đúng chỗ này: bản đầu em cho lên và xuống chung một
@@ -104,9 +104,9 @@
      *
      * Đời thật cũng thế: muốn lên thì phải có sức, còn muốn xuống thì chỉ cần
      * thôi giữ. */
-    var DESCEND_RATE = 30;
-    var ALT_MAX = 8000;            // trần bay nâng lên 8000m cho bé tự do khám phá
-    var ALT_CRUISE = 1500;         // độ cao đẹp nhất để ngắm cảnh
+    var DESCEND_RATE = 70;
+    var ALT_MAX = 12000;            // trần bay nâng lên 12000m cho bé tự do khám phá độ cao tiêu chuẩn của airliner
+    var ALT_CRUISE = 2500;         // độ cao ngắm cảnh tối ưu mới
 
     /* Buông tay thì máy bay TỰ CÂN BẰNG. Bản mô tả đòi đúng điều này, và nó
      * quan trọng hơn vẻ ngoài: đứa bé buông tay ra để chỉ vào màn hình khoe
