@@ -228,6 +228,18 @@
     }
 
     function resize() {
+        /* Lấy kích thước thực của vùng chứa canvas để tính tỷ lệ.
+         * Giữ H cố định (600) và tính W từ tỷ lệ thật — để game tự nhiên
+         * lấp đầy mọi hình dạng màn hình mà không bị méo. */
+        var host = canvas.parentElement;
+        if (host) {
+            var cw = host.clientWidth || 960;
+            var ch = host.clientHeight || 600;
+            if (cw > 0 && ch > 0) {
+                H = R.H;  // giữ chiều cao logic cố định
+                W = Math.round(H * (cw / ch));
+            }
+        }
         dpr = Math.min(2, window.devicePixelRatio || 1);
         canvas.width = Math.round(W * dpr);
         canvas.height = Math.round(H * dpr);
