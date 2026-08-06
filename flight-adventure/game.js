@@ -898,7 +898,9 @@
      *
      * Đi từ xa về gần để dải gần đè lên dải xa — không có thứ tự ấy thì đỉnh
      * núi phía sau chồng lên sườn đồi phía trước. */
-    var BANDS = 46;
+    /* Càng nhiều dải càng mượt, mà mỗi dải chỉ tốn một nét tô chữ nhật. 46 dải
+     * để lại mấy bậc thang thấy rõ ở khúc gần; 80 thì hết bậc mà vẫn rẻ. */
+    var BANDS = 80;
 
     function drawGround() {
         var rt = G.route, s = skyOf();
@@ -945,7 +947,7 @@
         ctx.lineWidth = 1.6;
 
         /* đường dọc, cách nhau 420 m theo chiều ngang */
-        var GZ = 420;
+        var GZ = 560;
         var z0 = Math.floor((cam.z - 5200) / GZ) * GZ;
         for (var z = z0; z < cam.z + 5200; z += GZ) {
             ctx.beginPath();
@@ -958,7 +960,7 @@
                 if (!p) continue;
                 if (drawn++) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
             }
-            ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.075)';
             ctx.stroke();
         }
 
@@ -970,7 +972,7 @@
             var g = R.groundAt(rt, wx2);
             var a = proj(wx2, g, cam.z - 5200), b = proj(wx2, g, cam.z + 5200);
             if (!a || !b) continue;
-            ctx.strokeStyle = 'rgba(255,255,255,' + (0.15 * (1 - haze(wx2 - cam.x))) + ')';
+            ctx.strokeStyle = 'rgba(255,255,255,' + (0.085 * (1 - haze(wx2 - cam.x))) + ')';
             ctx.beginPath();
             ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
             ctx.stroke();
@@ -1378,7 +1380,10 @@
     function drawPlane() {
         var p = proj(P.x, P.alt, P.z);
         if (!p) return;
-        var s = clamp(p.s, 0.4, 3.4) * 34;          // cỡ vẽ
+        /* Cỡ vẽ. 34 làm sải cánh chiếm gần một phần năm bề ngang màn hình —
+         * máy bay che mất chính cái nó đang bay tới. 23 thì vừa: đủ to để
+         * thấy rõ cú nghiêng cánh, đủ nhỏ để còn thấy đường. */
+        var s = clamp(p.s, 0.4, 3.4) * 23;
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(-P.bank * 0.5);
@@ -1395,33 +1400,40 @@
             ctx.stroke();
         }
 
+        /* Viền tối quanh cả chiếc máy bay: nền là đồng ruộng xanh sáng, mà
+         * thân máy bay thì trắng — không viền thì ở cỡ này nó nhoè vào nền. */
+        ctx.strokeStyle = 'rgba(24,40,58,0.85)';
+        ctx.lineJoin = 'round';
+
         /* đuôi đứng */
         ctx.fillStyle = '#d94f42';
+        ctx.lineWidth = Math.max(1, s * 0.05);
         ctx.beginPath();
-        ctx.moveTo(0, -s * 0.18);
-        ctx.lineTo(-s * 0.09, -s * 0.62);
-        ctx.lineTo(s * 0.09, -s * 0.62);
-        ctx.closePath(); ctx.fill();
+        ctx.moveTo(0, -s * 0.16);
+        ctx.lineTo(-s * 0.08, -s * 0.44);
+        ctx.lineTo(s * 0.08, -s * 0.44);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
 
         /* cánh: một dải dài hơi vểnh lên hai đầu */
         ctx.fillStyle = '#e05a4a';
         ctx.beginPath();
-        ctx.moveTo(-s * 1.0, -s * 0.02);
-        ctx.quadraticCurveTo(0, s * 0.16, s * 1.0, -s * 0.02);
-        ctx.lineTo(s * 0.96, s * 0.1);
-        ctx.quadraticCurveTo(0, s * 0.28, -s * 0.96, s * 0.1);
-        ctx.closePath(); ctx.fill();
+        ctx.moveTo(-s * 1.05, -s * 0.06);
+        ctx.quadraticCurveTo(0, s * 0.12, s * 1.05, -s * 0.06);
+        ctx.lineTo(s * 1.0, s * 0.06);
+        ctx.quadraticCurveTo(0, s * 0.24, -s * 1.0, s * 0.06);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
 
         /* hai động cơ dưới cánh */
         ctx.fillStyle = '#4a5666';
-        roundRect(ctx, -s * 0.62, s * 0.06, s * 0.2, s * 0.13, s * 0.06); ctx.fill();
-        roundRect(ctx, s * 0.42, s * 0.06, s * 0.2, s * 0.13, s * 0.06); ctx.fill();
+        roundRect(ctx, -s * 0.66, s * 0.02, s * 0.22, s * 0.14, s * 0.07); ctx.fill(); ctx.stroke();
+        roundRect(ctx, s * 0.44, s * 0.02, s * 0.22, s * 0.14, s * 0.07); ctx.fill(); ctx.stroke();
 
         /* thân, nhìn từ sau là một khối tròn dựng đứng */
         ctx.fillStyle = '#f4f7fb';
-        roundRect(ctx, -s * 0.17, -s * 0.28, s * 0.34, s * 0.5, s * 0.16); ctx.fill();
+        roundRect(ctx, -s * 0.2, -s * 0.24, s * 0.4, s * 0.44, s * 0.19);
+        ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#3aa7e0';
-        ctx.fillRect(-s * 0.17, -s * 0.02, s * 0.34, s * 0.08);
+        ctx.fillRect(-s * 0.2, -s * 0.02, s * 0.4, s * 0.09);
 
         /* càng, chỉ thò ra lúc còn thấp — mắt đọc được "sắp chạm đất rồi" */
         if (P.gear) {
