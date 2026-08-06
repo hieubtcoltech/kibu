@@ -462,9 +462,12 @@
          * Không còn bị giới hạn bởi trục Z nữa, bé có thể lái máy bay lượn vòng
          * tròn 360 độ tự do, bay ngược về Hà Nội hoặc đi bất cứ đâu. */
         if (!P.onGround) {
-            P.heading += P.turn * 1.35 * dt; // Tốc độ xoay hướng khi bay
+            // Trong khi bay, tốc độ đổi hướng (yaw rate) tỷ lệ thuận với độ nghiêng cánh (bank angle)
+            // giúp máy bay lượn vòng có quán tính chân thực, không bị rẽ đột ngột.
+            P.heading -= P.bank * 1.6 * dt;
         } else {
-            P.heading += P.turn * 0.65 * dt; // Tốc độ xoay hướng khi lăn bánh
+            // Khi lăn trên mặt đất, bánh lái mũi dẫn hướng trực tiếp theo lực bẻ lái
+            P.heading += P.turn * 0.6 * dt;
         }
         if (P.heading > Math.PI) P.heading -= Math.PI * 2;
         if (P.heading < -Math.PI) P.heading += Math.PI * 2;
