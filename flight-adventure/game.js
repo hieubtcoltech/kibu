@@ -1002,16 +1002,26 @@
         var rt = G.route, s = skyOf();
         drawDistantRidges();
 
-        /* THỢ SƠN: đi từ XA VỀ GẦN, mỗi dải tô từ đường chân trời của chính nó
-         * XUỐNG HẾT ĐÁY MÀN. Dải gần hơn nằm thấp hơn nên nó phủ lại phần
-         * dưới, chừa lại đúng phần trên của dải xa — và thế là đỉnh núi phía
-         * sau vẫn nhô lên trên sườn đồi phía trước, không cần bộ đệm chiều sâu
-         * nào cả.
-         *
-         * Bản đầu em tô ngược: chỉ tô khi dải mới CAO HƠN dải trước, mà đi từ
-         * xa về gần thì dải sau bao giờ cũng thấp hơn — nên dải xa nhất tô kín
-         * cả màn hình rồi mọi dải sau đó bị bỏ qua sạch. Nhìn ra thì mặt đất
-         * chiếm nửa trên còn bầu trời nằm dưới đáy: cả thế giới lộn ngược. */
+        var hz = horizonY();
+        var nearSeg = R.segmentAt(rt, cam.x + 900);
+        var farSeg = R.segmentAt(rt, cam.x + 8500);
+        var nearCol = terrainColour(nearSeg.seg.kind)[1];
+        var farCol = mix(terrainColour(farSeg.seg.kind)[1], s.haze, 0.5);
+        var base = ctx.createLinearGradient(0, hz, 0, H);
+        base.addColorStop(0, mix(farCol, s.haze, 0.58));
+        base.addColorStop(0.42, mix(farCol, nearCol, 0.44));
+        base.addColorStop(1, mix(nearCol, '#6f9565', 0.52));
+        ctx.fillStyle = base;
+        ctx.fillRect(0, hz, W, H - hz);
+
+        /* THỢ SƠN: đi từ XA VỀ GẦN, nhưng chỉ tô phần nằm giữa dải này và dải
+         * trước nó. Bản cũ mỗi dải đều tô kín xuống tận đáy màn; lúc cất cánh
+         * camera thấp, dải gần nhất thành một tấm cỏ xanh lớn ở bottom và cứ
+         * lặp/nhảy theo từng bước chiếu. Nền gradient ở trên giữ mặt đất liền
+         * mạch, còn các lát mỏng này chỉ thêm sắc độ địa hình. */
+        var lastY = H;
+        ctx.save();
+        ctx.globalAlpha = 0.58;
         for (var i = BANDS; i >= 0; i--) {
             /* Chia khoảng cách theo luỹ thừa chứ không đều: gần thì cần dày
              * dải, xa thì mấy chục cây số dồn vào vài dải cũng không ai thấy. */
@@ -1026,8 +1036,13 @@
             var col = seg.k > 0 ? mix(c[1], terrainColour(seg.next.kind)[1], seg.k) : c[1];
             /* càng xa càng chìm vào màu trời */
             ctx.fillStyle = mix(col, s.haze, haze(d) * 0.92);
-            ctx.fillRect(0, p.y, W, H - p.y + 2);
+            var y = clamp(p.y, hz, H);
+            if (y < lastY) {
+                ctx.fillRect(0, y, W, lastY - y + 1);
+                lastY = y;
+            }
         }
+        ctx.restore();
 
         drawGroundGrid();
         drawGroundProps();
