@@ -462,12 +462,11 @@
          * Không còn bị giới hạn bởi trục Z nữa, bé có thể lái máy bay lượn vòng
          * tròn 360 độ tự do, bay ngược về Hà Nội hoặc đi bất cứ đâu. */
         if (!P.onGround) {
-            // Trong khi bay, tốc độ đổi hướng (yaw rate) tỷ lệ thuận với độ nghiêng cánh (bank angle)
-            // giúp máy bay lượn vòng có quán tính chân thực, không bị rẽ đột ngột.
-            P.heading -= P.bank * 1.6 * dt;
+            // Trong khi bay, tốc độ đổi hướng tỷ lệ thuận với độ nghiêng cánh nhưng có quán tính lớn (yawRate chậm lại)
+            P.heading -= P.bank * 0.45 * dt;
         } else {
-            // Khi lăn trên mặt đất, bánh lái mũi dẫn hướng trực tiếp theo lực bẻ lái
-            P.heading += P.turn * 0.6 * dt;
+            // Khi lăn trên mặt đất, bánh lái mũi dẫn hướng mượt mà
+            P.heading += P.turn * 0.45 * dt;
         }
         if (P.heading > Math.PI) P.heading -= Math.PI * 2;
         if (P.heading < -Math.PI) P.heading += Math.PI * 2;
@@ -582,7 +581,7 @@
          * Máy bay thật nghiêng cánh để rẽ, nên cú nghiêng chính là cú rẽ đang
          * diễn ra — vẽ nó bằng một biến riêng thì có ngày hai thứ lệch nhau và
          * mắt thấy máy bay nghiêng sang trái mà nó bay sang phải. */
-        P.bank = lerp(P.bank, -P.turn * 0.42, clamp(dt * 6, 0, 1));
+        P.bank = lerp(P.bank, -P.turn * 0.32, clamp(dt * 1.6, 0, 1));
 
         syncHud(false);
     }
@@ -1305,6 +1304,33 @@
             // Con sóng bờ biển cuộn nhẹ nhàng
             ctx.fillStyle = 'rgba(255,255,255,0.72)';
             ctx.fillRect(p.x - 130 * s, p.y + Math.sin(G.t * 1.6 + idx) * 4 * s, 260 * s, 6 * s);
+        } else if (o.kind === 'sea') {
+            // Vẽ các hòn đảo xanh mướt (emerald green) nhô lên trên biển cả
+            if (r1 > 0.42) {
+                var iw = (180 + r2 * 260) * s;
+                var ih = (40 + hash(idx, 99) * 60) * s;
+                ctx.fillStyle = '#10b981'; // màu xanh lục bảo bãi biển
+                ctx.beginPath();
+                ctx.ellipse(p.x, p.y + 10 * s, iw, ih, 0, 0, 6.284);
+                ctx.fill();
+
+                // Viền bờ cát vàng nhạt quanh đảo
+                ctx.strokeStyle = '#fef08a';
+                ctx.lineWidth = Math.max(1, 2.8 * s);
+                ctx.stroke();
+
+                // Đỉnh đồi phủ cây rừng sẫm màu ở giữa đảo
+                if (r2 > 0.58) {
+                    var th = ih * 0.65;
+                    ctx.fillStyle = '#065f46';
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y - th);
+                    ctx.lineTo(p.x + th * 0.6, p.y);
+                    ctx.lineTo(p.x - th * 0.6, p.y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+            }
         }
         ctx.restore();
     }

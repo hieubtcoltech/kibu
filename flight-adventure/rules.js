@@ -223,53 +223,49 @@
             toAirport: { en: 'Da Nang Airport', vi: 'Sân bay Đà Nẵng', code: 'DAD' },
             realKm: 760,
             sky: 'morning',
-            len: 26000,               // mét thế giới từ đầu đường băng tới đầu đường băng kia
+            len: 54000,               // mét thế giới từ đầu đường băng tới đầu đường băng kia (kéo dài gấp đôi để thỏa sức bay khám phá)
             /* Đường băng cất cánh nằm ở đầu, đường băng hạ cánh ở cuối. Giữa
              * hai cái ấy là chuyến đi. */
             runwayLen: 2600,
-            /* Mời hạ cánh sớm hẳn, còn 8,4 km nữa mới tới nơi.
-             *
-             * Máy soát đo ra: bé bay ở độ cao ngắm cảnh 1 500 m, mà chúc xuống
-             * nhanh nhất cũng chỉ 30 m mỗi giây — cần gần một phút, tức là gần
-             * sáu cây số đường bay, mới xuống tới đầu đường băng. Mời muộn thì
-             * dù bé làm đúng mọi thứ vẫn tới nơi cao quá và phải lượn lại, mà
-             * bị bắt làm lại đúng lúc mình vừa làm đúng là kiểu bực nhất. */
-            landStart: 17600,
+            /* Mời hạ cánh sớm hẳn, còn 11 km nữa mới tới nơi để có đủ thời gian tiếp cận */
+            landStart: 43000,
             segments: [
-                { to: 3400, kind: 'city' },
-                { to: 8200, kind: 'fields' },
-                { to: 12600, kind: 'hills' },
-                { to: 17000, kind: 'mountains' },
-                { to: 20600, kind: 'coast' },
-                { to: 26000, kind: 'city' }
+                { to: 6000, kind: 'city' },
+                { to: 14000, kind: 'fields' },
+                { to: 22000, kind: 'hills' },
+                { to: 30000, kind: 'mountains' },
+                { to: 35000, kind: 'coast' },
+                { to: 44000, kind: 'sea' },       // Phân đoạn biển đảo cho bé ngắm cảnh đại dương
+                { to: 48000, kind: 'coast' },
+                { to: 54000, kind: 'city' }
             ],
             landmarks: [
                 {
-                    at: 2400, kind: 'lake', z: -520,
+                    at: 4000, kind: 'lake', z: -520,
                     en: 'Hoan Kiem Lake', vi: 'Hồ Hoàn Kiếm',
                     factEn: 'A famous lake in the middle of Hanoi.',
                     factVi: 'Một cái hồ nổi tiếng ở giữa Hà Nội.'
                 },
                 {
-                    at: 10600, kind: 'river', z: 640,
+                    at: 18000, kind: 'river', z: 640,
                     en: 'Winding River', vi: 'Dòng Sông Uốn Khúc',
                     factEn: 'Rivers carry water from the mountains to the sea.',
                     factVi: 'Sông mang nước từ núi ra tới biển.'
                 },
                 {
-                    at: 15200, kind: 'pass', z: -380,
+                    at: 28000, kind: 'pass', z: -380,
                     en: 'Hai Van Pass', vi: 'Đèo Hải Vân',
                     factEn: 'A mountain road high above the sea.',
                     factVi: 'Một con đèo chạy cao trên mặt biển.'
                 },
                 {
-                    at: 19400, kind: 'beach', z: 760,
+                    at: 39000, kind: 'beach', z: 760,
                     en: 'My Khe Beach', vi: 'Biển Mỹ Khê',
                     factEn: 'A long sandy beach beside the city.',
                     factVi: 'Một bãi cát dài ngay cạnh thành phố.'
                 },
                 {
-                    at: 22600, kind: 'bridge', z: -300,
+                    at: 49000, kind: 'bridge', z: -300,
                     en: 'Dragon Bridge', vi: 'Cầu Rồng',
                     factEn: 'A bridge shaped like a dragon.',
                     factVi: 'Một cây cầu mang hình con rồng.'
