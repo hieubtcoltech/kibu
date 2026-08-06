@@ -87,9 +87,9 @@
      *    thật ở trong game.
      * ------------------------------------------------------------------ */
     var SPD_MIN = 60;              // m/s — chậm nhất, lúc còn lăn trên đường băng
-    var SPD_CRUISE = 160;          // m/s ≈ 576 km/h — ga giữa
-    var SPD_MAX = 205;             // m/s ≈ 738 km/h — hết ga
-    var SPD_ACCEL = 26;            // đổi tốc bao nhanh (m/s mỗi giây)
+    var SPD_CRUISE = 240;          // m/s ≈ 864 km/h — ga giữa (tốc độ bay hành trình tiêu chuẩn của Boeing/Airbus)
+    var SPD_MAX = 265;             // m/s ≈ 954 km/h — hết ga (tốc độ tối đa thực tế của máy bay phản lực)
+    var SPD_ACCEL = 10;            // đổi tốc mượt mà hơn (m/s mỗi giây), tạo cảm giác máy bay nặng có quán tính thực tế
 
     var ROTATE_SPD = 78;           // đủ nhanh thì mới nhấc mũi lên được
     var TOUCHDOWN_SPD = 96;        // chậm hơn ngần này thì bánh chạm đất êm
