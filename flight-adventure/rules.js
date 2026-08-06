@@ -472,9 +472,8 @@
     /* ------------------------------------------------------------------ *
      * 8. VÒNG MÂY VÀ SAO TRỜI
      *
-     *    Suy thẳng từ toạ độ chứ không giữ mảng: bay đi bay lại vẫn thấy đúng
-     *    những vòng ấy ở đúng những chỗ ấy, và tuyến dài bao nhiêu cũng không
-     *    phải sinh trước cái gì.
+     *    Vòng mây và sao từng là đồ nhặt trên đường bay, nhưng hiện không còn
+     *    dùng nữa để bầu trời sạch hơn và trẻ tập trung ngắm cảnh.
      * ------------------------------------------------------------------ */
     /* Đụng vào vòng/sao không. Ba chiều thật, khoảng cách thật — mà vì mọi
      * thứ đều chiếu qua chung một phép, cái mắt thấy đúng là cái này tính. */
@@ -486,64 +485,12 @@
     var RING_FROM = 4200;          // đủ xa để cất cánh xong và ổn định
     var RING_END_PAD = 1400;       // và dừng trước lúc được mời hạ cánh
 
-    /* CHUỖI VÒNG MÂY — và chữ "chuỗi" là cả bài học ở đây.
-     *
-     * Bản đầu em rải mỗi vòng một chỗ ngẫu nhiên: độ cao bốc từ hàm băm, độ
-     * lệch ngang bốc từ hàm băm. Máy soát cho một con bọ lái THẲNG tới từng
-     * vòng một, và nó chỉ qua được 2 trên 12.
-     *
-     * Lý do là số học chứ không phải tay lái. Hai vòng cách nhau 1 450 m, ở
-     * tốc độ ga giữa là chín giây. Trong chín giây máy bay bẻ ngang được chừng
-     * 1 500 m và leo được 300 m. Mà rải ngẫu nhiên thì hai vòng liền nhau có
-     * thể lệch nhau 3 200 m ngang và 1 250 m dọc. Bay tới không kịp — không
-     * phải khó, mà là KHÔNG THỂ. Đứa bé sẽ tưởng tại mình dở.
-     *
-     * Nay mỗi vòng đặt theo vòng TRƯỚC NÓ, và bước nhảy bị kẹp trong đúng cái
-     * mà máy bay bay nổi trong quãng thời gian ấy. Đường bay nối các vòng lại
-     * thành một dải lượn mềm — vừa bay được, vừa đẹp hơn hẳn kiểu rải hạt.
-     *
-     * Chỗ nào địa hình dựng lên nhanh hơn sức leo (sườn núi đá vôi) thì bỏ
-     * hẳn vòng ấy đi, thà thiếu một vòng còn hơn treo nó ở chỗ không ai tới.
-     */
+    /* Không sinh vòng mây nữa. Giữ hàm này trả về mảng rỗng để các phần
+     * thống kê/check cũ vẫn chạy qua cùng một API. */
     function ringChain(route) {
         if (route._rings) return route._rings;
-        /* Dừng hẳn trước lúc trò chơi mời hạ cánh. Máy soát bắt được: hai
-         * vòng cuối nằm sau mốc ấy, và bé nào cũng bỏ chúng lại — không phải
-         * vì khó, mà vì đúng lúc ấy trò chơi bảo bé quay ra lo hạ cánh. Treo
-         * phần thưởng ở chỗ mình vừa bảo người ta đừng nhìn tới là một kiểu
-         * thất hứa lặng lẽ. */
-        var last = route.landStart - RING_END_PAD;
-        var n = Math.floor((last - RING_FROM) / RING_GAP) + 1;
-        var dt = RING_GAP / SPD_CRUISE;
-        var dzMax = LAT_SPEED * dt * 0.55;      // chừa lại cho quãng vào cua
-        var upMax = CLIMB_RATE * dt * 0.8;
-        var dnMax = DESCEND_RATE * dt * 0.8;
-        var out = [], alt = null, z = 0, i;
-        for (i = 0; i < n; i++) {
-            var x = RING_FROM + i * RING_GAP;
-            var floor = floorAt(route, x) + 150;
-            var wantAlt = clamp(1250 + Math.sin(i * 0.55 + 0.6) * 420, floor, ALT_MAX - 500);
-            var wantZ = Math.sin(i * 0.64) * 190 + Math.sin(i * 0.31 + 1.7) * 70;
-            if (alt === null) {
-                /* VÒNG ĐẦU TIÊN PHẢI VỚI TỚI ĐƯỢC TỪ CÚ CẤT CÁNH.
-                 *
-                 * Máy soát bắt được: bản trước vòng đầu treo ở 1 487 m ngay
-                 * quãng 4 200 m, mà từ lúc rời đường băng tới đó chỉ có hai
-                 * mươi tư giây — cần leo 60 m mỗi giây trong khi máy bay leo
-                 * nổi 34. Bé lái đúng hoàn hảo vẫn trượt bốn vòng đầu, và
-                 * trượt ngay lúc vừa mới học lái xong. Đặt thấp rồi để cả
-                 * chuỗi leo dần lên thì vòng nào cũng tới được. */
-                alt = Math.max(floor, 620);
-                z = 0;                       // thẳng trục, đúng hướng vừa cất cánh
-            }
-            else {
-                alt += clamp(wantAlt - alt, -dnMax, upMax);
-                z += clamp(wantZ - z, -dzMax, dzMax);
-            }
-            out.push(alt < floor - 1 ? null : { i: i, x: x, alt: alt, z: z });
-        }
-        route._rings = out;
-        return out;
+        route._rings = [];
+        return route._rings;
     }
 
     function ringAt(route, i) {

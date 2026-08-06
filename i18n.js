@@ -610,6 +610,7 @@
         ['Kéo nhẹ lên nào!', 'Now pull up gently!'],
         ['Con đang bay rồi! Nhìn thành phố phía dưới kìa.', 'You are flying! Look at the city below.'],
         ['Bay xuyên qua mấy vòng sáng đi!', 'Fly through the glowing rings!'],
+        ['Nhìn quanh và tận hưởng chuyến bay nhé!', 'Look around and enjoy the trip!'],
         ['Sân bay ở gần rồi. Chậm lại và hạ thấp xuống nhé!', 'The airport is nearby. Slow down and go down!'],
         ['Bay men theo vệt sáng về đường băng nào.', 'Follow the light path to the runway.'],
         ['Cẩn thận! Để chúng tôi nâng con lên một chút nhé.', 'Careful! Let us lift you up a little.'],

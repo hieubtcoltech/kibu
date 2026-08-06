@@ -743,7 +743,7 @@
             if (P.alt > 700) {
                 P.gear = false;
                 G.leg = 'cruise';
-                say('cruise', T('Fly through the glowing rings!'), 3.4);
+                say('cruise', T('Look around and enjoy the trip!'), 3.4);
             }
             return;
         }
