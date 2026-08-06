@@ -1456,17 +1456,19 @@
 
     function drawRunway(rw, arriving) {
         var pts = [];
-        var n = 18;
         var startX = arriving ? rw.x0 : rw.x0 - 500;
         var visStart = Math.max(startX, cam.x + R.NEAR);
         var endX = rw.x1;
-        if (visStart < endX) {
-            for (var i = 0; i <= n; i++) {
-                var wx = visStart + (endX - visStart) * (i / n);
-                var l = proj(wx, rw.y, -RW_HALF), r = proj(wx, rw.y, RW_HALF);
-                if (!l || !r) continue;
-                pts.push({ l: l, r: r, wx: wx });
-            }
+        
+        // Đoạn chia vạch cố định 32m để đồng bộ chuẩn xác với vận tốc di chuyển thật của máy bay
+        var step = 32; 
+        var firstX = Math.ceil(visStart / step) * step;
+        var limitX = Math.min(endX, visStart + 1800); // Chỉ vẽ tối đa 1800m phía trước để tối ưu hiệu năng
+        
+        for (var wx = firstX; wx <= limitX; wx += step) {
+            var l = proj(wx, rw.y, -RW_HALF), r = proj(wx, rw.y, RW_HALF);
+            if (!l || !r) continue;
+            pts.push({ l: l, r: r, wx: wx });
         }
         if (pts.length < 2) return;
 
