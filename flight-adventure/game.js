@@ -1595,8 +1595,8 @@
             ctx.stroke();
         }
 
-        ctx.strokeStyle = 'rgba(20,35,52,0.9)';
-        ctx.lineWidth = Math.max(1.2, s * 0.045);
+        ctx.strokeStyle = 'rgba(15,28,45,0.22)';
+        ctx.lineWidth = Math.max(0.7, s * 0.012);
         ctx.lineJoin = 'round';
 
         /* Cánh chính: thiết kế khí động học cao cấp với dải sơn trang trí màu xanh đậm */
@@ -1646,8 +1646,8 @@
         ctx.beginPath();
         ctx.ellipse(0, -s * 0.26, s * 0.14, s * 0.07, 0, 0, 6.284);
         ctx.fill();
-        ctx.strokeStyle = '#0f2035';
-        ctx.lineWidth = Math.max(1, s * 0.02);
+        ctx.strokeStyle = 'rgba(15,30,55,0.22)';
+        ctx.lineWidth = Math.max(0.6, s * 0.01);
         ctx.stroke();
 
         /* Đuôi đứng & Dải màu nhận diện của KIBU Airlines */
