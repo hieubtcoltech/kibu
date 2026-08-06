@@ -433,7 +433,7 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
         if (!m) continue;
 
         /* Hai đứa xô thì kết cục là bị hất khỏi tường, không phải mất mạng */
-        const shovesOnly = kind === 'thug' || kind === 'rival';
+        const shovesOnly = kind === 'thug' || kind === 'rival' || kind === 'bird';
         let killed = false;
         const before = G.lives;
         for (let i = 0; i < 400 && G.phase === 'play'; i++) {
@@ -994,7 +994,61 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 15. NGỒI YÊN THÌ PHẢI CHẾT
+ * 15. CẢNH VẬT PHẢI VẼ ĐƯỢC Ở MỌI VÙNG, VÀ KHÔNG ĐƯỢC CHUI VÀO KHE
+ *     Mặt trăng, đàn chim, máy bay, pháo hoa, đèn xe — không thứ nào đụng vào
+ *     người chơi, nên nếu một cái ném lỗi thì chẳng có gì báo ngoài màn hình
+ *     đen. Và chúng phải nằm SAU LƯNG hai toà tháp: bản thiết kế cấm để đồ
+ *     trang trí làm chìm mất mối nguy, mà khe giữa hai tháp là chỗ duy nhất
+ *     mối nguy đi qua.
+ * ------------------------------------------------------------------ */
+{
+    getEl('btn-play').dispatch('click');
+    step(10);
+    const errBefore = frameErrors;
+    const sceneCost = [];
+
+    for (const z of R.ZONES) {
+        const mid = z.to === Infinity ? z.from + 1500 : (z.from + z.to) / 2;
+        const y = mid * R.PX_PER_M + 900;
+        G.world.cursor = y + 9000;
+        G.world.zoneDone = R.ZONES.indexOf(z);
+        P.y = y;
+        P.x = G.world.wallX(P.side, P.y) + R.PLAYER_R;
+        G.maxY = y;
+        G.camY = y + 960 * R.CAM_ANCHOR;
+        G.zone = R.ZONES.indexOf(z);
+        G.lives = 9;
+        /* chạy đủ lâu để pháo hoa nổ, chim bay qua, máy bay lượn hết một vòng */
+        const before = drawCalls;
+        step(60 * 30);
+        ok(drawCalls > before, `ở vùng "${z.name}" không vẽ thêm nét nào`);
+        /* Sức vẽ mỗi khung hình. Cảnh vật đẹp mà làm tụt khung hình trên điện
+         * thoại thì là đổi một thứ thấy được lấy một thứ CẢM được — mà cảm
+         * giác mượt tay mới là thứ giữ người chơi. */
+        const perFrame = Math.round((drawCalls - before) / (60 * 30));
+        sceneCost.push(z.id + ' ' + perFrame);
+        ok(perFrame < 2600,
+            `vùng "${z.name}" vẽ ${perFrame} nét mỗi khung hình — nặng quá cho điện thoại`);
+        ok(frameErrors === errBefore, `cảnh vật vùng "${z.name}" ném lỗi`);
+        if (frameErrors !== errBefore) break;
+    }
+
+    /* Cảnh vật không được đẻ ra vật thể va chạm được. Số mối nguy phải đúng
+     * bằng những gì bộ sinh màn tạo ra, không thêm con chim trang trí nào. */
+    const kinds = new Set(G.world.movers.map(m => m.kind));
+    for (const k of kinds) {
+        ok(['drone', 'bird', 'laser', 'debris', 'swing', 'platform', 'loose',
+            'thug', 'rival', 'sentry'].indexOf(k) >= 0,
+            `có mối nguy lạ tên "${k}" — cảnh vật trang trí đang chui vào danh sách va chạm`);
+    }
+
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else getEl('btn-nav-menu').dispatch('click');
+    console.log(`  cảnh vật: 30 giây mỗi vùng, không lỗi · nét vẽ mỗi khung: ${sceneCost.join(' · ')}`);
+}
+
+/* ------------------------------------------------------------------ *
+ * 16. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -1010,7 +1064,7 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 16. BA CHẾ ĐỘ
+ * 17. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -1034,7 +1088,7 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
- * 17. CỬA HÀNG VÀ NHIỆM VỤ
+ * 18. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');

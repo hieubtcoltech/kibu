@@ -179,27 +179,43 @@
      *  nhà lẫn thời tiết — leo cao mà cảnh không đổi thì chẳng ai leo tiếp.
      * ======================================================================*/
 
+    /* Mỗi vùng còn khai NHỮNG THỨ SỐNG TRÊN TRỜI. Chúng không đụng vào ai,
+     * không tính điểm, và đó chính là chỗ đáng giá: một thành phố chỉ có mối
+     * nguy thì là một cái bẫy, có chim bay qua với đèn xe chạy dưới đường thì
+     * mới là một nơi chốn. Nhưng tất cả đều vẽ SAU LƯNG hai toà tháp hoặc mờ
+     * hẳn đi — bản thiết kế cấm để thứ trang trí làm chìm mất mối nguy.
+     *
+     *   body     mặt trời hay mặt trăng
+     *   birds    đàn chim bay ngang phía xa, 0 tới 1
+     *   traffic  đèn xe chạy dưới phố
+     *   air      máy bay đêm nhấp nháy
+     *   fw       pháo hoa
+     */
     var ZONES = [
         {
-            id: 'street', from: 0, to: 500, name: 'Street Morning', icon: '🌅',
+            id: 'street',
+            body: 'sun', birds: 1, traffic: 1, air: 0, fw: 0, from: 0, to: 500, name: 'Street Morning', icon: '🌅',
             sky: ['#8fd0f0', '#d9eefb', '#ffe6c2'], tower: '#b9a48c', towerDark: '#8d7862',
             win: '#ffe9b8', winOff: '#8f7c66', far: '#a9bfd4', accent: '#ffb861',
             weather: 'none'
         },
         {
-            id: 'district', from: 500, to: 1500, name: 'Skyscraper District', icon: '🏙️',
+            id: 'district',
+            body: 'sun', birds: 0.7, traffic: 0.5, air: 0.35, fw: 0, from: 500, to: 1500, name: 'Skyscraper District', icon: '🏙️',
             sky: ['#4b8fd6', '#8ec6ef', '#cfe8f7'], tower: '#7f93ab', towerDark: '#5d7088',
             win: '#d8f2ff', winOff: '#4b5e75', far: '#7f9bbb', accent: '#4bd7ff',
             weather: 'none'
         },
         {
-            id: 'cloudline', from: 1500, to: 3000, name: 'Cloudline', icon: '☁️',
+            id: 'cloudline',
+            body: null, birds: 1, traffic: 0, air: 0.6, fw: 0, from: 1500, to: 3000, name: 'Cloudline', icon: '☁️',
             sky: ['#6fa9d8', '#b9d9ee', '#e8f3fa'], tower: '#9aa7b6', towerDark: '#71808f',
             win: '#eaf6ff', winOff: '#5b6a7b', far: '#b9cfe0', accent: '#9de8ff',
             weather: 'mist'
         },
         {
-            id: 'sunset', from: 3000, to: 4500, name: 'Construction Sunset', icon: '🌇',
+            id: 'sunset',
+            body: 'sun', birds: 0.45, traffic: 0, air: 0.7, fw: 0, from: 3000, to: 4500, name: 'Construction Sunset', icon: '🌇',
             sky: ['#3a2a63', '#c8584f', '#ffb361'], tower: '#8a6a55', towerDark: '#5f473a',
             win: '#ffd08a', winOff: '#6b4f3f', far: '#7b5566', accent: '#ff9040',
             weather: 'none'
@@ -213,7 +229,8 @@
              * Nó cũng đặt đúng chỗ trong nhịp cảm xúc: sau quãng công trường
              * ngổn ngang là một quãng đẹp và bình yên, để cơn giông ngay sau đó
              * đổ xuống cho ra đổ. */
-            id: 'neon', from: 4500, to: 6200, name: 'Neon Night City', icon: '🌃',
+            id: 'neon',
+            body: 'moon', birds: 0.15, traffic: 1, air: 0.9, fw: 1, from: 4500, to: 6200, name: 'Neon Night City', icon: '🌃',
             sky: ['#050a1c', '#0d1a3d', '#2a3f6b'], tower: '#2a3550', towerDark: '#151d2f',
             win: '#ffe9a8', winOff: '#232c44', far: '#111a33', accent: '#ff56c8',
             weather: 'none',
@@ -224,13 +241,15 @@
             cityLights: 1
         },
         {
-            id: 'storm', from: 6200, to: 8500, name: 'Night Storm', icon: '⛈️',
+            id: 'storm',
+            body: 'moon', birds: 0, traffic: 0.6, air: 0.3, fw: 0, from: 6200, to: 8500, name: 'Night Storm', icon: '⛈️',
             sky: ['#080d1e', '#132146', '#22355f'], tower: '#2e3a52', towerDark: '#1c2537',
             win: '#ffe07a', winOff: '#26314a', far: '#1a2440', accent: '#7ec8ff',
             weather: 'rain', winLit: 0.66, cityLights: 1
         },
         {
-            id: 'sky', from: 8500, to: Infinity, name: 'Sky Fantasy', icon: '🌌',
+            id: 'sky',
+            body: 'moon', birds: 0.3, traffic: 0, air: 1, fw: 0, from: 8500, to: Infinity, name: 'Sky Fantasy', icon: '🌌',
             sky: ['#120a35', '#3d1f6d', '#6d3f9c'], tower: '#3b2f63', towerDark: '#251d44',
             win: '#c9a6ff', winOff: '#2e2550', far: '#2a1f4d', accent: '#ff7ae0',
             weather: 'aurora'
@@ -844,10 +863,15 @@
             }
         },
         {
-            id: 'bird-flock', intensity: 2, minM: 1400, weight: 6,
+            id: 'bird-flock', intensity: 2, minM: 420, weight: 6,
             build: function (w, y, d) {
                 /* Hai con lệch pha nửa vòng: lúc nào cũng có một con ở giữa
-                 * khe, nhưng không bao giờ cả hai cùng chỗ. */
+                 * khe, nhưng không bao giờ cả hai cùng chỗ.
+                 *
+                 * Ra sớm từ 420 m — chim là thứ có mặt ở mọi độ cao thấp, và
+                 * từ lúc chúng chỉ XÔ chứ không giết thì gặp sớm cũng chẳng sao.
+                 * Đâm phải một con chim mà mất luôn một mạng thì vô lý; bị hất
+                 * khỏi tường thì vừa đúng, vừa buồn cười. */
                 w.mover('bird', { y: y + 220, period: 2.6 / d.moverSpeed, phase: 0, span: 1 });
                 w.mover('bird', { y: y + 430, period: 2.6 / d.moverSpeed, phase: 0.5, span: 1 });
                 w.pickup('coin', 0.5, y + 320);

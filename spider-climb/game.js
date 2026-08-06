@@ -353,7 +353,8 @@
         sprint300: 0,
         gustSeen: null,
         deaths: {},
-        bolt: null, boltT: 0, farBolt: null, farBoltT: 0
+        bolt: null, boltT: 0, farBolt: null, farBoltT: 0,
+        fws: [], fwT: 0
     };
 
     var P = {
@@ -407,6 +408,7 @@
         G.revived = false; G.freeze = 0; G.shake = 0; G.flash = 0;
         G.sprint300 = 0; G.gustSeen = null; G.deaths = {};
         G.bolt = null; G.boltT = R.BOLT_GRACE; G.farBolt = null; G.farBoltT = 0;
+        G.fws.length = 0; G.fwT = 1.5;
         G.power = { shield: 0, magnet: 0, x2: 0, slow: 0 };
         G.stats = {
             metres: 0, coins: 0, gems: 0, jumps: 0, drones: 0, foes: 0, gusts: 0,
@@ -1555,13 +1557,14 @@
             if (Math.abs(pos.y - P.y) > 240) { m.near = 0; continue; }
             var dist = Math.hypot(pos.x - P.x, pos.y - P.y);
             if (dist < pos.r + R.PLAYER_R * 0.75) {
-                if (m.kind === 'thug' || m.kind === 'rival') {
+                if (m.kind === 'thug' || m.kind === 'rival' || m.kind === 'bird') {
                     /* Hai đứa này XÔ chứ không giết. Chúng là kẻ cản đường, và
                      * cản đường thì cái mất phải là độ cao với chuỗi liên hoàn
                      * — mất luôn cả mạng thì mỗi lần gặp là một lần cụt hứng
                      * chứ không phải một lần thót tim. */
                     if (P.state !== 'fall') {
-                        bumpOff(m.kind === 'rival' ? 'SHOVED!' : 'GET BACK!');
+                        bumpOff(m.kind === 'rival' ? 'SHOVED!' :
+                            (m.kind === 'bird' ? 'BIRD!' : 'GET BACK!'));
                     }
                 } else if (m.kind === 'sentry') {
                     /* thân rô-bốt bắt vào tường, đụng phải thì bật ra */
@@ -1717,13 +1720,204 @@
             ctx.fillRect(0, H * 0.42, W, H * 0.58);
         }
 
+        drawSkyBody();
         drawFarSkyline();
+        drawTraffic();
+        drawSkyLife();
         drawStorm();
         drawClouds();
     }
 
     /* Hàng nhà xa, trôi chậm hơn hẳn — đây là thứ làm người chơi TIN là mình
      * đang lên cao thật, chứ không phải hai bức tường trượt xuống. */
+    /* ========================================================================
+     *  NHỮNG THỨ SỐNG TRÊN TRỜI
+     * ------------------------------------------------------------------------
+     *  Không thứ nào dưới đây đụng vào người chơi, và tất cả đều vẽ SAU LƯNG
+     *  hai toà tháp. Đó là điều kiện để chúng được phép tồn tại: bản thiết kế
+     *  cấm để đồ trang trí làm chìm mất mối nguy, mà khe giữa hai tháp là chỗ
+     *  duy nhất mối nguy đi qua — nên khe phải sạch. Mọi thứ đẹp đẽ ở đây đều
+     *  nằm ngoài khe.
+     * ======================================================================*/
+
+    /* Mặt trời hay mặt trăng. Trôi CỰC chậm (0,015) — chậm hơn hẳn mọi lớp
+     * khác, vì thứ ở xa thật thì gần như đứng yên khi mình leo. Chính chỗ gần
+     * như đứng yên ấy nói với mắt rằng nó ở rất xa. */
+    function drawSkyBody() {
+        var zm = zoneMix();
+        var kind = zm.k > 0.5 ? zm.n.body : zm.z.body;
+        if (!kind) return;
+        /* mờ dần ở quãng giao vùng nếu hai bên khác nhau */
+        var a = zm.z.body === zm.n.body ? 1 : (zm.k > 0.5 ? (zm.k - 0.5) * 2 : 1 - zm.k * 2);
+        if (a < 0.02) return;
+
+        var bx = W * 0.74;
+        var by = 150 - (G.camY * 0.015) % 320;
+        if (by < -120) by += 320;
+
+        ctx.save();
+        ctx.globalAlpha = a;
+        if (kind === 'sun') {
+            var g = ctx.createRadialGradient(bx, by, 10, bx, by, 130);
+            g.addColorStop(0, 'rgba(255,236,170,0.85)');
+            g.addColorStop(0.35, 'rgba(255,196,120,0.28)');
+            g.addColorStop(1, 'rgba(255,180,110,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath(); ctx.arc(bx, by, 130, 0, 6.284); ctx.fill();
+            ctx.fillStyle = '#fff3c4';
+            ctx.beginPath(); ctx.arc(bx, by, 34, 0, 6.284); ctx.fill();
+        } else {
+            var g2 = ctx.createRadialGradient(bx, by, 12, bx, by, 120);
+            g2.addColorStop(0, 'rgba(226,238,255,0.55)');
+            g2.addColorStop(0.4, 'rgba(190,215,255,0.16)');
+            g2.addColorStop(1, 'rgba(190,215,255,0)');
+            ctx.fillStyle = g2;
+            ctx.beginPath(); ctx.arc(bx, by, 120, 0, 6.284); ctx.fill();
+            ctx.fillStyle = '#eef4ff';
+            ctx.beginPath(); ctx.arc(bx, by, 32, 0, 6.284); ctx.fill();
+            /* mấy hố trăng — không có thì nó chỉ là một chấm trắng */
+            ctx.fillStyle = 'rgba(180,196,225,0.55)';
+            ctx.beginPath(); ctx.arc(bx - 10, by - 8, 7, 0, 6.284); ctx.fill();
+            ctx.beginPath(); ctx.arc(bx + 9, by + 5, 5, 0, 6.284); ctx.fill();
+            ctx.beginPath(); ctx.arc(bx - 2, by + 13, 4, 0, 6.284); ctx.fill();
+        }
+        ctx.restore();
+    }
+
+    /* Một con chim hình chữ V, vẽ bằng hai nét cong. Cánh vỗ theo pha riêng
+     * của từng con nên cả đàn không đập cánh cùng nhịp — đàn chim đập cùng
+     * nhịp trông như một cái máy. */
+    function birdMark(x, y, sz, flap) {
+        ctx.beginPath();
+        ctx.moveTo(x - sz, y);
+        ctx.quadraticCurveTo(x - sz * 0.5, y - sz * flap, x, y);
+        ctx.quadraticCurveTo(x + sz * 0.5, y - sz * flap, x + sz, y);
+        ctx.stroke();
+    }
+
+    /* Đàn chim, máy bay đêm, và pháo hoa. Tất cả suy từ đồng hồ chứ không giữ
+     * trạng thái — trừ pháo hoa, thứ duy nhất cần nhớ mình nổ lúc nào. */
+    function drawSkyLife() {
+        var zm = zoneMix();
+        var birds = zn('birds', 0), air = zn('air', 0);
+
+        /* ---- đàn chim ---- */
+        if (birds > 0.02) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(40,52,70,0.55)';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            for (var f = 0; f < 3; f++) {
+                /* mỗi đàn có chu kỳ riêng, lệch nhau, nên chúng không bao giờ
+                 * bay thành hàng ngang cùng lúc */
+                var per = 15 + f * 7;
+                var t = ((G.t / per) + hash2(f, 91)) % 1;
+                if (t > 0.55) continue;                 // phần lớn thời gian trời trống
+                if (hash2(Math.floor(G.t / per) + f, 3) > birds) continue;
+                var dir = hash2(f, 5) > 0.5 ? 1 : -1;
+                var fx = dir > 0 ? -80 + t / 0.55 * (W + 160) : W + 80 - t / 0.55 * (W + 160);
+                var fy = 90 + hash2(f, 7) * 320 - (G.camY * 0.05) % 420;
+                if (fy < -60) fy += 420;
+                if (fy > H) continue;
+                var n = 3 + Math.floor(hash2(f, 11) * 3);
+                for (var i = 0; i < n; i++) {
+                    var ox = -dir * i * 22 - dir * (i % 2) * 6;
+                    var oy = i * 9 + Math.sin(G.t * 1.6 + i) * 3;
+                    var sz = 7 + hash2(f, i) * 3;
+                    birdMark(fx + ox, fy + oy, sz, 0.5 + 0.5 * Math.sin(G.t * 7 + i * 1.3));
+                }
+            }
+            ctx.restore();
+        }
+
+        /* ---- máy bay, chỉ hai đèn nhấp nháy và một thân mảnh ---- */
+        if (air > 0.02) {
+            var ap = 26;
+            var at = ((G.t / ap) + 0.3) % 1;
+            if (at < 0.6 && hash2(Math.floor(G.t / ap), 17) < air) {
+                var ax = -60 + (at / 0.6) * (W + 120);
+                var ay = 60 + hash2(Math.floor(G.t / ap), 23) * 160 - (G.camY * 0.03) % 240;
+                if (ay < -40) ay += 240;
+                if (ay < H) {
+                    ctx.save();
+                    ctx.fillStyle = 'rgba(210,225,250,0.5)';
+                    ctx.beginPath();
+                    ctx.ellipse(ax, ay, 15, 2.6, 0, 0, 6.284);
+                    ctx.fill();
+                    ctx.fillRect(ax - 2, ay - 6, 4, 12);
+                    var blink = Math.sin(G.t * 6) > 0;
+                    ctx.fillStyle = blink ? '#ff5a6e' : 'rgba(255,90,110,0.2)';
+                    ctx.beginPath(); ctx.arc(ax - 15, ay, 2.4, 0, 6.284); ctx.fill();
+                    ctx.fillStyle = blink ? 'rgba(120,255,160,0.25)' : '#78ffa0';
+                    ctx.beginPath(); ctx.arc(ax + 15, ay, 2.4, 0, 6.284); ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        /* ---- pháo hoa trên phố đêm ---- */
+        var fw = zn('fw', 0);
+        if (fw > 0.3) {
+            G.fwT -= 1 / 60;
+            if (G.fwT <= 0) {
+                G.fwT = 2.2 + Math.random() * 3.5;
+                G.fws.push({
+                    x: 60 + Math.random() * (W - 120),
+                    y: 110 + Math.random() * 260,
+                    t: 0,
+                    hue: Math.floor(Math.random() * 360),
+                    n: 14 + Math.floor(Math.random() * 10)
+                });
+                if (G.fws.length > 4) G.fws.shift();
+            }
+        }
+        for (var k = G.fws.length - 1; k >= 0; k--) {
+            var b = G.fws[k];
+            b.t += 1 / 60;
+            if (b.t > 1.5) { G.fws.splice(k, 1); continue; }
+            var kk = b.t / 1.5;
+            ctx.save();
+            ctx.globalAlpha = (1 - kk) * 0.75;
+            ctx.strokeStyle = 'hsl(' + b.hue + ',95%,70%)';
+            ctx.lineWidth = 2.4;
+            ctx.lineCap = 'round';
+            for (var r = 0; r < b.n; r++) {
+                var ang = (r / b.n) * 6.284;
+                var rad = 8 + kk * 70;
+                ctx.beginPath();
+                ctx.moveTo(b.x + Math.cos(ang) * rad * 0.72, b.y + Math.sin(ang) * rad * 0.72 + kk * 14);
+                ctx.lineTo(b.x + Math.cos(ang) * rad, b.y + Math.sin(ang) * rad + kk * 16);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+    }
+
+    /* Đèn xe chạy dưới phố. Chỉ là mấy vệt sáng nhỏ trườn ngang đáy màn, nhưng
+     * nó trả lời được câu "dưới kia có gì" — mà leo cao thì câu ấy quan trọng. */
+    function drawTraffic() {
+        var tr = zn('traffic', 0);
+        if (tr < 0.05) return;
+        /* chỉ thấy được khi còn thấp; lên cao thì đường phố khuất sau nhà */
+        var vis = clamp(1 - metresNow() / 1400, 0, 1) * tr;
+        if (vis < 0.04) return;
+        var base = H * 0.965 - (G.camY * 0.008) % 40;
+        ctx.save();
+        ctx.globalAlpha = vis;
+        for (var i = 0; i < 10; i++) {
+            var dir = i % 2 ? 1 : -1;
+            var sp = 40 + hash2(i, 31) * 70;
+            var x = ((hash2(i, 33) * W + G.t * sp * dir) % (W + 60) + W + 60) % (W + 60) - 30;
+            var y = base + (i % 2) * 9;
+            ctx.fillStyle = dir > 0 ? 'rgba(255,226,150,0.9)' : 'rgba(255,90,90,0.85)';
+            ctx.fillRect(x, y, 9, 3);
+            ctx.globalAlpha = vis * 0.3;
+            ctx.fillRect(x - dir * 14, y, 14, 3);
+            ctx.globalAlpha = vis;
+        }
+        ctx.restore();
+    }
+
     function drawFarSkyline() {
         var base = H * 0.72 + (G.camY * 0.055) % 240;
         var zm = zoneMix();
@@ -1755,6 +1949,11 @@
                 for (var r = 0; r < 26; r++) {
                     var ly = top + 10 + r * 13;
                     if (ly > base + 300) break;
+                    /* Bỏ qua hàng nằm ngoài màn. Mỗi toà có 26 hàng × 3 ô, mười
+                     * bốn toà là hơn nghìn ô mỗi khung hình — mà quá nửa nằm
+                     * ngoài tầm nhìn. Hỏi một câu trước khi vẽ thì rẻ hơn nhiều
+                     * so với vẽ rồi để trình duyệt tự cắt. */
+                    if (ly < -12 || ly > H + 12) continue;
                     for (var c2 = 0; c2 < 3; c2++) {
                         var hh2 = hash2(j * 71 + r, c2 * 17);
                         if (hh2 > 0.55) continue;
@@ -2020,6 +2219,48 @@
             var fx = G.world.wallX(b.side, (b.y0 + b.y1) / 2);
             var dir = b.side === SIDE_L ? 1 : -1;
             var hh = yB - yA;
+
+            /* CHIM BỒ CÂU ĐẬU TRÊN GỜ, và bay tán loạn khi người nhện tới gần.
+             *
+             * Chi tiết nhỏ nhất trong cả game, mà em nghĩ là đáng nhất: nó biến
+             * cục điều hoà từ một khối chắn đường thành một chỗ có ai đó đang
+             * sống. Và nó phản ứng với người chơi — thứ trang trí nào cũng đẹp,
+             * nhưng thứ trang trí BIẾT có mình mới làm thành phố thành thật.
+             *
+             * Con nào đậu ở đâu suy từ toạ độ nên không nhấp nháy, còn lúc bay
+             * đi thì nhớ vào chính vật cản ấy. Chúng không đụng vào ai. */
+            if ((b.type === 'ac' || b.type === 'balcony') && hash2(Math.round(b.y0), 41) < 0.4) {
+                if (b.pij == null) b.pij = 0;
+                if (!b.pij && Math.abs(P.y - b.y1) < 150 && Math.abs(P.x - fx) < 190) b.pij = G.t;
+                ctx.save();
+                ctx.strokeStyle = 'rgba(52,64,84,0.8)';
+                ctx.fillStyle = 'rgba(72,86,110,0.9)';
+                ctx.lineWidth = 2;
+                var np = 2 + Math.floor(hash2(Math.round(b.y0), 43) * 2);
+                for (var pI = 0; pI < np; pI++) {
+                    var pox = fx + dir * (14 + pI * 15);
+                    var poy = yA - 5;
+                    if (b.pij) {
+                        /* bay vọt lên và tản ra */
+                        var fT = G.t - b.pij;
+                        if (fT > 2.2) continue;
+                        pox += dir * fT * (60 + pI * 26);
+                        poy -= fT * (90 + pI * 20);
+                        ctx.globalAlpha = clamp(1 - fT / 2.2, 0, 1) * 0.85;
+                        birdMark(pox, poy, 7, 0.4 + 0.6 * Math.abs(Math.sin(G.t * 16 + pI)));
+                    } else {
+                        ctx.globalAlpha = 0.9;
+                        ctx.beginPath();
+                        ctx.ellipse(pox, poy, 5, 4, 0, 0, 6.284);
+                        ctx.fill();
+                        ctx.beginPath();
+                        ctx.arc(pox + dir * 4, poy - 4, 2.4, 0, 6.284);
+                        ctx.fill();
+                    }
+                }
+                ctx.restore();
+            }
+
             ctx.save();
             ctx.translate(fx, yA);
             ctx.scale(dir, 1);

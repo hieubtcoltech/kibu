@@ -638,6 +638,7 @@
         ['COI CHỪNG', 'WATCH OUT'],
         ['BỊ XÔ!', 'SHOVED!'],
         ['LÙI RA!', 'GET BACK!'],
+        ['CHIM!', 'BIRD!'],
         ['Trúng đạn rô-bốt gác!', 'Sentry shot!'],
         ['CHUỖI x{0}', 'COMBO x{0}'],
         ['KHIÊN', 'SHIELD', 'x'],
