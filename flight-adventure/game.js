@@ -1247,7 +1247,7 @@
 
     function drawRunway(rw, arriving) {
         var pts = [];
-        var n = 12;
+        var n = 18;
         for (var i = 0; i <= n; i++) {
             var wx = rw.x0 + (rw.x1 - rw.x0) * (i / n);
             var l = proj(wx, rw.y, -RW_HALF), r = proj(wx, rw.y, RW_HALF);
@@ -1257,36 +1257,43 @@
         if (pts.length < 2) return;
 
         ctx.save();
-        /* Bê-tông tối hẳn: đây là thứ bé phải nhìn thấy từ xa nhất trong cả
-         * chuyến bay, nên nó phải là mảng tương phản mạnh nhất với nền xanh. */
-        ctx.fillStyle = '#464c56';
+        /* Runway tự nó là vật thể chính của cảnh cất cánh: bê-tông chạy dài,
+         * hai vai đường tối, vạch mép và vạch tim. Không vẽ thêm thảm cỏ nào
+         * cùng hệ với runway, vì ở góc camera thấp thảm ấy sẽ chui vào giữa
+         * đường băng và nhìn như một mảng xanh lỗi. */
+        ctx.fillStyle = '#323946';
+        band(pts, RW_HALF + 4);
+        ctx.fillStyle = '#5f6875';
         band(pts, RW_HALF);
-        ctx.fillStyle = '#6d747f';
-        band(pts, RW_HALF * 0.92);
-        ctx.fillStyle = 'rgba(255,255,255,0.28)';
-        band(pts, RW_HALF * 0.82);
-        ctx.fillStyle = '#6d747f';
-        band(pts, RW_HALF * 0.74);
+        ctx.fillStyle = '#747d89';
+        band(pts, RW_HALF * 0.84);
+
+        edgeLine(-RW_HALF * 0.9, 'rgba(230,238,245,0.9)', 2.4);
+        edgeLine(RW_HALF * 0.9, 'rgba(230,238,245,0.9)', 2.4);
+        edgeLine(-RW_HALF * 0.55, 'rgba(255,255,255,0.16)', 1.6);
+        edgeLine(RW_HALF * 0.55, 'rgba(255,255,255,0.16)', 1.6);
+
         /* vạch tim đứt quãng */
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
         for (var k = 0; k < pts.length - 1; k++) {
             if (k % 2) continue;
-            var a = proj(pts[k].wx, rw.y, -3), b = proj(pts[k].wx, rw.y, 3);
-            var c = proj(pts[k + 1].wx, rw.y, 3), d = proj(pts[k + 1].wx, rw.y, -3);
+            var a = proj(pts[k].wx, rw.y + 0.2, -2.6), b = proj(pts[k].wx, rw.y + 0.2, 2.6);
+            var c = proj(pts[k + 1].wx, rw.y + 0.2, 2.6), d = proj(pts[k + 1].wx, rw.y + 0.2, -2.6);
             if (!a || !b || !c || !d) continue;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y);
             ctx.closePath(); ctx.fill();
         }
+
         for (var e = 0; e < pts.length; e += 2) {
-            var lp = proj(pts[e].wx, rw.y + 4, -RW_HALF - 9);
-            var rp = proj(pts[e].wx, rw.y + 4, RW_HALF + 9);
+            var lp = proj(pts[e].wx, rw.y + 3, -RW_HALF - 8);
+            var rp = proj(pts[e].wx, rw.y + 3, RW_HALF + 8);
             if (!lp || !rp) continue;
             if (lp.y > H - 125 || rp.y > H - 125) continue;
             var aEdge = 0.22 + 0.38 * (1 - haze(lp.d));
             ctx.fillStyle = 'rgba(255,245,178,' + aEdge + ')';
-            ctx.beginPath(); ctx.arc(lp.x, lp.y, clamp(5.5 * lp.s, 1.2, 4.2), 0, 6.284); ctx.fill();
-            ctx.beginPath(); ctx.arc(rp.x, rp.y, clamp(5.5 * rp.s, 1.2, 4.2), 0, 6.284); ctx.fill();
+            ctx.beginPath(); ctx.arc(lp.x, lp.y, clamp(4.7 * lp.s, 1.1, 3.6), 0, 6.284); ctx.fill();
+            ctx.beginPath(); ctx.arc(rp.x, rp.y, clamp(4.7 * rp.s, 1.1, 3.6), 0, 6.284); ctx.fill();
         }
         /* Đèn đầu đường băng nhấp nháy so le — thứ SÁNG NHẤT khung hình lúc hạ
          * cánh, vì mắt trẻ con đi theo chỗ sáng nhất. */
@@ -1316,6 +1323,19 @@
                 ctx.lineTo(q2.x, q2.y);
             }
             ctx.closePath(); ctx.fill();
+        }
+
+        function edgeLine(z, col, w) {
+            ctx.strokeStyle = col;
+            ctx.lineWidth = w;
+            ctx.beginPath();
+            var started = false;
+            for (var j = 0; j < pts.length; j++) {
+                var q = proj(pts[j].wx, rw.y + 0.4, z);
+                if (!q) continue;
+                if (started) ctx.lineTo(q.x, q.y); else { ctx.moveTo(q.x, q.y); started = true; }
+            }
+            ctx.stroke();
         }
     }
 
@@ -1491,25 +1511,45 @@
                 ctx.lineWidth = Math.max(1, 6 * q.s);
                 ctx.beginPath(); ctx.arc(q.x, q.y, rr * pulse - 9 * q.s, 0, 6.284); ctx.stroke();
             } else {
-                drawStar(q.x, q.y + Math.sin(G.t * 2 + it.i) * 10 * q.s,
-                    Math.max(4, R.STAR_R * q.s), '#ffd75e');
+                drawStarOrb(q.x, q.y + Math.sin(G.t * 2 + it.i) * 10 * q.s,
+                    Math.max(5, R.STAR_R * q.s), it.i);
             }
             ctx.restore();
         }
     }
 
-    function drawStar(x, y, r, col) {
+    function drawStarOrb(x, y, r, seed) {
+        var pulse = 1 + Math.sin(G.t * 3.2 + seed) * 0.07;
+        r *= pulse;
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(Math.sin(G.t * 1.3 + x * 0.01) * 0.15);
-        ctx.fillStyle = col;
+        var glow = ctx.createRadialGradient(0, 0, r * 0.18, 0, 0, r * 1.7);
+        glow.addColorStop(0, 'rgba(255,246,178,0.58)');
+        glow.addColorStop(0.5, 'rgba(255,206,74,0.22)');
+        glow.addColorStop(1, 'rgba(255,206,74,0)');
+        ctx.fillStyle = glow;
         ctx.beginPath();
-        for (var i = 0; i < 10; i++) {
-            var rad = i % 2 ? r * 0.44 : r;
-            var a = (i / 10) * 6.284 - 1.571;
-            ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
-        }
-        ctx.closePath(); ctx.fill();
+        ctx.arc(0, 0, r * 1.7, 0, 6.284);
+        ctx.fill();
+
+        var body = ctx.createRadialGradient(-r * 0.32, -r * 0.38, r * 0.08, 0, 0, r);
+        body.addColorStop(0, '#fff9c8');
+        body.addColorStop(0.42, '#ffd75e');
+        body.addColorStop(1, '#e49a23');
+        ctx.fillStyle = body;
+        ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.284); ctx.fill();
+        ctx.strokeStyle = 'rgba(122,75,10,0.3)';
+        ctx.lineWidth = Math.max(1, r * 0.08);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(255,255,255,0.82)';
+        ctx.beginPath(); ctx.ellipse(-r * 0.32, -r * 0.38, r * 0.23, r * 0.15, -0.35, 0, 6.284); ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+        ctx.lineWidth = Math.max(1, r * 0.07);
+        ctx.beginPath();
+        ctx.moveTo(r * 1.15, 0); ctx.lineTo(r * 1.52, 0);
+        ctx.moveTo(r * 1.34, -r * 0.18); ctx.lineTo(r * 1.34, r * 0.18);
+        ctx.stroke();
         ctx.restore();
     }
 
@@ -1521,19 +1561,16 @@
     function drawPlane() {
         var p = proj(P.x, P.alt, P.z);
         if (!p) return;
-        /* Cỡ vẽ. 34 làm sải cánh chiếm gần một phần năm bề ngang màn hình —
-         * máy bay che mất chính cái nó đang bay tới. 28 thì vừa: rõ hơn ở
-         * màn nhỏ, nhưng vẫn chừa đủ đường băng và vòng mây phía trước. */
-        var s = clamp(p.s, 0.4, 3.7) * 28;
+        var s = clamp(p.s, 0.4, 3.7) * 29;
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(-P.bank * 0.5);
 
         ctx.save();
-        ctx.globalAlpha = 0.22;
+        ctx.globalAlpha = 0.18;
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.ellipse(0, s * 0.06, s * 1.18, s * 0.38, 0, 0, 6.284);
+        ctx.ellipse(0, s * 0.06, s * 1.35, s * 0.42, 0, 0, 6.284);
         ctx.fill();
         ctx.restore();
 
@@ -1549,42 +1586,69 @@
             ctx.stroke();
         }
 
-        /* Viền tối quanh cả chiếc máy bay: nền là đồng ruộng xanh sáng, mà
-         * thân máy bay thì trắng — không viền thì ở cỡ này nó nhoè vào nền. */
+        /* Máy bay phản lực thương mại nhìn từ sau: thân trắng dài, cánh xuôi,
+         * hai động cơ dưới cánh và đuôi đứng xanh. Silhouette này gần với
+         * airliner/Boeing hơn kiểu máy bay đồ chơi cánh đỏ trước đây. */
         ctx.strokeStyle = 'rgba(24,40,58,0.85)';
+        ctx.lineWidth = Math.max(1.2, s * 0.045);
         ctx.lineJoin = 'round';
 
-        /* đuôi đứng */
-        ctx.fillStyle = '#d94f42';
-        ctx.lineWidth = Math.max(1, s * 0.05);
+        /* cánh chính xuôi ra sau */
+        ctx.fillStyle = '#e8edf3';
         ctx.beginPath();
-        ctx.moveTo(0, -s * 0.16);
-        ctx.lineTo(-s * 0.08, -s * 0.44);
-        ctx.lineTo(s * 0.08, -s * 0.44);
+        ctx.moveTo(-s * 1.24, s * 0.02);
+        ctx.lineTo(-s * 0.24, -s * 0.13);
+        ctx.lineTo(s * 0.24, -s * 0.13);
+        ctx.lineTo(s * 1.24, s * 0.02);
+        ctx.lineTo(s * 1.05, s * 0.16);
+        ctx.lineTo(s * 0.18, s * 0.08);
+        ctx.lineTo(-s * 0.18, s * 0.08);
+        ctx.lineTo(-s * 1.05, s * 0.16);
         ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        /* cánh: một dải dài hơi vểnh lên hai đầu */
-        ctx.fillStyle = '#e05a4a';
+        ctx.fillStyle = '#d7dee8';
         ctx.beginPath();
-        ctx.moveTo(-s * 1.05, -s * 0.06);
-        ctx.quadraticCurveTo(0, s * 0.12, s * 1.05, -s * 0.06);
-        ctx.lineTo(s * 1.0, s * 0.06);
-        ctx.quadraticCurveTo(0, s * 0.24, -s * 1.0, s * 0.06);
+        ctx.moveTo(-s * 0.92, s * 0.12); ctx.lineTo(-s * 0.18, s * 0.04);
+        ctx.lineTo(-s * 0.08, s * 0.1); ctx.lineTo(-s * 0.78, s * 0.24);
+        ctx.closePath(); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(s * 0.92, s * 0.12); ctx.lineTo(s * 0.18, s * 0.04);
+        ctx.lineTo(s * 0.08, s * 0.1); ctx.lineTo(s * 0.78, s * 0.24);
         ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        /* hai động cơ dưới cánh */
-        ctx.fillStyle = '#4a5666';
-        roundRect(ctx, -s * 0.66, s * 0.02, s * 0.22, s * 0.14, s * 0.07); ctx.fill(); ctx.stroke();
-        roundRect(ctx, s * 0.44, s * 0.02, s * 0.22, s * 0.14, s * 0.07); ctx.fill(); ctx.stroke();
+        /* hai động cơ turbofan */
+        drawJetEngine(-s * 0.58, s * 0.1, s);
+        drawJetEngine(s * 0.58, s * 0.1, s);
 
-        /* thân, nhìn từ sau là một khối tròn dựng đứng */
-        ctx.fillStyle = '#f4f7fb';
-        roundRect(ctx, -s * 0.2, -s * 0.24, s * 0.4, s * 0.44, s * 0.19);
+        /* thân máy bay */
+        var fus = ctx.createLinearGradient(-s * 0.22, 0, s * 0.22, 0);
+        fus.addColorStop(0, '#cfd8e3');
+        fus.addColorStop(0.28, '#f8fbff');
+        fus.addColorStop(0.72, '#f8fbff');
+        fus.addColorStop(1, '#b9c6d4');
+        ctx.fillStyle = fus;
+        roundRect(ctx, -s * 0.22, -s * 0.38, s * 0.44, s * 0.72, s * 0.21);
         ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#3aa7e0';
-        ctx.fillRect(-s * 0.2, -s * 0.02, s * 0.4, s * 0.09);
-        ctx.fillStyle = 'rgba(255,255,255,0.65)';
-        ctx.fillRect(-s * 0.15, -s * 0.19, s * 0.3, s * 0.08);
+
+        ctx.fillStyle = '#2f8fd8';
+        ctx.fillRect(-s * 0.2, -s * 0.04, s * 0.4, s * 0.08);
+        ctx.fillStyle = 'rgba(18,47,83,0.9)';
+        ctx.beginPath(); ctx.ellipse(0, -s * 0.26, s * 0.14, s * 0.08, 0, 0, 6.284); ctx.fill();
+
+        /* đuôi đứng và hai cánh đuôi */
+        ctx.fillStyle = '#1f76bd';
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 0.3);
+        ctx.lineTo(-s * 0.12, -s * 0.66);
+        ctx.lineTo(s * 0.12, -s * 0.66);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#dbe3ee';
+        ctx.beginPath();
+        ctx.moveTo(-s * 0.56, -s * 0.28); ctx.lineTo(-s * 0.1, -s * 0.38); ctx.lineTo(-s * 0.08, -s * 0.27);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(s * 0.56, -s * 0.28); ctx.lineTo(s * 0.1, -s * 0.38); ctx.lineTo(s * 0.08, -s * 0.27);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
 
         /* càng, chỉ thò ra lúc còn thấp — mắt đọc được "sắp chạm đất rồi" */
         if (P.gear) {
@@ -1613,6 +1677,18 @@
             ctx.beginPath();
             ctx.ellipse(sp.x, sp.y, 24 * sp.s, 6 * sp.s, 0, 0, 6.284);
             ctx.fill();
+            ctx.restore();
+        }
+
+        function drawJetEngine(x, y, sc) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.fillStyle = '#c9d2dd';
+            ctx.beginPath(); ctx.ellipse(0, 0, sc * 0.18, sc * 0.14, 0, 0, 6.284); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#2d3746';
+            ctx.beginPath(); ctx.ellipse(0, 0, sc * 0.1, sc * 0.08, 0, 0, 6.284); ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+            ctx.beginPath(); ctx.ellipse(-sc * 0.04, -sc * 0.04, sc * 0.04, sc * 0.025, 0, 0, 6.284); ctx.fill();
             ctx.restore();
         }
     }
