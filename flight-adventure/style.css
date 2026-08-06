@@ -429,14 +429,36 @@ body {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    font-size: 0.9rem;
-    color: #cbd9e5;
-    line-height: 1.5;
+    gap: 10px;
+    width: 100%;
+    padding: 2px;
 }
 
-.help-list li { padding-left: 4px; }
-.help-list b { color: #fff; }
+.help-list li {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-left: 4px solid var(--sky);
+    border-radius: 12px;
+    padding: 14px 18px;
+    font-size: 0.92rem;
+    color: #cbd9e5;
+    line-height: 1.55;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.help-list li:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.2);
+    border-left-color: var(--sun);
+    transform: translateX(4px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.help-list b {
+    color: var(--sun);
+    font-weight: 800;
+}
 
 .big-btn {
     font-family: var(--font-display);
