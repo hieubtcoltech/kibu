@@ -100,148 +100,150 @@
         </header>
 
         <main class="game-viewport">
+            <!-- Cảnh báo bắt buộc xoay màn hình khi ở điện thoại dọc -->
+            <div class="orientation-warning">
+                <div class="ow-content">
+                    <div class="ow-icon">🔄</div>
+                    <h2>Xoay Ngang Màn Hình</h2>
+                    <p>Vui lòng xoay ngang điện thoại để lái máy bay nhé!</p>
+                    <p class="ow-sub">Please rotate your device to landscape to fly.</p>
+                </div>
+            </div>
+
             <!-- Khung sân giữ đúng tỉ lệ canvas 960×600. NẰM NGANG, khác hẳn
                  mấy game dựng đứng khác trên trang: bay thì thứ đáng có là
                  đường chân trời và cái gì đang tới phía trước. -->
             <div class="stage">
                 <div id="game-canvas"></div>
+            </div>
 
-                <!-- BẢNG ĐIỀU KHIỂN: ba con số và một thanh hành trình.
-                     Không nhãn chữ — biểu tượng nói đủ, mà nhãn chữ thì vừa
-                     phải dịch vừa làm ô vỡ dòng khi bản dịch dài hơn. -->
-                <div id="hud" class="hud" hidden>
-                    <div class="hud-top">
-                        <span class="hud-chip"><i class="fa-solid fa-gauge-high"></i><b id="hud-spd">0</b><em>km/h</em></span>
-                        <span class="hud-chip"><i class="fa-solid fa-arrow-up-from-ground-water"></i><b id="hud-alt">0</b><em>m</em></span>
-                        <span class="hud-chip chip-soft" style="display: none !important;">⭐<b id="hud-star">0</b></span>
-                        <span class="hud-chip chip-soft">📷<b id="hud-photo">0/5</b></span>
-                    </div>
-
-                    <!-- Thanh hành trình: hai thành phố hai đầu, máy bay chạy ở
-                         giữa. Trẻ con không đọc phần trăm, nhưng "cái máy bay
-                         đã đi được đến đây" thì nhìn một cái là hiểu. -->
-                    <div class="progress">
-                        <span class="pg-city" id="pg-from">Hanoi</span>
-                        <div class="pg-track">
-                            <i id="progress-fill"></i>
-                            <span id="progress-plane">✈️</span>
-                        </div>
-                        <span class="pg-city" id="pg-to">Da Nang</span>
-                    </div>
-
-                    <div id="guide" class="guide"></div>
-
-                    <div class="hud-right">
-                        <button id="btn-photo" class="round-btn btn-photo" title="Take a photo">📷</button>
-                        <button id="btn-auto" class="round-btn btn-auto" title="Auto-help">🪄</button>
-                        <button id="btn-land" class="round-btn btn-land" title="Help me land" hidden>🛬</button>
-                    </div>
+            <!-- BẢNG ĐIỀU KHIỂN: Di chuyển ra ngoài stage để căn chỉnh tối ưu theo khung hình thiết bị thực tế -->
+            <div id="hud" class="hud" hidden>
+                <div class="hud-top">
+                    <span class="hud-chip"><i class="fa-solid fa-gauge-high"></i><b id="hud-spd">0</b><em>km/h</em></span>
+                    <span class="hud-chip"><i class="fa-solid fa-arrow-up-from-ground-water"></i><b id="hud-alt">0</b><em>m</em></span>
+                    <span class="hud-chip chip-soft" style="display: none !important;">⭐<b id="hud-star">0</b></span>
+                    <span class="hud-chip chip-soft">📷<b id="hud-photo">0/5</b></span>
                 </div>
 
-                <!-- HAI CỤM NÚT, HAI GÓC DƯỚI. Một bên lên xuống, một bên ga.
-                     Đặt hai đầu màn để hai ngón cái không phải với nhau. -->
-                <div id="touch-row" class="touch-row" hidden>
-                    <!-- BỐN HƯỚNG, xếp hình chữ thập. Bé đặt một ngón cái lên
-                         giữa là với tới cả bốn nút, đúng như mọi tay cầm mà bé
-                         từng thấy. Xếp hàng ngang thì lên xuống với trái phải
-                         trông như bốn thứ ngang hàng nhau, mà chúng không phải. -->
-                    <div class="pad pad-left">
-                        <button id="btn-left" class="touch-btn pad-l"><span>◀</span></button>
-                        <div class="pad-mid">
-                            <button id="btn-up" class="touch-btn pad-u"><span>▲</span></button>
-                            <button id="btn-down" class="touch-btn pad-d"><span>▼</span></button>
-                        </div>
-                        <button id="btn-right" class="touch-btn pad-r"><span>▶</span></button>
+                <!-- Thanh hành trình: hai thành phố hai đầu, máy bay chạy ở giữa. -->
+                <div class="progress">
+                    <span class="pg-city" id="pg-from">Hanoi</span>
+                    <div class="pg-track">
+                        <i id="progress-fill"></i>
+                        <span id="progress-plane">✈️</span>
                     </div>
-                    <div class="pad pad-right">
-                        <button id="btn-slow" class="touch-btn btn-thr"><span>🐢</span></button>
-                        <button id="btn-fast" class="touch-btn btn-thr btn-go"><span>🚀</span></button>
-                    </div>
+                    <span class="pg-city" id="pg-to">Da Nang</span>
                 </div>
 
-                <!-- ================= MÀN CHỌN TUYẾN ================= -->
-                <div id="menu-overlay" class="screen">
-                    <div class="panel">
-                        <div class="panel-emoji">✈️</div>
-                        <h2 class="panel-title">FLIGHT ADVENTURE KIDS</h2>
-                        <p class="panel-desc">Fly a friendly airplane, look at the world below, take photos of famous places, and land safely. You can never crash.</p>
+                <div id="guide" class="guide"></div>
 
-                        <div id="route-list" class="route-list"></div>
-
-                        <button id="btn-fly" class="big-btn btn-go-fly"><i class="fa-solid fa-plane-departure"></i> FLY NOW</button>
-                        <button id="btn-album" class="big-btn btn-ghost"><i class="fa-solid fa-book"></i> TRAVEL ALBUM</button>
-                    </div>
+                <div class="hud-right">
+                    <button id="btn-photo" class="round-btn btn-photo" title="Take a photo">📷</button>
+                    <button id="btn-auto" class="round-btn btn-auto" title="Auto-help">🪄</button>
+                    <button id="btn-land" class="round-btn btn-land" title="Help me land" hidden>🛬</button>
                 </div>
+            </div>
 
-                <!-- ================= HƯỚNG DẪN ================= -->
-                <div id="help-overlay" class="screen hidden">
-                    <div class="panel">
-                        <div class="panel-emoji">🧑‍✈️</div>
-                        <h2 class="panel-title">HOW TO FLY</h2>
-                        <ul class="help-list">
-                            <li><b>🚀 Speed up</b> to roll down the runway, then <b>▲ pull up</b> to fly.</li>
-                            <li><b>▲ ▼ ◀ ▶</b> or the arrow keys fly up, down, left and right.</li>
-                            <li>Fly through the <b>glowing rings</b> and collect <b>stars</b>.</li>
-                            <li>When a famous place appears, press <b>📷</b> to take a photo.</li>
-                            <li>Near the end, press <b>🛬</b> and the game helps you land.</li>
-                            <li>Press <b>🪄</b> any time and the plane flies by itself.</li>
-                            <li>You can never crash. If you fly too low, the game lifts you up.</li>
-                        </ul>
-                        <button id="btn-help-close" class="big-btn">GOT IT</button>
+            <!-- HAI CỤM NÚT, HAI GÓC DƯỚI. Phím bấm bám sát 2 góc lề màn hình thiết bị giúp ngón tay chạm tối ưu -->
+            <div id="touch-row" class="touch-row" hidden>
+                <div class="pad pad-left">
+                    <button id="btn-left" class="touch-btn pad-l"><span>◀</span></button>
+                    <div class="pad-mid">
+                        <button id="btn-up" class="touch-btn pad-u"><span>▲</span></button>
+                        <div style="height: 4px; display: block;"></div>
+                        <button id="btn-down" class="touch-btn pad-d"><span>▼</span></button>
                     </div>
+                    <button id="btn-right" class="touch-btn pad-r"><span>▶</span></button>
                 </div>
+                <div class="pad pad-right">
+                    <button id="btn-slow" class="touch-btn btn-thr"><span>🐢</span></button>
+                    <button id="btn-fast" class="touch-btn btn-thr btn-go"><span>🚀</span></button>
+                </div>
+            </div>
 
-                <!-- ================= TẠM DỪNG ================= -->
-                <div id="pause-overlay" class="screen hidden">
-                    <div class="panel panel-small">
-                        <div class="panel-emoji">⏸️</div>
-                        <h2 class="panel-title">PAUSED</h2>
-                        <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> KEEP FLYING</button>
-                        <button id="btn-quit" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> MENU</button>
+            <!-- ================= MÀN CHỌN TUYẾN ================= -->
+            <div id="menu-overlay" class="screen">
+                <div class="panel">
+                    <div class="panel-emoji">✈️</div>
+                    <h2 class="panel-title">FLIGHT ADVENTURE KIDS</h2>
+                    <p class="panel-desc">Fly a friendly airplane, look at the world below, take photos of famous places, and land safely. You can never crash.</p>
+
+                    <div id="route-list" class="route-list"></div>
+
+                    <button id="btn-fly" class="big-btn btn-go-fly"><i class="fa-solid fa-plane-departure"></i> FLY NOW</button>
+                    <button id="btn-album" class="big-btn btn-ghost"><i class="fa-solid fa-book"></i> TRAVEL ALBUM</button>
+                </div>
+            </div>
+
+            <!-- ================= HƯỚNG DẪN ================= -->
+            <div id="help-overlay" class="screen hidden">
+                <div class="panel">
+                    <div class="panel-emoji">🧑‍✈️</div>
+                    <h2 class="panel-title">HOW TO FLY</h2>
+                    <ul class="help-list">
+                        <li><b>🚀 Speed up</b> to roll down the runway, then <b>▲ pull up</b> to fly.</li>
+                        <li><b>▲ ▼ ◀ ▶</b> or the arrow keys fly up, down, left and right.</li>
+                        <li>Fly through <b>dynamic weather</b> and enjoy the gorgeous landscapes.</li>
+                        <li>When a famous place appears, press <b>📷</b> to take a photo.</li>
+                        <li>Near the end, press <b>🛬</b> and the game helps you land.</li>
+                        <li>Press <b>🪄</b> any time and the plane flies by itself.</li>
+                        <li>You can never crash. If you fly too low, the game lifts you up.</li>
+                    </ul>
+                    <button id="btn-help-close" class="big-btn">GOT IT</button>
+                </div>
+            </div>
+
+            <!-- ================= TẠM DỪNG ================= -->
+            <div id="pause-overlay" class="screen hidden">
+                <div class="panel panel-small">
+                    <div class="panel-emoji">⏸️</div>
+                    <h2 class="panel-title">PAUSED</h2>
+                    <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> KEEP FLYING</button>
+                    <button id="btn-quit" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> MENU</button>
+                </div>
+            </div>
+
+            <!-- ================= SỔ LƯU ================= -->
+            <div id="album-overlay" class="screen hidden">
+                <div class="panel">
+                    <div class="panel-emoji">📔</div>
+                    <h2 class="panel-title">TRAVEL ALBUM</h2>
+                    <div class="album-top">
+                        <div class="al-stat"><b id="album-flights">0</b><span>Flights</span></div>
+                        <div class="al-stat"><b id="album-stars" style="display:none;">0</b><span style="display:none;">Stars</span></div>
                     </div>
+                    <h3 class="album-head">Airport stamps</h3>
+                    <div id="album-stamps" class="stamp-row"></div>
+                    <h3 class="album-head">Landmark photos</h3>
+                    <div id="album-photos" class="photo-grid"></div>
+                    <button id="btn-album-close" class="big-btn">BACK</button>
                 </div>
+            </div>
 
-                <!-- ================= SỔ LƯU ================= -->
-                <div id="album-overlay" class="screen hidden">
-                    <div class="panel">
-                        <div class="panel-emoji">📔</div>
-                        <h2 class="panel-title">TRAVEL ALBUM</h2>
-                        <div class="album-top">
-                            <div class="al-stat"><b id="album-flights">0</b><span>Flights</span></div>
-                            <div class="al-stat"><b id="album-stars">0</b><span>Stars</span></div>
-                        </div>
-                        <h3 class="album-head">Airport stamps</h3>
-                        <div id="album-stamps" class="stamp-row"></div>
-                        <h3 class="album-head">Landmark photos</h3>
-                        <div id="album-photos" class="photo-grid"></div>
-                        <button id="btn-album-close" class="big-btn">BACK</button>
+            <!-- ================= HẠ CÁNH XONG ================= -->
+            <div id="done-overlay" class="screen hidden">
+                <div class="panel">
+                    <div class="landed-hero">
+                        <span class="lh-icon" id="done-rating-icon">🌟</span>
+                        <b class="lh-rating" id="done-rating">Great Landing</b>
+                        <span class="lh-route" id="done-route">Hanoi → Da Nang</span>
                     </div>
-                </div>
 
-                <!-- ================= HẠ CÁNH XONG ================= -->
-                <div id="done-overlay" class="screen hidden">
-                    <div class="panel">
-                        <div class="landed-hero">
-                            <span class="lh-icon" id="done-rating-icon">🌟</span>
-                            <b class="lh-rating" id="done-rating">Great Landing</b>
-                            <span class="lh-route" id="done-route">Hanoi → Da Nang</span>
+                    <div class="done-row">
+                        <div class="stamp big-stamp">
+                            <b id="done-stamp">DAD</b><span id="done-stamp-city">Da Nang</span>
                         </div>
+                        <div class="done-tile" style="display: none !important;"><span>⭐</span><b id="done-stars">0</b></div>
+                        <div class="done-tile" style="display: none !important;"><span>💍</span><b id="done-rings">0/0</b></div>
+                    </div>
 
-                        <div class="done-row">
-                            <div class="stamp big-stamp">
-                                <b id="done-stamp">DAD</b><span id="done-stamp-city">Da Nang</span>
-                            </div>
-                            <div class="done-tile" style="display: none !important;"><span>⭐</span><b id="done-stars">0</b></div>
-                            <div class="done-tile" style="display: none !important;"><span>💍</span><b id="done-rings">0/0</b></div>
-                        </div>
+                    <div id="done-photos" class="photo-grid"></div>
 
-                        <div id="done-photos" class="photo-grid"></div>
-
-                        <div class="over-actions">
-                            <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> FLY AGAIN</button>
-                            <button id="btn-done-album" class="big-btn btn-ghost"><i class="fa-solid fa-book"></i> ALBUM</button>
-                            <button id="btn-done-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> MENU</button>
-                        </div>
+                    <div class="over-actions">
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> FLY AGAIN</button>
+                        <button id="btn-done-album" class="big-btn btn-ghost"><i class="fa-solid fa-book"></i> ALBUM</button>
+                        <button id="btn-done-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> MENU</button>
                     </div>
                 </div>
             </div>

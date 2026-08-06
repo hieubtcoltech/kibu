@@ -769,11 +769,76 @@ body {
 /* Điện thoại xoay ngang: khung bay vốn nằm ngang nên vừa vặn hẳn, chỉ cần
    dẹp bớt phần trang trí quanh nó. */
 @media (max-height: 520px) and (orientation: landscape) {
-    .app-wrapper { padding: 6px 8px 6px; gap: 6px; }
-    .unified-nav { padding: 5px 10px; border-radius: 14px; }
-    .brand-title { font-size: 0.95rem; }
+    .app-wrapper { padding: 4px 6px 4px; gap: 4px; }
+    .unified-nav { padding: 4px 8px; border-radius: 12px; }
+    .brand-title { font-size: 0.9rem; }
     .site-footer { display: none; }
-    .touch-btn { width: 54px; height: 54px; }
-    .round-btn { width: 44px; height: 44px; font-size: 1.2rem; }
-    .guide { bottom: 80px; }
+    .touch-btn { width: 50px; height: 50px; }
+    .pad-mid .touch-btn { height: 44px; }
+    .pad-l, .pad-r { height: 92px; }
+    .round-btn { width: 40px; height: 40px; font-size: 1.1rem; }
+    .hud-right { right: 8px; gap: 6px; }
+    .touch-row { bottom: 8px; left: 8px; right: 8px; }
+    .hud-chip { min-width: 66px; padding: 4px 7px; font-size: 0.68rem; }
+    .hud-chip b { font-size: 0.88rem; }
+    .progress { top: 38px; width: min(65%, 280px); }
+    .guide { bottom: 74px; font-size: 0.76rem; padding: 6px 12px; }
+}
+
+/* =========================================================
+   CẢNH BÁO XOAY MÀN HÌNH (PORTRAIT MOBILE WARNING)
+   ========================================================= */
+.orientation-warning {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: #071019;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+}
+
+.ow-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.ow-icon {
+    font-size: 3.5rem;
+    animation: ow-rotate 2.2s infinite ease-in-out;
+}
+
+@keyframes ow-rotate {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-90deg); }
+}
+
+.ow-content h2 {
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    color: #fff;
+    font-weight: 800;
+}
+
+.ow-content p {
+    font-size: 0.95rem;
+    color: #cbd9e5;
+    line-height: 1.45;
+}
+
+.ow-sub {
+    font-size: 0.78rem !important;
+    opacity: 0.65;
+    margin-top: -4px;
+}
+
+/* Hiển thị cảnh báo xoay màn hình CHỈ khi ở chế độ Portrait trên màn hình di động nhỏ */
+@media (orientation: portrait) and (max-width: 768px) {
+    .orientation-warning {
+        display: flex;
+    }
 }
