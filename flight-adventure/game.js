@@ -2294,7 +2294,7 @@
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        drawCockpitRunwayApron(deckY, sideW);
+        drawCockpitRunwayView(deckY, sideW);
 
         /* Mũi máy bay hiện thấp dưới kính, tạo cảm giác đang ngồi sau táp-lô. */
         var noseW = clamp(W * 0.42, 120, 250);
@@ -2479,20 +2479,20 @@
         ctx.restore();
     }
 
-    function drawCockpitRunwayApron(deckY, sideW) {
+    function drawCockpitRunwayView(deckY, sideW) {
         var rt = G.route;
         if (!rt || !isCockpitView()) return;
         var dep = R.departRunway(rt);
         var arr = R.arriveRunway(rt);
         var onDep = P.x >= dep.x0 - 80 && P.x <= dep.x1 + 80 && Math.abs(P.z) < RW_HALF * 2.2;
-        var onArr = P.x >= arr.x0 - 80 && P.x <= arr.x1 + 80 && Math.abs(P.z) < RW_HALF * 2.2;
+        var onArr = P.x >= arr.x0 - 220 && P.x <= arr.x1 + 120 && Math.abs(P.z) < RW_HALF * 2.4;
         if (!onDep && !onArr) return;
 
         var center = W / 2 - clamp(P.z * 0.22, -W * 0.18, W * 0.18);
-        var topY = clamp(horizonY() + 52, H * 0.31, deckY - 48);
-        var bottomY = deckY + 18;
-        var topHalf = clamp(W * 0.14 + Math.abs(P.z) * 0.02, 70, W * 0.26);
-        var bottomHalf = clamp(W * 0.48, 170, W * 0.58);
+        var topY = clamp(horizonY() + 18, H * 0.32, deckY - 98);
+        var bottomY = deckY + 16;
+        var topHalf = clamp(W * 0.035, 18, 44);
+        var bottomHalf = clamp(W * 0.5, 170, W * 0.6);
 
         ctx.save();
         ctx.beginPath();
@@ -2500,9 +2500,9 @@
         ctx.clip();
 
         var grad = ctx.createLinearGradient(0, topY, 0, bottomY);
-        grad.addColorStop(0, 'rgba(90, 100, 112, 0.62)');
-        grad.addColorStop(0.55, 'rgba(98, 108, 121, 0.82)');
-        grad.addColorStop(1, 'rgba(54, 61, 72, 0.94)');
+        grad.addColorStop(0, 'rgba(104, 114, 126, 0.9)');
+        grad.addColorStop(0.52, 'rgba(82, 92, 104, 0.94)');
+        grad.addColorStop(1, 'rgba(50, 58, 68, 0.98)');
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.moveTo(center - topHalf, topY);
@@ -2512,23 +2512,52 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(235, 242, 248, 0.65)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.lineWidth = clamp(W * 0.002, 1, 2.4);
+        for (var slab = 1; slab < 7; slab++) {
+            var st = slab / 7;
+            var y = topY + (bottomY - topY) * Math.pow(st, 1.45);
+            var half = topHalf + (bottomHalf - topHalf) * Math.pow(st, 1.08);
+            ctx.beginPath();
+            ctx.moveTo(center - half, y);
+            ctx.lineTo(center + half, y);
+            ctx.stroke();
+        }
+
+        ctx.strokeStyle = 'rgba(235, 242, 248, 0.82)';
+        ctx.lineWidth = clamp(W * 0.0026, 1.4, 3.2);
         ctx.beginPath();
-        ctx.moveTo(center - topHalf * 1.08, topY);
-        ctx.lineTo(center - bottomHalf * 1.02, bottomY);
-        ctx.moveTo(center + topHalf * 1.08, topY);
-        ctx.lineTo(center + bottomHalf * 1.02, bottomY);
+        ctx.moveTo(center - topHalf * 1.14, topY);
+        ctx.lineTo(center - bottomHalf * 1.01, bottomY);
+        ctx.moveTo(center + topHalf * 1.14, topY);
+        ctx.lineTo(center + bottomHalf * 1.01, bottomY);
         ctx.stroke();
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = clamp(W * 0.008, 4, 10);
-        ctx.lineCap = 'round';
-        var stripeTop = topY + (bottomY - topY) * 0.22;
-        ctx.beginPath();
-        ctx.moveTo(center, stripeTop);
-        ctx.lineTo(center, bottomY - 12);
-        ctx.stroke();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+        for (var i = 0; i < 7; i++) {
+            var t0 = 0.08 + i * 0.125;
+            var t1 = t0 + 0.056;
+            var y0 = topY + (bottomY - topY) * Math.pow(t0, 1.42);
+            var y1 = topY + (bottomY - topY) * Math.pow(t1, 1.42);
+            var w0 = clamp((topHalf + (bottomHalf - topHalf) * Math.pow(t0, 1.08)) * 0.11, 3, 18);
+            var w1 = clamp((topHalf + (bottomHalf - topHalf) * Math.pow(t1, 1.08)) * 0.11, 4, 22);
+            ctx.beginPath();
+            ctx.moveTo(center - w0, y0);
+            ctx.lineTo(center + w0, y0);
+            ctx.lineTo(center + w1, y1);
+            ctx.lineTo(center - w1, y1);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        var thresholdY = topY + (bottomY - topY) * 0.16;
+        var thresholdHalf = topHalf + (bottomHalf - topHalf) * Math.pow(0.16, 1.08);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.86)';
+        for (var m = -2; m <= 2; m++) {
+            if (m === 0) continue;
+            var markX = center + m * thresholdHalf * 0.18;
+            ctx.fillRect(markX - 2, thresholdY, 4, clamp(W * 0.012, 8, 18));
+        }
 
         ctx.restore();
     }
@@ -2540,8 +2569,10 @@
         drawSky();
         if (G.route) {
             drawGround();
-            drawRunway(R.departRunway(G.route), false);
-            drawRunway(R.arriveRunway(G.route), true);
+            if (!isCockpitView()) {
+                drawRunway(R.departRunway(G.route), false);
+                drawRunway(R.arriveRunway(G.route), true);
+            }
             drawLandmarks();
             drawGlide();
             drawPickups();
