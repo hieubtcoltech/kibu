@@ -484,12 +484,12 @@
         var c = ringChain(route);
         return (i < 0 || i >= c.length) ? null : c[i];
     }
-    function ringCount(route) { return ringChain(route).length; }
+    function ringCount(route) { return 0; }
 
     /* Sao treo GIỮA hai vòng, ngay trên đường nối chúng. Bay men theo dải vòng
      * mây thì nhặt được sao mà không phải rẽ thêm đâu cả — phần thưởng cho
      * việc đi đúng đường, chứ không phải một việc thứ hai phải làm. */
-    function starCount(route) { return Math.max(0, ringCount(route) - 1); }
+    function starCount(route) { return 0; }
 
     /* Bao nhiêu vòng THẬT SỰ có mặt — chỗ nào địa hình dựng quá nhanh thì
      * chuỗi bỏ trống. Máy soát đếm bằng con số này chứ không bằng chiều dài
