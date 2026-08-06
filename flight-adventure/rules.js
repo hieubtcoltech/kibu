@@ -271,6 +271,67 @@
                     factVi: 'Một cây cầu mang hình con rồng.'
                 }
             ]
+        },
+        {
+            id: 'han-sfo',
+            en: 'Hanoi to San Francisco', vi: 'Hà Nội đến San Francisco',
+            fromCity: { en: 'Hanoi', vi: 'Hà Nội' },
+            toCity: { en: 'San Francisco', vi: 'San Francisco' },
+            fromAirport: { en: 'Noi Bai Airport', vi: 'Sân bay Nội Bài', code: 'HAN' },
+            toAirport: { en: 'San Francisco Airport', vi: 'Sân bay San Francisco', code: 'SFO' },
+            realKm: 12000,
+            sky: 'sunset',
+            len: 86000,
+            runwayLen: 2600,
+            landStart: 68000,
+            segments: [
+                { to: 6300, kind: 'city' },
+                { to: 14300, kind: 'fields' },
+                { to: 21500, kind: 'hills' },
+                { to: 28700, kind: 'mountains' },
+                { to: 35800, kind: 'coast' },
+                { to: 64500, kind: 'sea' },
+                { to: 73500, kind: 'coast' },
+                { to: 86000, kind: 'city' }
+            ],
+            landmarks: [
+                {
+                    at: 4000, kind: 'lake', z: -520,
+                    en: 'Hoan Kiem Lake', vi: 'Hồ Hoàn Kiếm',
+                    factEn: 'A famous lake in the middle of Hanoi.',
+                    factVi: 'Một cái hồ nổi tiếng ở giữa Hà Nội.'
+                },
+                {
+                    at: 12500, kind: 'river', z: 580,
+                    en: 'Red River Delta', vi: 'Đồng bằng Sông Hồng',
+                    factEn: 'Green fields and rivers near the capital.',
+                    factVi: 'Ruộng xanh và sông uốn quanh thủ đô.'
+                },
+                {
+                    at: 34000, kind: 'beach', z: 640,
+                    en: 'Pacific Coast', vi: 'Bờ Thái Bình Dương',
+                    factEn: 'The plane leaves land and flies over the ocean.',
+                    factVi: 'Máy bay rời đất liền và bay ra biển lớn.'
+                },
+                {
+                    at: 52000, kind: 'beach', z: -420,
+                    en: 'Open Pacific', vi: 'Giữa Thái Bình Dương',
+                    factEn: 'Hours of blue water below the wings.',
+                    factVi: 'Hàng giờ chỉ thấy nước xanh dưới cánh máy bay.'
+                },
+                {
+                    at: 66000, kind: 'beach', z: 520,
+                    en: 'California Coast', vi: 'Bờ biển California',
+                    factEn: 'Land appears again after the long ocean flight.',
+                    factVi: 'Đất liền hiện ra sau chặng bay qua đại dương.'
+                },
+                {
+                    at: 80500, kind: 'bridge', z: -280,
+                    en: 'Golden Gate Bridge', vi: 'Cầu Cổng Vàng',
+                    factEn: 'A big orange bridge by the bay.',
+                    factVi: 'Cây cầu màu cam nổi tiếng bên vịnh.'
+                }
+            ]
         }
     ];
 

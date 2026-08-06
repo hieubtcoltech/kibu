@@ -975,6 +975,12 @@
         return { top: top, mid: mid, low: low, haze: hz, sun: s.sun };
     }
 
+    function sunVisibility() {
+        var w = G.route ? weatherAt(P.x) : { storm: 0, cloudy: 0 };
+        var cover = Math.max(w.storm * 0.98, w.cloudy * 0.88);
+        return clamp(1 - cover, 0, 1);
+    }
+
     function drawSky() {
         var s = currentSky();
         var hz = horizonY();
@@ -989,17 +995,20 @@
         ctx.fillRect(0, 0, W, H);
 
         var sp = proj(SUN_WX, SUN_ALT, SUN_WZ);
-        if (sp && sp.y < hz + 24) {
+        var sunVis = sunVisibility();
+        if (sp && sp.y < hz + 24 && sunVis > 0.05) {
             var sunX = sp.x;
             var sunY = Math.min(sp.y, hz - 28);
             var gg = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 200);
-            gg.addColorStop(0, 'rgba(255,247,214,0.95)');
-            gg.addColorStop(0.32, 'rgba(255,240,180,0.32)');
+            gg.addColorStop(0, 'rgba(255,247,214,' + (0.95 * sunVis) + ')');
+            gg.addColorStop(0.32, 'rgba(255,240,180,' + (0.32 * sunVis) + ')');
             gg.addColorStop(1, 'rgba(255,240,180,0)');
             ctx.fillStyle = gg;
             ctx.fillRect(sunX - 200, sunY - 200, 400, 400);
+            ctx.globalAlpha = sunVis;
             ctx.fillStyle = s.sun;
             ctx.beginPath(); ctx.arc(sunX, sunY, 28, 0, 6.284); ctx.fill();
+            ctx.globalAlpha = 1;
         }
     }
 
