@@ -2042,9 +2042,11 @@
     }
 
     function drawRadarCompass() {
-        var r = 38;
-        var mcX = 22 + r; // Căn đều từ lề trái
-        var mcY = 22 + r; // Căn đều từ lề trên
+        /* Trên màn dọc (W hẹp), rada thu nhỏ và đẩy xuống dưới thanh progress */
+        var isNarrow = W < 500;
+        var r = isNarrow ? 26 : 38;
+        var mcX = (isNarrow ? 14 : 22) + r;
+        var mcY = (isNarrow ? 56 : 22) + r; // portrait: đẩy xuống tránh đè progress
         
         ctx.save();
         
