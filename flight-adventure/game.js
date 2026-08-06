@@ -922,6 +922,12 @@
         sunset: { top: '#3a3d7a', mid: '#e8756b', low: '#ffc978', haze: '#ffd9a8', sun: '#fff0b0' }
     };
 
+    /* Mặt trời cố định trong thế giới (phía trước–phải so với tuyến +X), không
+     * gắn vào máy quay bám đuôi — bẻ lái thì chỉ đổi góc nhìn, không kéo mặt trời theo. */
+    var SUN_WX = 80000;
+    var SUN_WZ = 28000;
+    var SUN_ALT = 10000;
+
     function skyOf() { return SKIES[G.route ? G.route.sky : 'morning'] || SKIES.morning; }
 
     function weatherAt(x) {
@@ -982,18 +988,19 @@
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, W, H);
 
-        /* Mặt trời ở xa hàng trăm cây số nên nó gần như đứng yên — chỉ trượt
-         * theo cú bẻ lái, đúng như nhìn từ buồng lái thật. */
-        var sunX = W * 0.74 - cam.z * 0.012;
-        var sunY = hz - 118;
-        var gg = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 200);
-        gg.addColorStop(0, 'rgba(255,247,214,0.95)');
-        gg.addColorStop(0.32, 'rgba(255,240,180,0.32)');
-        gg.addColorStop(1, 'rgba(255,240,180,0)');
-        ctx.fillStyle = gg;
-        ctx.fillRect(sunX - 200, sunY - 200, 400, 400);
-        ctx.fillStyle = s.sun;
-        ctx.beginPath(); ctx.arc(sunX, sunY, 28, 0, 6.284); ctx.fill();
+        var sp = proj(SUN_WX, SUN_ALT, SUN_WZ);
+        if (sp && sp.y < hz + 24) {
+            var sunX = sp.x;
+            var sunY = Math.min(sp.y, hz - 28);
+            var gg = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 200);
+            gg.addColorStop(0, 'rgba(255,247,214,0.95)');
+            gg.addColorStop(0.32, 'rgba(255,240,180,0.32)');
+            gg.addColorStop(1, 'rgba(255,240,180,0)');
+            ctx.fillStyle = gg;
+            ctx.fillRect(sunX - 200, sunY - 200, 400, 400);
+            ctx.fillStyle = s.sun;
+            ctx.beginPath(); ctx.arc(sunX, sunY, 28, 0, 6.284); ctx.fill();
+        }
     }
 
     function drawDistantRidges() {
