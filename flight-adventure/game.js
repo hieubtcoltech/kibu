@@ -2663,7 +2663,7 @@
     /* ========================================================================
      * 11. MÀN HÌNH HTML
      * ======================================================================*/
-    var screens = ['menu-overlay', 'help-overlay', 'album-overlay', 'done-overlay', 'pause-overlay'];
+    var screens = ['menu-overlay', 'help-overlay', 'album-overlay', 'photo-view-overlay', 'done-overlay', 'pause-overlay'];
     function showScreen(id) {
         for (var i = 0; i < screens.length; i++) {
             el(screens[i]).classList.toggle('hidden', screens[i] !== id);
@@ -2734,22 +2734,33 @@
         for (var i = 0; i < rt.landmarks.length; i++) {
             var lm = rt.landmarks[i];
             if (G.shots.indexOf(lm.en) < 0) continue;
-            host.appendChild(photoCard(lm));
+            host.appendChild(photoCard(lm, 'done-overlay'));
         }
     }
 
-    function photoCard(lm) {
-        var d = document.createElement('div');
+    var photoBackScreen = 'album-overlay';
+    function photoCard(lm, backScreen) {
+        var d = document.createElement('button');
+        d.type = 'button';
         d.className = 'photo-card';
         d.innerHTML = '<div class="pc-pic pc-' + lm.kind + '"></div>' +
             '<b>' + name(lm) + '</b><span>' + fact(lm) + '</span>';
+        d.addEventListener('click', function () { openPhotoView(lm, backScreen || 'album-overlay'); });
         return d;
+    }
+
+    function openPhotoView(lm, backScreen) {
+        photoBackScreen = backScreen || 'album-overlay';
+        var pic = el('photo-view-pic');
+        pic.className = 'photo-view-pic pc-' + lm.kind;
+        el('photo-view-title').textContent = name(lm);
+        el('photo-view-fact').textContent = fact(lm);
+        showScreen('photo-view-overlay');
     }
 
     function renderAlbum() {
         var d = store.data;
         el('album-flights').textContent = String(d.flights);
-        el('album-stars').textContent = String(d.stars);
 
         var st = el('album-stamps');
         st.innerHTML = '';
@@ -2773,7 +2784,7 @@
             for (var k = 0; k < rt.landmarks.length; k++) {
                 var lm = rt.landmarks[k];
                 if (!d.photos[rt.id + ':' + lm.en]) continue;
-                ph.appendChild(photoCard(lm));
+                ph.appendChild(photoCard(lm, 'album-overlay'));
                 any = true;
             }
         }
@@ -2995,6 +3006,7 @@
         el('btn-help-close').addEventListener('click', function () {
             showScreen(G.phase === 'menu' ? 'menu-overlay' : 'pause-overlay');
         });
+        el('btn-photo-view-close').addEventListener('click', function () { showScreen(photoBackScreen); });
         el('btn-pause').addEventListener('click', togglePause);
         el('btn-resume').addEventListener('click', togglePause);
         el('btn-quit').addEventListener('click', backToMenu);

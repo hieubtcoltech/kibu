@@ -605,7 +605,7 @@ body .app-wrapper {
 .album-top { display: flex; gap: 10px; width: 100%; }
 
 .al-stat {
-    flex: 1;
+    width: 100%;
     padding: 10px;
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.05);
@@ -668,6 +668,12 @@ body .app-wrapper {
    cộng một chữ, và thế là đủ: điều bé nhớ không phải hình cái cầu, mà là
    "mình đã tới đó và chụp được". */
 .photo-card {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
     padding: 8px;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.06);
@@ -676,6 +682,15 @@ body .app-wrapper {
     flex-direction: column;
     gap: 4px;
     text-align: left;
+    transition: border-color 0.16s ease, transform 0.16s ease, background 0.16s ease;
+}
+
+.photo-card:hover,
+.photo-card:focus-visible {
+    border-color: rgba(255, 215, 94, 0.52);
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    transform: translateY(-2px);
 }
 
 .pc-pic {
@@ -694,6 +709,26 @@ body .app-wrapper {
 .photo-card span { font-size: 0.71rem; color: #9fb4c6; line-height: 1.35; }
 
 .no-photo { font-size: 0.85rem; color: #8fa6ba; grid-column: 1 / -1; }
+
+.panel-photo { max-width: 760px; }
+
+.photo-view-pic {
+    width: 100%;
+    min-height: clamp(180px, 42vh, 360px);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: linear-gradient(160deg, #7fd0ef, #3aa7e0);
+    box-shadow: inset 0 -60px 90px rgba(0, 0, 0, 0.16);
+}
+
+.photo-view-title { font-size: clamp(1.5rem, 5vw, 2.2rem); }
+.photo-view-fact { max-width: 56ch; }
+
+.photo-view-pic.pc-lake { background: linear-gradient(160deg, #8fe0c8, #2f8f9e); }
+.photo-view-pic.pc-river { background: linear-gradient(160deg, #a7e6ff, #3f8ad8); }
+.photo-view-pic.pc-pass { background: linear-gradient(160deg, #cbd8e6, #5d7a92); }
+.photo-view-pic.pc-beach { background: linear-gradient(160deg, #ffe6b0, #58c2e0); }
+.photo-view-pic.pc-bridge { background: linear-gradient(160deg, #ffc078, #e0663a); }
 
 /* ---------------- Màn hạ cánh xong ----------------
    Một tấm huy hiệu to làm chủ, rồi con dấu và mấy con số. Không có bảng liệt
