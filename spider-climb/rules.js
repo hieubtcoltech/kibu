@@ -107,6 +107,22 @@
      * ấy là "khe rộng khó hơn" — không phải vì nhảy hụt (nhảy hụt là bất công,
      * người chơi có làm gì sai đâu) mà vì hở sườn lâu gần gấp đôi giữa khe. */
 
+    /* ---- Ba nhân vật phản diện ---- */
+    var THUG_WARN = 0.9;           // cửa sổ lạch cạch bấy nhiêu giây trước khi hắn thò ra
+    var THUG_OUT = 1.4;            // rồi hắn chắn tường bấy nhiêu giây
+    var RIVAL_SPEED = 132;         // đối thủ tụt xuống nhanh chừng này (điểm ảnh/giây)
+    var RIVAL_WINDUP = 0.55;       // hắn rùn người bấy nhiêu giây trước khi nhảy sang
+    /* Mỗi lượt chạm mặt hắn chỉ được nhảy sang tường mình ĐÚNG MỘT LẦN.
+     *
+     * Đây là con số giữ cho hắn thú vị thay vì bất công. Cho nhảy không giới
+     * hạn thì hắn bám dính lấy người chơi và đường thoát biến mất — mà bản
+     * thiết kế đòi lúc nào cũng phải còn một đường đi hợp lý. Một lần thì
+     * thành ra đúng một màn đấu trí: đổi tường, hắn theo, đổi lại, hắn hết
+     * lượt. */
+    var RIVAL_JUMPS = 1;
+    var SHOT_SPEED = 430;          // đạn rô-bốt gác bay ngang
+    var SHOT_LIVE = 0.9;           // và sống được bấy nhiêu giây
+
     var CRACK_HOLD = 1.25;         // bám tấm nứt quá ngần này giây thì vỡ
     var WEB_MAX = 3;               // số lần bắn tơ giữ trong người
     var WEB_RECHARGE = 6.2;        // giây nạp lại một lần bắn
@@ -255,8 +271,24 @@
      * công thức ở hai chỗ — một chỗ để ép lúc đặt, một chỗ để soát — rồi hai
      * chỗ lệch nhau: phép đặt tưởng đã kẹp đủ, máy soát vẫn kêu hở có 1,04 s.
      * Sai không phải ở con số nào cả, sai ở chỗ có HAI con số. */
+    /* Mốc mét ba nhân vật phản diện bước vào. Giãn xa nhau, và mỗi đứa lần đầu
+     * xuất hiện là xuất hiện MỘT MÌNH — luật giới thiệu dần của bản thiết kế.
+     * Gặp lần đầu mà đã kèm mối nguy khác thì người chơi chỉ kịp thấy mình
+     * chết, không kịp thấy mình chết vì cái gì. */
+    var THUG_M = 700;              // gã thò ra cửa sổ
+    var RIVAL_M = 2200;            // người nhện đối thủ, leo ngược xuống
+    var SENTRY_M = 4200;           // rô-bốt gác, bắn đón đầu
+
     function moverWindow(m) {
         if (m.kind === 'laser') return m.period - m.charge - m.fire;
+        /* Gã kia thò ra bao lâu thì nguy hiểm bấy lâu; phần còn lại của chu kỳ
+         * là khe trống, kể cả quãng hắn đang loay hoay mở cửa sổ. */
+        if (m.kind === 'thug') return m.period - m.out;
+        if (m.kind === 'sentry') return m.period - m.charge - SHOT_LIVE;
+        /* Đối thủ không tuần hoàn — hắn đi xuống một lần rồi thôi. Chỗ giữ cho
+         * hắn công bằng không phải chu kỳ mà là số lần được nhảy sang tường
+         * mình, xem RIVAL_JUMPS. */
+        if (m.kind === 'rival') return Infinity;
         if (m.kind === 'drone' || m.kind === 'bird') return m.period * 0.5 * (1 - FLY_OCC);
         if (m.kind === 'debris') return m.period - 0.8;
         if (m.kind === 'swing') return m.period * 0.5;
@@ -344,29 +376,8 @@
      *   · đè lên mặt tường xấu bên kia
      * Đây là hàm giữ cho cả game công bằng. */
     World.prototype.blocker = function (side, y0, h, type) {
-        var y1 = y0 + h, i, b, s;
-        var other = 1 - side;
-        for (i = 0; i < this.blockers.length; i++) {
-            b = this.blockers[i];
-            if (b.side === side) {
-                if (overlap(y0 - SAME_SIDE_MIN, y1 + SAME_SIDE_MIN, b.y0, b.y1)) return null;
-            } else {
-                /* hai tường cùng bị chặn ở một quãng ⇒ không còn đường nào */
-                if (overlap(y0 - CLEAR, y1 + CLEAR, b.y0 - CLEAR, b.y1 + CLEAR)) return null;
-            }
-        }
-        for (i = 0; i < this.surfaces.length; i++) {
-            s = this.surfaces[i];
-            if (s.side === other && overlap(y0 - CLEAR, y1 + CLEAR, s.y0, s.y1)) return null;
-            if (s.side === side && overlap(y0, y1, s.y0, s.y1)) return null;
-        }
-        for (i = 0; i < this.movers.length; i++) {
-            var mv = this.movers[i];
-            if (mv.kind === 'platform') {
-                if (mv.side === side && overlap(y0 - SAME_SIDE_MIN, y1 + SAME_SIDE_MIN, mv.y0, mv.y1)) return null;
-                if (mv.side === other && overlap(y0 - CLEAR, y1 + CLEAR, mv.y0 - CLEAR, mv.y1 + CLEAR)) return null;
-            }
-        }
+        var y1 = y0 + h, b;
+        if (!this.wallFree(side, y0, y1)) return null;
         b = { side: side, y0: y0, y1: y1, type: type || 'ac', hp: type === 'barrier' ? 2 : 1 };
         this.blockers.push(b);
         /* Vật cản sinh SAU có thể đè lên xu đã rải trước đó — luật "vật phẩm
@@ -399,6 +410,39 @@
         var out = { side: side, y0: y0, y1: y1, kind: kind, cut: false };
         this.surfaces.push(out);
         return out;
+    };
+
+    /* Có ĐÒI ĐƯỢC một quãng tường không?
+     *
+     * Vật cản đứng yên, giàn lau kính và gã thò cửa sổ đều chiếm chỗ trên mặt
+     * tường, nên đều phải theo đúng một luật: bên kia phải quang. Tách ra dùng
+     * chung vì bản trước em chép luật ấy ba lần, và ba bản chép đã bắt đầu
+     * lệch nhau — chỗ thì kiểm cả mặt tường xấu, chỗ thì quên.
+     *
+     * Trả về true nếu đòi được. */
+    World.prototype.wallFree = function (side, y0, y1) {
+        var other = 1 - side, i;
+        for (i = 0; i < this.blockers.length; i++) {
+            var b = this.blockers[i];
+            if (b.side === side) {
+                if (overlap(y0 - SAME_SIDE_MIN, y1 + SAME_SIDE_MIN, b.y0, b.y1)) return false;
+            } else if (overlap(y0 - CLEAR, y1 + CLEAR, b.y0 - CLEAR, b.y1 + CLEAR)) return false;
+        }
+        for (i = 0; i < this.surfaces.length; i++) {
+            var sf = this.surfaces[i];
+            if (sf.side === other && overlap(y0 - CLEAR, y1 + CLEAR, sf.y0, sf.y1)) return false;
+            if (sf.side === side && overlap(y0, y1, sf.y0, sf.y1)) return false;
+        }
+        for (i = 0; i < this.movers.length; i++) {
+            var mv = this.movers[i];
+            if (mv.kind !== 'platform' && mv.kind !== 'thug') continue;
+            var m0 = mv.y0 != null ? mv.y0 : mv.y;
+            var m1 = mv.y1 != null ? mv.y1 : mv.y + 90;
+            if (mv.side === side) {
+                if (overlap(y0 - SAME_SIDE_MIN, y1 + SAME_SIDE_MIN, m0, m1)) return false;
+            } else if (overlap(y0 - CLEAR, y1 + CLEAR, m0 - CLEAR, m1 + CLEAR)) return false;
+        }
+        return true;
     };
 
     /* Mối nguy di động. Mỗi loại tự khai chu kỳ và bề rộng cửa sổ an toàn;
@@ -446,6 +490,29 @@
             m.hp = 1;
         } else if (kind === 'loose') {
             m.period = 0;
+            m.hp = 1;
+        } else if (kind === 'thug') {
+            /* Hắn chiếm mặt tường lúc thò ra, nên phải theo đúng luật của vật
+             * cản đứng yên: bên kia phải quang suốt quãng ấy. */
+            if (!this.wallFree(m.side, m.y, m.y + 90)) return null;
+            m.warn = Math.max(0.7, m.warn || THUG_WARN);
+            m.out = Math.min(1.6, m.out || THUG_OUT);
+            m.period = Math.max(m.warn + m.out + MIN_WINDOW, m.period || 4.2);
+            m.hp = 1;
+        } else if (kind === 'rival') {
+            /* Đối thủ chỉ XÔ chứ không giết, và người chơi luôn đổi tường được,
+             * nên hắn không cần đòi chỗ trên tường như mấy loại kia. */
+            m.speed = m.speed || RIVAL_SPEED;
+            m.ry = m.y;                       // độ cao hiện tại, tự đi xuống
+            m.jumps = RIVAL_JUMPS;
+            m.windup = 0;
+            m.hp = 1;
+        } else if (kind === 'sentry') {
+            if (!this.wallFree(m.side, m.y - 30, m.y + 30)) return null;
+            m.charge = Math.max(0.85, m.charge || 1.05);
+            m.period = Math.max(m.charge + SHOT_LIVE + MIN_WINDOW, m.period || 3.8);
+            m.t = 0;
+            m.shot = null;
             m.hp = 1;
         }
         this.movers.push(m);
@@ -763,6 +830,81 @@
             }
         },
 
+        /* ---------- NHÂN VẬT PHẢN DIỆN ----------
+         * Máy bay và chim là mối nguy vô tri: chúng bay theo nhịp của chúng,
+         * chẳng buồn biết có ai đang leo. Ba đứa dưới đây thì NHÌN THẤY người
+         * chơi, và đó là chỗ khác nhau — leo qua một cái quạt và leo qua một
+         * kẻ đang chờ mình là hai cảm giác không giống nhau chút nào. */
+        {
+            id: 'window-thug', intensity: 2, minM: THUG_M, weight: 7,
+            build: function (w, y, d) {
+                /* Cửa sổ lạch cạch gần một giây rồi mới có kẻ thò ra chắn
+                 * đường. Bất ngờ nằm ở chỗ KHÔNG BIẾT CỬA SỔ NÀO, chứ không
+                 * phải ở chỗ không kịp phản ứng — bất ngờ kiểu sau là bẫy. */
+                var side = w.rng.chance(0.5) ? SIDE_L : SIDE_R;
+                var n = d.m > 3000 ? 2 : 1;
+                for (var i = 0; i < n; i++) {
+                    w.mover('thug', {
+                        side: side, y: y + 220 + i * STEP,
+                        period: (4.2 - 0.5 * curve(d.m, 4000)) / 1
+                    });
+                    w.pickup('coin', side === SIDE_L ? 0.9 : 0.1, y + 260 + i * STEP);
+                    side = 1 - side;
+                }
+                return 240 + n * STEP;
+            }
+        },
+        {
+            id: 'rival-descent', intensity: 3, minM: RIVAL_M, weight: 7,
+            build: function (w, y, d) {
+                /* Người nhện đối thủ tụt xuống ngược chiều, và nếu mình đổi
+                 * tường thì hắn nhảy theo — đúng MỘT lần. Nên đây là một màn
+                 * đấu trí ngắn có lời giải chắc chắn: đổi tường, hắn theo, đổi
+                 * lại, hắn hết lượt. Hoặc bắn tơ cho xong chuyện. */
+                var side = w.rng.chance(0.5) ? SIDE_L : SIDE_R;
+                w.mover('rival', {
+                    side: side, y: y + 720,
+                    speed: RIVAL_SPEED * (0.85 + 0.35 * curve(d.m, 5000))
+                });
+                w.pickup('web', 0.5, y + 170);
+                w.coinRun(0.5, y + 300, 4, 62, 0);
+                w.pickup('gem', 0.5, y + 620);
+                return 820;
+            }
+        },
+        {
+            id: 'sentry-post', intensity: 3, minM: SENTRY_M, weight: 6,
+            build: function (w, y, d) {
+                /* Rô-bốt gác ngắm rồi bắn ngang khe. Chấm đỏ dính lên người
+                 * chơi gần một giây trước khi nổ súng, và viên đạn bay chậm —
+                 * nên câu trả lời luôn là "đừng đứng yên", chứ không phải
+                 * "đoán xem lúc nào". */
+                var side = w.rng.chance(0.5) ? SIDE_L : SIDE_R;
+                w.mover('sentry', {
+                    side: side, y: y + 300,
+                    period: 3.8 * d.window, charge: 1.05 * d.window
+                });
+                w.coinRun(side === SIDE_L ? 0.88 : 0.12, y + 200, 4, 64, 0);
+                return 640;
+            }
+        },
+        {
+            id: 'rooftop-ambush', intensity: 4, minM: 8000, weight: 5,
+            build: function (w, y, d) {
+                /* Trên tám nghìn mét thì cả ba đứa cùng ra. Đây là chỗ duy nhất
+                 * chúng gặp nhau, và chỉ sau khi người chơi đã gặp riêng từng
+                 * đứa hàng nghìn mét trước đó. */
+                var side = w.rng.chance(0.5) ? SIDE_L : SIDE_R;
+                w.mover('thug', { side: side, y: y + 200, period: 3.7 });
+                w.mover('sentry', { side: 1 - side, y: y + 560, period: 3.4, charge: 0.9 });
+                w.mover('rival', { side: side, y: y + 900, speed: RIVAL_SPEED * 1.25 });
+                w.pickup('shield', 0.5, y + 260);
+                w.pickup('x2', 0.5, y + 700);
+                w.pickup('gem', 0.5, y + 860);
+                return 1020;
+            }
+        },
+
         /* ---------- khe rộng hẹp ---------- */
         {
             id: 'narrow-sprint', intensity: 1, minM: 250, weight: 7,
@@ -957,6 +1099,9 @@
         { id: 'd8', tpl: 'Web {0} drones out of the sky', n: 8, stat: 'drones', coins: 170 },
         { id: 'd15', tpl: 'Web {0} drones out of the sky', n: 15, stat: 'drones', coins: 300, gems: 1 },
 
+        { id: 'foe2', tpl: 'Web {0} of the climbers who get in your way', n: 2, stat: 'foes', coins: 140 },
+        { id: 'foe5', tpl: 'Web {0} of the climbers who get in your way', n: 5, stat: 'foes', coins: 280, gems: 1 },
+
         { id: 'w3', tpl: 'Ride out {0} wind gusts', n: 3, stat: 'gusts', coins: 90 },
         { id: 'w8', tpl: 'Ride out {0} wind gusts', n: 8, stat: 'gusts', coins: 190 },
 
@@ -1066,6 +1211,10 @@
         difficulty: difficulty, curve: curve,
         makeRng: makeRng, dailySeed: dailySeed,
         World: World, PATTERNS: PATTERNS, moverWindow: moverWindow, FLY_OCC: FLY_OCC,
+        THUG_M: THUG_M, RIVAL_M: RIVAL_M, SENTRY_M: SENTRY_M,
+        THUG_WARN: THUG_WARN, THUG_OUT: THUG_OUT, RIVAL_SPEED: RIVAL_SPEED,
+        RIVAL_WINDUP: RIVAL_WINDUP, RIVAL_JUMPS: RIVAL_JUMPS,
+        SHOT_SPEED: SHOT_SPEED, SHOT_LIVE: SHOT_LIVE,
         MISSIONS: MISSIONS, missionText: missionText, rollMissions: rollMissions,
         SUITS: SUITS, SCORE: SCORE, comboMul: comboMul,
         overlap: overlap

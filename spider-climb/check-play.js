@@ -356,6 +356,25 @@ ok(maxScore > 500, `điểm cao nhất mới ${Math.round(maxScore)}`);
 ok(drawCalls > 10000, `phần vẽ mới gọi ${drawCalls} lần — hình như không vẽ gì`);
 ok(seen.jumped > 20, `mới nhảy sang tường kia ${seen.jumped} lần`);
 ok(seen.fell > 0, 'chưa lần nào rơi — nhánh rơi và tự cứu chưa được soát');
+/* Con bọ không phải lúc nào cũng chết đủ ba lần trong quãng chơi ngắn, nên
+ * nếu chưa hết mạng lần nào thì ép nó đi hết đường ấy. Việc cần soát là "hết
+ * mạng thì có sang được màn kết thúc rồi chơi lại được không", chứ không phải
+ * "con bọ có dở đủ mức cần thiết không". */
+if (!seen.overs && G.phase === 'play') {
+    for (let i = 0; i < 600 && G.phase === 'play'; i++) {
+        P.invuln = 0;
+        G.power.shield = 0;
+        P.y = G.camY - 960 - 60;          // thả rơi hẳn khỏi đáy màn
+        step(1);
+    }
+    ok(G.phase === 'over', 'rơi khỏi đáy màn hết cả ba mạng mà vẫn chưa kết thúc lượt');
+    if (G.phase === 'over') {
+        seen.overs++;
+        getEl('btn-again').dispatch('click');
+        ok(G.phase === 'play', 'bấm CHƠI LẠI sau khi hết mạng mà không vào lại được');
+        ok(G.score === 0 && G.combo === 0, 'lượt mới mà điểm hoặc chuỗi còn sót lại từ lượt trước');
+    }
+}
 ok(seen.overs > 0, 'chưa lần nào hết mạng — màn kết thúc chưa được soát');
 
 /* Bảng điểm HTML có đổi theo không */
@@ -381,13 +400,25 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
         /* Chu kỳ ngắn thôi: phép đặt kẹp charge tối thiểu 0,75 s và fire tối
          * đa 0,55 s, nên chu kỳ dài thì cửa sổ bắn chỉ chiếm vài phần trăm
          * thời gian và phép thử dễ chạy trượt qua nó. */
-        ['laser', { y: 0, charge: 0.8, fire: 0.55, period: 2.6 }]
+        ['laser', { y: 0, charge: 0.8, fire: 0.55, period: 2.6 }],
+        /* Ba nhân vật phản diện. Hai đứa đầu XÔ chứ không giết, nên phép soát
+         * dưới đây chấp nhận cả hai kết cục: mất mạng, hoặc bị hất khỏi tường.
+         * Cái nó KHÔNG chấp nhận là chạm vào mà chẳng có gì xảy ra — một kẻ
+         * cản đường không cản được ai thì chỉ là hình vẽ. */
+        ['thug', { side: 0, y: 0, period: 3.4 }],
+        ['rival', { side: 0, y: 0 }],
+        ['sentry', { side: 0, y: 0, period: 2.8, charge: 0.9 }]
     ];
     for (const [kind, base] of kinds) {
         getEl('btn-play').dispatch('click');
         step(30);
         const w = G.world;
+        /* Dọn quang cả tường lẫn mối nguy. Gã cửa sổ và rô-bốt gác ĐÒI CHỖ
+         * trên mặt tường y như vật cản đứng yên — đúng như chúng phải thế —
+         * nên không dọn thì phép đặt từ chối và phép soát báo hỏng oan. */
         w.movers.length = 0;
+        w.blockers.length = 0;
+        w.surfaces.length = 0;
         const opt = Object.assign({}, base);
         const anchor = P.y + 120;
         if (opt.y !== undefined) opt.y += anchor;
@@ -396,14 +427,16 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
         ok(!!m, `không đặt nổi mối nguy ${kind} để thử`);
         if (!m) continue;
 
+        /* Hai đứa xô thì kết cục là bị hất khỏi tường, không phải mất mạng */
+        const shovesOnly = kind === 'thug' || kind === 'rival';
         let killed = false;
         const before = G.lives;
         for (let i = 0; i < 400 && G.phase === 'play'; i++) {
             /* Dán người chơi vào đúng chỗ mối nguy đang đứng, và bỏ miễn nhiễm
              * — đây là phép thử va chạm, không phải phép thử kỹ năng. */
-            const pos = D.pos(m);
+            const pos = D.pos(m) || (m.shot ? { x: m.shot.x, y: m.shot.y } : null);
             if (pos) {
-                P.state = 'jump';
+                P.state = shovesOnly ? 'cling' : 'jump';
                 P.x = kind === 'laser' ? 270 : pos.x;
                 P.y = pos.y;
                 P.vx = 0; P.vy = 0;
@@ -412,8 +445,9 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
             }
             step(1);
             if (G.lives < before || G.phase === 'over') { killed = true; break; }
+            if (shovesOnly && P.state === 'fall') { killed = true; break; }
         }
-        ok(killed, `chạm thẳng vào ${kind} mà không mất mạng — mối nguy này chỉ để trang trí`);
+        ok(killed, `chạm thẳng vào ${kind} mà không hề gì — mối nguy này chỉ để trang trí`);
         if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
     }
 }
@@ -477,7 +511,15 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
     /* Lúc ĐANG RƠI thì phím cách phải bám lại tường, không phải nhảy vu vơ —
      * đây là cú bấm gấp nhất trong game nên nó nằm trên phím to nhất. */
     waitCling(400);
-    P.state = 'fall'; P.vy = -100; P.vx = 0; P.x = 270; P.web = R.WEB_MAX;
+    /* Dọn quang hai tường trước đã. Bám hụt vì chỗ ấy có vật cản là hành vi
+     * ĐÚNG của game — nhưng phép soát này hỏi chuyện khác: phím cách lúc đang
+     * rơi có gọi tới phần bám tường không. Không dọn thì nó lúc đạt lúc không
+     * tuỳ hạt giống, và một phép soát chập chờn thì tới lúc báo hỏng thật cũng
+     * bị cho qua. */
+    G.world.blockers.length = 0;
+    G.world.surfaces.length = 0;
+    G.world.movers.length = 0;
+    P.state = 'fall'; P.vy = -100; P.vx = 0; P.x = 268; P.web = R.WEB_MAX;
     step(1);
     press(' ');
     ok(P.state === 'cling', 'đang rơi, bấm phím cách mà không bám lại được tường');
@@ -596,7 +638,85 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 9. NGỒI YÊN THÌ PHẢI CHẾT
+ * 9. CHƠI THẬT Ở TRÊN CAO
+ *    Con bọ chơi từ mặt đất lên chỉ tới được vài trăm mét, mà ba nhân vật phản
+ *    diện thì mãi 700, 2 200 và 4 200 m mới ra. Nghĩa là suốt cả lượt chơi thử
+ *    dài ba phút, phần MÃ VẼ của chúng chưa lần nào chạy — mà vẽ mới là chỗ dễ
+ *    ném lỗi nhất, vì nó đụng vào canvas chứ không chỉ tính toán.
+ *
+ *    Nên dời thẳng người nhện lên 9 000 m rồi chơi tiếp: ở đó cả ba đứa cùng
+ *    có mặt, và mọi nét vẽ của chúng đều phải chạy thật.
+ * ------------------------------------------------------------------ */
+{
+    getEl('btn-play').dispatch('click');
+    step(10);
+    const HIGH = 9000 * R.PX_PER_M + 900;
+    G.world.cursor = HIGH - 600;
+    G.world.zoneDone = R.ZONES.length - 1;
+    P.y = HIGH;
+    P.x = G.world.wallX(P.side, P.y) + R.PLAYER_R;
+    G.maxY = HIGH;
+    G.camY = HIGH + 960 * R.CAM_ANCHOR;
+    G.zone = R.ZONES.length - 1;
+
+    const errBefore = frameErrors;
+    const met = new Set();
+    /* Chạy tới khi gặp đủ cả ba, có trần — và nếu tới trần vẫn thiếu đứa nào
+     * thì ĐẶT THẲNG đứa ấy ra trước mặt.
+     *
+     * Đặt cứng một số khung hình rồi đòi gặp đủ ba thì phép soát lúc đạt lúc
+     * không tuỳ hạt giống: lần thiếu rô-bốt gác, lần thiếu gã cửa sổ. Mà một
+     * phép soát chập chờn thì chẳng mấy ai còn tin, rồi tới lúc nó báo hỏng
+     * thật cũng bị cho qua. Việc nó phải làm là "mã vẽ của cả ba đứa đều được
+     * chạy trong lúc chơi thật" — gặp tự nhiên hay đặt tay vào đều chạy đúng
+     * một đường mã ấy, nên đặt tay không làm phép soát yếu đi, chỉ làm nó
+     * chắc chắn. */
+    let natural = 0;
+    for (let f = 0; f < 14000 && met.size < 3; f++) {
+        if (f === 6000) {
+            natural = met.size;
+            /* Dọn sạch CẢ mối nguy nữa. Gã cửa sổ và rô-bốt gác đòi chỗ trên
+             * tường, mà chỗ ấy có thể đang bị chính một gã khác giữ — nên
+             * mover() trả về null và cú đặt tay lặng lẽ trượt. Đó đúng là lý do
+             * phép soát này vẫn chập chờn sau lần sửa trước: em dọn tường mà
+             * quên dọn mấy đứa đang đứng trên tường. */
+            G.world.blockers.length = 0;
+            G.world.surfaces.length = 0;
+            G.world.movers.length = 0;
+            let at = P.y + 200;
+            for (const k of ['thug', 'rival', 'sentry']) {
+                if (met.has(k)) continue;
+                const made = G.world.mover(k, {
+                    side: 1 - P.side, y: at, period: 3.4, charge: 0.9
+                });
+                ok(!!made, `không đặt nổi ${k} ra trước mặt để soát phần vẽ`);
+                at += 400;
+            }
+        }
+        if (G.phase !== 'play') break;
+        /* Bơm mạng suốt phép thử này. Bấm CHƠI LẠI thì lượt mới bắt đầu từ mặt
+         * đất, và cả phần còn lại của phép thử lại chạy ở độ cao 0 — tức là nó
+         * đo cái hoàn toàn khác với cái nó nói đang đo. Ở đây em cần mã vẽ của
+         * mấy đứa phản diện được chạy, không cần biết con bọ sống hay chết. */
+        G.lives = 9;
+        botThink();
+        step(1);
+        for (const m of G.world.movers) {
+            if (m.kind === 'thug' || m.kind === 'rival' || m.kind === 'sentry') met.add(m.kind);
+        }
+    }
+    ok(frameErrors === errBefore,
+        `chơi ở trên cao ném thêm ${frameErrors - errBefore} lỗi — nhiều phần là ở mã vẽ của mấy đứa phản diện`);
+    ok(met.size === 3,
+        `leo mãi ở 9 000 m mà chỉ gặp ${met.size}/3 nhân vật phản diện (${[...met].join(', ') || 'không đứa nào'})`);
+    console.log(`  trên 9 000 m gặp: ${[...met].join(' · ')}` +
+        (natural && natural < 3 ? ` (${natural} đứa gặp tự nhiên, còn lại phải đặt tay)` : ''));
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else getEl('btn-nav-menu').dispatch('click');
+}
+
+/* ------------------------------------------------------------------ *
+ * 10. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -612,7 +732,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 10. BA CHẾ ĐỘ
+ * 11. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -636,7 +756,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 11. CỬA HÀNG VÀ NHIỆM VỤ
+ * 12. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');

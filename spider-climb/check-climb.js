@@ -117,6 +117,37 @@ for (let s = 1; s <= SEEDS; s++) {
         }
     }
 
+    /* ---- 6b. ba nhân vật phản diện ----
+     * Gã cửa sổ và rô-bốt gác CHIẾM MẶT TƯỜNG, nên phải theo đúng luật của vật
+     * cản đứng yên: bên kia phải quang. Không soát riêng thì chúng lọt qua
+     * điều luật số 1 — canCling() của rules.js cố ý không biết lúc nào ai đang
+     * thò ra, nên phép quét "còn đường leo không" nhìn xuyên qua chúng.
+     *
+     * Còn đối thủ thì luật của hắn không nằm ở chỗ đứng mà ở SỐ LƯỢT NHẢY: cho
+     * hắn bám dính lấy người chơi thì đường thoát biến mất. */
+    for (const m of w.movers) {
+        if (m.kind === 'thug' || m.kind === 'sentry') {
+            const a0 = m.kind === 'thug' ? m.y : m.y - 30;
+            const a1 = m.kind === 'thug' ? m.y + 90 : m.y + 30;
+            const other = 1 - m.side;
+            for (const b of w.blockers) {
+                if (b.side === other && R.overlap(a0 - R.CLEAR, a1 + R.CLEAR, b.y0, b.y1)) {
+                    fail(`hạt ${s}: ${m.kind} ở ${Math.round(m.y / R.PX_PER_M)} m mà tường đối diện cũng bị chặn`);
+                }
+            }
+            for (const sf of w.surfaces) {
+                if (sf.side === other && R.overlap(a0 - R.CLEAR, a1 + R.CLEAR, sf.y0, sf.y1)) {
+                    fail(`hạt ${s}: ${m.kind} ở ${Math.round(m.y / R.PX_PER_M)} m mà tường đối diện là mặt xấu`);
+                }
+            }
+        } else if (m.kind === 'rival') {
+            if (m.jumps > R.RIVAL_JUMPS) {
+                fail(`hạt ${s}: đối thủ ở ${Math.round(m.y / R.PX_PER_M)} m được nhảy ${m.jumps} lần — bám dính thì hết đường thoát`);
+            }
+            if (!(m.speed > 0)) fail(`hạt ${s}: đối thủ ở ${Math.round(m.y / R.PX_PER_M)} m đứng yên`);
+        }
+    }
+
     /* ---- 7. vật phẩm không nằm trong vật cản ---- */
     for (const p of w.pickups) {
         const side = p.ax < 0.16 ? 0 : (p.ax > 0.84 ? 1 : -1);
@@ -220,6 +251,14 @@ for (let s = 1; s <= SEEDS; s++) {
         ['mối nguy di động', moving, 3],
         ['loại vật phẩm', picks, 6]
     ];
+    /* Bản thiết kế xếp riêng một hàng "Active Threats" — kẻ thù BIẾT có người
+     * chơi, khác hẳn cái quạt bay theo nhịp của nó. Đòi đủ cả ba. */
+    const foes = ['thug', 'rival', 'sentry'].filter(k => moving.has(k));
+    if (foes.length < 3) {
+        fail(`nhân vật phản diện: mới có ${foes.length}/3 (${foes.join(', ') || 'chưa có đứa nào'})`);
+    } else {
+        console.log(`  nhân vật phản diện: ${foes.join(' · ')}`);
+    }
     for (const [name, set, n] of need) {
         if (set.size < n) fail(`${name}: mới có ${set.size} loại, bản thiết kế đòi ${n} (${[...set].join(', ')})`);
     }

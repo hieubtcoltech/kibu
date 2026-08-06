@@ -141,7 +141,7 @@
                 if (!AC) return;
                 this.ctx = new AC();
                 this.master = this.ctx.createGain();
-                this.master.gain.value = 0.5;
+                this.master.gain.value = this.on ? 0.5 : 0;
                 this.master.connect(this.ctx.destination);
                 var n = Math.floor(this.ctx.sampleRate * 0.6);
                 var buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
@@ -152,8 +152,43 @@
         },
         toggle: function () {
             this.on = !this.on;
+            /* Vặn cả núm tổng, không chỉ đặt cờ. Nền gió là một nguồn chạy liên
+             * tục, nó không đi qua ready() như mấy tiếng bắn một phát — chỉ đặt
+             * cờ thì tắt tiếng xong gió vẫn thổi. */
+            if (this.master) this.master.gain.value = this.on ? 0.5 : 0;
             try { localStorage.setItem(SOUND_KEY, this.on ? '1' : '0'); } catch (e) { }
             return this.on;
+        },
+
+        /* NỀN GIÓ — một nguồn ồn chạy vòng, và cả game chỉ có một cái.
+         *
+         * Nó lo luôn ba việc mà bản thiết kế đòi: hơi thở của thành phố lúc
+         * đang leo, tiếng rít khi bò nhanh, và tiếng gió ù lên lúc rơi. Làm ba
+         * tiếng riêng thì chúng chồng lên nhau nghe đục; một nguồn rồi vặn độ
+         * to với tần số theo trạng thái thì nghe liền mạch như một luồng gió
+         * thật đang đổi. */
+        ambient: function (level, bright) {
+            if (!this.ctx || this.ctx.state !== 'running') return;
+            if (!this.amb) {
+                var src = this.ctx.createBufferSource();
+                src.buffer = this.noise;
+                src.loop = true;
+                var f = this.ctx.createBiquadFilter();
+                f.type = 'bandpass';
+                f.frequency.value = 420;
+                f.Q.value = 0.6;
+                var g = this.ctx.createGain();
+                g.gain.value = 0;
+                src.connect(f); f.connect(g); g.connect(this.master);
+                src.start();
+                this.amb = { g: g, f: f };
+            }
+            var t = this.ctx.currentTime;
+            /* Chuyển dần trong 0,15 giây. Đặt thẳng giá trị thì mỗi khung hình
+             * là một bước nhảy, và tai nghe ra tiếng rẹt rẹt — đúng thứ vừa đi
+             * chữa ở tiếng bám tay. */
+            this.amb.g.gain.setTargetAtTime(this.on ? level : 0, t, 0.15);
+            this.amb.f.frequency.setTargetAtTime(bright, t, 0.2);
         },
         /* Máy có ĐANG CHẠY không. Lúc trình duyệt treo nó thì currentTime đứng
          * yên, mọi tiếng đặt lịch trong quãng ấy dồn về một mốc quá khứ rồi nổ
@@ -194,7 +229,26 @@
 
         jump: function () { this.tone(340, 620, 0.11, 'triangle', 0.05); },
         land: function () { this.hit(0.09, 0.10, 1400, 'lowpass'); this.tone(520, 300, 0.07, 'sine', 0.035); },
-        climb: function () { this.hit(0.035, 0.022, 900, 'bandpass'); },
+
+        /* TIẾNG BÁM TAY.
+         *
+         * Bản trước là tiếng ồn trắng bắn ra ngẫu nhiên năm tới chín lần mỗi
+         * giây. Hai chỗ sai, và cộng lại thành đúng cái tiếng lạo xạo anh Hiếu
+         * nghe thấy: một, ồn trắng lọc dải cao nghe y như nhiễu radio chứ không
+         * giống bàn tay chạm tường; hai, RẢI NGẪU NHIÊN nên không có nhịp, mà
+         * tai người bắt nhịp trước khi bắt được âm sắc — cái gì đều đặn thì
+         * nghe ra hành động, cái gì lộn xộn thì nghe ra tạp âm.
+         *
+         * Nay mỗi lần bám là một tiếng, đếm theo QUÃNG ĐƯỜNG leo chứ không theo
+         * đồng hồ: nhịp tự khớp với dáng bò, và leo nhanh thì nhịp dồn lên
+         * đúng như thật. Âm sắc là một cú "bụp" trầm lọc thấp cộng một chút
+         * dính tay, hai tay so le nhau nửa cung. */
+        step: function (right) {
+            if (!this.ready()) return;
+            var f = right ? 132 : 108;
+            this.tone(f, f * 0.72, 0.055, 'sine', 0.030);
+            this.hit(0.045, 0.020, 620, 'lowpass');
+        },
         web: function () { this.tone(1500, 260, 0.16, 'sawtooth', 0.035); this.hit(0.1, 0.05, 2600, 'highpass'); },
         webHit: function () { this.hit(0.14, 0.11, 900, 'lowpass'); this.tone(300, 90, 0.16, 'square', 0.04); },
         coin: function (n) { this.tone(880 + Math.min(9, n || 0) * 46, 1320, 0.075, 'triangle', 0.042); },
@@ -261,6 +315,11 @@
 
     var START_Y = 900;
 
+    /* Leo được bấy nhiêu điểm ảnh thì đổi tay một lần. 44 ra chừng bốn nhịp mỗi
+     * giây lúc mới xuất phát — đủ để nghe ra là đang bò, chưa tới mức lách
+     * cách. */
+    var STEP_PX = 44;
+
     var G = {
         phase: 'menu',        // menu | play | pause | over
         mode: 'endless',
@@ -288,6 +347,7 @@
         side: SIDE_L, x: 0, y: START_Y, vx: 0, vy: 0,
         state: 'cling', face: 1, anim: 0,
         crack: 0, glassOn: null, glassT: 0, invuln: 0, boost: 0,
+        stepPhase: 0, stepRight: false,
         fastKey: false, fastTouch: false,
         web: R.WEB_MAX, webT: 0, webShot: null, catchFail: 0
     };
@@ -334,7 +394,7 @@
         G.sprint300 = 0; G.gustSeen = null; G.deaths = {};
         G.power = { shield: 0, magnet: 0, x2: 0, slow: 0 };
         G.stats = {
-            metres: 0, coins: 0, gems: 0, jumps: 0, drones: 0, gusts: 0,
+            metres: 0, coins: 0, gems: 0, jumps: 0, drones: 0, foes: 0, gusts: 0,
             combo: 0, near: 0, catches: 0, powers: 0, cracks: 0, webs: 0, cleanMetres: 0
         };
 
@@ -369,6 +429,7 @@
 
     function endRun() {
         G.phase = 'over';
+        Sfx.ambient(0, 300);
         Sfx.over();
         touchButtons(false);
 
@@ -530,7 +591,7 @@
             pop(P.x, P.y - 26, 'NO WEB!', '#ff8a8a');
             return;
         }
-        if (G.world.canCling(side, P.y)) {
+        if (spotFree(side, P.y)) {
             P.web--;
             P.side = side;
             P.state = 'cling';
@@ -603,7 +664,7 @@
         for (var dy = 0; dy < H * 0.8; dy += 12) {
             for (var s = 0; s < 2; s++) {
                 var side = s === 0 ? SIDE_L : SIDE_R;
-                if (G.world.canCling(side, base + dy) && !nearHazard(base + dy)) {
+                if (spotFree(side, base + dy) && !nearHazard(base + dy)) {
                     P.side = side; P.y = base + dy;
                     P.x = wallHold(side, P.y);
                     P.state = 'cling'; P.vx = 0; P.vy = 0; P.crack = 0;
@@ -689,6 +750,18 @@
             G.score += pts;
             addCombo(1);
             if (tgt.m.kind === 'drone' || tgt.m.kind === 'bird') G.stats.drones++;
+            /* Hạ được một kẻ cản đường đáng giá hơn hẳn bắn rụng cái quạt bay:
+             * chúng hiếm hơn, dai hơn, và bắn trúng lúc đang bị dồn thì đó là
+             * khoảnh khắc đáng nhớ nhất của cả lượt chơi. */
+            if (tgt.m.kind === 'thug' || tgt.m.kind === 'rival' || tgt.m.kind === 'sentry') {
+                G.stats.foes++;
+                var extra = R.SCORE.webKill * 2 * mul();
+                G.score += extra;
+                pts += extra;
+                addCombo(2);
+                G.shake = Math.max(G.shake, 7);
+                burst(tgt.x, tgt.y, 22, '#ffd75e', 240, 'spark');
+            }
             pop(tgt.x, tgt.y - 20, '+' + Math.round(pts), '#ffe27a');
         } else if (tgt.kind === 'wire') {
             tgt.s.cut = true;
@@ -780,7 +853,123 @@
             e = gapEdges(m.y);
             return { x: (e.l + e.r) / 2, y: m.y, r: 0 };
         }
+        if (m.kind === 'thug') {
+            /* Chỉ CÓ MẶT lúc đã thò hẳn ra. Lúc còn trong nhà thì hắn không
+             * phải là mối nguy, mà cũng không được là mục tiêu cho tơ — bắn
+             * xuyên tường vào một cái cửa sổ đóng thì vô lý. */
+            if (thugPhase(m) !== 'out') return null;
+            var tx = G.world.wallX(m.side, m.y + 45);
+            return { x: tx + (m.side === SIDE_L ? 24 : -24), y: m.y + 45, r: 22 };
+        }
+        if (m.kind === 'rival') {
+            var rx = G.world.wallX(m.side, m.ry);
+            return { x: rx + (m.side === SIDE_L ? R.PLAYER_R : -R.PLAYER_R), y: m.ry, r: 19 };
+        }
+        if (m.kind === 'sentry') {
+            var sx = G.world.wallX(m.side, m.y);
+            return { x: sx + (m.side === SIDE_L ? 18 : -18), y: m.y, r: 18 };
+        }
         return null;
+    }
+
+    /* Gã cửa sổ đang ở pha nào: 'in' | 'warn' | 'out' */
+    function thugPhase(m) {
+        var t = (((G.hz / m.period) + m.phase) % 1) * m.period;
+        if (t < m.period - m.warn - m.out) return 'in';
+        if (t < m.period - m.out) return 'warn';
+        return 'out';
+    }
+
+    /* Chỗ này có gã nào đang chắn không. Tách riêng khỏi world.canCling() vì
+     * rules.js cố ý không biết gì về đồng hồ — nó lo hình dạng của màn, còn
+     * chuyện lúc này ai đang thò ra là việc của phần chơi. */
+    function thugAt(side, y) {
+        var mv = G.world.movers;
+        for (var i = 0; i < mv.length; i++) {
+            var m = mv[i];
+            if (m.kind !== 'thug' || m.dead || m.side !== side) continue;
+            if (thugPhase(m) === 'out' && y >= m.y - 6 && y <= m.y + 96) return m;
+        }
+        return null;
+    }
+
+    /* Bám được ở đây không, tính cả gã đang thò ra. */
+    function spotFree(side, y) {
+        return G.world.canCling(side, y) && !thugAt(side, y);
+    }
+
+    /* ------------------------------------------------------------------
+     *  Mấy đứa có TRÍ NHỚ
+     *
+     *  Máy bay, chim, laser đều suy vị trí thẳng từ đồng hồ — không nhớ gì cả,
+     *  nên dọn rác hay tua lại đều không sao. Nhưng đối thủ thì phải nhớ hắn
+     *  đang ở đâu và đã dùng lượt nhảy chưa, còn rô-bốt gác phải nhớ đã ngắm
+     *  vào đâu. Hai đứa ấy bước theo dt ở đây, và dt đã nhân sẵn hệ số chậm
+     *  của đồng hồ cát nên vật phẩm ấy vẫn ăn vào chúng như mọi thứ khác.
+     * ------------------------------------------------------------------ */
+    function stepMovers(dt) {
+        var mv = G.world.movers, i, m;
+        for (i = 0; i < mv.length; i++) {
+            m = mv[i];
+            if (m.dead) continue;
+
+            if (m.kind === 'rival') {
+                m.ry -= m.speed * dt;
+                if (m.ry < G.camY - H - 120) { m.dead = true; continue; }
+
+                /* Mình đổi tường thì hắn nhảy theo — nhưng rùn người trước đã,
+                 * và chỉ được đúng một lần. */
+                var near = Math.abs(m.ry - P.y) < 320;
+                if (near && m.jumps > 0 && P.side !== m.side && P.state === 'cling') {
+                    m.windup += dt;
+                    if (m.windup >= R.RIVAL_WINDUP) {
+                        m.side = 1 - m.side;
+                        m.jumps--;
+                        m.windup = 0;
+                        Sfx.jump();
+                        burst(moverPos(m).x, m.ry, 10, '#c08bff', 160, 'dust');
+                    }
+                } else m.windup = 0;
+
+            } else if (m.kind === 'sentry') {
+                m.t += dt;
+                if (m.t >= m.period) {
+                    m.t -= m.period;
+                    /* Hết quãng ngắm là bắn, theo đúng độ cao đã khoá */
+                    var sp = moverPos(m);
+                    if (sp && m.aimY != null && Math.abs(m.aimY - P.y) < H) {
+                        m.shot = {
+                            x: sp.x, y: m.aimY,
+                            vx: (m.side === SIDE_L ? 1 : -1) * R.SHOT_SPEED,
+                            life: R.SHOT_LIVE
+                        };
+                        Sfx.laserFire();
+                    }
+                }
+                /* KHOÁ độ cao ngay khi bắt đầu ngắm, rồi giữ nguyên tới lúc bắn.
+                 *
+                 * Bản đầu em cho chấm đỏ bám theo người chơi suốt quãng ngắm —
+                 * nghe thì "thông minh" hơn, nhưng như thế viên đạn luôn trúng
+                 * dù chạy đằng nào, và cả con rô-bốt thành ra một cái thuế đánh
+                 * vào thời gian chứ không phải một mối nguy né được. Khoá lại
+                 * thì "đừng đứng yên" mới là câu trả lời đúng, và đó chính là
+                 * điều nó nên dạy người chơi. */
+                var inCharge = m.t > m.period - m.charge;
+                if (inCharge && !m.charging) {
+                    m.charging = 1;
+                    m.aimY = P.y;
+                    if (Math.abs(m.y - P.y) < 460) Sfx.laserCharge();
+                }
+                if (!inCharge) m.charging = 0;
+
+                if (m.shot) {
+                    m.shot.x += m.shot.vx * dt;
+                    m.shot.life -= dt;
+                    var ge = gapEdges(m.shot.y);
+                    if (m.shot.life <= 0 || m.shot.x < ge.l - 20 || m.shot.x > ge.r + 20) m.shot = null;
+                }
+            }
+        }
     }
 
     /* Tia laser đang ở pha nào: 'off' | 'charge' | 'fire' */
@@ -836,6 +1025,7 @@
         var w = G.world;
         var m = metresNow();
         var d = R.difficulty(m);
+        var fastNow = false;
 
         /* ---- vật phẩm tạm thời ---- */
         ['magnet', 'x2', 'slow'].forEach(function (k) {
@@ -864,6 +1054,7 @@
             /* Leo nhanh đến từ hai nguồn và cùng một hệ số: người chơi tự
              * giữ phím, hoặc quãng thưởng ngắn sau một cú bắt tường đẹp. */
             var fast = P.fastKey || P.fastTouch || P.boost > 0;
+            fastNow = fast;
             var speed = d.climb * (fast ? R.CLIMB_BOOST : 1) * (G.power.slow > 0 ? 0.82 : 1);
             var surf = w.surfaceAt(P.side, P.y);
             if (surf && surf.kind === 'glass') {
@@ -905,7 +1096,15 @@
 
             P.y += speed * dt;
             P.anim += dt * (speed > 0 ? 7 : 3) * (fast ? 1.6 : 1);
-            if (Math.random() < dt * (fast ? 9 : 5)) Sfx.climb();
+            /* Một tiếng bám tay cho mỗi STEP_PX leo được — nhịp theo quãng
+             * đường, không theo đồng hồ, nên nó tự khớp với dáng bò và tự dồn
+             * lên khi leo nhanh. */
+            P.stepPhase += Math.abs(speed) * dt;
+            if (P.stepPhase >= STEP_PX) {
+                P.stepPhase -= STEP_PX;
+                P.stepRight = !P.stepRight;
+                Sfx.step(P.stepRight);
+            }
             /* Vệt gió tuôn xuống sau lưng. Không có nó thì "đang leo nhanh" chỉ
              * là một con số thay đổi ở đâu đó — mà người chơi đang nhìn lên
              * phía trước tìm vật cản, không nhìn bảng điểm. */
@@ -916,7 +1115,7 @@
 
             /* Đầu chạm vật cản hoặc dây điện phía trên ⇒ bật ra */
             var ahead = P.y + R.PLAYER_R;
-            if (w.blockerAt(P.side, ahead)) {
+            if (w.blockerAt(P.side, ahead) || thugAt(P.side, ahead)) {
                 bumpOff('BLOCKED');
             } else {
                 var up = w.surfaceAt(P.side, ahead);
@@ -940,7 +1139,7 @@
             var face = w.wallX(target, P.y);
             var reached = target === SIDE_R ? (P.x + R.PLAYER_R >= face) : (P.x - R.PLAYER_R <= face);
             if (reached) {
-                if (w.canCling(target, P.y)) {
+                if (spotFree(target, P.y)) {
                     P.side = target;
                     P.state = 'cling';
                     P.x = wallHold(target, P.y);
@@ -1019,6 +1218,20 @@
             G.flash = 0.45; Sfx.thunder();
         }
 
+        stepMovers(dt * (G.power.slow > 0 ? 0.42 : 1));
+        /* Nền gió đổi theo việc đang làm: bám tường thì chỉ là hơi thở của thành
+         * phố, bò nhanh thì rít lên, còn rơi thì ù hẳn — và đó cũng chính là
+         * TIẾNG BÁO RƠI mà bản thiết kế đòi, khỏi cần thêm tiếng nào nữa. */
+        var high = R.curve(metresNow(), 4000);
+        if (P.state === 'fall') {
+            var vv = Math.min(1, Math.abs(P.vy) / R.FALL_MAX_V);
+            Sfx.ambient(0.05 + 0.10 * vv, 700 + 900 * vv);
+        } else if (P.state === 'jump') {
+            Sfx.ambient(0.035, 620);
+        } else {
+            Sfx.ambient(0.012 + 0.022 * (fastNow ? 1 : 0) + 0.012 * high, 330 + 160 * high);
+        }
+
         collide(dt);
         stepParticles(dt);
         syncHud(false);
@@ -1066,12 +1279,34 @@
                 continue;
             }
 
+            /* Đạn của rô-bốt gác đi riêng: nó là thứ duy nhất trong game bay
+             * ngang khe theo đường thẳng, và nó GIẾT chứ không xô. Ngắm gần
+             * một giây rồi mới bắn, đạn lại bay chậm, nên trả giá bằng một
+             * mạng là công bằng. */
+            if (m.kind === 'sentry' && m.shot) {
+                if (Math.hypot(m.shot.x - P.x, m.shot.y - P.y) < 12 + R.PLAYER_R * 0.75) {
+                    m.shot = null;
+                    loseLife('Sentry shot!');
+                }
+            }
+
             var pos = moverPos(m);
             if (!pos) continue;
             if (Math.abs(pos.y - P.y) > 240) { m.near = 0; continue; }
             var dist = Math.hypot(pos.x - P.x, pos.y - P.y);
             if (dist < pos.r + R.PLAYER_R * 0.75) {
-                if (m.kind === 'platform') {
+                if (m.kind === 'thug' || m.kind === 'rival') {
+                    /* Hai đứa này XÔ chứ không giết. Chúng là kẻ cản đường, và
+                     * cản đường thì cái mất phải là độ cao với chuỗi liên hoàn
+                     * — mất luôn cả mạng thì mỗi lần gặp là một lần cụt hứng
+                     * chứ không phải một lần thót tim. */
+                    if (P.state !== 'fall') {
+                        bumpOff(m.kind === 'rival' ? 'SHOVED!' : 'GET BACK!');
+                    }
+                } else if (m.kind === 'sentry') {
+                    /* thân rô-bốt bắt vào tường, đụng phải thì bật ra */
+                    if (P.state === 'cling') bumpOff('WATCH OUT');
+                } else if (m.kind === 'platform') {
                     /* Giàn lau kính không giết — nó ĐẨY người chơi ra khỏi
                      * tường. Mối nguy nào cũng chết ngay thì lượt chơi ngắn và
                      * cay, mà bản thiết kế đòi thua phải hiểu được vì sao. */
@@ -1548,6 +1783,10 @@
                 continue;
             }
 
+            if (m.kind === 'thug') { drawThug(m); continue; }
+            if (m.kind === 'sentry') { drawSentry(m); continue; }
+            if (m.kind === 'rival') { drawRival(m); continue; }
+
             var pos = moverPos(m);
             if (!pos) continue;
             var py = sy(pos.y);
@@ -1645,6 +1884,186 @@
                 ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.moveTo(-4, -16); ctx.lineTo(-8, -34); ctx.stroke();
             }
+            ctx.restore();
+        }
+    }
+
+    /* CỬA SỔ CÓ NGƯỜI.
+     *
+     * Vẽ cả ba pha, kể cả lúc hắn còn trong nhà — và đó mới là phần quan
+     * trọng: cái cửa sổ phải NẰM SẴN trên tường từ xa. Chỉ vẽ lúc hắn thò ra
+     * thì đúng là bất ngờ thật, nhưng là kiểu bất ngờ của một cái bẫy hiện ra
+     * từ hư không. Ở đây bất ngờ nằm ở chỗ không biết cửa sổ NÀO sẽ mở. */
+    function drawThug(m) {
+        var yy = sy(m.y + 45);
+        if (yy < -90 || yy > H + 90) return;
+        var fx = G.world.wallX(m.side, m.y + 45);
+        var dir = m.side === SIDE_L ? 1 : -1;
+        var ph = thugPhase(m);
+        var shake = ph === 'warn' ? Math.sin(G.hz * 40) * 2.5 : 0;
+
+        ctx.save();
+        ctx.translate(fx, yy + shake);
+        ctx.scale(dir, 1);
+
+        /* khung cửa sổ, hõm vào trong tường */
+        ctx.fillStyle = '#1d2431';
+        roundRect(ctx, -58, -42, 58, 84, 5); ctx.fill();
+        ctx.strokeStyle = '#68758c'; ctx.lineWidth = 3;
+        roundRect(ctx, -58, -42, 58, 84, 5); ctx.stroke();
+
+        if (ph === 'in') {
+            /* bóng người mờ mờ sau kính — đủ để đoán, không đủ để chắc */
+            ctx.fillStyle = 'rgba(120,150,190,0.30)';
+            ctx.beginPath(); ctx.arc(-30, -6, 13, 0, 6.284); ctx.fill();
+            ctx.fillRect(-42, 6, 24, 30);
+        } else {
+            /* hai cánh cửa trượt mở */
+            var open = ph === 'warn' ? 0.5 : 1;
+            ctx.fillStyle = '#33465e';
+            ctx.fillRect(-58, -42, 26 * (1 - open) + 4, 84);
+            ctx.fillRect(-4 - 26 * (1 - open), -42, 26 * (1 - open) + 4, 84);
+        }
+
+        if (ph === 'warn') {
+            ctx.fillStyle = '#ffd75e';
+            ctx.font = 'bold 26px Baloo 2, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.scale(dir, 1);                      // chữ không được lộn ngược
+            ctx.fillText('!', dir * -28, -50);
+            ctx.scale(dir, 1);
+        }
+
+        if (ph === 'out') {
+            /* gã thò hẳn ra khe: vai, đầu, và một cánh tay chìa ra chắn đường */
+            ctx.fillStyle = '#2f3a4e';
+            roundRect(ctx, -34, -6, 62, 44, 12); ctx.fill();      // thân
+            ctx.fillStyle = '#e8b48c';
+            ctx.beginPath(); ctx.arc(-2, -18, 16, 0, 6.284); ctx.fill();  // đầu
+            ctx.fillStyle = '#22303f';
+            roundRect(ctx, -18, -34, 34, 14, 6); ctx.fill();      // mũ
+            ctx.fillStyle = '#1b2430';
+            ctx.beginPath(); ctx.arc(3, -20, 2.6, 0, 6.284); ctx.fill();
+            ctx.beginPath(); ctx.arc(-9, -20, 2.6, 0, 6.284); ctx.fill();
+            ctx.strokeStyle = '#e8b48c'; ctx.lineWidth = 11; ctx.lineCap = 'round';
+            ctx.beginPath(); ctx.moveTo(14, 4); ctx.lineTo(44, -8); ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    /* NGƯỜI NHỆN ĐỐI THỦ — tụt xuống ngược chiều, đầu chúc xuống.
+     * Cùng dáng với người chơi nhưng lộn đầu và đổi màu, để một cái nhìn là
+     * hiểu ngay: cùng loài, khác phe, và đang đi ngược đường mình. */
+    function drawRival(m) {
+        var pos = moverPos(m);
+        if (!pos) return;
+        var py = sy(pos.y);
+        if (py < -80 || py > H + 80) return;
+        var dir = m.side === SIDE_L ? 1 : -1;
+
+        ctx.save();
+        ctx.translate(pos.x, py);
+
+        /* rùn người chuẩn bị nhảy sang — báo trước, nếu không thì cú nhảy của
+         * hắn là một cú đánh lén */
+        if (m.windup > 0) {
+            var k = m.windup / R.RIVAL_WINDUP;
+            ctx.strokeStyle = 'rgba(255,215,94,' + (0.4 + 0.6 * Math.abs(Math.sin(G.t * 22))) + ')';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(0, 0, 24 + k * 12, 0, 6.284); ctx.stroke();
+        }
+
+        ctx.scale(dir, -1);                        // lộn ngược: hắn đi xuống
+
+        ctx.strokeStyle = '#1a0f2e'; ctx.lineWidth = 4.5; ctx.lineCap = 'round';
+        var sw = Math.sin(G.t * 8);
+        var limbs = [[-6, -8, -20, -18 - sw * 6], [-6, 6, -21, 14 + sw * 6],
+                     [6, -8, 19, -16 + sw * 6], [6, 6, 20, 15 - sw * 6]];
+        for (var i = 0; i < limbs.length; i++) {
+            var L = limbs[i];
+            ctx.beginPath();
+            ctx.moveTo(L[0], L[1]);
+            ctx.quadraticCurveTo(L[2] * 0.6, L[1] + (L[3] - L[1]) * 0.2, L[2], L[3]);
+            ctx.stroke();
+        }
+        ctx.fillStyle = '#6b2fb5';
+        roundRect(ctx, -11, -12, 22, 26, 9); ctx.fill();
+        ctx.strokeStyle = '#1a0f2e'; ctx.lineWidth = 2.4;
+        roundRect(ctx, -11, -12, 22, 26, 9); ctx.stroke();
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(0, -10); ctx.lineTo(0, 12);
+        ctx.moveTo(-9, 0); ctx.lineTo(9, 0);
+        ctx.stroke();
+        ctx.fillStyle = '#6b2fb5';
+        ctx.beginPath(); ctx.arc(2, -18, 11, 0, 6.284); ctx.fill();
+        ctx.strokeStyle = '#1a0f2e'; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.arc(2, -18, 11, 0, 6.284); ctx.stroke();
+        /* mắt đỏ — dấu hiệu duy nhất cần để biết đây không phải bạn */
+        ctx.fillStyle = '#ff3b52';
+        ctx.beginPath(); ctx.ellipse(6, -20, 6, 4.4, -0.35, 0, 6.284); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-3, -20, 4.6, 3.6, 0.35, 0, 6.284); ctx.fill();
+        ctx.restore();
+    }
+
+    /* RÔ-BỐT GÁC — bắt vào tường, ngắm rồi bắn ngang khe. */
+    function drawSentry(m) {
+        var yy = sy(m.y);
+        if (yy < -90 || yy > H + 90) {
+            if (!m.shot) return;
+        }
+        var fx = G.world.wallX(m.side, m.y);
+        var dir = m.side === SIDE_L ? 1 : -1;
+        var aiming = m.t > m.period - m.charge;
+
+        ctx.save();
+        ctx.translate(fx, yy);
+        ctx.scale(dir, 1);
+        ctx.fillStyle = '#2b3444';
+        roundRect(ctx, -8, -18, 26, 36, 6); ctx.fill();
+        ctx.fillStyle = '#4a5668';
+        roundRect(ctx, 12, -11, 22, 22, 6); ctx.fill();
+        /* nòng chĩa ra khe, hơi ngóc theo mục tiêu */
+        ctx.strokeStyle = '#8b97ab'; ctx.lineWidth = 7; ctx.lineCap = 'butt';
+        ctx.beginPath(); ctx.moveTo(28, 0); ctx.lineTo(44, 0); ctx.stroke();
+        var eye = aiming ? (0.5 + 0.5 * Math.abs(Math.sin(G.t * 18))) : 0.35;
+        ctx.fillStyle = 'rgba(255,60,80,' + eye + ')';
+        ctx.beginPath(); ctx.arc(22, 0, 6, 0, 6.284); ctx.fill();
+        ctx.restore();
+
+        /* vạch ngắm và chấm đỏ trên người chơi */
+        if (aiming && m.aimY != null) {
+            var ay = sy(m.aimY);
+            var e = gapEdges(m.aimY);
+            ctx.save();
+            ctx.globalAlpha = 0.5 + 0.5 * Math.abs(Math.sin(G.t * 16));
+            ctx.strokeStyle = '#ff3c50';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([7, 7]);
+            ctx.beginPath();
+            ctx.moveTo(fx + dir * 44, sy(m.y));
+            ctx.lineTo(dir > 0 ? e.r : e.l, ay);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#ff3c50';
+            ctx.beginPath(); ctx.arc(P.x, ay, 5, 0, 6.284); ctx.fill();
+            ctx.restore();
+        }
+
+        /* viên đạn */
+        if (m.shot) {
+            var shy = sy(m.shot.y);
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255,140,90,0.55)';
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(m.shot.x, shy);
+            ctx.lineTo(m.shot.x - Math.sign(m.shot.vx) * 34, shy);
+            ctx.stroke();
+            ctx.fillStyle = '#fff2c8';
+            ctx.beginPath(); ctx.arc(m.shot.x, shy, 7, 0, 6.284); ctx.fill();
+            ctx.fillStyle = '#ff7a3c';
+            ctx.beginPath(); ctx.arc(m.shot.x, shy, 4, 0, 6.284); ctx.fill();
             ctx.restore();
         }
     }
@@ -2173,6 +2592,7 @@
     function togglePause() {
         if (G.phase === 'play') {
             G.phase = 'pause';
+            Sfx.ambient(0, 300);
             showScreen('pause-overlay');
             touchButtons(false);
         } else if (G.phase === 'pause') {
@@ -2219,6 +2639,7 @@
 
     function backToMenu() {
         G.phase = 'menu';
+        Sfx.ambient(0, 300);
         touchButtons(false);
         el('zone-banner').classList.remove('show');
         syncMenu();
