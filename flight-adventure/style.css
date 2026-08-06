@@ -786,59 +786,31 @@ body {
 }
 
 /* =========================================================
-   CẢNH BÁO XOAY MÀN HÌNH (PORTRAIT MOBILE WARNING)
+   CHẾ ĐỘ DỌC TRÊN ĐIỆN THOẠI (PORTRAIT MOBILE SUPPORT)
+   Game bay nằm ngang, nhưng vẫn hoạt động mượt mà khi cầm dọc.
+   Canvas thu nhỏ lại ở phía trên, nút bấm nằm vừa tầm ngón cái.
    ========================================================= */
-.orientation-warning {
-    display: none;
-    position: absolute;
-    inset: 0;
-    background: #071019;
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 30px;
-}
-
-.ow-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-}
-
-.ow-icon {
-    font-size: 3.5rem;
-    animation: ow-rotate 2.2s infinite ease-in-out;
-}
-
-@keyframes ow-rotate {
-    0%, 100% { transform: rotate(0deg); }
-    50% { transform: rotate(-90deg); }
-}
-
-.ow-content h2 {
-    font-family: var(--font-display);
-    font-size: 1.45rem;
-    color: #fff;
-    font-weight: 800;
-}
-
-.ow-content p {
-    font-size: 0.95rem;
-    color: #cbd9e5;
-    line-height: 1.45;
-}
-
-.ow-sub {
-    font-size: 0.78rem !important;
-    opacity: 0.65;
-    margin-top: -4px;
-}
-
-/* Hiển thị cảnh báo xoay màn hình CHỈ khi ở chế độ Portrait trên màn hình di động nhỏ */
 @media (orientation: portrait) and (max-width: 768px) {
-    .orientation-warning {
-        display: flex;
-    }
+    .app-wrapper { padding: 6px 6px 8px; gap: 6px; }
+    .unified-nav { padding: 6px 8px; border-radius: 14px; }
+    .brand-title { font-size: 0.9rem; }
+    .site-footer { display: none; }
+
+    .hud-top { gap: 5px; }
+    .hud-chip { min-width: 62px; padding: 4px 7px; font-size: 0.66rem; }
+    .hud-chip b { font-size: 0.84rem; }
+    .hud-chip em { display: none; }
+    .progress { top: 40px; width: min(80%, 300px); }
+    .pg-city { font-size: 0.6rem; }
+    .guide { font-size: 0.78rem; padding: 6px 12px; bottom: 160px; }
+
+    .round-btn { width: 42px; height: 42px; font-size: 1.15rem; }
+    .hud-right { right: 6px; gap: 5px; }
+
+    .touch-row { bottom: 6px; left: 6px; right: 6px; }
+    .touch-btn { width: 52px; height: 52px; border-radius: 14px; font-size: 1.15rem; }
+    .pad { gap: 5px; }
+    .pad-mid { gap: 4px; }
+    .pad-mid .touch-btn { height: 44px; }
+    .pad-l, .pad-r { height: 96px; }
 }
