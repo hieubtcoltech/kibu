@@ -1991,158 +1991,95 @@
         ctx.globalAlpha = 1;
     }
 
-    function drawMinimap() {
-        var startX = 22;
-        var startY = 70;
-        var mapW = 210;
-        var mapH = 75;
+    function drawRadarCompass() {
+        var mcX = 64;
+        var mcY = 112;
+        var r = 38;
         
-        var hanX = startX + 30;
-        var hanY = startY + 58;
-        var dadX = startX + mapW - 35;
-        var dadY = startY + 32;
-
         ctx.save();
         
-        // 1. Nền bảng điều khiển tối màu (Glassmorphism cao cấp)
-        ctx.fillStyle = 'rgba(7, 18, 30, 0.88)';
+        // 1. Nền tối mờ la bàn (Glassmorphism)
+        ctx.fillStyle = 'rgba(7, 18, 30, 0.85)';
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.16)';
         ctx.lineWidth = 1.5;
-        roundRect(ctx, startX, startY, mapW, mapH, 8);
+        ctx.beginPath();
+        ctx.arc(mcX, mcY, r, 0, 6.284);
         ctx.fill();
         ctx.stroke();
-
-        // Giới hạn vùng vẽ địa lý bên trong thẻ bản đồ
-        ctx.save();
-        roundRect(ctx, startX + 1, startY + 1, mapW - 2, mapH - 2, 7);
-        ctx.clip();
-
-        // 2. Vẽ địa lý Vệ tinh giả lập (Đất liền Việt Nam bên trái, Biển Đông bên phải)
-        // Vùng đất liền (Màu xanh lục xám sẫm màu của rừng núi)
-        ctx.fillStyle = '#1e2923';
-        ctx.fillRect(startX, startY, mapW, mapH);
-
-        // Vùng biển nước sâu (Xanh dương thẫm)
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.moveTo(startX + 105, startY);
-        ctx.bezierCurveTo(startX + 120, startY + 25, startX + 80, startY + 50, startX + 125, startY + mapH);
-        ctx.lineTo(startX + mapW, startY + mapH);
-        ctx.lineTo(startX + mapW, startY);
-        ctx.closePath();
-        ctx.fill();
-
-        // Đường bờ biển Việt Nam (Màu vàng cát mảnh dẻ)
-        ctx.strokeStyle = '#c5a880';
-        ctx.lineWidth = 1.2;
-        ctx.beginPath();
-        ctx.moveTo(startX + 105, startY);
-        ctx.bezierCurveTo(startX + 120, startY + 25, startX + 80, startY + 50, startX + 125, startY + mapH);
-        ctx.stroke();
-
-        // 3. Vẽ hệ tọa độ Kinh/Vĩ tuyến định vị tinh tế
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+        
+        // 2. Vạch tròn radar đồng tâm mờ
+        ctx.strokeStyle = 'rgba(34, 197, 94, 0.16)';
         ctx.lineWidth = 0.8;
-        ctx.setLineDash([2, 4]);
-        // Đường vĩ tuyến ngang
-        for (var y = startY + 15; y < startY + mapH; y += 22) {
-            ctx.beginPath(); ctx.moveTo(startX, y); ctx.lineTo(startX + mapW, y); ctx.stroke();
-        }
-        // Đường kinh tuyến dọc
-        for (var x = startX + 30; x < startX + mapW; x += 40) {
-            ctx.beginPath(); ctx.moveTo(x, startY); ctx.lineTo(x, startY + mapH); ctx.stroke();
-        }
-        ctx.setLineDash([]); // Reset nét liền
-
-        // 4. Ánh xạ vị trí máy bay lên bản đồ
-        var pct = clamp(P.x / 54000, 0, 1);
-        var planeX = hanX + (dadX - hanX) * pct;
-        var planeY = hanY + (dadY - hanY) * pct - P.z * 0.0035;
-
-        // 5. Vẽ tuyến đường bay (Flight Path)
-        // Chặng đã bay qua: Màu xanh lá cây đứt nét biểu thị lịch sử hành trình
-        ctx.strokeStyle = '#22c55e';
-        ctx.lineWidth = 1.8;
-        ctx.setLineDash([3, 3]);
-        ctx.beginPath();
-        ctx.moveTo(hanX, hanY);
-        ctx.lineTo(planeX, planeY);
-        ctx.stroke();
-
-        // Chặng sắp bay qua: Màu trắng đục biểu thị lộ trình phía trước
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.42)';
+        ctx.beginPath(); ctx.arc(mcX, mcY, r * 0.4, 0, 6.284); ctx.stroke();
+        ctx.beginPath(); ctx.arc(mcX, mcY, r * 0.72, 0, 6.284); ctx.stroke();
+        
+        // 3. Vệt quét radar xoay tròn tự động
+        var sweepAngle = (G.t * 1.5) % 6.284;
+        ctx.strokeStyle = 'rgba(34, 197, 94, 0.38)';
         ctx.lineWidth = 1.5;
-        ctx.setLineDash([]);
         ctx.beginPath();
-        ctx.moveTo(planeX, planeY);
-        ctx.lineTo(dadX, dadY);
+        ctx.moveTo(mcX, mcY);
+        ctx.lineTo(mcX + Math.cos(sweepAngle) * r, mcY + Math.sin(sweepAngle) * r);
         ctx.stroke();
-
-        // 6. Vẽ các điểm sân bay với nhãn và vòng tròn định vị
-        // Sân bay Nội Bài (HAN)
-        ctx.fillStyle = '#38bdf8';
-        ctx.beginPath(); ctx.arc(hanX, hanY, 3, 0, 6.284); ctx.fill();
-        ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-        ctx.beginPath(); ctx.arc(hanX, hanY, 6, 0, 6.284); ctx.stroke();
-
-        // Sân bay Đà Nẵng (DAD)
-        ctx.fillStyle = '#f43f5e';
-        ctx.beginPath(); ctx.arc(dadX, dadY, 3, 0, 6.284); ctx.fill();
-        ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
-        ctx.beginPath(); ctx.arc(dadX, dadY, 6, 0, 6.284); ctx.stroke();
-
-        // Chữ HAN/DAD nhỏ
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.font = '800 7px Nunito, sans-serif';
+        
+        // 4. Nhãn hướng Đông-Tây-Nam-Bắc
+        ctx.font = '800 8px Nunito, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('HAN', hanX, hanY - 8);
-        ctx.fillText('DAD', dadX, dadY - 8);
-
-        // 7. Vẽ máy bay phản lực thương mại màu trắng, xoay mũi theo hướng thực tế
+        ctx.textBaseline = 'middle';
+        
+        // Bắc (North) - 12h màu đỏ nổi bật la bàn
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('N', mcX, mcY - r + 7);
+        
+        // Các hướng còn lại màu trắng sáng
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.fillText('S', mcX, mcY + r - 7); // Nam
+        ctx.fillText('E', mcX + r - 7, mcY); // Đông
+        ctx.fillText('W', mcX - r + 7, mcY); // Tây
+        
+        // 5. Vẽ vạch chia 45 độ tinh tế
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+        ctx.lineWidth = 0.8;
+        for (var a = 0; a < 360; a += 45) {
+            if (a % 90 === 0) continue;
+            var rad = a * Math.PI / 180;
+            ctx.beginPath();
+            ctx.moveTo(mcX + Math.cos(rad) * (r - 3.5), mcY + Math.sin(rad) * (r - 3.5));
+            ctx.lineTo(mcX + Math.cos(rad) * r, mcY + Math.sin(rad) * r);
+            ctx.stroke();
+        }
+        
+        // 6. Quy đổi góc bay sang Độ (0 độ là hướng Đông / E)
+        var headingDeg = Math.round((P.heading * 180 / Math.PI) % 360);
+        if (headingDeg < 0) headingDeg += 360;
+        
+        // 7. Máy bay chỉ thị hướng bay nằm ở tâm la bàn
         ctx.save();
-        ctx.translate(planeX, planeY);
-        ctx.rotate(P.heading - Math.atan2(dadY - hanY, dadX - hanX)); // Xoay tương đối theo hướng tuyến bay
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#0f172a';
+        ctx.translate(mcX, mcY);
+        ctx.rotate(P.heading);
+        ctx.fillStyle = '#10b981'; // Màu xanh lá điện tử
+        ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 0.8;
         ctx.beginPath();
         ctx.moveTo(6, 0);
-        ctx.lineTo(-2, -6);
+        ctx.lineTo(-2, -5.5);
         ctx.lineTo(-1, -1.8);
         ctx.lineTo(-4.5, -2);
         ctx.lineTo(-3, 0);
         ctx.lineTo(-4.5, 2);
         ctx.lineTo(-1, 1.8);
-        ctx.lineTo(-2, 6);
+        ctx.lineTo(-2, 5.5);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
         ctx.restore();
-
-        ctx.restore(); // Thoát clip vùng vẽ địa lý
-
-        // 8. Tiêu đề và Thông số chuyến bay (In-flight Telemetry Overlay)
-        // Tiêu đề
-        ctx.fillStyle = '#10b981'; // Xanh lá cây hệ thống
-        ctx.beginPath(); ctx.arc(startX + 10, startY + 9, 2.2, 0, 6.284); ctx.fill(); // Đèn hoạt động
         
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-        ctx.font = '800 6.5px Nunito, sans-serif';
-        ctx.textAlign = 'left';
-        ctx.fillText('FLIGHT INFOCENTER / HÀNH TRÌNH BAY', startX + 16, startY + 11);
-
-        // Bảng số liệu kỹ thuật góc phải
-        ctx.fillStyle = 'rgba(34, 197, 94, 0.82)'; // Màu xanh lá điện tử
-        ctx.font = '700 7px Courier New, monospace';
-        ctx.textAlign = 'right';
+        // 8. Số đo hướng bay HDG dạng số góc dưới la bàn
+        ctx.fillStyle = 'rgba(34, 197, 94, 0.9)';
+        ctx.font = '800 7.5px Courier New, monospace';
+        ctx.fillText('HDG: ' + headingDeg + '°', mcX, mcY + r + 9);
         
-        var alt = Math.round(P.alt);
-        var spd = Math.round(P.spd * 3.6);
-        var dist = Math.round(760 * (1 - pct)); // Quy đổi quãng đường thật 760km
-        
-        ctx.fillText('ALT: ' + alt + ' m', startX + mapW - 10, startY + 11);
-        ctx.fillText('SPD: ' + spd + ' km/h', startX + mapW - 10, startY + 19);
-        ctx.fillText('DST: ' + dist + ' km', startX + mapW - 10, startY + 27);
+        ctx.restore();
     }
 
     function draw() {
@@ -2166,8 +2103,8 @@
             if (w.storm > 0.02) drawRain(w.storm);
             if (w.storm > 0.3) drawStormWarning(w.storm);
             
-            // Vẽ bản đồ con hỗ trợ định hướng khi đang bay
-            if (G.phase === 'fly' || G.phase === 'pause') drawMinimap();
+            // Vẽ rada 4 hướng chỉ thị góc bay của máy bay
+            if (G.phase === 'fly' || G.phase === 'pause') drawRadarCompass();
         } else {
             drawMenuScene();
         }
