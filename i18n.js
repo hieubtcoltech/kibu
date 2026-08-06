@@ -566,7 +566,7 @@
         ['Đã tới', 'Reached'],
 
         /* chế độ chơi và các bảng phụ */
-        ['Leo Hằng Ngày', 'Daily Climb'],
+        ['Hằng Ngày', 'Daily Climb'],
         /* Nhãn nút ngắn hơn hẳn nhãn dài ở chỗ khác — cờ 'x' khoá lại để một
            chữ 'Daily' đứng lẻ không chui vào giữa câu nào khác. */
         ['Hằng Ngày', 'Daily', 'x'],
