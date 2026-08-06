@@ -797,6 +797,8 @@ body .app-wrapper {
     height: 54px;
     border-radius: 10px;
     background: linear-gradient(160deg, #7fd0ef, #3aa7e0);
+    background-size: cover;
+    background-position: center;
 }
 
 .pc-lake { background: linear-gradient(160deg, #8fe0c8, #2f8f9e); }
@@ -818,6 +820,8 @@ body .app-wrapper {
     border-radius: 18px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     background: linear-gradient(160deg, #7fd0ef, #3aa7e0);
+    background-size: cover;
+    background-position: center;
     box-shadow: inset 0 -60px 90px rgba(0, 0, 0, 0.16);
 }
 

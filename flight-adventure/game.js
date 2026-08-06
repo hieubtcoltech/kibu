@@ -51,6 +51,7 @@
             flights: 0,
             stamps: {},      // mã sân bay -> số lần hạ cánh
             photos: {},      // tuyến:thắng cảnh -> true
+            photoShots: {},   // tuyến:thắng cảnh -> ảnh canvas đã chụp
             stars: 0,
             rings: 0,
             best: {}         // tuyến -> hạng hạ cánh tốt nhất
@@ -864,11 +865,32 @@
         if (G.phase !== 'fly' || !G.photoHint) return;
         var lm = G.photoHint;
         G.shots.push(lm.en);
+        savePhotoShot(lm);
         G.flash = 1;
         Sfx.shutter();
         say('shot', name(lm) + ' 📸', 2.8);
         el('btn-photo').classList.remove('is-hot');
         G.photoHint = null;
+    }
+
+    function photoKey(lm, rt) {
+        return (rt || G.route).id + ':' + lm.en;
+    }
+
+    function savePhotoShot(lm) {
+        if (!canvas || !G.route) return;
+        try {
+            var shotCanvas = document.createElement('canvas');
+            shotCanvas.width = 360;
+            shotCanvas.height = 220;
+            var shotCtx = shotCanvas.getContext('2d');
+            shotCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, shotCanvas.width, shotCanvas.height);
+            store.data.photos[photoKey(lm)] = true;
+            store.data.photoShots[photoKey(lm)] = shotCanvas.toDataURL('image/jpeg', 0.72);
+            store.save();
+        } catch (e) {
+            store.data.photos[photoKey(lm)] = true;
+        }
     }
 
     function stepParticles(dt) {
@@ -2826,28 +2848,49 @@
         for (var i = 0; i < rt.landmarks.length; i++) {
             var lm = rt.landmarks[i];
             if (G.shots.indexOf(lm.en) < 0) continue;
-            host.appendChild(photoCard(lm, 'done-overlay'));
+            host.appendChild(photoCard(lm, 'done-overlay', rt));
         }
     }
 
     var photoBackScreen = 'album-overlay';
-    function photoCard(lm, backScreen) {
+    function photoCard(lm, backScreen, rt) {
         var d = document.createElement('button');
         d.type = 'button';
         d.className = 'photo-card';
-        d.innerHTML = '<div class="pc-pic pc-' + lm.kind + '"></div>' +
+        var src = photoShotSrc(lm, rt);
+        d.innerHTML = '<div class="pc-pic pc-' + photoKind(lm) + '"></div>' +
             '<b>' + name(lm) + '</b><span>' + fact(lm) + '</span>';
-        d.addEventListener('click', function () { openPhotoView(lm, backScreen || 'album-overlay'); });
+        if (src) {
+            var pic = d.querySelector('.pc-pic');
+            pic.style.backgroundImage = 'url("' + src + '")';
+        }
+        d.addEventListener('click', function () { openPhotoView(lm, backScreen || 'album-overlay', rt); });
         return d;
     }
 
-    function openPhotoView(lm, backScreen) {
+    function openPhotoView(lm, backScreen, rt) {
         photoBackScreen = backScreen || 'album-overlay';
         var pic = el('photo-view-pic');
-        pic.className = 'photo-view-pic pc-' + lm.kind;
+        var src = photoShotSrc(lm, rt);
+        pic.className = 'photo-view-pic pc-' + photoKind(lm);
+        pic.style.backgroundImage = src ? 'url("' + src + '")' : '';
         el('photo-view-title').textContent = name(lm);
         el('photo-view-fact').textContent = fact(lm);
         showScreen('photo-view-overlay');
+    }
+
+    function photoKind(lm) {
+        return lm && lm.kind ? lm.kind : 'default';
+    }
+
+    function photoShotSrc(lm, rt) {
+        if (!lm || !store.data.photoShots) return '';
+        if (rt && store.data.photoShots[photoKey(lm, rt)]) return store.data.photoShots[photoKey(lm, rt)];
+        for (var r = 0; r < R.ROUTES.length; r++) {
+            var key = photoKey(lm, R.ROUTES[r]);
+            if (store.data.photoShots[key]) return store.data.photoShots[key];
+        }
+        return '';
     }
 
     function renderAlbum() {
@@ -2876,7 +2919,7 @@
             for (var k = 0; k < rt.landmarks.length; k++) {
                 var lm = rt.landmarks[k];
                 if (!d.photos[rt.id + ':' + lm.en]) continue;
-                ph.appendChild(photoCard(lm, 'album-overlay'));
+                ph.appendChild(photoCard(lm, 'album-overlay', rt));
                 any = true;
             }
         }
