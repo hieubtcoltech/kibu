@@ -1922,106 +1922,89 @@
     }
 
     function drawMinimap() {
-        var mcX = 75;
-        var mcY = 85;
-        var r = 45;
-        var scale = r / 3500; // Phạm vi hiển thị bán kính 3.5 km quanh máy bay
+        var startX = 22;
+        var startY = 70;
+        var mapW = 210;
+        var mapH = 50;
+        
+        var ptHAN_x = startX + 25;
+        var ptDAD_x = startX + mapW - 25;
+        var pt_y = startY + 25;
+        var routeLenPx = ptDAD_x - ptHAN_x; // 160px
 
         ctx.save();
         
-        // Nền kính mờ bán trong suốt sang trọng
-        ctx.fillStyle = 'rgba(7, 18, 32, 0.72)';
+        // 1. Nền kính mờ bán trong suốt sang trọng bo tròn góc
+        ctx.fillStyle = 'rgba(7, 18, 32, 0.76)';
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.arc(mcX, mcY, r, 0, 6.284);
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, startX, startY, mapW, mapH, 12);
         ctx.fill();
         ctx.stroke();
 
-        // Giới hạn vùng vẽ trong khung tròn bản đồ
-        ctx.clip();
-
-        // 1. Vẽ trục đường bay trung tâm (đường đứt nét màu xanh dương nhạt)
-        var lineX = mcX - P.z * scale;
-        ctx.strokeStyle = 'rgba(58, 167, 224, 0.4)';
-        ctx.lineWidth = 1.5;
+        // 2. Vẽ đường bay tuyến tính đứt nét kết nối HAN -> DAD
+        ctx.strokeStyle = 'rgba(58, 167, 224, 0.3)';
+        ctx.lineWidth = 2;
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
-        ctx.moveTo(lineX, mcY - r);
-        ctx.lineTo(lineX, mcY + r);
+        ctx.moveTo(ptHAN_x, pt_y);
+        ctx.lineTo(ptDAD_x, pt_y);
         ctx.stroke();
         ctx.setLineDash([]); // Reset nét liền
 
-        // 2. Vẽ sân bay xuất phát & đích nếu ở trong tầm hiển thị
-        var dep = R.departRunway(G.route);
-        var arr = R.arriveRunway(G.route);
+        // 3. Vẽ hai điểm đầu cuối sân bay
+        // Điểm xuất phát (HAN - xanh dương)
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath(); ctx.arc(ptHAN_x, pt_y, 4, 0, 6.284); ctx.fill();
+        // Điểm đích (DAD - đỏ hồng)
+        ctx.fillStyle = '#f43f5e';
+        ctx.beginPath(); ctx.arc(ptDAD_x, pt_y, 4, 0, 6.284); ctx.fill();
 
-        // Sân bay Nội Bài (HAN)
-        var depRY = mcY - (dep.x0 + dep.x1) / 2 * scale + P.x * scale;
-        var depRX = mcX + (0 - P.z) * scale;
-        if (Math.abs(depRY - mcY) < r) {
-            ctx.fillStyle = '#64748b';
-            ctx.fillRect(depRX - 3, depRY - 12, 6, 24);
-        }
+        // Vẽ chữ nhãn sân bay nhỏ
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+        ctx.font = '800 8.5px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('HAN', ptHAN_x, pt_y - 8);
+        ctx.fillText('DAD', ptDAD_x, pt_y - 8);
 
-        // Sân bay Đà Nẵng (DAD)
-        var arrRY = mcY - (arr.x0 + arr.x1) / 2 * scale + P.x * scale;
-        var arrRX = mcX + (0 - P.z) * scale;
-        if (Math.abs(arrRY - mcY) < r) {
-            ctx.fillStyle = '#f43f5e';
-            ctx.fillRect(arrRX - 3, arrRY - 12, 6, 24);
-        }
-
-        // 3. Vẽ các địa điểm danh lam thắng cảnh xung quanh (chấm tròn vàng)
+        // 4. Vẽ các thắng cảnh dọc tuyến bay (các chấm vàng nhỏ)
         ctx.fillStyle = '#fbbf24';
         for (var i = 0; i < G.route.landmarks.length; i++) {
             var lm = G.route.landmarks[i];
-            var lmy = mcY - (lm.at - P.x) * scale;
-            var lmx = mcX + ((lm.z || 0) - P.z) * scale;
-            var dx = lmx - mcX;
-            var dy = lmy - mcY;
-            if (dx * dx + dy * dy < r * r) {
-                ctx.beginPath();
-                ctx.arc(lmx, lmy, 3, 0, 6.284);
-                ctx.fill();
-            }
+            var lmx = ptHAN_x + (lm.at / 54000) * routeLenPx;
+            ctx.beginPath();
+            ctx.arc(lmx, pt_y, 2.5, 0, 6.284);
+            ctx.fill();
         }
 
-        // 4. Vẽ icon máy bay phản lực ở tâm bản đồ, xoay theo góc hướng bay thật
+        // 5. Tính toán vị trí máy bay của bé trên bản đồ
+        var planeX = ptHAN_x + (clamp(P.x, 0, 54000) / 54000) * routeLenPx;
+        // Trục Z lệch sang 2 bên được ánh xạ lên trục đứng (Y) bản đồ (Scale: ±4000m -> ±14px)
+        var planeY = clamp(pt_y - P.z * 0.0035, startY + 6, startY + mapH - 6);
+
+        // 6. Vẽ biểu tượng máy bay phản lực màu trắng, xoay hướng theo P.heading
         ctx.save();
-        ctx.translate(mcX, mcY);
+        ctx.translate(planeX, planeY);
         ctx.rotate(P.heading);
         ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#1e3a8a';
+        ctx.strokeStyle = '#0f172a';
         ctx.lineWidth = 1;
         ctx.beginPath();
-        ctx.moveTo(0, -6);
-        ctx.lineTo(-7, 2);
-        ctx.lineTo(-2, 1);
-        ctx.lineTo(-3, 5);
-        ctx.lineTo(0, 3);
-        ctx.lineTo(3, 5);
-        ctx.lineTo(2, 1);
-        ctx.lineTo(7, 2);
+        // Vẽ máy bay quay mũi sang PHẢI ở góc quay = 0 (hướng bay HAN -> DAD là bên phải)
+        ctx.moveTo(6, 0);       // Mũi máy bay (phía phải)
+        ctx.lineTo(-2, -7);     // Cánh trên
+        ctx.lineTo(-1, -2);
+        ctx.lineTo(-5, -3);     // Đuôi trên
+        ctx.lineTo(-3, 0);      // Thân đuôi
+        ctx.lineTo(-5, 3);      // Đuôi dưới
+        ctx.lineTo(-1, 2);
+        ctx.lineTo(-2, 7);      // Cánh dưới
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
         ctx.restore();
 
-        ctx.restore(); // Restore clip
-
-        // Vẽ viền tròn ngoài bản đồ
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.35)';
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(mcX, mcY, r, 0, 6.284);
-        ctx.stroke();
-
-        // Ký hiệu hướng Bắc (N) ở đỉnh bản đồ
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = '800 8.5px Nunito, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillText('N', mcX, mcY - r + 8);
+        ctx.restore();
     }
 
     function draw() {
