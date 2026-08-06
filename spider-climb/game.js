@@ -1817,7 +1817,6 @@
 
         drawSkyBody();
         drawFarSkyline();
-        drawTraffic();
         drawSkyLife();
         drawStorm();
         drawClouds();
@@ -2003,31 +2002,6 @@
             }
             ctx.restore();
         }
-    }
-
-    /* Đèn xe chạy dưới phố. Chỉ là mấy vệt sáng nhỏ trườn ngang đáy màn, nhưng
-     * nó trả lời được câu "dưới kia có gì" — mà leo cao thì câu ấy quan trọng. */
-    function drawTraffic() {
-        var tr = zn('traffic', 0);
-        if (tr < 0.05) return;
-        /* chỉ thấy được khi còn thấp; lên cao thì đường phố khuất sau nhà */
-        var vis = clamp(1 - metresNow() / 1400, 0, 1) * tr;
-        if (vis < 0.04) return;
-        var base = H * 0.965 - (G.camY * 0.008) % 40;
-        ctx.save();
-        ctx.globalAlpha = vis;
-        for (var i = 0; i < 10; i++) {
-            var dir = i % 2 ? 1 : -1;
-            var sp = 40 + hash2(i, 31) * 70;
-            var x = ((hash2(i, 33) * W + G.t * sp * dir) % (W + 60) + W + 60) % (W + 60) - 30;
-            var y = base + (i % 2) * 9;
-            ctx.fillStyle = dir > 0 ? 'rgba(255,226,150,0.9)' : 'rgba(255,90,90,0.85)';
-            ctx.fillRect(x, y, 9, 3);
-            ctx.globalAlpha = vis * 0.3;
-            ctx.fillRect(x - dir * 14, y, 14, 3);
-            ctx.globalAlpha = vis;
-        }
-        ctx.restore();
     }
 
     function drawFarSkyline() {
