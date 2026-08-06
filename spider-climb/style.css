@@ -673,24 +673,177 @@ body {
 
 .help-list b { color: #fff; }
 
-.final-grid { width: 100%; display: flex; flex-direction: column; gap: 7px; }
+/* =========================================================
+   MÀN KẾT QUẢ
+   ---------------------------------------------------------
+   Trẻ con đọc HÌNH trước, đọc SỐ sau, chữ thì sau cùng — nếu
+   còn đọc. Bản trước là năm dòng xám giống hệt nhau: nhãn
+   trái, số phải, cùng cỡ chữ, cùng nền. Mắt không biết nhìn
+   đâu trước nên nó không nhìn đâu cả, và cả màn hình đọc ra
+   như một tờ hoá đơn.
 
-.score-row {
+   Nay ba tầng, không tầng nào cãi tầng nào:
+     1. MỘT con số to đùng — leo được bao cao, đó là cả trò
+        chơi. Kèm thanh so với kỷ lục, vì "262" trơ ra thì
+        không nói được gì: nhiều hay ít?
+     2. Ba ô có biểu tượng — điểm, xu, chuỗi. Ngang hàng nhau
+        vì chúng đúng là ngang hàng.
+     3. Một huy hiệu vùng đã tới, có biểu tượng to.
+   ========================================================= */
+
+.over-hero {
+    width: 100%;
+    position: relative;
+    padding: 16px 18px 14px;
+    border-radius: 22px;
+    background: linear-gradient(160deg, rgba(255, 215, 94, 0.15), rgba(75, 215, 255, 0.09));
+    border: 1px solid rgba(255, 215, 94, 0.32);
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
-    gap: 14px;
-    padding: 9px 16px;
-    border-radius: 14px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.93rem;
-    color: #cbd5e1;
+    gap: 2px;
 }
 
-.score-row b { color: #fff; font-size: 1.15rem; }
+/* Huy hiệu kỷ lục đứng ĐÈ lên mép trên khung, không nằm trong dòng chữ nhỏ
+   dưới đáy như trước. Phá vỡ đường viền là cách rẻ nhất để một thứ kêu lên
+   "nhìn tôi này" mà không cần to thêm tí nào. */
+.hero-new {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    padding: 4px 15px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--gold), #ff9f43);
+    color: #38240a;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.74rem;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    box-shadow: 0 6px 18px rgba(255, 176, 58, 0.5);
+    transform: translateX(-50%);
+    animation: heroPop 1s ease-in-out infinite alternate;
+}
+
+.hero-new[hidden] { display: none; }
+
+@keyframes heroPop {
+    from { transform: translateX(-50%) scale(1); }
+    to { transform: translateX(-50%) scale(1.07); }
+}
+
+.hero-num {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.hero-num b {
+    font-size: clamp(3rem, 14vw, 4.3rem);
+    background: linear-gradient(135deg, #ffffff, var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-num span { font-size: 1.35rem; color: var(--gold); }
+
+.hero-unit {
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #9fb2cc;
+}
+
+.hero-track {
+    width: 100%;
+    height: 12px;
+    margin-top: 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.09);
+    overflow: hidden;
+}
+
+/* Chạy từ 0 lên trong non một giây. Thanh nhảy phắt sang chỗ đúng thì mắt
+   chỉ thấy một cái gạch; thanh CHẠY thì mắt thấy quãng đường vừa leo. */
+.hero-track i {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--sky), var(--gold));
+    transition: width 0.85s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+
+.hero-foot {
+    margin-top: 6px;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    color: #94a3b8;
+}
+
+.hero-foot b { color: #fff; }
+
+.stat-tiles {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.stat-tile {
+    padding: 11px 5px 9px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.t-ico { font-size: 1.45rem; line-height: 1; }
+
+.stat-tile b {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.15rem, 5.4vw, 1.5rem);
+    color: #fff;
+    line-height: 1.1;
+}
+
+.t-lbl {
+    font-size: 0.7rem;
+    letter-spacing: 0.4px;
+    color: #94a3b8;
+    text-align: center;
+}
+
+/* Mỗi ô một màu riêng, trùng với màu thứ ấy vẫn mang trong lúc chơi — xu
+   vàng cam, chuỗi đỏ lửa. Trẻ con nhớ màu trước khi nhớ chữ. */
+.t-score { background: rgba(255, 215, 94, 0.09); border-color: rgba(255, 215, 94, 0.34); }
+.t-coin { background: rgba(255, 176, 58, 0.09); border-color: rgba(255, 176, 58, 0.34); }
+.t-combo { background: rgba(255, 59, 82, 0.09); border-color: rgba(255, 59, 82, 0.32); }
+
+.zone-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 17px;
+    border-radius: 999px;
+    background: rgba(75, 215, 255, 0.11);
+    border: 1px solid rgba(75, 215, 255, 0.34);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #dff4ff;
+}
+
+.zone-badge .z-ico { font-size: 1.3rem; line-height: 1; }
 
 .best-line {
     font-family: var(--font-display);
@@ -699,19 +852,6 @@ body {
 }
 
 .best-line b { color: var(--gold); font-size: 1.15rem; }
-
-.new-best {
-    margin-left: 8px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    background: rgba(255, 215, 94, 0.2);
-    border: 1px solid var(--gold);
-    color: var(--gold);
-    font-size: 0.72rem;
-    letter-spacing: 1px;
-}
-
-.new-best[hidden] { display: none; }
 
 /* Ba cái nút ở màn kết thúc nằm gọn TRÊN MỘT DÒNG.
    Trước để flex-wrap kèm min-width 170px, nên trên màn hẹp chúng xuống hàng
@@ -849,6 +989,14 @@ body {
     .nav-actions { gap: 6px; }
     .game-viewport { border-radius: 18px; }
     .panel { padding: 18px 15px 16px; border-radius: 20px; }
+    .over-hero { padding: 13px 14px 11px; border-radius: 18px; }
+    .hero-track { margin-top: 8px; height: 10px; }
+    .hero-foot { margin-top: 4px; font-size: 0.75rem; }
+    .stat-tiles { gap: 6px; }
+    .stat-tile { padding: 9px 3px 7px; border-radius: 13px; }
+    .t-ico { font-size: 1.25rem; }
+    .t-lbl { font-size: 0.62rem; }
+    .zone-badge { font-size: 0.85rem; padding: 6px 13px; }
     .over-actions { gap: 6px; }
     .over-actions .big-btn {
         font-size: 0.72rem;

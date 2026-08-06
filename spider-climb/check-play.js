@@ -1143,7 +1143,22 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
         if (G.phase === 'over') { died = true; break; }
     }
     ok(died, 'ngồi yên không bấm gì suốt một phút mà vẫn không thua — game không có ăn thua');
-    if (died) getEl('btn-over-menu').dispatch('click');
+
+    /* MÀN KẾT QUẢ. Soát cái mà mắt trẻ con cần, chứ không soát cách bày biện:
+     * con số chủ đạo phải TRƠ MỘT SỐ (đơn vị nằm riêng, không dính vào số),
+     * ba ô phải có đủ số, và thanh so kỷ lục phải thật sự được đặt bề rộng. */
+    if (died) {
+        const heroTxt = getEl('over-height').textContent;
+        ok(/^[\d,]+$/.test(heroTxt),
+            `số độ cao ở màn kết quả là "${heroTxt}" — phải trơ một số, đơn vị để riêng thì mới phóng to được`);
+        for (const id of ['over-score', 'over-coins', 'over-combo', 'over-bestm', 'over-zone', 'over-zone-ico']) {
+            ok(String(getEl(id).textContent).length > 0, `ô "${id}" ở màn kết quả bỏ trống`);
+        }
+        const w = getEl('over-bar').style.width;
+        ok(/^\d+%$/.test(w || ''), `thanh so kỷ lục có bề rộng "${w}" — chưa được đặt`);
+        console.log(`  màn kết quả: cao ${heroTxt} m · điểm ${getEl('over-score').textContent} · xu ${getEl('over-coins').textContent} · chuỗi ${getEl('over-combo').textContent} · thanh kỷ lục ${w}`);
+        getEl('btn-over-menu').dispatch('click');
+    }
 }
 
 /* ------------------------------------------------------------------ *

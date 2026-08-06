@@ -266,16 +266,32 @@
                 <div class="panel">
                     <div class="panel-emoji">🕸️</div>
                     <h2 class="panel-title">RUN OVER</h2>
-                    <div class="final-grid">
-                        <div class="score-row"><span>Height</span><b id="over-height">0 m</b></div>
-                        <div class="score-row"><span>Score</span><b id="over-score">0</b></div>
-                        <div class="score-row"><span>Coins</span><b id="over-coins">0</b></div>
-                        <div class="score-row"><span>Best combo</span><b id="over-combo">x0</b></div>
-                        <div class="score-row"><span>Reached</span><b id="over-zone">Street Morning</b></div>
+                    <div class="over-hero">
+                        <span id="over-new" class="hero-new" hidden>NEW BEST!</span>
+                        <div class="hero-num"><b id="over-height">0</b><span>m</span></div>
+                        <div class="hero-unit">Height</div>
+                        <div class="hero-track"><i id="over-bar"></i></div>
+                        <div class="hero-foot">Your best: <b id="over-bestm">0 m</b></div>
+                    </div>
+                    <div class="stat-tiles">
+                        <div class="stat-tile t-score">
+                            <span class="t-ico">⭐</span><b id="over-score">0</b>
+                            <span class="t-lbl">Score</span>
+                        </div>
+                        <div class="stat-tile t-coin">
+                            <span class="t-ico">🪙</span><b id="over-coins">0</b>
+                            <span class="t-lbl">Coins</span>
+                        </div>
+                        <div class="stat-tile t-combo">
+                            <span class="t-ico">🔥</span><b id="over-combo">x0</b>
+                            <span class="t-lbl">Best combo</span>
+                        </div>
+                    </div>
+                    <div class="zone-badge">
+                        <span class="z-ico" id="over-zone-ico">🌅</span><span id="over-zone">Street Morning</span>
                     </div>
                     <div id="over-missions" class="mission-list"></div>
-                    <p class="best-line">Best score: <b id="over-best">0</b>
-                        <span id="over-new" class="new-best" hidden>NEW BEST!</span></p>
+                    <p class="best-line">Best score: <b id="over-best">0</b></p>
                     <div class="over-actions">
                         <button id="btn-revive" class="big-btn btn-revive" hidden><i class="fa-solid fa-heart"></i> REVIVE 💎2</button>
                         <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> CLIMB AGAIN</button>

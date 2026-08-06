@@ -564,6 +564,7 @@
         ['Độ cao', 'Height'],
         ['Chuỗi dài nhất', 'Best combo'],
         ['Đã tới', 'Reached'],
+        ['Kỷ lục của con:', 'Your best:'],
 
         /* chế độ chơi và các bảng phụ */
         ['Hằng Ngày', 'Daily Climb'],

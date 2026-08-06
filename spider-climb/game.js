@@ -564,8 +564,11 @@
         d.coins += G.coins;
         d.gems += G.gems;
 
+        /* Giữ lại kỷ lục CŨ trước khi ghi đè: thanh so sánh ở màn kết quả phải
+         * đo với cái mình vừa phá, không phải với chính mình. */
+        var prevBestM = d.bestM[G.mode] || 0;
         var freshScore = s > (d.best[G.mode] || 0);
-        var freshHeight = m > (d.bestM[G.mode] || 0);
+        var freshHeight = m > prevBestM;
         if (freshScore) d.best[G.mode] = s;
         if (freshHeight) d.bestM[G.mode] = m;
         if (G.maxCombo > (d.rec.combo || 0)) d.rec.combo = G.maxCombo;
@@ -575,14 +578,31 @@
         var finished = checkMissions();
         store.save();
 
-        el('over-height').textContent = fmt(m) + ' m';
+        el('over-height').textContent = fmt(m);
         el('over-score').textContent = fmt(s);
         el('over-coins').textContent = fmt(G.coins);
         el('over-combo').textContent = 'x' + G.maxCombo;
-        el('over-zone').textContent = R.ZONES[G.zone].icon + ' ' + R.ZONES[G.zone].name;
+        el('over-zone-ico').textContent = R.ZONES[G.zone].icon;
+        el('over-zone').textContent = R.ZONES[G.zone].name;
         el('over-best').textContent = fmt(d.best[G.mode] || 0);
+        el('over-bestm').textContent = fmt(d.bestM[G.mode] || 0) + ' m';
         el('over-new').hidden = !(freshScore || freshHeight);
         if (freshScore || freshHeight) Sfx.record();
+
+        /* THANH SO VỚI KỶ LỤC.
+         *
+         * Một con số trơ ra không nói được gì: 262 là nhiều hay ít? Đứa trẻ
+         * không có gì để so. Thanh này trả lời đúng câu ấy — mình đang ở đâu
+         * trên đường tới lần tốt nhất của chính mình.
+         *
+         * Đặt về 0 rồi mới đặt tới đích, và đọc offsetWidth ở giữa để trình
+         * duyệt kịp ghi nhận mốc 0 — không có nhịp ấy thì hai lệnh gộp làm
+         * một, thanh nhảy phắt sang chỗ đúng và mắt chỉ thấy một cái gạch. */
+        var frac = freshHeight ? 1 : (prevBestM > 0 ? Math.min(1, m / prevBestM) : (m > 0 ? 1 : 0));
+        var bar = el('over-bar');
+        bar.style.width = '0%';
+        void bar.offsetWidth;
+        bar.style.width = Math.round(frac * 100) + '%';
 
         var box = el('over-missions');
         box.innerHTML = '';
