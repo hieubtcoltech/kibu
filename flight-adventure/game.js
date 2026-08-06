@@ -2184,34 +2184,33 @@
         // Nhấp nháy nhẹ nhàng, mờ đi một chút (độ đục dao động từ 0.22 đến 0.58)
         var flash = 0.22 + 0.36 * Math.abs(Math.sin(G.t * 4.2));
         
-        // Vị trí nằm chính giữa màn hình ngang, ngay phía dưới thanh progress (ly = 152)
+        // Vị trí nằm chính giữa màn hình ngang, ngay phía dưới sát thanh progress (ly = 138)
         var lx = W / 2;
-        var ly = 152;
+        var ly = 138;
         
-        ctx.lineWidth = 3.6;
+        ctx.lineWidth = 4.8; // Nét vẽ dày hơn cho rõ ràng
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.globalAlpha = flash;
+        ctx.strokeStyle = '#f87171'; // Màu đỏ nhạt cảnh báo lệch hướng (Warning Red)
         
-        // Vẽ 3 dấu chevron vector lồng nhau cách nhau 12px cực kỳ chuyên nghiệp
+        // Vẽ 3 dấu chevron vector cỡ lớn lồng nhau cách nhau 14px cực kỳ trực quan
         if (needTurnRight) {
-            ctx.strokeStyle = '#4ade80'; // Xanh lá chỉ hướng rẽ phải
             for (var i = 0; i < 3; i++) {
-                var cx = lx - 12 + i * 12;
+                var cx = lx - 14 + i * 14;
                 ctx.beginPath();
-                ctx.moveTo(cx - 5, ly - 8);
+                ctx.moveTo(cx - 8, ly - 11);
                 ctx.lineTo(cx, ly);
-                ctx.lineTo(cx - 5, ly + 8);
+                ctx.lineTo(cx - 8, ly + 11);
                 ctx.stroke();
             }
         } else {
-            ctx.strokeStyle = '#38bdf8'; // Xanh dương chỉ hướng rẽ trái
             for (var i = 0; i < 3; i++) {
-                var cx = lx + 12 - i * 12;
+                var cx = lx + 14 - i * 14;
                 ctx.beginPath();
-                ctx.moveTo(cx + 5, ly - 8);
+                ctx.moveTo(cx + 8, ly - 11);
                 ctx.lineTo(cx, ly);
-                ctx.lineTo(cx + 5, ly + 8);
+                ctx.lineTo(cx + 8, ly + 11);
                 ctx.stroke();
             }
         }
