@@ -1347,7 +1347,7 @@
      * không có một dòng nào chỉnh tay theo khoảng cách. */
     function drawGroundProps() {
         var rt = G.route;
-        var STEP = 410;                         // mét giữa hai cụm theo chiều bay
+        var STEP = 560;                         // mét giữa hai cụm theo chiều bay
         var x0 = Math.ceil((cam.x + 200) / STEP) * STEP;
         var list = [];
 
@@ -1390,7 +1390,7 @@
 
         if (o.kind === 'city') {
             drawCityFeature(o, r1, r2);
-            var n = 2 + (r1 > 0.55 ? 1 : 0);
+            var n = r1 > 0.72 ? 2 : 1;
             for (var b = 0; b < n; b++) {
                 var bxM = (b - 1) * 82 + (hash(idx, b + 61) - 0.5) * 20;
                 var bzM = (hash(idx, b + 63) - 0.5) * 90;
@@ -1402,165 +1402,54 @@
                     hash(idx, b + 47) > 0.5 ? '#93c5fd' : '#cbd5e1');
             }
         } else if (o.kind === 'fields') {
-            // Thảm cỏ ruộng xanh mướt bo tròn
-            ctx.fillStyle = r1 > 0.5 ? '#86efac' : '#a7f3d0';
-            ctx.beginPath();
-            ctx.ellipse(p.x, p.y, 160 * s, 26 * s, 0, 0, 6.284);
-            ctx.fill();
-
             if (r2 < 0.32) {
-                // 1. Ao hồ nước xanh biếc lấp lánh phản chiếu mây trời giữa thung lũng cỏ
-                var lw = (55 + r1 * 75) * s;
-                var lh = (14 + r2 * 20) * s;
-                // Bờ cát vàng bảo vệ quanh hồ nước
-                ctx.fillStyle = '#eab308';
-                ctx.beginPath();
-                ctx.ellipse(p.x, p.y, lw + 2.5 * s, lh + 1.8 * s, 0, 0, 6.284);
-                ctx.fill();
-                // Mặt hồ phẳng lặng màu ngọc bích
-                ctx.fillStyle = '#38bdf8';
-                ctx.beginPath();
-                ctx.ellipse(p.x, p.y, lw, lh, 0, 0, 6.284);
-                ctx.fill();
-                // Vệt nắng chiếu lấp lánh nhẹ nhàng trên mặt nước hồ
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
-                ctx.beginPath();
-                ctx.ellipse(p.x - lw * 0.15, p.y - lh * 0.1, lw * 0.45, lh * 0.15, 0.1, 0, 6.284);
-                ctx.fill();
+                drawGroundPoly(o, [[-150, -80], [96, -72], [130, 58], [-120, 82]], 'rgba(134,239,172,0.62)', 'rgba(236,253,245,0.22)', 1);
+                drawGroundPoly(o, [[-72, -28], [54, -20], [64, 30], [-62, 38]], '#38bdf8', 'rgba(255,255,255,0.38)', 1);
+                drawGroundLine(o, [[-144, 70], [-80, 18], [8, 0], [116, -46]], 'rgba(255,255,255,0.28)', Math.max(1, 2 * s));
             } else if (r2 >= 0.32 && r2 < 0.62) {
-                // 2. Cây cổ thụ (Oak Tree) tán lá tròn xum xuê bóng đổ
-                var th = (16 + r1 * 14) * s;
-                // Thân cây gỗ nâu sẫm
-                ctx.fillStyle = '#78350f';
-                ctx.fillRect(p.x - 2.5 * s, p.y - th * 0.36, 5 * s, th * 0.36);
-                
-                // Tán lá to xum xuê màu xanh cỏ mướt mát có chiều sâu
-                var grLeaf = ctx.createRadialGradient(p.x, p.y - th * 0.68, 2 * s, p.x, p.y - th * 0.68, 12 * s);
-                grLeaf.addColorStop(0, '#4ade80');
-                grLeaf.addColorStop(0.7, '#16a34a');
-                grLeaf.addColorStop(1, '#15803d');
-                ctx.fillStyle = grLeaf;
-                ctx.beginPath();
-                ctx.arc(p.x, p.y - th * 0.68, 12 * s, 0, 6.284);
-                ctx.fill();
+                drawGroundPoly(o, [[-142, -88], [-12, -90], [-18, 18], [-148, 20]], '#a7f3d0', 'rgba(255,255,255,0.18)', 1);
+                drawGroundPoly(o, [[-8, -88], [128, -78], [118, 22], [-18, 18]], '#86efac', 'rgba(255,255,255,0.16)', 1);
+                drawGroundPoly(o, [[-132, 28], [0, 20], [8, 98], [-118, 104]], '#bbf7d0', 'rgba(255,255,255,0.14)', 1);
+                drawGroundPoly(o, [[8, 20], [132, 24], [126, 102], [8, 98]], '#74b855', 'rgba(255,255,255,0.12)', 1);
+                drawGroundLine(o, [[-150, -30], [136, -26]], 'rgba(255,255,255,0.18)', Math.max(1, 1.4 * s));
+                drawGroundLine(o, [[-20, -96], [-16, 106]], 'rgba(255,255,255,0.18)', Math.max(1, 1.4 * s));
             } else {
-                // 3. Cụm làng quê ấm cúng (Clustering cottages) với nhiều nhà cạnh nhau sơn màu phong phú
-                var numHouses = r1 > 0.62 ? 2 : 1;
-                for (var h = 0; h < numHouses; h++) {
-                    var hx = p.x + (h - 0.5 * (numHouses - 1)) * 22 * s;
-                    var hy = p.y;
-                    var hw = (13 + hash(idx, h + 15) * 7) * s;
-                    var hh = (14 + hash(idx, h + 25) * 5) * s;
-                    
-                    // Thân nhà gạch/gỗ màu trắng sữa hoặc kem nhạt
-                    ctx.fillStyle = h === 0 ? '#fef3c7' : '#fafaf9';
-                    ctx.fillRect(hx - hw / 2, hy - hh, hw, hh);
-                    
-                    // Mái ngói dốc tam giác đỏ gạch hoặc xanh lam nổi bật
-                    ctx.fillStyle = h === 0 ? '#ef4444' : '#2563eb';
-                    ctx.beginPath();
-                    ctx.moveTo(hx, hy - hh - 7 * s);
-                    ctx.lineTo(hx + hw / 2 + 1.8 * s, hy - hh);
-                    ctx.lineTo(hx - hw / 2 - 1.8 * s, hy - hh);
-                    ctx.closePath();
-                    ctx.fill();
-                    
-                    // Cửa ra vào màu nâu gỗ
-                    ctx.fillStyle = '#b4530f';
-                    ctx.fillRect(hx - 3 * s, hy - 8 * s, 6 * s, 8 * s);
-                    
-                    // Cửa sổ vuông tỏa sáng đèn vàng ấm áp biểu thị có người ở trong nhà
-                    ctx.fillStyle = '#fde047';
-                    ctx.fillRect(hx - hw / 3.2, hy - hh * 0.72, 3.2 * s, 3.2 * s);
+                drawGroundLine(o, [[-154, 42], [-68, 12], [16, 20], [140, -34]], 'rgba(71,85,105,0.55)', Math.max(2, 10 * s));
+                drawGroundLine(o, [[-154, 42], [-68, 12], [16, 20], [140, -34]], 'rgba(255,255,255,0.28)', Math.max(1, 1.5 * s), [7 * s, 8 * s]);
+                var village = r1 > 0.5 ? 3 : 2;
+                for (var h = 0; h < village; h++) {
+                    var ox = -56 + h * 52 + (hash(idx, h + 12) - 0.5) * 18;
+                    var oz = -18 + (hash(idx, h + 15) - 0.5) * 70;
+                    drawMapBlock(o, ox, oz, 34, 28, 9, '#fef3c7', h % 2 ? '#2563eb' : '#ef4444');
                 }
             }
         } else if (o.kind === 'hills' || o.kind === 'mountains') {
-            if (r1 > 0.35) {
-                var th = (18 + r2 * 16) * s;
-                // Thân cây thông bằng gỗ nâu sẫm
-                ctx.fillStyle = '#78350f';
-                ctx.fillRect(p.x - th * 0.05, p.y - th * 0.16, th * 0.1, th * 0.16);
-
-                // Tán lá thông 3 tầng xếp chồng tuyệt đẹp
-                var layers = 3;
-                var baseCol = o.kind === 'mountains' ? '#0f5132' : '#15803d';
-                var lightCol = o.kind === 'mountains' ? '#146c43' : '#166534';
-                
-                for (var l = 0; l < layers; l++) {
-                    var ly0 = p.y - th * (0.12 + l * 0.28);
-                    var ly1 = p.y - th * (0.52 + l * 0.26);
-                    var lw = th * (0.38 - l * 0.11);
-
-                    var gr = ctx.createLinearGradient(p.x - lw, ly0, p.x + lw, ly0);
-                    gr.addColorStop(0, baseCol);
-                    gr.addColorStop(0.5, lightCol);
-                    gr.addColorStop(1, baseCol);
-                    ctx.fillStyle = gr;
-
-                    ctx.beginPath();
-                    ctx.moveTo(p.x, ly1);
-                    ctx.lineTo(p.x + lw, ly0);
-                    ctx.lineTo(p.x - lw, ly0);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-            }
-            if (o.kind === 'mountains' && o.g > 1250 && r2 > 0.55) {
-                // Đỉnh núi phủ tuyết trắng tinh khôi ở những vùng núi cao
-                ctx.fillStyle = '#f8fafc';
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y - th);
-                ctx.lineTo(p.x + th * 0.1, p.y - th * 0.72);
-                ctx.lineTo(p.x - th * 0.1, p.y - th * 0.72);
-                ctx.closePath();
-                ctx.fill();
-            }
             if (o.kind === 'mountains' && r1 < 0.34) {
-                ctx.strokeStyle = 'rgba(226, 232, 240, 0.32)';
-                ctx.lineWidth = Math.max(1, 3 * s);
-                ctx.beginPath();
-                ctx.moveTo(p.x - 44 * s, p.y - 6 * s);
-                ctx.lineTo(p.x - 10 * s, p.y - 36 * s);
-                ctx.lineTo(p.x + 26 * s, p.y - 10 * s);
-                ctx.stroke();
+                drawGroundLine(o, [[-142, 70], [-86, 18], [-20, 4], [58, -42], [132, -70]], 'rgba(125, 211, 252, 0.45)', Math.max(1, 4 * s));
+                drawGroundLine(o, [[-120, -60], [-40, -24], [40, -38], [128, 12]], 'rgba(226,232,240,0.28)', Math.max(1, 2.2 * s));
             } else if (o.kind === 'hills' && r1 < 0.3) {
-                ctx.strokeStyle = 'rgba(254, 240, 138, 0.45)';
-                ctx.lineWidth = Math.max(1, 3 * s);
-                ctx.beginPath();
-                ctx.moveTo(p.x - 70 * s, p.y + 2 * s);
-                ctx.quadraticCurveTo(p.x - 18 * s, p.y - 26 * s, p.x + 58 * s, p.y - 8 * s);
-                ctx.stroke();
+                drawGroundLine(o, [[-140, 54], [-60, 18], [8, 24], [128, -34]], 'rgba(254, 240, 138, 0.45)', Math.max(1, 3 * s));
+            } else {
+                var trees = o.kind === 'mountains' ? 2 : 3;
+                for (var tr = 0; tr < trees; tr++) {
+                    var tx = -70 + tr * 70 + (hash(idx, tr + 73) - 0.5) * 24;
+                    var tz = (hash(idx, tr + 79) - 0.5) * 110;
+                    drawGroundPoly(o, [[tx - 18, tz - 12, 5], [tx + 18, tz - 12, 5], [tx + 22, tz + 14, 5], [tx - 20, tz + 14, 5]],
+                        o.kind === 'mountains' ? '#0f5132' : '#15803d', 'rgba(255,255,255,0.12)', 1);
+                }
             }
         } else if (o.kind === 'coast') {
-            // Con sóng bờ biển cuộn nhẹ nhàng
-            ctx.fillStyle = 'rgba(255,255,255,0.72)';
-            ctx.fillRect(p.x - 130 * s, p.y + Math.sin(G.t * 1.6 + idx) * 4 * s, 260 * s, 6 * s);
+            drawGroundLine(o, [[-160, -26], [-70, -12], [24, -18], [150, 2]], 'rgba(255,255,255,0.72)', Math.max(1, 5 * s));
+            if (r2 > 0.6) drawMapBlock(o, 36, 56, 42, 28, 10, '#fef3c7', '#ef4444');
         } else if (o.kind === 'sea') {
-            // Vẽ các hòn đảo xanh mướt (emerald green) nhô lên trên biển cả
             if (r1 > 0.42) {
-                var iw = (180 + r2 * 260) * s;
-                var ih = (40 + hash(idx, 99) * 60) * s;
-                ctx.fillStyle = '#10b981'; // màu xanh lục bảo bãi biển
-                ctx.beginPath();
-                ctx.ellipse(p.x, p.y + 10 * s, iw, ih, 0, 0, 6.284);
-                ctx.fill();
-
-                // Viền bờ cát vàng nhạt quanh đảo
-                ctx.strokeStyle = '#fef08a';
-                ctx.lineWidth = Math.max(1, 2.8 * s);
-                ctx.stroke();
-
-                // Đỉnh đồi phủ cây rừng sẫm màu ở giữa đảo
+                drawGroundPoly(o, [[-120, -56], [82, -72], [142, 18], [44, 78], [-110, 58]], '#10b981', '#fef08a', Math.max(1, 2.8 * s));
                 if (r2 > 0.58) {
-                    var th = ih * 0.65;
-                    ctx.fillStyle = '#065f46';
-                    ctx.beginPath();
-                    ctx.moveTo(p.x, p.y - th);
-                    ctx.lineTo(p.x + th * 0.6, p.y);
-                    ctx.lineTo(p.x - th * 0.6, p.y);
-                    ctx.closePath();
-                    ctx.fill();
+                    drawGroundPoly(o, [[-18, -18, 8], [42, -20, 8], [58, 12, 8], [4, 28, 8]], '#065f46', null, 0);
                 }
+            } else if (r2 < 0.24) {
+                drawGroundPoly(o, [[-18, -8, 4], [18, -8, 4], [28, 0, 4], [18, 8, 4], [-18, 8, 4], [-28, 0, 4]], '#f8fafc', 'rgba(15,23,42,0.25)', 1);
+                drawGroundLine(o, [[-4, -20, 6], [-4, 20, 6]], 'rgba(255,255,255,0.72)', Math.max(1, 2 * s));
             }
         }
         ctx.restore();
@@ -1654,20 +1543,22 @@
         if (s < 0.012) return;
 
         if (r2 < 0.2) {
-            drawGroundPoly(o, [[-135, -90], [75, -74], [118, 78], [-112, 96]], 'rgba(52, 211, 153, 0.78)', 'rgba(240,253,244,0.35)', 1);
-            drawGroundPoly(o, [[-54, -28], [22, -22], [32, 18], [-44, 26]], '#38bdf8', 'rgba(255,255,255,0.42)', 1);
-            drawGroundLine(o, [[-128, 42], [-62, -8], [18, 0], [104, -52]], 'rgba(254, 243, 199, 0.75)', Math.max(1, 3 * s));
-        } else if (r2 < 0.38) {
+            drawGroundLine(o, [[-152, 42], [-68, 16], [24, 8], [152, -36]], 'rgba(51, 65, 85, 0.86)', Math.max(4, 26 * s));
+            drawGroundLine(o, [[-152, 42], [-68, 16], [24, 8], [152, -36]], 'rgba(255,255,255,0.56)', Math.max(1, 2 * s), [8 * s, 8 * s]);
+            drawMapBlock(o, -58, -34, 62, 46, 34, '#475569', '#cbd5e1');
+            drawMapBlock(o, 48, 28, 78, 54, 48, '#2563eb', '#93c5fd');
+        } else if (r2 < 0.26) {
             drawMapBlock(o, 0, 0, 110, 78, 30, '#f8fafc', '#dbeafe');
             drawGroundPoly(o, [[-16, -14, 32], [16, -14, 32], [16, 14, 32], [-16, 14, 32]], '#ef4444', null, 0);
             drawGroundPoly(o, [[-34, -5, 33], [34, -5, 33], [34, 5, 33], [-34, 5, 33]], '#ef4444', null, 0);
-        } else if (r2 < 0.56) {
+        } else if (r2 < 0.36) {
             drawGroundPoly(o, [[-116, -86], [112, -86], [112, 74], [-116, 74]], 'rgba(187, 247, 208, 0.38)', 'rgba(255,255,255,0.18)', 1);
             drawMapBlock(o, -34, -8, 86, 58, 24, '#fde68a', '#f97316');
             drawMapBlock(o, 58, 12, 62, 44, 18, '#fef3c7', '#f59e0b');
             drawGroundLine(o, [[88, -56, 4], [88, -98, 4]], '#64748b', Math.max(1, 2 * s));
             drawGroundPoly(o, [[88, -98, 4], [122, -88, 4], [88, -78, 4]], '#ef4444', null, 0);
-        } else if (r2 < 0.74) {
+        } else if (r2 < 0.44) {
+            drawGroundPoly(o, [[-146, -88], [146, -88], [146, 88], [-146, 88]], 'rgba(22, 163, 74, 0.42)', 'rgba(255,255,255,0.16)', 1);
             drawGroundPoly(o, [[-135, -76], [135, -76], [135, 76], [-135, 76]], '#22c55e', 'rgba(255,255,255,0.75)', Math.max(1, 1.8 * s));
             drawGroundPoly(o, [[-112, -58], [112, -58], [112, 58], [-112, 58]], null, 'rgba(255,255,255,0.8)', Math.max(1, 1.6 * s));
             drawGroundLine(o, [[0, -58], [0, 58]], 'rgba(255,255,255,0.76)', Math.max(1, 1.5 * s));
@@ -1687,13 +1578,13 @@
     }
 
     function drawBirds() {
-        var gap = 920;
+        var gap = 5200;
         var x0 = Math.ceil((cam.x + 260) / gap) * gap;
         var list = [];
-        for (var wx = x0; wx < cam.x + 9000; wx += gap) {
+        for (var wx = x0; wx < cam.x + 16000; wx += gap) {
             var idx = Math.round(wx / gap);
-            if (hash(idx, 191) > 0.26) continue;
-            var flock = 2 + Math.floor(hash(idx, 193) * 4);
+            if (hash(idx, 191) > 0.18) continue;
+            var flock = 2 + Math.floor(hash(idx, 193) * 3);
             var baseZ = (hash(idx, 197) - 0.5) * 5200;
             var baseAlt = 450 + hash(idx, 199) * 1350;
             for (var b = 0; b < flock; b++) {
