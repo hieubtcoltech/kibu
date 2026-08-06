@@ -447,6 +447,28 @@
         if (P.state === 'fall') tryWallCatch();
     }
 
+    /* Nhảy CÓ HƯỚNG, dành cho bàn phím.
+     *
+     * Trên điện thoại chỉ có một cú chạm và nó luôn có nghĩa "sang tường bên
+     * kia" — không cần hướng, vì bao giờ cũng chỉ có một chỗ để sang. Nhưng
+     * ngồi bàn phím trước hai toà tháp thì tay tự tìm phím trái phải, và để
+     * trống hai phím ấy là bắt người chơi học một quy ước mà màn hình không hề
+     * gợi ý gì. Nay bấm về phía tường kia thì nhảy, còn bấm về phía tường mình
+     * ĐANG BÁM thì không làm gì cả — chứ không phải nhảy đi rồi nhảy về, mất
+     * toi cả chuỗi liên hoàn vì một cú bấm mà ý người chơi rõ ràng là "ở yên".
+     *
+     * Lúc đang rơi, hai phím ấy còn chọn được bám vào tường nào — thứ mà cú
+     * chạm trên điện thoại phải đoán hộ. */
+    function doJumpTo(dir) {
+        var target = dir > 0 ? SIDE_R : SIDE_L;
+        if (P.state === 'cling') {
+            if (P.side === target) return;
+            doJump();
+        } else if (P.state === 'fall') {
+            tryWallCatch(target);
+        }
+    }
+
     /* Bắn tơ bám lại vào tường lúc đang rơi. Đây là cách TỰ CỨU, và nó TIÊU
      * MỘT LẦN BẮN TƠ.
      *
@@ -460,8 +482,11 @@
      * Nó vẫn phải THẤT BẠI được: bám vào chỗ có vật cản hay dây điện thì trượt
      * tay — và lần trượt ấy không tính tiền, vì người chơi có làm gì sai đâu
      * ngoài việc chọn nhầm chỗ. */
-    function tryWallCatch() {
-        var side = P.x < W / 2 ? SIDE_L : SIDE_R;
+    function tryWallCatch(prefer) {
+        /* prefer là bên người chơi CHỈ ĐỊNH bằng phím trái/phải. Không chỉ định
+         * thì bám vào tường gần hơn — đúng thứ ngón tay trên điện thoại muốn,
+         * vì ở đó chỉ có một cú chạm chứ không có hướng nào để nói. */
+        var side = prefer != null ? prefer : (P.x < W / 2 ? SIDE_L : SIDE_R);
         if (P.web <= 0) {
             P.catchFail = 0.35;
             Sfx.bump();
@@ -1963,6 +1988,10 @@
             if (k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJump(); }
                 else if (G.phase === 'menu') { e.preventDefault(); startRun('endless'); }
+            } else if (k === 'ArrowLeft' || k === 'a' || k === 'A') {
+                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJumpTo(-1); }
+            } else if (k === 'ArrowRight' || k === 'd' || k === 'D') {
+                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJumpTo(1); }
             } else if (k === 'f' || k === 'F' || k === 'Shift' || k === 'ArrowDown') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); fireWeb(); }
             } else if (k === 'p' || k === 'P' || k === 'Escape') {
@@ -2084,7 +2113,7 @@
          * đáng soát nhất — chỗ ép đổi tường, chỗ bám hụt lúc rơi. Một tệp
          * 1 900 dòng vẽ mỗi giây sáu mươi lần thì thứ đáng sợ không phải luật
          * chơi sai, mà là một dòng ném lỗi ở khung hình thứ mười nghìn. */
-        window.ClimbDebug = { G: G, P: P, tap: doJump, web: fireWeb, start: startRun, R: R, pos: moverPos };
+        window.ClimbDebug = { G: G, P: P, tap: doJump, tapDir: doJumpTo, web: fireWeb, start: startRun, R: R, pos: moverPos };
 
         requestAnimationFrame(frame);
     }

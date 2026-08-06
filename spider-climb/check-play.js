@@ -22,7 +22,9 @@
  *   3. không có NaN chui vào toạ độ, điểm hay độ cao
  *   4. bảng điểm HTML đổi theo
  *   5. đi trọn được luồng: chơi → hết mạng → màn kết thúc → chơi lại
- *   6. cả ba chế độ đều khởi động được
+ *   6. mỗi loại mối nguy chạm vào là mất mạng thật
+ *   7. mọi phím gán ra đều thật sự điều khiển được
+ *   8. cả ba chế độ đều khởi động được
  *   7. con bọ NGỒI YÊN không bấm gì thì phải chết — game có ăn thua thật
  *   8. mua đồ và làm xong nhiệm vụ không làm vỡ tiến trình đã lưu
  */
@@ -363,7 +365,69 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 7. NGỒI YÊN THÌ PHẢI CHẾT
+ * 7. BÀN PHÍM PHẢI THẬT SỰ ĐIỀU KHIỂN ĐƯỢC
+ *    Anh Hiếu báo: bấm mũi tên trái phải không thấy gì xảy ra. Đúng — hai
+ *    phím ấy chưa gán gì cả, mà không có gì kêu lên. Gán phím là loại mã hỏng
+ *    im lặng nhất trong cả tệp: không ném lỗi, không sai số liệu, chỉ đơn giản
+ *    là không có chuyện gì xảy ra khi người chơi bấm. Nên từ nay bấm thật, qua
+ *    đúng cái listener của window, rồi hỏi xem người nhện có nhúc nhích không.
+ * ------------------------------------------------------------------ */
+{
+    const press = (key) => (winListeners['keydown'] || []).forEach(fn =>
+        fn({ key, repeat: false, preventDefault() { } }));
+
+    getEl('btn-play').dispatch('click');
+    step(30);
+
+    /* mũi tên về phía tường ĐỐI DIỆN thì phải bay sang */
+    for (const [key, want] of [['ArrowRight', 1], ['ArrowLeft', 0]]) {
+        while (P.state !== 'cling') step(1);
+        if (P.side === want) { press(key === 'ArrowRight' ? 'ArrowLeft' : 'ArrowRight'); step(24); }
+        while (P.state !== 'cling') step(1);
+        const from = P.side;
+        press(key);
+        ok(P.state === 'jump', `bấm ${key} khi đang bám tường ${from} mà không nhảy`);
+        for (let i = 0; i < 90 && P.state === 'jump'; i++) step(1);
+    }
+
+    /* mũi tên về phía tường ĐANG BÁM thì phải im — nhảy đi rồi nhảy về là mất
+     * chuỗi liên hoàn vì một cú bấm mà ý người chơi rõ ràng là "ở yên" */
+    while (P.state !== 'cling') step(1);
+    const stay = P.side === 0 ? 'ArrowLeft' : 'ArrowRight';
+    press(stay);
+    ok(P.state === 'cling', `bấm ${stay} khi đang bám đúng tường ấy mà vẫn nhảy đi`);
+
+    /* phím cách vẫn phải nhảy như cũ */
+    while (P.state !== 'cling') step(1);
+    press(' ');
+    ok(P.state === 'jump', 'phím cách không còn nhảy được');
+    for (let i = 0; i < 90 && P.state === 'jump'; i++) step(1);
+
+    /* lúc rơi, mũi tên chọn được bám vào tường nào */
+    while (P.state !== 'cling') step(1);
+    P.state = 'fall'; P.vy = -100; P.vx = 0; P.web = R.WEB_MAX;
+    P.x = 270;
+    step(1);
+    const pick = P.side === 0 ? 'ArrowRight' : 'ArrowLeft';
+    const target = pick === 'ArrowRight' ? 1 : 0;
+    press(pick);
+    if (P.state === 'cling') {
+        ok(P.side === target, 'đang rơi, bấm mũi tên mà bám nhầm sang tường bên kia');
+    }
+
+    /* phím P phải tạm dừng rồi chơi tiếp được */
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else {
+        press('p');
+        ok(G.phase === 'pause', 'phím P không tạm dừng được');
+        press('p');
+        ok(G.phase === 'play', 'phím P không chơi tiếp được');
+        getEl('btn-nav-menu').dispatch('click');
+    }
+}
+
+/* ------------------------------------------------------------------ *
+ * 8. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -379,7 +443,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 8. BA CHẾ ĐỘ
+ * 9. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -403,7 +467,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 9. CỬA HÀNG VÀ NHIỆM VỤ
+ * 10. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');

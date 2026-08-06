@@ -657,8 +657,8 @@
             'Glass makes you slide, cracked panels break if you hang on, live cables shock - but your web can cut them.'],
         ['Xu bao giờ cũng nằm ở bên nguy hiểm. Bắt tường gọn thì chuỗi liên hoàn còn, mà chuỗi còn thì điểm nhân lên.',
             'Coins sit on the risky side. Land a clean jump to keep your combo and your score multiplier climbing.'],
-        ['Chơi bằng bàn phím: phím cách để nhảy, phím F để bắn tơ, phím P để tạm dừng.',
-            'Keyboard: space to jump, F to shoot web, P to pause.'],
+        ['Chơi bằng bàn phím: phím cách hoặc mũi tên lên để nhảy, mũi tên trái phải để chọn sang tháp nào, phím F để bắn tơ, phím P để tạm dừng.',
+            'Keyboard: space or up to jump, left and right pick which tower, F to shoot web, P to pause.'],
 
         /* ---------- Block Tower (block-tower) ---------- */
         ['Tháp Khối', 'Block Tower'],
