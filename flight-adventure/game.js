@@ -2036,9 +2036,9 @@
     }
 
     function drawRadarCompass() {
-        var mcX = 64;
-        var mcY = 112;
         var r = 38;
+        var mcX = 22 + r; // Căn đều từ lề trái
+        var mcY = 22 + r; // Căn đều từ lề trên
         
         ctx.save();
         
