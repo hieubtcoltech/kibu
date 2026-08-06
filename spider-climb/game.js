@@ -1912,30 +1912,45 @@
         var zm = zoneMix();
         var birds = zn('birds', 0), air = zn('air', 0);
 
-        /* ---- đàn chim ---- */
+        /* ---- đàn chim ----
+         *
+         * Ba đàn ở ba lớp sâu khác nhau, và MỌI thứ của một đàn đều phải khai
+         * cùng một độ sâu ấy: nhỏ hơn, nhạt hơn, trôi chậm hơn, vỗ cánh thưa
+         * hơn, và trượt theo máy quay ít hơn.
+         *
+         * Chỗ này bản trước sai: ba đàn to bằng nhau và đàn nào cũng lướt hết
+         * bầu trời trong tám giây. Mắt không đọc ra "xa" — nó chỉ đọc ra
+         * "nhanh", và cả bầu trời hoá một cái máy chạy chứ không phải một buổi
+         * sáng. Xa thì phải chậm; đó là cách duy nhất mắt đo được khoảng cách
+         * trên một mặt phẳng hai chiều. */
         if (birds > 0.02) {
             ctx.save();
-            ctx.strokeStyle = 'rgba(40,52,70,0.55)';
-            ctx.lineWidth = 2;
             ctx.lineCap = 'round';
             for (var f = 0; f < 3; f++) {
-                /* mỗi đàn có chu kỳ riêng, lệch nhau, nên chúng không bao giờ
-                 * bay thành hàng ngang cùng lúc */
-                var per = 15 + f * 7;
+                var dp = f / 2;                          // 0 gần nhất … 1 xa nhất
+                /* Đàn xa mất gần một phút mới qua hết trời, đàn gần hơn thì
+                 * nhanh hơn — nhưng cả ba đều thong thả. Chu kỳ lệch nhau nên
+                 * chúng không bao giờ bay thành hàng ngang cùng lúc. */
+                var per = 26 + f * 14;
                 var t = ((G.t / per) + hash2(f, 91)) % 1;
                 if (t > 0.55) continue;                 // phần lớn thời gian trời trống
                 if (hash2(Math.floor(G.t / per) + f, 3) > birds) continue;
                 var dir = hash2(f, 5) > 0.5 ? 1 : -1;
                 var fx = dir > 0 ? -80 + t / 0.55 * (W + 160) : W + 80 - t / 0.55 * (W + 160);
-                var fy = 90 + hash2(f, 7) * 320 - (G.camY * 0.05) % 420;
+                /* càng xa càng ít trượt theo máy quay */
+                var fy = 90 + hash2(f, 7) * 320 - (G.camY * (0.075 - dp * 0.045)) % 420;
                 if (fy < -60) fy += 420;
                 if (fy > H) continue;
+                ctx.strokeStyle = 'rgba(40,52,70,' + (0.55 - dp * 0.2) + ')';
+                ctx.lineWidth = 2 - dp * 0.7;
                 var n = 3 + Math.floor(hash2(f, 11) * 3);
+                var shrink = 1 - dp * 0.42;
                 for (var i = 0; i < n; i++) {
-                    var ox = -dir * i * 22 - dir * (i % 2) * 6;
-                    var oy = i * 9 + Math.sin(G.t * 1.6 + i) * 3;
-                    var sz = 7 + hash2(f, i) * 3;
-                    birdMark(fx + ox, fy + oy, sz, 0.5 + 0.5 * Math.sin(G.t * 7 + i * 1.3));
+                    var ox = (-dir * i * 22 - dir * (i % 2) * 6) * shrink;
+                    var oy = (i * 9) * shrink + Math.sin(G.t * (1.6 - dp * 0.8) + i) * 3 * shrink;
+                    var sz = (7 + hash2(f, i) * 3) * shrink;
+                    birdMark(fx + ox, fy + oy, sz,
+                        0.5 + 0.5 * Math.sin(G.t * (7 - dp * 3) + i * 1.3));
                 }
             }
             ctx.restore();
@@ -2055,19 +2070,29 @@
         ctx.restore();
     }
 
+    /* Mây trôi. Cả bầu trời chỉ có MỘT chiều gió, vì gió là một thứ — bản
+     * trước cho mỗi đám lắc lư quanh chỗ của nó bằng một hàm sin, nên chúng
+     * đứng yên tại chỗ mà rung, không đám nào đi đến đâu cả.
+     *
+     * Và đám to trôi nhanh hơn đám nhỏ: to là gần, gần là lướt qua mắt nhanh
+     * hơn. Đó cũng là cách chúng khai độ sâu — cùng một cơn gió, nhưng đám gần
+     * qua hết trời trong non hai phút, còn đám xa mất tới năm phút rưỡi. */
     function drawClouds() {
         var zm = zoneMix();
         var misty = zm.z.weather === 'mist' || zm.n.weather === 'mist';
         ctx.save();
+        ctx.fillStyle = '#ffffff';
         for (var i = 0; i < 9; i++) {
             var band = 900;
-            var wy = ((hash2(i, 3) * band * 6) - G.camY * 0.35) % (band * 6);
+            var s = 0.6 + hash2(i, 5) * 1.1;
+            var dp = (s - 0.6) / 1.1;                    // 0 xa nhất … 1 gần nhất
+            /* càng gần càng trượt theo máy quay nhiều */
+            var wy = ((hash2(i, 3) * band * 6) - G.camY * (0.22 + dp * 0.26)) % (band * 6);
             wy = ((wy % (band * 6)) + band * 6) % (band * 6);
             if (wy > H + 160) continue;
-            var cx = hash2(i, 4) * (W + 200) - 100 + Math.sin(G.t * 0.12 + i) * 22;
-            var s = 0.6 + hash2(i, 5) * 1.1;
+            var span = W + 340;
+            var cx = ((hash2(i, 4) * span + G.t * (2.6 + dp * 6)) % span + span) % span - 170;
             ctx.globalAlpha = misty ? 0.5 : 0.26;
-            ctx.fillStyle = '#ffffff';
             puff(cx, wy, 62 * s);
         }
         ctx.restore();
