@@ -3246,16 +3246,30 @@
         }
         ctx.globalAlpha = 1;
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
         ctx.font = 'bold 19px Baloo 2, Nunito, sans-serif';
         for (var j = 0; j < pops.length; j++) {
             var q = pops[j];
-            ctx.globalAlpha = clamp(q.life / 0.9, 0, 1);
-            ctx.lineWidth = 2.5;
-            ctx.strokeStyle = 'rgba(0,0,0,0.55)';
-            ctx.strokeText(q.text, q.x, sy(q.y));
+            var alpha = clamp(q.life / 0.9, 0, 1);
+            var yy = sy(q.y);
+            var tw = ctx.measureText(q.text).width;
+            ctx.globalAlpha = alpha * 0.78;
+            ctx.fillStyle = 'rgba(16,24,39,0.72)';
+            roundRect(ctx, q.x - tw / 2 - 9, yy - 13, tw + 18, 26, 7);
+            ctx.fill();
+            ctx.globalAlpha = alpha;
+            ctx.lineJoin = 'round';
+            ctx.miterLimit = 2;
+            ctx.lineWidth = 4.5;
+            ctx.strokeStyle = 'rgba(16,24,39,0.88)';
+            ctx.strokeText(q.text, q.x, yy);
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(255,255,255,0.38)';
+            ctx.strokeText(q.text, q.x, yy);
             ctx.fillStyle = q.col;
-            ctx.fillText(q.text, q.x, sy(q.y));
+            ctx.fillText(q.text, q.x, yy);
         }
+        ctx.textBaseline = 'alphabetic';
         ctx.globalAlpha = 1;
     }
 

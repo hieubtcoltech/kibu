@@ -380,6 +380,12 @@ body {
 
 .screen.hidden { display: none; }
 
+#menu-overlay.screen {
+    background:
+        radial-gradient(circle at 50% 42%, rgba(7, 18, 32, 0.42), rgba(4, 10, 18, 0.76)),
+        linear-gradient(180deg, rgba(4, 10, 18, 0.16), rgba(4, 10, 18, 0.58));
+}
+
 .panel {
     width: 100%;
     max-width: 620px;
