@@ -375,6 +375,8 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 {
     const press = (key) => (winListeners['keydown'] || []).forEach(fn =>
         fn({ key, repeat: false, preventDefault() { } }));
+    const release = (key) => (winListeners['keyup'] || []).forEach(fn =>
+        fn({ key, preventDefault() { } }));
 
     getEl('btn-play').dispatch('click');
     step(30);
@@ -402,6 +404,45 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
     press(' ');
     ok(P.state === 'jump', 'phím cách không còn nhảy được');
     for (let i = 0; i < 90 && P.state === 'jump'; i++) step(1);
+
+    /* MŨI TÊN LÊN LÀ LEO NHANH, KHÔNG PHẢI NHẢY.
+     *
+     * Anh Hiếu nói đúng: bấm lên mà nhân vật bay ngang là sai với thứ tay đang
+     * nghĩ. Nên đo hẳn hai quãng đường trong cùng số khung hình — giữ phím phải
+     * đi được xa hơn thật, chứ không chỉ là "có gán phím". Và người nhện phải
+     * còn bám tường chứ không được rời ra. */
+    function climbedIn(frames, holdUp) {
+        /* Phải đợi cho quãng thưởng sau cú bắt tường tắt hẳn đã.
+         *
+         * Bản đầu em đo ngay sau khi tiếp tường, và P.boost lúc ấy đang bật —
+         * nên CẢ HAI lần đo đều chạy ở tốc độ nhanh, ra hai con số y hệt nhau
+         * (146 và 146), và phép soát kết luận phím lên không làm gì. Kết luận
+         * sai, mà sai vì phép đo chứ không vì mã game: hai nguồn tăng tốc dùng
+         * chung một hệ số nên khi cái kia đang bật thì cái này không thêm được
+         * gì để mà thấy. */
+        while (P.state !== 'cling' || P.boost > 0) step(1);
+        if (holdUp) press('ArrowUp');
+        const y0 = P.y;
+        for (let i = 0; i < frames && P.state === 'cling'; i++) step(1);
+        const gained = P.y - y0;
+        if (holdUp) release('ArrowUp');
+        return gained;
+    }
+    const slow = climbedIn(30, false);
+    const quick = climbedIn(30, true);
+    ok(quick > slow * 1.2,
+        `giữ mũi tên lên chỉ leo được ${quick.toFixed(0)} so với ${slow.toFixed(0)} khi không giữ — phím ấy chưa làm gì`);
+
+    /* và nó KHÔNG được làm người nhện rời tường */
+    while (P.state !== 'cling') step(1);
+    press('ArrowUp');
+    step(6);
+    ok(P.state === 'cling', 'giữ mũi tên lên mà người nhện lại nhảy đi — phím lên không phải phím nhảy');
+    release('ArrowUp');
+
+    /* nhả phím rồi thì phải chậm lại, không được leo nhanh mãi */
+    step(4);
+    ok(!P.fastKey, 'nhả mũi tên lên rồi mà cờ leo nhanh vẫn bật');
 
     /* lúc rơi, mũi tên chọn được bám vào tường nào */
     while (P.state !== 'cling') step(1);

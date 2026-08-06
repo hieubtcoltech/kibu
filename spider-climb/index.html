@@ -137,11 +137,16 @@
                     <div id="zone-banner" class="zone-banner"></div>
                 </div>
 
-                <!-- Nút bắn tơ: ở góc phải dưới, vừa tầm ngón cái, và cố ý nằm
-                     XA đường bay giữa khe để không che mất mối nguy. -->
-                <button id="btn-web" class="web-btn" hidden aria-label="Web shot">
-                    <span class="web-ico">🕸</span>
-                    <span class="web-cap">WEB</span>
+                <!-- Hai nút cảm ứng nằm ở hai góc dưới, vừa tầm hai ngón cái, và
+                     cố ý nằm XA khe giữa để không che mất mối nguy đang bay qua.
+                     Chạm giữa sân vẫn là nhảy, nên chơi một ngón vẫn đủ. -->
+                <button id="btn-boost" class="touch-btn boost-btn" hidden aria-label="Climb fast">
+                    <span class="touch-ico">⬆</span>
+                    <span class="touch-cap">CLIMB</span>
+                </button>
+                <button id="btn-web" class="touch-btn web-btn" hidden aria-label="Web shot">
+                    <span class="touch-ico">🕸</span>
+                    <span class="touch-cap">WEB</span>
                 </button>
             </div>
 
@@ -212,11 +217,12 @@
                     <ul class="help-list">
                         <li><b>You climb by yourself</b> while you hang on a wall. That never stops.</li>
                         <li><b>Tap anywhere</b> to leap across to the other tower. Time it before the wall ahead is blocked.</li>
+                        <li><b>Hold the CLIMB button</b> to scramble up faster. You cover more ground, but you get less time to read what is coming.</li>
                         <li><b>Falling?</b> Tap again to shoot a web line and catch the wall - each catch costs one web shot. Fall off the bottom and it costs a life.</li>
                         <li><b>Tap the WEB button</b> to shoot down drones, birds and loose gear. The dashed ring shows what you will hit.</li>
                         <li>Glass makes you slide, cracked panels break if you hang on, live cables shock - but your web can cut them.</li>
                         <li>Coins sit on the risky side. Land a clean jump to keep your combo and your score multiplier climbing.</li>
-                        <li>Keyboard: space or up to jump, left and right pick which tower, F to shoot web, P to pause.</li>
+                        <li>Keyboard: up arrow to climb fast, left and right to leap to that tower, space to leap across, F to shoot web, P to pause.</li>
                     </ul>
                     <button id="btn-help-back" class="big-btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> BACK</button>
                 </div>

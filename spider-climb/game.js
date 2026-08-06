@@ -283,6 +283,7 @@
         side: SIDE_L, x: 0, y: START_Y, vx: 0, vy: 0,
         state: 'cling', face: 1, anim: 0,
         crack: 0, invuln: 0, boost: 0,
+        fastKey: false, fastTouch: false,
         web: R.WEB_MAX, webT: 0, webShot: null, catchFail: 0
     };
 
@@ -335,6 +336,7 @@
         P.side = SIDE_L; P.y = START_Y; P.vx = 0; P.vy = 0;
         P.state = 'cling'; P.face = 1; P.anim = 0;
         P.crack = 0; P.invuln = 1.2; P.boost = 0;
+        P.fastKey = false; P.fastTouch = false;
         P.web = R.WEB_MAX; P.webT = 0; P.webShot = null; P.catchFail = 0;
         P.x = G.world.wallX(SIDE_L, P.y) + R.PLAYER_R;
 
@@ -345,7 +347,7 @@
         G.phase = 'play';
         showScreen(null);
         el('hud').hidden = false;
-        el('btn-web').hidden = false;
+        touchButtons(true);
         syncHud(true);
         Sfx.wake();
     }
@@ -355,7 +357,7 @@
     function endRun() {
         G.phase = 'over';
         Sfx.over();
-        el('btn-web').hidden = true;
+        touchButtons(false);
 
         var m = Math.floor(metresNow());
         var s = Math.floor(G.score);
@@ -417,7 +419,7 @@
         G.lives = 2;
         G.phase = 'play';
         showScreen(null);
-        el('btn-web').hidden = false;
+        touchButtons(true);
         respawn(true);
         Sfx.save();
         toast('Back on the wall!');
@@ -426,6 +428,20 @@
     /* ========================================================================
      *  7. NGƯỜI CHƠI
      * ======================================================================*/
+
+    /* Hai cái nút cảm ứng luôn hiện và ẩn CÙNG NHAU, và ẩn đi thì phải thả tay
+     * hộ luôn. Bản trước em bật tắt từng cái ở bảy chỗ rời rạc — kiểu ấy chỉ
+     * cần quên một chỗ là nút LEO nằm lại trên màn kết thúc, giữ nguyên trạng
+     * thái đang bấm, rồi lượt sau bắt đầu bằng việc leo nhanh mà không ai bảo. */
+    function touchButtons(on) {
+        el('btn-web').hidden = !on;
+        el('btn-boost').hidden = !on;
+        if (!on) {
+            P.fastTouch = false;
+            P.fastKey = false;
+            el('btn-boost').classList.remove('is-on');
+        }
+    }
 
     function wallHold(side, y) {
         return G.world.wallX(side, y) + (side === SIDE_L ? R.PLAYER_R : -R.PLAYER_R);
@@ -824,7 +840,10 @@
         }
 
         if (P.state === 'cling') {
-            var speed = d.climb * (P.boost > 0 ? R.CLIMB_BOOST : 1) * (G.power.slow > 0 ? 0.82 : 1);
+            /* Leo nhanh đến từ hai nguồn và cùng một hệ số: người chơi tự
+             * giữ phím, hoặc quãng thưởng ngắn sau một cú bắt tường đẹp. */
+            var fast = P.fastKey || P.fastTouch || P.boost > 0;
+            var speed = d.climb * (fast ? R.CLIMB_BOOST : 1) * (G.power.slow > 0 ? 0.82 : 1);
             var surf = w.surfaceAt(P.side, P.y);
             if (surf && surf.kind === 'glass') {
                 speed = R.GLASS_SLIDE;
@@ -840,8 +859,15 @@
             } else P.crack = 0;
 
             P.y += speed * dt;
-            P.anim += dt * (speed > 0 ? 7 : 3);
-            if (Math.random() < dt * 5) Sfx.climb();
+            P.anim += dt * (speed > 0 ? 7 : 3) * (fast ? 1.6 : 1);
+            if (Math.random() < dt * (fast ? 9 : 5)) Sfx.climb();
+            /* Vệt gió tuôn xuống sau lưng. Không có nó thì "đang leo nhanh" chỉ
+             * là một con số thay đổi ở đâu đó — mà người chơi đang nhìn lên
+             * phía trước tìm vật cản, không nhìn bảng điểm. */
+            if (fast && Math.random() < dt * 30) {
+                addPart(P.x + (Math.random() - 0.5) * 22, P.y - 6,
+                    (Math.random() - 0.5) * 20, -260, 0.28, 'rgba(255,255,255,0.55)', 2, 'dust');
+            }
 
             /* Đầu chạm vật cản hoặc dây điện phía trên ⇒ bật ra */
             var ahead = P.y + R.PLAYER_R;
@@ -1982,22 +2008,68 @@
             fireWeb();
         });
 
+        /* Nút LEO cho màn cảm ứng, đặt đối xứng với nút TƠ ở góc bên kia.
+         *
+         * Phải có nó thì bàn phím và ngón tay mới làm được đúng những việc như
+         * nhau — cùng một bảng vàng mà một bên leo nhanh được còn bên kia thì
+         * không là hỏng bảng vàng. Vẫn chơi được bằng MỘT ngón như cũ: chạm
+         * giữa sân để nhảy là đủ, hai cái nút góc chỉ là phần thêm. */
+        var boostBtn = el('btn-boost');
+        boostBtn.addEventListener('pointerdown', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            Sfx.wake();
+            P.fastTouch = true;
+            boostBtn.classList.add('is-on');
+        });
+        /* Bắt cả bốn cách ngón tay rời ra. Thiếu pointercancel là kiểu treo
+         * kinh điển trên điện thoại: hệ điều hành cướp cú chạm giữa chừng
+         * (thông báo kéo xuống, cuộc gọi tới) thì pointerup không bao giờ tới,
+         * và nút kẹt ở trạng thái đang giữ. */
+        ['pointerup', 'pointercancel', 'pointerleave', 'lostpointercapture'].forEach(function (ev) {
+            boostBtn.addEventListener(ev, function () {
+                P.fastTouch = false;
+                boostBtn.classList.remove('is-on');
+            });
+        });
+
         window.addEventListener('keydown', function (e) {
             if (e.repeat) return;
             var k = e.key;
-            if (k === ' ' || k === 'ArrowUp' || k === 'w' || k === 'W') {
+            /* MŨI TÊN LÊN LÀ LEO LÊN, không phải nhảy ngang.
+             *
+             * Bản trước em gán ↑ thành nhảy, vì gán theo mạch của ngón tay trên
+             * điện thoại: ở đó chỉ có một cú chạm và nó luôn có nghĩa "sang
+             * tường bên kia". Nhưng trên bàn phím thì mỗi phím mang đúng nghĩa
+             * hình học của nó — bấm lên mà nhân vật bay ngang là sai với thứ
+             * tay đang nghĩ. Nay: lên là leo nhanh, trái phải là nhảy, phím
+             * cách là nhảy sang tường đối diện. */
+            if (k === 'ArrowUp' || k === 'w' || k === 'W') {
+                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); P.fastKey = true; }
+                else if (G.phase === 'menu') { e.preventDefault(); startRun('endless'); }
+            } else if (k === ' ') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJump(); }
                 else if (G.phase === 'menu') { e.preventDefault(); startRun('endless'); }
             } else if (k === 'ArrowLeft' || k === 'a' || k === 'A') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJumpTo(-1); }
             } else if (k === 'ArrowRight' || k === 'd' || k === 'D') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJumpTo(1); }
-            } else if (k === 'f' || k === 'F' || k === 'Shift' || k === 'ArrowDown') {
+            } else if (k === 'f' || k === 'F' || k === 'e' || k === 'E' || k === 'Shift') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); fireWeb(); }
             } else if (k === 'p' || k === 'P' || k === 'Escape') {
                 togglePause();
             }
         });
+
+        window.addEventListener('keyup', function (e) {
+            var k = e.key;
+            if (k === 'ArrowUp' || k === 'w' || k === 'W') P.fastKey = false;
+        });
+
+        /* Rời khỏi cửa sổ mà còn đang giữ phím thì trình duyệt KHÔNG gửi keyup
+         * — quay lại là người nhện leo nhanh mãi không thôi, và không có cách
+         * nào tắt ngoài bấm lại rồi nhả ra. Lỗi nhỏ mà bực, nên thả tay hộ. */
+        window.addEventListener('blur', function () { P.fastKey = false; });
 
         /* Chuyển tab giữa lượt thì dừng lại — quay về thấy mình đã rơi mất hai
          * mạng là kiểu bực nhất, mà lỗi hoàn toàn không phải của người chơi. */
@@ -2010,11 +2082,11 @@
         if (G.phase === 'play') {
             G.phase = 'pause';
             showScreen('pause-overlay');
-            el('btn-web').hidden = true;
+            touchButtons(false);
         } else if (G.phase === 'pause') {
             G.phase = 'play';
             showScreen(null);
-            el('btn-web').hidden = false;
+            touchButtons(true);
         }
     }
 
@@ -2055,7 +2127,7 @@
 
     function backToMenu() {
         G.phase = 'menu';
-        el('btn-web').hidden = true;
+        touchButtons(false);
         el('zone-banner').classList.remove('show');
         syncMenu();
         showScreen('menu-overlay');
@@ -2106,7 +2178,7 @@
 
         syncMenu();
         showScreen('menu-overlay');
-        el('btn-web').hidden = true;
+        touchButtons(false);
 
         /* Cửa sổ nhỏ cho check-play.js nhìn vào. Không có nó thì máy chơi thử
          * chỉ bấm mò được, mà bấm mò thì không bao giờ đi qua nổi những đoạn

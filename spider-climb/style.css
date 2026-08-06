@@ -301,10 +301,9 @@ body {
 .zone-banner span { font-size: 1.2rem; }
 .zone-banner.show { opacity: 1; transform: translate(-50%, 0); }
 
-/* ---------------- Nút bắn tơ ---------------- */
-.web-btn {
+/* ---------------- Hai nút cảm ứng ---------------- */
+.touch-btn {
     position: absolute;
-    right: 3.5%;
     bottom: 4.5%;
     width: 86px;
     height: 86px;
@@ -325,11 +324,23 @@ body {
     touch-action: none;
 }
 
-.web-btn[hidden] { display: none; }
-.web-btn:active { transform: scale(0.93); }
-.web-ico { font-size: 1.85rem; line-height: 1; }
+.web-btn { right: 3.5%; }
+.boost-btn { left: 3.5%; }
 
-.web-cap {
+.touch-btn[hidden] { display: none; }
+.touch-btn:active,
+.boost-btn.is-on { transform: scale(0.93); }
+
+/* Nút LEO sáng lên lúc đang giữ. Ngón cái che mất gần hết cái nút, nên dấu
+   hiệu "đang bật" phải nằm ở VIỀN chứ không ở giữa. */
+.boost-btn.is-on {
+    border-color: #ffd75e;
+    box-shadow: 0 0 0 4px rgba(255, 215, 94, 0.28), 0 8px 26px rgba(0, 0, 0, 0.5);
+}
+
+.touch-ico { font-size: 1.85rem; line-height: 1; }
+
+.touch-cap {
     font-family: var(--font-display);
     font-size: 0.6rem;
     font-weight: 800;
@@ -734,8 +745,8 @@ body {
     .over-actions .big-btn { min-width: 0; }
     .hud-box { padding: 3px 9px; }
     .hud-box b { font-size: 1.02rem; }
-    .web-btn { width: 74px; height: 74px; }
-    .web-ico { font-size: 1.6rem; }
+    .touch-btn { width: 74px; height: 74px; }
+    .touch-ico { font-size: 1.6rem; }
     .hud-combo { top: 84px; }
     .hud-combo b { font-size: 1.6rem; }
 }
@@ -749,8 +760,8 @@ body {
     .brand-img { width: 26px; height: 26px; }
     .btn { min-height: 38px; padding: 6px 10px; }
     .site-footer { display: none; }
-    .web-btn { width: 62px; height: 62px; }
-    .web-cap { display: none; }
+    .touch-btn { width: 62px; height: 62px; }
+    .touch-cap { display: none; }
 }
 
 /* Trên máy cảm ứng, bảng chọn dài hơn màn hình và nút BẮT ĐẦU trôi xuống dưới
