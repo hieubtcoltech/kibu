@@ -246,11 +246,6 @@
         canvas.style.width = '100%';
         canvas.style.height = '100%';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        var stage = document.querySelector('.stage');
-        if (stage) {
-            stage.style.setProperty('--stage-w', W);
-            stage.style.setProperty('--stage-h', H);
-        }
     }
 
     /* ========================================================================

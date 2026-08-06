@@ -106,40 +106,31 @@ body {
 .btn:hover { background: rgba(255, 255, 255, 0.14); transform: translateY(-2px); }
 
 /* ---------------- Khung sân ---------------- */
+body .app-wrapper {
+    max-width: none;
+    width: 100%;
+    padding: 4px 4px 6px;
+    gap: 4px;
+}
+
 .game-viewport {
     position: relative;
     flex: 1;
     min-height: 0;
     min-width: 0;
-    border-radius: 24px;
+    width: 100%;
+    border-radius: 16px;
     overflow: hidden;
     border: 1px solid var(--card-border);
     box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
     background: #071019;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    container-type: size;
 }
 
-/* Sân giữ đúng tỉ lệ canvas — game.js đặt --stage-w/--stage-h theo khổ thật.
-   NẰM NGANG 960×600, cố ý khác mấy game dựng đứng trên trang: bay thì thứ
-   đáng nhìn là đường chân trời với cái gì đang tới phía trước. */
+/* Canvas lấp đầy mọi cạnh — game.js đổi W theo tỷ lệ khung thật, không letterbox. */
 .stage {
-    --stage-w: 960;
-    --stage-h: 600;
-    position: relative;
-    width: 100%;
-    height: auto;
-    aspect-ratio: var(--stage-w) / var(--stage-h);
-    max-width: 100%;
-    max-height: 100%;
-    min-width: 0;
+    position: absolute;
+    inset: 0;
     touch-action: none;
-}
-
-@supports (width: 1cqh) {
-    .stage { width: min(100cqw, 100cqh * var(--stage-w) / var(--stage-h)); }
 }
 
 #game-canvas { position: absolute; inset: 0; }
@@ -839,14 +830,6 @@ body {
         border-radius: 0;
         border: none;
         box-shadow: none;
-    }
-
-    /* Stage: bỏ khóa tỷ lệ 1.6:1, dùng tỷ lệ thấp hơn để lấp đầy
-       chiều ngang và dành nhiều chiều cao hơn cho canvas */
-    .stage {
-        aspect-ratio: auto !important;
-        width: 100% !important;
-        height: 100% !important;
     }
 
     /* HUD nén gọn sát mép trên */
