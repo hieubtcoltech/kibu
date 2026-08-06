@@ -207,14 +207,26 @@ function waitCling(maxFrames, restedToo) {
  * đo bừa ở chỗ nào cũng được, rồi đúng lần chạy này rơi trúng một ô kính: giữa
  * lúc đo thì tấm kính vỡ, người nhện rơi, và phép soát kết luận "phím lên chưa
  * làm gì". Kết luận sai, mà sai vì chỗ đo chứ không vì cái đang đo. */
+/* Cả QUÃNG từ đây lên trên có sạch không — quét từng 30 điểm ảnh một, chứ
+ * không chỉ hỏi hai đầu.
+ *
+ * Bản trước chỉ kiểm ở chân và ở đỉnh quãng. Một ô kính nằm lọt hẳn vào giữa
+ * thì hai phép hỏi ấy đều trả lời "sạch", rồi giữa lúc đo thì người nhện bò
+ * tới mép trên ô kính, kính vỡ, và phép đo kết luận "phím lên chưa làm gì".
+ * Đúng cái bẫy đã bắt được một lần rồi, chỉ khác chỗ nấp. */
+function plainSpan(w, side, y0, len) {
+    for (let d = 0; d <= len; d += 30) {
+        if (w.surfaceAt(side, y0 + d)) return false;
+        if (w.blockerAt(side, y0 + d)) return false;
+    }
+    return true;
+}
+
 function restOnPlainWall(maxFrames) {
     for (let i = 0; i < (maxFrames || 900); i++) {
         if (G.phase !== 'play') return false;
         const w = G.world;
-        if (P.state === 'cling' && P.boost <= 0 &&
-            !w.surfaceAt(P.side, P.y) &&
-            !w.surfaceAt(P.side, P.y + 240) &&
-            !w.blockerAt(P.side, P.y + 240)) return true;
+        if (P.state === 'cling' && P.boost <= 0 && plainSpan(w, P.side, P.y, 300)) return true;
         step(1);
     }
     return false;
@@ -441,7 +453,13 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
     press(stay);
     ok(P.state === 'cling', `bấm ${stay} khi đang bám đúng tường ấy mà vẫn nhảy đi`);
 
-    /* PHÍM CÁCH LÀ BẮN TƠ. Soát bằng số tơ còn lại chứ không bằng "có ném lỗi
+    /* PHÍM CÁCH LÀ NHẢY. */
+    waitCling(400);
+    press(' ');
+    ok(P.state === 'jump', 'phím cách không còn nhảy được');
+    for (let i = 0; i < 90 && P.state === 'jump'; i++) step(1);
+
+    /* PHÍM F LÀ BẮN TƠ. Soát bằng số tơ còn lại chứ không bằng "có ném lỗi
      * không" — đổi ý nghĩa một phím là loại thay đổi mà mọi thứ vẫn chạy êm ru
      * dù nó nối vào nhầm chỗ. Và nó KHÔNG được làm người nhện rời tường. */
     waitCling(400);
@@ -451,10 +469,18 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
     G.world.mover('drone', { y: P.y + 80, period: 4 });
     P.web = R.WEB_MAX;
     const webBefore = P.web;
-    press(' ');
+    press('f');
     ok(P.web === webBefore - 1,
-        `phím cách không tiêu lần bắn tơ nào (còn ${P.web}/${webBefore}) — nó chưa nối vào chỗ bắn tơ`);
-    ok(P.state !== 'jump', 'phím cách vẫn làm người nhện nhảy — lẽ ra chỉ bắn tơ');
+        `phím F không tiêu lần bắn tơ nào (còn ${P.web}/${webBefore}) — nó chưa nối vào chỗ bắn tơ`);
+    ok(P.state !== 'jump', 'phím F lại làm người nhện nhảy — lẽ ra chỉ bắn tơ');
+
+    /* Lúc ĐANG RƠI thì phím cách phải bám lại tường, không phải nhảy vu vơ —
+     * đây là cú bấm gấp nhất trong game nên nó nằm trên phím to nhất. */
+    waitCling(400);
+    P.state = 'fall'; P.vy = -100; P.vx = 0; P.x = 270; P.web = R.WEB_MAX;
+    step(1);
+    press(' ');
+    ok(P.state === 'cling', 'đang rơi, bấm phím cách mà không bám lại được tường');
 
     /* MŨI TÊN LÊN LÀ LEO NHANH, KHÔNG PHẢI NHẢY.
      *

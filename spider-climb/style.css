@@ -662,14 +662,31 @@ body {
 
 .new-best[hidden] { display: none; }
 
+/* Ba cái nút ở màn kết thúc nằm gọn TRÊN MỘT DÒNG.
+   Trước để flex-wrap kèm min-width 170px, nên trên màn hẹp chúng xuống hàng
+   thành ba khối to đùng chồng lên nhau, đẩy cả bảng điểm ra ngoài tầm nhìn —
+   mà đây là chỗ người chơi chỉ muốn bấm CHƠI LẠI thật nhanh. Nay không cho
+   xuống hàng nữa, và chữ nhỏ lại cho vừa. */
 .over-actions {
     display: flex;
-    gap: 9px;
+    gap: 8px;
     width: 100%;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
-.over-actions .big-btn { flex: 1; min-width: 170px; }
+.over-actions .big-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 0.86rem;
+    letter-spacing: 0.4px;
+    padding: 11px 10px;
+    min-height: 46px;
+    gap: 7px;
+    white-space: nowrap;
+}
+
+/* Nút VỀ BẢNG CHỌN ít dùng nhất nên nhường chỗ cho hai nút kia */
+.over-actions .btn-ghost { flex: 0.7 1 0; }
 
 .big-btn {
     font-family: var(--font-display);
@@ -741,8 +758,14 @@ body {
     .nav-actions { gap: 6px; }
     .game-viewport { border-radius: 18px; }
     .panel { padding: 18px 15px 16px; border-radius: 20px; }
-    .over-actions { flex-direction: column; }
-    .over-actions .big-btn { min-width: 0; }
+    .over-actions { gap: 6px; }
+    .over-actions .big-btn {
+        font-size: 0.72rem;
+        letter-spacing: 0;
+        padding: 9px 6px;
+        min-height: 42px;
+        gap: 5px;
+    }
     .hud-box { padding: 3px 9px; }
     .hud-box b { font-size: 1.02rem; }
     .touch-btn { width: 74px; height: 74px; }

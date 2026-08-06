@@ -583,7 +583,7 @@
         ['Lên 300 m nhanh nhất', 'Fastest to 300 m'],
         ['Kỷ lục Leo Hằng Ngày', 'Daily Climb best'],
         ['Kỷ lục Khắc Nghiệt', 'Hardcore best'],
-        ['HỒI SINH · 2 💎', 'REVIVE · 2 💎'],
+        ['HỒI SINH 💎2', 'REVIVE 💎2'],
         ['Bộ nào leo cũng y như nhau. Chỉ là mặc vào trông đẹp hơn thôi.',
             'Every suit climbs exactly the same. They just look better doing it.'],
         ['Xong một cái là có cái mới thế chỗ ngay.', 'Finish one and a new one takes its place.'],
@@ -661,8 +661,8 @@
         ['<b>Giữ nút LEO</b> để bò lên nhanh hơn. Đi được xa hơn, nhưng thời gian nhìn thấy thứ phía trước cũng ngắn lại.',
             '<b>Hold the CLIMB button</b> to scramble up faster. You cover more ground, but you get less time to read what is coming.'],
         ['LEO', 'CLIMB', 'x'],
-        ['Chơi bằng bàn phím: mũi tên lên để leo nhanh, mũi tên trái phải để bay sang tháp bên ấy, phím cách để bắn tơ, phím P để tạm dừng.',
-            'Keyboard: up arrow to climb fast, left and right to leap to that tower, space to shoot web, P to pause.'],
+        ['Chơi bằng bàn phím: mũi tên lên để leo nhanh, mũi tên trái phải để bay sang tháp bên ấy, phím cách để bay sang tường đối diện (và để bám lại tường lúc đang rơi), phím F để bắn tơ, phím P để tạm dừng.',
+            'Keyboard: up arrow to climb fast, left and right to leap to that tower, space to leap across (and to catch a wall while falling), F to shoot web, P to pause.'],
 
         /* ---------- Block Tower (block-tower) ---------- */
         ['Tháp Khối', 'Block Tower'],

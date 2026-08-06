@@ -2134,12 +2134,16 @@
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); P.fastKey = true; }
                 else if (G.phase === 'menu') { e.preventDefault(); startRun('endless'); }
             } else if (k === ' ') {
-                /* Phím cách là BẮN TƠ, không phải nhảy. Trái phải đã tới được
-                 * cả hai tháp rồi nên không còn việc gì cho một phím "nhảy sang
-                 * bên kia" nữa — mà phím cách thì to nhất bàn phím, để nó làm
-                 * cái việc duy nhất cần bấm gấp là đúng chỗ. */
-                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); fireWeb(); }
+                /* Phím cách: NHẢY sang tường đối diện — và lúc đang rơi thì
+                 * chính nó bắn tơ bám lại tường, vì doJump() phân biệt hai
+                 * trạng thái. Nên cú bấm cần gấp nhất (trượt tay, phải bám lại
+                 * ngay) nằm đúng trên phím to nhất bàn phím, không phải nhớ đổi
+                 * ngón sang phím khác giữa lúc đang rơi. */
+                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJump(); }
                 else if (G.phase === 'menu') { e.preventDefault(); startRun('endless'); }
+            } else if (k === 'f' || k === 'F') {
+                /* Bắn tơ CHỦ ĐỘNG: hạ máy bay, cắt dây điện, gom xu. */
+                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); fireWeb(); }
             } else if (k === 'ArrowLeft' || k === 'a' || k === 'A') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJumpTo(-1); }
             } else if (k === 'ArrowRight' || k === 'd' || k === 'D') {
