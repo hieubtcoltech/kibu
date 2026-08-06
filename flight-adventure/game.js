@@ -267,6 +267,7 @@
         z: 0,                 // mét lệch sang hai bên trục tuyến
         vz: 0,                // tốc độ lệch ngang
         turn: 0,              // -1…1, nút trái phải đang giữ
+        heading: 0,           // hướng bay (radian), 0 là đi dọc tuyến X dương
         alt: 0,               // mét trên mực nước biển
         spd: 0,               // m/s
         throttle: 0,          // 0…1, ga người chơi đặt
@@ -338,7 +339,7 @@
         P.x = rw.x0 + 120;
         P.alt = rw.y;
         P.spd = 0;
-        P.z = 0; P.vz = 0; P.turn = 0; P.turnHeld = false;
+        P.z = 0; P.vz = 0; P.turn = 0; P.turnHeld = false; P.heading = 0;
         P.throttle = 0;
         P.pitch = 0;
         P.vs = 0; P.bank = 0;
@@ -456,31 +457,25 @@
         if (P.onGround && wantVS <= 0) wantVS = 0;
         P.vs = lerp(P.vs, wantVS, clamp(dt * R.LEVEL_EASE * 1.6, 0, 1));
         P.alt += P.vs * dt;
-        P.x += P.spd * dt;
 
-        /* ---- BẺ SANG TRÁI PHẢI ----
-         *
-         * Chiều thứ ba, và là lý do cả phần nhìn được làm lại. Trước đây trái
-         * phải không có chỗ nào để đi; nay nó đi thật, và vòng mây thì nằm rải
-         * hai bên nên muốn xuyên qua là phải bẻ lái.
-         *
-         * Trên mặt đất thì bánh xe giữ máy bay trên đường băng — lăn ngang ra
-         * bãi cỏ không phải là thứ một đứa bé cần học. */
-        var wantVZ = P.onGround ? 0 : P.turn * R.LAT_SPEED * clamp(P.spd / R.SPD_CRUISE, 0.3, 1);
-        P.vz = lerp(P.vz, wantVZ, clamp(dt * R.LAT_EASE, 0, 1));
-        P.z += P.vz * dt;
-        if (!G.auto && !P.turnHeld) P.turn = lerp(P.turn, 0, clamp(dt * R.LEVEL_EASE, 0, 1));
-
-        /* Ra quá xa thì trò chơi nhẹ nhàng đẩy về, và nói một câu. Bản mô tả
-         * viết "the game gently turns the plane back" — chữ đáng giá nhất
-         * trong câu ấy là "gently": không chặn cứng, không quay ngoắt, chỉ là
-         * một bàn tay đặt lên cánh. */
-        if (Math.abs(P.z) > R.LAT_MAX) {
-            var over = Math.abs(P.z) - R.LAT_MAX;
-            P.z -= (P.z > 0 ? 1 : -1) * Math.min(over, 90 * dt);
-            P.vz = lerp(P.vz, (P.z > 0 ? -1 : 1) * 40, clamp(dt * 2, 0, 1));
-            say('far', T('Let us turn back towards the route.'), 2.6);
+        /* ---- BẺ SÚ HƯỚNG 360 ĐỘ ----
+         * Không còn bị giới hạn bởi trục Z nữa, bé có thể lái máy bay lượn vòng
+         * tròn 360 độ tự do, bay ngược về Hà Nội hoặc đi bất cứ đâu. */
+        if (!P.onGround) {
+            P.heading -= P.turn * 1.35 * dt; // Tốc độ xoay hướng khi bay
+        } else {
+            P.heading -= P.turn * 0.65 * dt; // Tốc độ xoay hướng khi lăn bánh
         }
+        if (P.heading > Math.PI) P.heading -= Math.PI * 2;
+        if (P.heading < -Math.PI) P.heading += Math.PI * 2;
+
+        var vx = P.spd * Math.cos(P.heading);
+        var vz = P.spd * Math.sin(P.heading);
+
+        P.x += vx * dt;
+        P.z += vz * dt;
+
+        if (!G.auto && !P.turnHeld) P.turn = lerp(P.turn, 0, clamp(dt * R.LEVEL_EASE, 0, 1));
 
         /* Buông tay thì cần lái tự về giữa */
         if (!G.auto && !P.pitchHeld) P.pitch = lerp(P.pitch, 0, clamp(dt * R.LEVEL_EASE, 0, 1));
@@ -531,16 +526,26 @@
         var lifting = P.vs > 0.02;
 
         if (P.alt <= gnd + 1 && !lifting) {
-            /* Chạm đất. Trên đường băng thì là hạ cánh; ngoài đường băng thì
-             * KHÔNG rơi — trò chơi nâng lên và nói một câu. */
-            if (onRunway && (G.leg === 'final' || G.leg === 'ready' || G.leg === 'roll' || G.leg === 'rollout')) {
+            /* Chạm đất: Cho phép bé hạ cánh tự do ở bất kỳ đâu. */
+            var arrRun = R.arriveRunway(rt);
+            var onArrRunway = P.x >= arrRun.x0 && P.x <= arrRun.x1 && Math.abs(P.z) < RW_HALF;
+
+            if (onArrRunway && (G.leg === 'final' || G.leg === 'approach')) {
+                // Hạ cánh ở sân bay đích để hoàn thành chặng bay
                 P.alt = gnd;
                 if (!P.onGround) touchDown(gnd);
                 P.onGround = true;
                 P.vs = 0;
             } else {
-                P.alt = gnd + 2;
-                assistLift();
+                // Hạ cánh tự do trên cỏ, đồi núi, hoặc sân bay xuất phát
+                P.alt = gnd;
+                if (!P.onGround) {
+                    Sfx.touchdown();
+                    burst(W / 2, H * 0.62, 14, 'rgba(255,255,255,0.8)', 130);
+                    say('down', T('Great! We are on the ground.'), 3);
+                }
+                P.onGround = true;
+                P.vs = 0;
             }
         } else if (P.alt < gnd) {
             P.alt = gnd;
@@ -549,19 +554,11 @@
         }
 
         /* ---- bàn tay đỡ khi bay quá thấp ----
-         *
-         * Chỉ đỡ khi máy bay ĐANG KHÔNG TỰ LO ĐƯỢC. Máy soát bắt được chỗ này:
-         * bản đầu đỡ hễ thấy thấp, nên đúng bốn giây sau khi cất cánh — lúc
-         * máy bay mới rời đường băng bảy mét và đang lao lên — trò chơi đã kêu
-         * "cẩn thận, để chúng tôi nâng con lên" và ghi vào sổ là bé cần giúp.
-         * Bé bay đúng cách hoàn hảo vẫn chỉ được tấm huy hiệu hạng ba, mà
-         * không bao giờ biết vì sao.
-         *
-         * Máy bay đang leo lên thì nó đã tự giải bài của nó rồi. Đỡ một người
-         * đang tự đứng dậy không phải là giúp, là cản. */
+         * Chỉ tự động nâng lên nếu bé đang không chủ động điều khiển để hạ cánh hoặc bay sát đất
+         * (tức là ga lớn và không giữ nút chúc mũi xuống). */
         if (!P.onGround && G.leg !== 'final' && G.leg !== 'climb' && G.leg !== 'roll') {
             var floor = R.floorAt(rt, P.x);
-            if (P.alt < floor && P.vs < 2) {
+            if (P.alt < floor && P.vs < 2 && P.throttle > 0.3 && !P.pitchHeld) {
                 P.alt += R.RESCUE_LIFT * dt;
                 if (P.vs < 0) P.vs = 0;
                 assistLift();
@@ -609,16 +606,25 @@
              * một con số chép tay, mà suy ngược từ chính ngưỡng ấy. Sửa ngưỡng
              * ở rules.js là chỗ này tự theo. */
             P.throttle = clamp((R.TOUCHDOWN_SPD - 10 - R.SPD_MIN) / (R.SPD_MAX - R.SPD_MIN), 0, 1);
+            
+            var targetHeading = 0;
+            var headingError = targetHeading - P.heading;
+            if (headingError > Math.PI) headingError -= Math.PI * 2;
+            if (headingError < -Math.PI) headingError += Math.PI * 2;
+            P.turn = clamp(-P.z / 300 + headingError * 1.5, -1, 1);
         } else {
             wantAlt = R.groundAt(rt, P.x) + R.ALT_CRUISE * 0.62;
             wantAlt = clamp(wantAlt, 700, R.ALT_MAX - 500);
             P.throttle = 0.62;
+
+            var targetHeading = clamp(-P.z / 600, -0.6, 0.6);
+            var headingError = targetHeading - P.heading;
+            if (headingError > Math.PI) headingError -= Math.PI * 2;
+            if (headingError < -Math.PI) headingError += Math.PI * 2;
+            P.turn = clamp(headingError * 1.5, -1, 1);
         }
         var err = wantAlt - P.alt;
         P.pitch = clamp(err / 260, -1, 1);
-        /* Tự lái thì cũng tự về trục tuyến — hạ cánh mà lệch ba cây số sang
-         * bên thì không thấy đường băng đâu cả. */
-        P.turn = clamp(-P.z / 600, -1, 1);
     }
 
     /* ---- các chặng của chuyến bay ---- */
@@ -803,7 +809,7 @@
      *  hai phép thì có ngày vật này trông như ở trước vật kia mà mã lại tính
      *  nó ở sau, và không ai tìm ra vì sao.
      * ======================================================================*/
-    var cam = { x: 0, alt: 0, z: 0, pitch: 0 };
+    var cam = { x: 0, alt: 0, z: 0, pitch: 0, yaw: 0 };
 
     /* Đặt máy quay đúng chỗ ngay lập tức, không bám mềm. Dùng lúc bắt đầu
      * chuyến và lúc dựng màn chờ — không có nó thì khung hình đầu tiên máy
@@ -811,23 +817,36 @@
     function snapCam() {
         var back = (G.leg === 'ready' || G.leg === 'roll') ? 240 : R.CAM_BACK;
         var up = (G.leg === 'ready' || G.leg === 'roll') ? 56 : R.CAM_UP;
-        cam.x = P.x - back;
+        cam.yaw = P.heading;
+        cam.x = P.x - back * Math.cos(cam.yaw);
+        cam.z = P.z - back * Math.sin(cam.yaw);
         cam.alt = P.alt + up;
-        cam.z = P.z * 0.82;
         cam.pitch = 0;
     }
 
     function stepCam(dt) {
         var back = (G.leg === 'ready' || G.leg === 'roll') ? 240 : R.CAM_BACK;
         var up = (G.leg === 'ready' || G.leg === 'roll') ? 56 : R.CAM_UP;
-        cam.x = P.x - back;
+        
+        // Quay camera bám theo hướng bay của máy bay
+        var kYaw = clamp(dt * 3.6, 0, 1);
+        // Normalize angle difference to interpolate correctly
+        var diff = P.heading - cam.yaw;
+        if (diff > Math.PI) diff -= Math.PI * 2;
+        if (diff < -Math.PI) diff += Math.PI * 2;
+        cam.yaw += diff * kYaw;
+        if (cam.yaw > Math.PI) cam.yaw -= Math.PI * 2;
+        if (cam.yaw < -Math.PI) cam.yaw += Math.PI * 2;
+
+        cam.x = P.x - back * Math.cos(cam.yaw);
+        cam.z = P.z - back * Math.sin(cam.yaw);
+
         /* Máy quay bám mềm theo độ cao và độ lệch chứ không dính cứng. Dính
          * cứng thì bẻ lái một cái là cả thế giới giật sang bên; bám mềm thì
          * máy bay nhích ra khỏi giữa màn một chút rồi máy quay đuổi theo, và
          * chính cái nhích ấy mới cho mắt thấy là mình VỪA BẺ LÁI. */
         var k = clamp(dt * 3.2, 0, 1);
         cam.alt = lerp(cam.alt, P.alt + up, k);
-        cam.z = lerp(cam.z, P.z * 0.82, k);
         /* Chúc máy quay theo tốc độ lên xuống: leo lên thì thấy nhiều trời
          * hơn, chúc xuống thì thấy nhiều đất hơn. */
         cam.pitch = lerp(cam.pitch, clamp(P.vs / R.CLIMB_RATE, -1, 1) * 46, k);
@@ -836,13 +855,18 @@
     function horizonY() { return R.HORIZON + cam.pitch; }
 
     /* Chiếu một điểm thế giới (x dọc tuyến, alt độ cao, z lệch ngang) lên màn.
-     * Trả null nếu nó ở sau lưng máy quay. */
+     * Trả null nếu nó ở sau lưng máy quay. Hỗ trợ xoay camera 360 độ. */
     function proj(x, alt, z) {
-        var d = x - cam.x;
+        var dx = x - cam.x;
+        var dz = z - cam.z;
+        var cos = Math.cos(cam.yaw || 0);
+        var sin = Math.sin(cam.yaw || 0);
+        var d = dx * cos + dz * sin;
         if (d < R.NEAR) return null;
+        var zProj = -dx * sin + dz * cos;
         var s = R.FOCAL / d;
         return {
-            x: W / 2 + (z - cam.z) * s,
+            x: W / 2 + zProj * s,
             y: horizonY() + (cam.alt - alt) * s,
             s: s, d: d
         };
@@ -1018,9 +1042,12 @@
              * dải, xa thì mấy chục cây số dồn vào vài dải cũng không ai thấy. */
             var t = i / BANDS;
             var d = R.NEAR + (R.VIEW_FAR - R.NEAR) * t * t;
-            var wx = cam.x + d;
+            var cos = Math.cos(cam.yaw || 0);
+            var sin = Math.sin(cam.yaw || 0);
+            var wx = cam.x + d * cos;
+            var wz = cam.z + d * sin;
             var g = R.groundAt(rt, wx);
-            var p = proj(wx, g, cam.z);
+            var p = proj(wx, g, wz);
             if (!p || p.y > H) continue;
             var seg = R.segmentAt(rt, wx);
             var c = terrainColour(seg.seg.kind);

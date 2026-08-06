@@ -105,7 +105,7 @@
      * Đời thật cũng thế: muốn lên thì phải có sức, còn muốn xuống thì chỉ cần
      * thôi giữ. */
     var DESCEND_RATE = 30;
-    var ALT_MAX = 3400;            // trần bay — trên nữa chỉ có trời trắng, chán
+    var ALT_MAX = 8000;            // trần bay nâng lên 8000m cho bé tự do khám phá
     var ALT_CRUISE = 1500;         // độ cao đẹp nhất để ngắm cảnh
 
     /* Buông tay thì máy bay TỰ CÂN BẰNG. Bản mô tả đòi đúng điều này, và nó
