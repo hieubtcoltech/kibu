@@ -464,6 +464,7 @@
         flight: 0, flightMax: 0.35,
         stepPhase: 0, stepRight: false,
         fastKey: false, fastTouch: false,
+        mash: 0,              // sức dồn từ việc bấm nút leo liên tiếp, 0…1
         web: R.WEB_MAX, webT: 0, webShot: null, catchFail: 0
     };
 
@@ -521,7 +522,7 @@
         P.side = SIDE_L; P.y = START_Y; P.vx = 0; P.vy = 0;
         P.state = 'cling'; P.face = 1; P.anim = 0;
         P.crack = 0; P.glassOn = null; P.glassT = 0; P.invuln = 1.2; P.boost = 0;
-        P.fastKey = false; P.fastTouch = false;
+        P.fastKey = false; P.fastTouch = false; P.mash = 0;
         P.web = R.WEB_MAX; P.webT = 0; P.webShot = null; P.catchFail = 0;
         P.x = G.world.wallX(SIDE_L, P.y) + R.PLAYER_R;
 
@@ -661,6 +662,7 @@
         if (!on) {
             P.fastTouch = false;
             P.fastKey = false;
+            P.mash = 0;
             el('btn-boost').classList.remove('is-on');
         }
     }
@@ -793,6 +795,17 @@
         breakCombo();
         G.freeze = 0.55;
         G.shake = 18; G.flash = 0.5;
+        /* CẮT NỀN GIÓ NGAY.
+         *
+         * Mất mạng thì bao giờ cũng đang rơi, mà đang rơi thì gió đang ở mức
+         * to nhất — nên đúng cái khoảnh khắc tệ nhất lại là khoảnh khắc ồn
+         * nhất, và quãng đóng băng nửa giây sau đó giữ nguyên tiếng ồn ấy chứ
+         * không cho nó tắt. Nghe rất khó chịu, và tệ hơn: nó át mất tiếng
+         * "thua" — thứ duy nhất đáng nghe lúc ấy.
+         *
+         * Im hẳn đi thì cú thua tự nó thành một dấu lặng, và dấu lặng nói to
+         * hơn mọi thứ tiếng. */
+        Sfx.ambient(0, 300);
         Sfx.lose();
         burst(P.x, P.y, 26, 'rgba(255,120,120,0.9)', 240, 'spark');
         if (G.lives <= 0) { endRun(); return; }
@@ -979,6 +992,27 @@
             }
             if (!got) collect(tgt.p);
         }
+    }
+
+    /* HỆ SỐ TỐC ĐỘ LEO — nguồn sự thật duy nhất.
+     *
+     * Ba chỗ cần con số này: lúc bám tường, lúc đang bay, và lúc tia sét tính
+     * xem một giây nữa người chơi sẽ ở đâu. Trước đây cả ba tự nhân lấy, và cứ
+     * thêm một nguồn tăng tốc là phải nhớ sửa đủ ba — mà chỗ thứ ba thì không
+     * ai nghĩ tới, nên sét sẽ nhắm trượt vào chỗ người chơi KHÔNG tới.
+     *
+     * Hai nguồn cộng vào nhau: giữ nút (0,55) và bấm dồn (tối đa 0,45). */
+    function climbMul() {
+        var hold = (P.fastKey || P.fastTouch || P.boost > 0) ? R.CLIMB_BOOST - 1 : 0;
+        return 1 + hold + P.mash * R.CLIMB_MASH;
+    }
+
+    /* Một cú bấm mới vào nút leo. Chỉ tính lúc BẮT ĐẦU bấm — giữ nguyên ngón
+     * thì không cộng thêm gì, đúng như nó phải thế: giữ đã có phần thưởng
+     * riêng rồi. */
+    function mashTap() {
+        if (G.phase !== 'play') return;
+        P.mash = Math.min(1, P.mash + R.MASH_PER_TAP);
     }
 
     function mul() {
@@ -1179,6 +1213,11 @@
      *
      * Chúng đậu ở CẠNH NGOÀI của gờ, tức là ngay trên đường bay của người
      * chơi, chứ không nép vào tường. Nép vào tường thì chúng chỉ là hình vẽ. */
+    /* Con chim thứ i đậu cách mặt tường bao nhiêu. Chỗ vẽ và chỗ bung ra hỏi
+     * chung hàm này — lệch nhau thì con chim nhảy một cái sang chỗ khác đúng
+     * lúc bay lên, mà mắt bắt được cú nhảy ấy ngay. */
+    function PERCH_DX(i) { return 20 + i * 22; }
+
     function perchN(b) {
         if (b.type !== 'ac' && b.type !== 'balcony') return 0;
         if (hash2(Math.round(b.y0), 41) >= 0.4) return 0;
@@ -1199,7 +1238,7 @@
         var dir = b.side === SIDE_L ? 1 : -1;          // hướng bung ra khỏi tường
         for (var i = 0; i < n; i++) {
             flock.push({
-                x: fx + dir * (16 + i * 15),
+                x: fx + dir * PERCH_DX(i),
                 y: b.y1 + 6,
                 dir: dir,
                 /* Rùn người một nhịp trước khi bật lên. Không có nhịp này thì
@@ -1309,10 +1348,6 @@
         var w = G.world;
         var m = metresNow();
         var d = R.difficulty(m);
-        /* Tính một lần cho cả khung hình: lúc bay cũng cần biết có đang giữ
-         * nút leo nhanh không, để tốc độ lên cao không đổi giữa chừng. */
-        var fastNow = P.fastKey || P.fastTouch || P.boost > 0;
-
         /* ---- vật phẩm tạm thời ---- */
         ['magnet', 'x2', 'slow'].forEach(function (k) {
             if (G.power[k] > 0) G.power[k] = Math.max(0, G.power[k] - dt);
@@ -1327,6 +1362,10 @@
         if (P.catchFail > 0) P.catchFail -= dt;
         if (P.invuln > 0) P.invuln -= dt;
         if (P.boost > 0) P.boost -= dt;
+        /* Sức dồn tự rút đi, nên muốn giữ nó đầy thì phải bấm chừng ba lần một
+         * giây. Không rút thì bấm một cái là nhanh mãi, và cái nút hoá thành
+         * một cái công tắc chứ không phải một việc phải làm. */
+        if (P.mash > 0) P.mash = Math.max(0, P.mash - R.MASH_DECAY * dt);
 
         /* ---- người chơi ---- */
         var wind = w.windAt(P.y);
@@ -1339,8 +1378,7 @@
         if (P.state === 'cling') {
             /* Leo nhanh đến từ hai nguồn và cùng một hệ số: người chơi tự
              * giữ phím, hoặc quãng thưởng ngắn sau một cú bắt tường đẹp. */
-            var fast = fastNow;
-            var speed = d.climb * (fast ? R.CLIMB_BOOST : 1) * (G.power.slow > 0 ? 0.82 : 1);
+            var speed = d.climb * climbMul() * (G.power.slow > 0 ? 0.82 : 1);
             var surf = w.surfaceAt(P.side, P.y);
             if (surf && surf.kind === 'glass') {
                 /* Leo qua kính nhanh như tường thường — cái phải trả không phải
@@ -1380,7 +1418,12 @@
             } else { P.crack = 0; P.glassOn = null; }
 
             P.y += speed * dt;
-            P.anim += dt * (speed > 0 ? 7 : 3) * (fast ? 1.6 : 1);
+            /* Dáng bò dồn lên theo SỨC LEO chứ không theo một cái công tắc
+             * bật/tắt: bấm dồn thì tay chân cũng phải quẫy nhanh hơn lúc chỉ
+             * giữ nút, không thì người chơi bấm mệt tay mà màn hình không tỏ
+             * ra biết. */
+            var urge = climbMul() - 1;               // 0 … 1,0
+            P.anim += dt * (speed > 0 ? 7 : 3) * (1 + urge * 1.1);
             /* Một tiếng bám tay cho mỗi STEP_PX leo được — nhịp theo quãng
              * đường, không theo đồng hồ, nên nó tự khớp với dáng bò và tự dồn
              * lên khi leo nhanh. */
@@ -1393,9 +1436,10 @@
             /* Vệt gió tuôn xuống sau lưng. Không có nó thì "đang leo nhanh" chỉ
              * là một con số thay đổi ở đâu đó — mà người chơi đang nhìn lên
              * phía trước tìm vật cản, không nhìn bảng điểm. */
-            if (fast && Math.random() < dt * 30) {
+            if (urge > 0.08 && Math.random() < dt * 54 * urge) {
                 addPart(P.x + (Math.random() - 0.5) * 22, P.y - 6,
-                    (Math.random() - 0.5) * 20, -260, 0.28, 'rgba(255,255,255,0.55)', 2, 'dust');
+                    (Math.random() - 0.5) * 20, -220 - 220 * urge, 0.28,
+                    'rgba(255,255,255,' + (0.4 + 0.35 * urge) + ')', 2, 'dust');
             }
 
             /* Đầu chạm vật cản hoặc dây điện phía trên ⇒ bật ra */
@@ -1433,7 +1477,7 @@
              * một cú bay chứ không phải một cú trượt ngang. */
             if (wind) P.vx += wind.dir * wind.str * dt;
             P.x += P.vx * dt;
-            P.y += d.climb * (fastNow ? R.CLIMB_BOOST : 1) * (G.power.slow > 0 ? 0.82 : 1) * dt;
+            P.y += d.climb * climbMul() * (G.power.slow > 0 ? 0.82 : 1) * dt;
             P.flight += dt;
             P.anim += dt * 10;
 
@@ -1536,9 +1580,15 @@
         G.hornT -= dt;
         if (G.hornT <= 0) {
             G.hornT = 3.5 + Math.random() * 7;
-            if (city > 0.06 && Math.random() < city) Sfx.cityHorn(city);
+            if (city > 0.06 && G.freeze <= 0 && Math.random() < city) Sfx.cityHorn(city);
         }
-        if (P.state === 'fall') {
+        if (G.freeze > 0) {
+            /* Đang đóng băng vì vừa mất mạng thì không nền gì hết — xem
+             * loseLife. Phải chặn cả ở đây, không thì mấy khung hình đóng băng
+             * lại gọi ambient() và vặn gió to trở lại ngay sau khi loseLife
+             * vừa vặn nó xuống. */
+            Sfx.ambient(0, 300);
+        } else if (P.state === 'fall') {
             /* Gió rơi vẫn phải là TIẾNG BÁO RƠI, nên nó vẫn dâng theo tốc độ —
              * nhưng đỉnh hạ từ 0,15 xuống 0,066. Cũ thì nó to gấp mười hai lần
              * nền lúc leo, tức là mỗi lần trượt tay tai bị đấm một cái; nay
@@ -1562,7 +1612,7 @@
              *
              * Tiếng của việc LEO vẫn là tiếng bám tay chứ không phải tiếng
              * ồn — ồn không kể được mình đang leo nhanh hay chậm. */
-            Sfx.ambient(0.007 + 0.009 * city + 0.010 * (fastNow ? 1 : 0),
+            Sfx.ambient(0.007 + 0.009 * city + 0.008 * (climbMul() - 1),
                 280 + 620 * (1 - city));
         }
 
@@ -1606,8 +1656,7 @@
             /* Không giáng lúc người chơi đang rơi hay vừa hồi sinh: lúc ấy họ
              * đã trả giá rồi, đánh thêm chỉ là dồn người ta vào chân tường. */
             if (G.boltT <= 0 && P.state === 'cling' && P.invuln <= 0) {
-                var fastNow2 = P.fastKey || P.fastTouch || P.boost > 0;
-                var sp = d.climb * (fastNow2 ? R.CLIMB_BOOST : 1);
+                var sp = d.climb * climbMul();
                 G.bolt = {
                     t: 0,
                     side: P.side,
@@ -2530,19 +2579,32 @@
                 ctx.save();
                 ctx.fillStyle = 'rgba(72,86,110,0.92)';
                 for (var pI = 0; pI < np; pI++) {
-                    var pox = fx + dir * (16 + pI * 15);
-                    var poy = yA - 5;
+                    var pox = fx + dir * PERCH_DX(pI);
+                    var poy = yA - 7;
                     /* Thỉnh thoảng rụt cổ một cái, lệch nhịp nhau — đứng im
                      * tuyệt đối thì trông như hai hòn sỏi đặt trên gờ. */
-                    var bob = Math.sin(G.t * 1.7 + pI * 2.3) > 0.94 ? 1.5 : 0;
+                    var bob = Math.sin(G.t * 1.7 + pI * 2.3) > 0.94 ? 2 : 0;
+                    /* Thân: đủ to để lát nữa bung cánh ra là VỪA con chim ấy.
+                     * Bản trước thân rộng 12 điểm ảnh mà lúc bay sải cánh 47 —
+                     * mắt không nối được hai hình lại thành một con vật, nên
+                     * cú bung cánh đọc ra như "con chim biến mất, một con khác
+                     * hiện ra". Thân bây giờ rộng 19, đúng tỉ lệ thật của con
+                     * bồ câu: mình bằng chừng ba phần mười sải cánh. */
                     ctx.beginPath();
-                    ctx.ellipse(pox, poy + bob, 6, 4.6, 0, 0, 6.284);
+                    ctx.ellipse(pox, poy + bob, 9.5, 7, dir * 0.12, 0, 6.284);
+                    ctx.fill();
+                    /* đuôi chìa ra phía sau, để dáng đậu có hướng */
+                    ctx.beginPath();
+                    ctx.moveTo(pox - dir * 7, poy + bob - 1);
+                    ctx.lineTo(pox - dir * 17, poy + bob + 3);
+                    ctx.lineTo(pox - dir * 7, poy + bob + 4);
+                    ctx.closePath();
                     ctx.fill();
                     ctx.beginPath();
-                    ctx.arc(pox + dir * 5, poy - 4 + bob, 2.8, 0, 6.284);
+                    ctx.arc(pox + dir * 7, poy - 6.5 + bob, 4.2, 0, 6.284);
                     ctx.fill();
                     ctx.fillStyle = 'rgba(255,176,58,0.9)';
-                    ctx.fillRect(pox + dir * 7, poy - 4.5 + bob, dir * 3, 1.6);
+                    ctx.fillRect(pox + dir * 10, poy - 7.5 + bob, dir * 4.5, 2.2);
                     ctx.fillStyle = 'rgba(72,86,110,0.92)';
                 }
                 ctx.restore();
@@ -2757,14 +2819,14 @@
                 ctx.fillStyle = 'rgba(72,86,110,0.92)';
                 var crouch = 1 - f.wait / 0.6;
                 ctx.beginPath();
-                ctx.ellipse(f.x, py + 1, 6.5, 4.2, 0, 0, 6.284); ctx.fill();
+                ctx.ellipse(f.x, py + 1, 9.5, 6.4, 0, 0, 6.284); ctx.fill();
                 ctx.strokeStyle = 'rgba(72,86,110,0.92)';
-                ctx.lineWidth = 3; ctx.lineCap = 'round';
+                ctx.lineWidth = 4; ctx.lineCap = 'round';
                 ctx.beginPath();
-                ctx.moveTo(f.x - 5, py);
-                ctx.lineTo(f.x - 2, py - 6 - crouch * 7);
-                ctx.moveTo(f.x + 5, py);
-                ctx.lineTo(f.x + 2, py - 6 - crouch * 7);
+                ctx.moveTo(f.x - 7, py - 1);
+                ctx.lineTo(f.x - 3, py - 9 - crouch * 10);
+                ctx.moveTo(f.x + 7, py - 1);
+                ctx.lineTo(f.x + 3, py - 9 - crouch * 10);
                 ctx.stroke();
                 ctx.restore();
             } else {
@@ -3450,6 +3512,7 @@
             e.stopPropagation();
             Sfx.wake();
             P.fastTouch = true;
+            mashTap();
             boostBtn.classList.add('is-on');
         });
         /* Bắt cả bốn cách ngón tay rời ra. Thiếu pointercancel là kiểu treo
@@ -3475,7 +3538,7 @@
              * tay đang nghĩ. Nay: lên là leo nhanh, trái phải là nhảy, phím
              * cách là nhảy sang tường đối diện. */
             if (k === 'ArrowUp' || k === 'w' || k === 'W') {
-                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); P.fastKey = true; }
+                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); P.fastKey = true; mashTap(); }
                 else if (G.phase === 'menu') { e.preventDefault(); startRun('endless'); }
             } else if (k === ' ') {
                 /* Phím cách: NHẢY sang tường đối diện — và lúc đang rơi thì

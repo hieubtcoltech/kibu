@@ -1212,6 +1212,70 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 }
 
 /* ------------------------------------------------------------------ *
+ * BẤM DỒN NÚT LEO
+ *    Giữ nút là một lời khai, bấm dồn là lời khai khác — "tôi cần lên
+ *    nhanh NGAY, có con chim trước mặt". Soát cả ba nhánh: giữ, bấm dồn,
+ *    và giữ lẫn bấm dồn; rồi soát nó có tự rút đi không. Không rút thì
+ *    bấm một cái là nhanh mãi, và cái nút hoá thành một cái công tắc.
+ * ------------------------------------------------------------------ */
+{
+    getEl('btn-play').dispatch('click');
+    /* Ghim con bọ vào tường và cho bất tử suốt phép đo. Không ghim thì nó
+     * trượt tay giữa chừng, quãng đóng băng bóp nhỏ dt lại, và phép đo ra số
+     * âm — đo tốc độ leo mà lẫn cả cú rơi vào thì đo cái gì cũng sai. */
+    const climbIn = (frames, prep) => {
+        P.mash = 0; P.fastKey = false; P.fastTouch = false; P.boost = 0;
+        P.state = 'cling'; P.vy = 0;
+        const y0 = P.y;
+        for (let i = 0; i < frames; i++) {
+            P.state = 'cling'; P.vy = 0; P.invuln = 5; P.crack = 0;
+            P.x = G.world.wallX(P.side, P.y) + R.PLAYER_R;
+            prep(i);
+            step(1);
+        }
+        return P.y - y0;
+    };
+    /* Đo suốt một giây rưỡi chứ không nửa giây. Sức dồn cần chừng bốn cú bấm
+     * mới lên tới trần, nên cửa sổ ngắn quá thì đo trúng lúc nó đang trèo lên
+     * và ra một con số thấp hơn hẳn thứ người chơi thật cảm thấy. */
+    const FR = Math.round(FPS * 1.5);
+    const plain = climbIn(FR, () => { });
+    const held = climbIn(FR, () => { P.fastKey = true; });
+    /* Bấm dồn ba lần một giây — nhịp một đứa trẻ bấm được thật. Bấm XONG PHẢI
+     * NHẢ, không thì ngón tay coi như dính luôn ở nút và phép đo này đo nhầm
+     * sang nhánh "giữ nút". */
+    const tap = () => {
+        getEl('btn-boost').dispatch('pointerdown');
+        getEl('btn-boost').dispatch('pointerup');
+    };
+    const mashed = climbIn(FR, (i) => { if (i % 20 === 0) tap(); });
+    const both = climbIn(FR, (i) => {
+        P.fastKey = true;
+        if (i % 20 === 0) tap();
+    });
+
+    ok(held > plain * 1.3, `giữ nút leo mà chỉ nhanh hơn ${(held / plain).toFixed(2)} lần`);
+    ok(mashed > plain * 1.25,
+        `bấm dồn ba nhịp một giây mà chỉ nhanh hơn ${(mashed / plain).toFixed(2)} lần — bấm mệt tay mà màn hình gần như không đổi`);
+    ok(both > held * 1.05,
+        `vừa giữ vừa bấm dồn mà không nhanh hơn chỉ giữ (${(both / held).toFixed(2)} lần) — hai lời khai gộp thành một`);
+    ok(both / plain <= 2.05,
+        `dồn hết sức lên tới ${(both / plain).toFixed(2)} lần tốc độ thường — quá trần 2,0 thì màn chơi hết công bằng`);
+
+    /* Thôi bấm thì phải chậm lại, trong vòng chừng một giây */
+    P.mash = 1; P.fastKey = false; P.fastTouch = false; P.boost = 0;
+    for (let i = 0; i < FPS; i++) {
+        P.state = 'cling'; P.vy = 0; P.invuln = 5;
+        P.x = G.world.wallX(P.side, P.y) + R.PLAYER_R;
+        step(1);
+    }
+    ok(P.mash === 0, `thôi bấm cả một giây rồi mà sức dồn vẫn còn ${P.mash.toFixed(2)} — nó không tự rút đi`);
+
+    console.log(`  bấm dồn nút leo: thường 1,00 · giữ ${(held / plain).toFixed(2)} · bấm dồn ${(mashed / plain).toFixed(2)} · cả hai ${(both / plain).toFixed(2)} lần`);
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+}
+
+/* ------------------------------------------------------------------ *
  * ÂM THANH: CÂN BẰNG
  * ------------------------------------------------------------------
  *  Quãng chơi thử ở trên cố ý chạy KHÔNG có AudioContext, để soát đường
@@ -1362,6 +1426,16 @@ let comps = 0, lastComp = null;
     ok(highUp.lvl < low.lvl,
         `lên cao mà nền vẫn to bằng dưới phố (${highUp.lvl.toFixed(3)} so với ${low.lvl.toFixed(3)})`);
     ok(lvl.horn > 0, 'còi xe không sinh ra nút nào');
+
+    /* LÚC MẤT MẠNG PHẢI IM. Đang rơi thì gió ở mức to nhất, mà mất mạng thì
+     * bao giờ cũng đang rơi — nên đúng khoảnh khắc tệ nhất lại là khoảnh khắc
+     * ồn nhất, và nó át mất tiếng "thua". */
+    P.state = 'fall'; P.vy = -R.FALL_MAX_V; step(1);
+    G.freeze = 0.5;
+    step(1);
+    ok(S.amb.g.gain.value === 0,
+        `vừa mất mạng mà nền vẫn kêu ở mức ${S.amb.g.gain.value.toFixed(3)} — lúc ấy phải im`);
+    G.freeze = 0;
     for (const k of ['bump', 'land', 'webHit']) {
         ok(lvl[k] > bedFall * 1.8,
             `gió lúc rơi ${bedFall.toFixed(3)} so với tiếng "${k}" ${lvl[k].toFixed(3)} — đang rơi thì không nghe được gì nữa`);

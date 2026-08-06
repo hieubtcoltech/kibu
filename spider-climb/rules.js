@@ -73,6 +73,26 @@
      * cho cú nhảy đẹp, và nó tự khép vòng: nhảy giỏi thì lên nhanh, lên nhanh
      * thì điểm cao, chứ không cần thêm nút nào để bấm. */
     var CLIMB_BOOST = 1.55;
+    /* BẤM DỒN NÚT LEO thì lên nhanh thêm nữa, tối đa cộng chừng ấy.
+     *
+     * Giữ nút là một lời khai "tôi muốn lên nhanh"; bấm dồn là một lời khai
+     * khác — "tôi cần lên nhanh NGAY BÂY GIỜ, có con chim trước mặt". Hai việc
+     * khác nhau nên phải có hai cách bấm, và cách thứ hai phải mệt tay hơn thì
+     * mới đáng được thưởng thêm. Cộng lại trần là 2,0 lần tốc độ leo thường. */
+    var CLIMB_MASH = 0.45;
+    /* Mỗi cú bấm cộng bấy nhiêu, và nó rút đi bấy nhiêu mỗi giây.
+     *
+     * Hai con số này phải cân với NHỊP TAY thật của một đứa trẻ, chừng ba lần
+     * một giây. Bản đầu em để 0,34 mỗi cú: mỗi nhịp bấm cộng 0,34 mà rút mất
+     * 0,37 — tức là bấm mửa mật vẫn không giữ nổi mức, đo ra vỏn vẹn nhanh
+     * hơn 1,08 lần. Bấm mệt tay mà màn hình gần như không đổi thì đứa trẻ chỉ
+     * kết luận một điều: cái nút này hỏng.
+     *
+     * Nay 0,55 mỗi cú: bấm đều ba nhịp một giây thì dồn tới trần sau chừng
+     * bốn cú và giữ được ở đó, cho ra 1,38 lần. Thôi bấm thì rút hết trong
+     * non một giây. */
+    var MASH_PER_TAP = 0.55;
+    var MASH_DECAY = 1.1;
     /* KÍNH: leo bình thường, nhưng MÉP TRÊN của ô kính là hạn chót.
      *
      * Bản đầu kính làm tụt xuống. Chạy thử thì nó chỉ là một đoạn bực mình chứ
@@ -1316,6 +1336,7 @@
         CLEAR: CLEAR, SAME_SIDE_MIN: SAME_SIDE_MIN, SURFACE_CLEAR: SURFACE_CLEAR,
         MIN_WINDOW: MIN_WINDOW,
         CLIMB_BASE: CLIMB_BASE, CLIMB_MAX: CLIMB_MAX, CLIMB_BOOST: CLIMB_BOOST,
+        CLIMB_MASH: CLIMB_MASH, MASH_PER_TAP: MASH_PER_TAP, MASH_DECAY: MASH_DECAY,
         GLASS_WARN: GLASS_WARN, GLASS_GRACE: GLASS_GRACE, GLASS_MIN_H: GLASS_MIN_H,
         JUMP_VX: JUMP_VX,
         GRAVITY: GRAVITY, FALL_GRAVITY: FALL_GRAVITY, FALL_MAX_V: FALL_MAX_V,
