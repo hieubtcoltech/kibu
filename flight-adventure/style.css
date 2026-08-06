@@ -400,6 +400,106 @@ body .app-wrapper {
 .btn-go { background: rgba(46, 140, 80, 0.55); border-color: rgba(150, 240, 180, 0.5); }
 .btn-go.is-on { background: rgba(60, 200, 110, 0.7); }
 
+.throttle-zone {
+    width: 92px;
+    height: 154px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(7, 18, 32, 0.66);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    grid-template-rows: 1fr auto;
+    gap: 6px 8px;
+    padding: 10px 9px 8px;
+    color: #e6f2fb;
+    touch-action: none;
+    cursor: grab;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 10px 24px rgba(0, 0, 0, 0.28);
+}
+
+.throttle-zone:active { cursor: grabbing; }
+.throttle-zone.is-active {
+    border-color: rgba(255, 215, 94, 0.45);
+    box-shadow: 0 0 0 4px rgba(255, 215, 94, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.throttle-zone:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.28), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.throttle-scale {
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 2px 0;
+    font-family: var(--font-display);
+    font-size: 0.54rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: rgba(214, 230, 242, 0.68);
+}
+
+.throttle-slot {
+    position: relative;
+    grid-row: 1;
+    width: 30px;
+    justify-self: center;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255, 215, 94, 0.2), rgba(58, 167, 224, 0.08));
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+}
+
+.throttle-slot::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 9px;
+    bottom: 9px;
+    width: 4px;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: rgba(3, 9, 16, 0.72);
+}
+
+.throttle-fill {
+    position: absolute;
+    left: 7px;
+    right: 7px;
+    bottom: 8px;
+    height: 0;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #ffd75e, #38bdf8);
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+}
+
+.throttle-knob {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 42px;
+    height: 26px;
+    border-radius: 10px;
+    transform: translateX(-50%);
+    background: linear-gradient(180deg, #f8fafc, #8aa4b8 48%, #263745);
+    border: 1px solid rgba(255, 255, 255, 0.46);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.42);
+}
+
+.throttle-readout {
+    grid-column: 1 / -1;
+    min-height: 16px;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #dff1ff;
+    text-align: center;
+}
+
 /* ---------------- Bảng phủ ---------------- */
 .screen {
     position: absolute;
@@ -821,6 +921,8 @@ body .app-wrapper {
 
     .round-btn { width: 48px; height: 48px; font-size: 1.3rem; }
     .touch-btn { width: 56px; height: 56px; border-radius: 16px; font-size: 1.25rem; }
+    .throttle-zone { width: 82px; height: 136px; border-radius: 16px; padding: 8px 8px 7px; }
+    .throttle-knob { width: 38px; height: 24px; }
     .pad { gap: 6px; }
     .joystick-zone { width: 110px; height: 110px; }
     .joystick-knob { width: 44px; height: 44px; }
@@ -837,6 +939,11 @@ body .app-wrapper {
     .brand-title { font-size: 0.9rem; }
     .site-footer { display: none !important; }
     .touch-btn { width: 50px; height: 50px; }
+    .throttle-zone { width: 76px; height: 112px; border-radius: 14px; padding: 7px 7px 6px; }
+    .throttle-scale { font-size: 0.48rem; }
+    .throttle-slot { width: 26px; }
+    .throttle-knob { width: 34px; height: 21px; border-radius: 8px; }
+    .throttle-readout { font-size: 0.64rem; }
     .joystick-zone { width: 100px; height: 100px; }
     .joystick-knob { width: 40px; height: 40px; }
     .round-btn { width: 40px; height: 40px; font-size: 1.1rem; }
@@ -965,8 +1072,12 @@ body .app-wrapper {
         align-items: flex-end;
     }
     .touch-btn { width: 54px; height: 54px; border-radius: 16px; font-size: 1.16rem; }
+    .throttle-zone { width: 78px; height: 126px; border-radius: 15px; padding: 8px 7px 6px; }
+    .throttle-scale { font-size: 0.48rem; }
+    .throttle-slot { width: 26px; }
+    .throttle-knob { width: 36px; height: 22px; border-radius: 8px; }
+    .throttle-readout { font-size: 0.66rem; }
     .pad { gap: 7px; }
-    .pad-right { flex-direction: column-reverse; }
     .joystick-zone { width: 112px; height: 112px; }
     .joystick-knob { width: 44px; height: 44px; }
 
@@ -986,6 +1097,10 @@ body .app-wrapper {
     .hud-chip b { font-size: 0.72rem; }
     .round-btn { width: 38px; height: 38px; font-size: 1rem; }
     .touch-btn { width: 50px; height: 50px; }
+    .throttle-zone { width: 70px; height: 116px; }
+    .throttle-scale { display: none; }
+    .throttle-zone { grid-template-columns: 1fr; }
+    .throttle-slot { width: 28px; }
     .joystick-zone { width: 104px; height: 104px; }
     .joystick-knob { width: 40px; height: 40px; }
 }

@@ -375,7 +375,7 @@
         setAutoBtn();
         setViewBtn();
         Sfx.wake();
-        say('ready', T('Ready to fly? Hold the green button!'), 4.5);
+        say('ready', T('Ready to fly? Push the throttle up!'), 4.5);
         /* Nhả tiêu điểm khỏi nút vừa bấm, không thì phím cách sau đó bấm lại
          * chính cái nút ấy và chuyến bay khởi động lại từ đầu. */
         if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -2705,6 +2705,24 @@
         el(id).textContent = v;
     }
 
+    function syncThrottleLever() {
+        var zone = el('throttle-zone');
+        if (!zone) return;
+        var pct = clamp(P.throttle, 0, 1);
+        var label = String(Math.round(pct * 100));
+        var fill = el('throttle-fill');
+        var knob = el('throttle-knob');
+        var readout = el('throttle-readout');
+        if (fill) fill.style.height = (pct * 100).toFixed(1) + '%';
+        if (knob) {
+            var slot = knob.parentElement;
+            var travel = Math.max(0, (slot ? slot.clientHeight : 0) - knob.offsetHeight);
+            knob.style.bottom = (travel * pct).toFixed(1) + 'px';
+        }
+        if (readout) readout.textContent = label + '%';
+        if (zone.setAttribute) zone.setAttribute('aria-valuenow', label);
+    }
+
     function syncHud(force) {
         if (force) hudCache = {};
         setText('hud-spd', fmt(P.spd * 3.6));
@@ -2714,6 +2732,7 @@
         var pc = clamp(P.x / G.route.len, 0, 1);
         el('progress-fill').style.width = (pc * 100).toFixed(1) + '%';
         el('progress-plane').style.left = (pc * 100).toFixed(1) + '%';
+        syncThrottleLever();
     }
 
     /* ========================================================================
@@ -2975,9 +2994,63 @@
             });
         });
 
-        // Throttle buttons (right side) — giữ nguyên holdBtn
-        holdBtn('btn-fast', function () { P.thrUp = 1; }, function () { P.thrUp = 0; });
-        holdBtn('btn-slow', function () { P.thrDn = 1; }, function () { P.thrDn = 0; });
+        /* =================== CẦN GA ===================
+         * Không dùng hai nút nhanh/chậm nữa. Cần ga có vị trí thật: kéo lên
+         * là thêm lực đẩy, kéo xuống là idle. W/S trên bàn phím vẫn là trim
+         * tăng/giảm chậm để người chơi desktop không mất thói quen cũ. */
+        var tZone = el('throttle-zone');
+        var tActive = false;
+        var tPointerId = null;
+
+        function setThrottleFromClientY(clientY) {
+            if (G.auto) return;
+            var rect = tZone.getBoundingClientRect();
+            var pad = 10;
+            var y = clamp(clientY - rect.top, pad, rect.height - pad);
+            P.throttle = clamp(1 - (y - pad) / Math.max(1, rect.height - pad * 2), 0, 1);
+            P.thrUp = 0;
+            P.thrDn = 0;
+            syncThrottleLever();
+        }
+
+        tZone.addEventListener('pointerdown', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            Sfx.wake();
+            tActive = true;
+            tPointerId = e.pointerId;
+            tZone.setPointerCapture(e.pointerId);
+            tZone.classList.add('is-active');
+            setThrottleFromClientY(e.clientY);
+        });
+
+        tZone.addEventListener('pointermove', function (e) {
+            if (!tActive || e.pointerId !== tPointerId) return;
+            e.preventDefault();
+            setThrottleFromClientY(e.clientY);
+        });
+
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) {
+            tZone.addEventListener(ev, function (e) {
+                if (e.pointerId !== tPointerId) return;
+                tActive = false;
+                tPointerId = null;
+                tZone.classList.remove('is-active');
+            });
+        });
+
+        tZone.addEventListener('keydown', function (e) {
+            if (G.auto) return;
+            if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                e.preventDefault(); Sfx.wake(); P.throttle = clamp(P.throttle + 0.08, 0, 1); syncThrottleLever();
+            } else if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+                e.preventDefault(); Sfx.wake(); P.throttle = clamp(P.throttle - 0.08, 0, 1); syncThrottleLever();
+            } else if (e.key === 'Home') {
+                e.preventDefault(); Sfx.wake(); P.throttle = 1; syncThrottleLever();
+            } else if (e.key === 'End') {
+                e.preventDefault(); Sfx.wake(); P.throttle = 0; syncThrottleLever();
+            }
+        });
 
         el('btn-photo').addEventListener('click', function (e) { e.preventDefault(); takePhoto(); });
         el('btn-view').addEventListener('click', function (e) { e.preventDefault(); toggleView(); });

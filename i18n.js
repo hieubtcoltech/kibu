@@ -586,6 +586,9 @@
         /* hướng dẫn */
         ['{0} để chạy đà trên đường băng, rồi {1} để bay lên.',
             '{0} to roll down the runway, then {1} to fly.'],
+        ['Đẩy cần ga lên để chạy đà trên đường băng, rồi {0} kéo lên để bay.',
+            'Throttle up to roll down the runway, then {0} pull up to fly.'],
+        ['Đẩy cần ga lên', 'Throttle up'],
         ['Tăng tốc', 'Speed up'],
         ['kéo lên', 'pull up'],
         ['{0} hoặc phím mũi tên cho máy bay lên xuống.',
@@ -603,7 +606,7 @@
             'You can never crash. If you fly too low, the game lifts you up.'],
 
         /* lời nhắc trong lúc bay */
-        ['Sẵn sàng bay chưa? Giữ nút màu xanh nào!', 'Ready to fly? Hold the green button!'],
+        ['Sẵn sàng bay chưa? Đẩy cần ga lên nào!', 'Ready to fly? Push the throttle up!'],
         ['Kéo nhẹ lên nào!', 'Now pull up gently!'],
         ['Con đang bay rồi! Nhìn thành phố phía dưới kìa.', 'You are flying! Look at the city below.'],
         ['Bay xuyên qua mấy vòng sáng đi!', 'Fly through the glowing rings!'],

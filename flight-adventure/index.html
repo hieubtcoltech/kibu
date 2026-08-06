@@ -152,8 +152,18 @@
                 <button id="btn-up" style="display:none;"></button>
                 <button id="btn-down" style="display:none;"></button>
                 <div class="pad pad-right">
-                    <button id="btn-slow" class="touch-btn btn-thr"><span>🐢</span></button>
-                    <button id="btn-fast" class="touch-btn btn-thr btn-go"><span>🚀</span></button>
+                    <div id="throttle-zone" class="throttle-zone" role="slider" aria-label="Throttle" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0">
+                        <div class="throttle-scale">
+                            <span>TOGA</span>
+                            <span>CLB</span>
+                            <span>IDLE</span>
+                        </div>
+                        <div class="throttle-slot">
+                            <i id="throttle-fill" class="throttle-fill"></i>
+                            <b id="throttle-knob" class="throttle-knob"></b>
+                        </div>
+                        <output id="throttle-readout" class="throttle-readout">0%</output>
+                    </div>
                 </div>
             </div>
 
@@ -177,7 +187,7 @@
                     <div class="panel-emoji">🧑‍✈️</div>
                     <h2 class="panel-title">HOW TO FLY</h2>
                     <ul class="help-list">
-                        <li><b>🚀 Speed up</b> to roll down the runway, then <b>▲ pull up</b> to fly.</li>
+                        <li><b>Throttle up</b> to roll down the runway, then <b>▲ pull up</b> to fly.</li>
                         <li><b>▲ ▼ ◀ ▶</b> or the arrow keys fly up, down, left and right.</li>
                         <li>Fly through <b>dynamic weather</b> and enjoy the gorgeous landscapes.</li>
                         <li>Press <b>🧑‍✈️</b> or <b>V</b> to switch between outside view and cockpit view.</li>
