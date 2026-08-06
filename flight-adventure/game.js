@@ -1305,29 +1305,71 @@
             ctx.ellipse(p.x, p.y, 160 * s, 26 * s, 0, 0, 6.284);
             ctx.fill();
 
-            if (r2 > 0.65) {
-                // Nhà tranh nhỏ xinh ở đồng quê: Tường trắng sữa
-                ctx.fillStyle = '#f8fafc';
-                ctx.fillRect(p.x - 14 * s, p.y - 18 * s, 28 * s, 18 * s);
-
-                // Mái nhà màu đỏ gạch nổi bật hình tam giác
-                ctx.fillStyle = '#f43f5e';
+            if (r2 < 0.32) {
+                // 1. Ao hồ nước xanh biếc lấp lánh phản chiếu mây trời giữa thung lũng cỏ
+                var lw = (55 + r1 * 75) * s;
+                var lh = (14 + r2 * 20) * s;
+                // Bờ cát vàng bảo vệ quanh hồ nước
+                ctx.fillStyle = '#eab308';
                 ctx.beginPath();
-                ctx.moveTo(p.x, p.y - 28 * s);
-                ctx.lineTo(p.x + 17 * s, p.y - 18 * s);
-                ctx.lineTo(p.x - 17 * s, p.y - 18 * s);
-                ctx.closePath();
+                ctx.ellipse(p.x, p.y, lw + 2.5 * s, lh + 1.8 * s, 0, 0, 6.284);
                 ctx.fill();
-
-                // Cửa ra vào màu gỗ ấm áp
-                ctx.fillStyle = '#d97706';
-                ctx.fillRect(p.x - 4 * s, p.y - 10 * s, 8 * s, 10 * s);
-
-                // Cửa sổ tròn màu xanh da trời phản chiếu
+                // Mặt hồ phẳng lặng màu ngọc bích
                 ctx.fillStyle = '#38bdf8';
                 ctx.beginPath();
-                ctx.arc(p.x, p.y - 20 * s, 3.5 * s, 0, 6.284);
+                ctx.ellipse(p.x, p.y, lw, lh, 0, 0, 6.284);
                 ctx.fill();
+                // Vệt nắng chiếu lấp lánh nhẹ nhàng trên mặt nước hồ
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.38)';
+                ctx.beginPath();
+                ctx.ellipse(p.x - lw * 0.15, p.y - lh * 0.1, lw * 0.45, lh * 0.15, 0.1, 0, 6.284);
+                ctx.fill();
+            } else if (r2 >= 0.32 && r2 < 0.62) {
+                // 2. Cây cổ thụ (Oak Tree) tán lá tròn xum xuê bóng đổ
+                var th = (16 + r1 * 14) * s;
+                // Thân cây gỗ nâu sẫm
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(p.x - 2.5 * s, p.y - th * 0.36, 5 * s, th * 0.36);
+                
+                // Tán lá to xum xuê màu xanh cỏ mướt mát có chiều sâu
+                var grLeaf = ctx.createRadialGradient(p.x, p.y - th * 0.68, 2 * s, p.x, p.y - th * 0.68, 12 * s);
+                grLeaf.addColorStop(0, '#4ade80');
+                grLeaf.addColorStop(0.7, '#16a34a');
+                grLeaf.addColorStop(1, '#15803d');
+                ctx.fillStyle = grLeaf;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y - th * 0.68, 12 * s, 0, 6.284);
+                ctx.fill();
+            } else {
+                // 3. Cụm làng quê ấm cúng (Clustering cottages) với nhiều nhà cạnh nhau sơn màu phong phú
+                var numHouses = r1 > 0.62 ? 2 : 1;
+                for (var h = 0; h < numHouses; h++) {
+                    var hx = p.x + (h - 0.5 * (numHouses - 1)) * 22 * s;
+                    var hy = p.y;
+                    var hw = (13 + hash(idx, h + 15) * 7) * s;
+                    var hh = (14 + hash(idx, h + 25) * 5) * s;
+                    
+                    // Thân nhà gạch/gỗ màu trắng sữa hoặc kem nhạt
+                    ctx.fillStyle = h === 0 ? '#fef3c7' : '#fafaf9';
+                    ctx.fillRect(hx - hw / 2, hy - hh, hw, hh);
+                    
+                    // Mái ngói dốc tam giác đỏ gạch hoặc xanh lam nổi bật
+                    ctx.fillStyle = h === 0 ? '#ef4444' : '#2563eb';
+                    ctx.beginPath();
+                    ctx.moveTo(hx, hy - hh - 7 * s);
+                    ctx.lineTo(hx + hw / 2 + 1.8 * s, hy - hh);
+                    ctx.lineTo(hx - hw / 2 - 1.8 * s, hy - hh);
+                    ctx.closePath();
+                    ctx.fill();
+                    
+                    // Cửa ra vào màu nâu gỗ
+                    ctx.fillStyle = '#b4530f';
+                    ctx.fillRect(hx - 3 * s, hy - 8 * s, 6 * s, 8 * s);
+                    
+                    // Cửa sổ vuông tỏa sáng đèn vàng ấm áp biểu thị có người ở trong nhà
+                    ctx.fillStyle = '#fde047';
+                    ctx.fillRect(hx - hw / 3.2, hy - hh * 0.72, 3.2 * s, 3.2 * s);
+                }
             }
         } else if (o.kind === 'hills' || o.kind === 'mountains') {
             if (r1 > 0.35) {
