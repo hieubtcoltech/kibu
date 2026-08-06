@@ -2181,24 +2181,39 @@
         
         ctx.save();
         
-        // Nhấp nháy nhẹ nhàng, mờ đi một chút (độ đục dao động từ 0.16 đến 0.48)
-        var flash = 0.16 + 0.32 * Math.abs(Math.sin(G.t * 3.8));
+        // Nhấp nháy nhẹ nhàng, mờ đi một chút (độ đục dao động từ 0.22 đến 0.58)
+        var flash = 0.22 + 0.36 * Math.abs(Math.sin(G.t * 4.2));
+        
+        // Vị trí nằm chính giữa màn hình ngang, ngay phía dưới thanh progress (ly = 152)
+        var lx = W / 2;
+        var ly = 152;
+        
+        ctx.lineWidth = 3.6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.globalAlpha = flash;
         
-        ctx.font = '900 32px Nunito, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        var ly = H * 0.46; // Vẽ ngang tầm mắt máy bay để bé nhận diện tự nhiên nhất
-        
+        // Vẽ 3 dấu chevron vector lồng nhau cách nhau 12px cực kỳ chuyên nghiệp
         if (needTurnRight) {
-            ctx.fillStyle = '#4ade80'; // Xanh lá chỉ hướng rẽ phải
-            // Vẽ mũi tên ở phía bên phải để thu hút mắt bé nhìn sang phải
-            ctx.fillText('▶▶▶', W / 2 + 120, ly);
+            ctx.strokeStyle = '#4ade80'; // Xanh lá chỉ hướng rẽ phải
+            for (var i = 0; i < 3; i++) {
+                var cx = lx - 12 + i * 12;
+                ctx.beginPath();
+                ctx.moveTo(cx - 5, ly - 8);
+                ctx.lineTo(cx, ly);
+                ctx.lineTo(cx - 5, ly + 8);
+                ctx.stroke();
+            }
         } else {
-            ctx.fillStyle = '#38bdf8'; // Xanh dương chỉ hướng rẽ trái
-            // Vẽ mũi tên ở phía bên trái để thu hút mắt bé nhìn sang trái
-            ctx.fillText('◀◀◀', W / 2 - 120, ly);
+            ctx.strokeStyle = '#38bdf8'; // Xanh dương chỉ hướng rẽ trái
+            for (var i = 0; i < 3; i++) {
+                var cx = lx + 12 - i * 12;
+                ctx.beginPath();
+                ctx.moveTo(cx + 5, ly - 8);
+                ctx.lineTo(cx, ly);
+                ctx.lineTo(cx + 5, ly + 8);
+                ctx.stroke();
+            }
         }
         
         ctx.restore();
