@@ -2195,18 +2195,19 @@
         
         ctx.font = '800 9.5px Nunito, sans-serif';
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle'; // Căn thẳng hàng dọc ở giữa chuẩn xác
         
         var fullText = needTurnRight ? (label + " " + arrow) : (arrow + " " + label);
         var tw = ctx.measureText(fullText).width;
         
-        var ly = 168; // Nằm phía trên bảng điều khiển lái
+        var ly = 166; // Điểm trục đứng của dòng chữ hướng dẫn
         var lx = W / 2;
         
-        // Vẽ thẻ hướng dẫn bo góc mờ ảo
+        // Vẽ thẻ hướng dẫn bo góc mờ ảo đối xứng qua ly
         ctx.fillStyle = 'rgba(7, 18, 30, 0.85)';
         ctx.strokeStyle = needTurnRight ? 'rgba(34, 197, 94, ' + (0.3 + flash * 0.7) + ')' : 'rgba(56, 189, 248, ' + (0.3 + flash * 0.7) + ')';
         ctx.lineWidth = 1.5;
-        roundRect(ctx, lx - tw / 2 - 14, ly - 14, tw + 28, 20, 6);
+        roundRect(ctx, lx - tw / 2 - 12, ly - 10, tw + 24, 20, 5);
         ctx.fill();
         ctx.stroke();
         
@@ -2214,7 +2215,7 @@
         ctx.fillStyle = needTurnRight ? '#4ade80' : '#38bdf8'; // màu xanh lá cho rẽ phải, xanh dương cho rẽ trái
         if (flash > 0.5) ctx.fillStyle = '#ffffff';
         
-        ctx.fillText(fullText, lx, ly + 2);
+        ctx.fillText(fullText, lx, ly);
         ctx.restore();
     }
 
