@@ -2181,41 +2181,26 @@
         
         ctx.save();
         
-        var flash = Math.abs(Math.sin(G.t * 4.5));
-        var label = "";
-        var arrow = "";
+        // Nhấp nháy nhẹ nhàng, mờ đi một chút (độ đục dao động từ 0.16 đến 0.48)
+        var flash = 0.16 + 0.32 * Math.abs(Math.sin(G.t * 3.8));
+        ctx.globalAlpha = flash;
+        
+        ctx.font = '900 32px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        var ly = H * 0.46; // Vẽ ngang tầm mắt máy bay để bé nhận diện tự nhiên nhất
         
         if (needTurnRight) {
-            label = isVi() ? "RẼ PHẢI ĐỂ QUAY LẠI ĐƯỜNG BAY" : "TURN RIGHT TO RETURN TO ROUTE";
-            arrow = "▶▶▶";
+            ctx.fillStyle = '#4ade80'; // Xanh lá chỉ hướng rẽ phải
+            // Vẽ mũi tên ở phía bên phải để thu hút mắt bé nhìn sang phải
+            ctx.fillText('▶▶▶', W / 2 + 120, ly);
         } else {
-            label = isVi() ? "RẼ TRÁI ĐỂ QUAY LẠI ĐƯỜNG BAY" : "TURN LEFT TO RETURN TO ROUTE";
-            arrow = "◀◀◀";
+            ctx.fillStyle = '#38bdf8'; // Xanh dương chỉ hướng rẽ trái
+            // Vẽ mũi tên ở phía bên trái để thu hút mắt bé nhìn sang trái
+            ctx.fillText('◀◀◀', W / 2 - 120, ly);
         }
         
-        ctx.font = '800 9.5px Nunito, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle'; // Căn thẳng hàng dọc ở giữa chuẩn xác
-        
-        var fullText = needTurnRight ? (label + " " + arrow) : (arrow + " " + label);
-        var tw = ctx.measureText(fullText).width;
-        
-        var ly = 166; // Điểm trục đứng của dòng chữ hướng dẫn
-        var lx = W / 2;
-        
-        // Vẽ thẻ hướng dẫn bo góc mờ ảo đối xứng qua ly
-        ctx.fillStyle = 'rgba(7, 18, 30, 0.85)';
-        ctx.strokeStyle = needTurnRight ? 'rgba(34, 197, 94, ' + (0.3 + flash * 0.7) + ')' : 'rgba(56, 189, 248, ' + (0.3 + flash * 0.7) + ')';
-        ctx.lineWidth = 1.5;
-        roundRect(ctx, lx - tw / 2 - 12, ly - 10, tw + 24, 20, 5);
-        ctx.fill();
-        ctx.stroke();
-        
-        // Màu chữ nổi bật nhấp nháy
-        ctx.fillStyle = needTurnRight ? '#4ade80' : '#38bdf8'; // màu xanh lá cho rẽ phải, xanh dương cho rẽ trái
-        if (flash > 0.5) ctx.fillStyle = '#ffffff';
-        
-        ctx.fillText(fullText, lx, ly);
         ctx.restore();
     }
 
