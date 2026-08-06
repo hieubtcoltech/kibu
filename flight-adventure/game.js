@@ -1011,9 +1011,20 @@
         var x0 = Math.ceil((cam.x + 200) / STEP) * STEP;
         var list = [];
 
+        var dep = R.departRunway(rt), arr = R.arriveRunway(rt);
+
         for (var wx = x0; wx < cam.x + 8600; wx += STEP) {
             var kind = R.segmentAt(rt, wx).seg.kind;
             var g = R.groundAt(rt, wx);
+            /* KHÔNG DỰNG NHÀ TRONG SÂN BAY.
+             *
+             * Nhìn cảnh vào hạ cánh mới thấy: cả một rừng cao ốc mọc chồng lên
+             * đúng dải đường băng, và cái thứ bé cần nhìn thấy nhất trong cả
+             * chuyến bay thì lẫn mất trong đó. Sân bay thật quang cả cây số
+             * quanh đường băng, đúng vì lý do ấy. */
+            var atField = (wx > dep.x0 - 900 && wx < dep.x1 + 900) ||
+                (wx > arr.x0 - 900 && wx < arr.x1 + 900);
+            if (atField) continue;
             for (var lane = -2; lane <= 2; lane++) {
                 var idx = Math.round(wx / STEP) * 8 + lane;
                 var z = lane * 1020 + (hash(idx, 1) - 0.5) * 640;
@@ -1274,20 +1285,28 @@
                     ctx.fill();
                 }
             } else if (lm.kind === 'bridge') {
+                /* CỠ THẬT, KHÔNG PHẢI CỠ CHO ĐẸP.
+                 *
+                 * Bản đầu em vẽ con sông rộng 1 200 m và ba nhịp cầu mỗi nhịp
+                 * 300 m. Nhìn từ xa thì đẹp; bay tới gần thì cả cây cầu tràn
+                 * kín màn hình như một vệt sơn cam khổng lồ, che mất cả sân
+                 * bay ngay sau nó. Cầu Rồng thật dài 666 m và rộng 37 — vẽ
+                 * đúng cỡ ấy thì nó tự lớn dần lên khi bay tới, đúng như mọi
+                 * thứ khác, và bé đọc được khoảng cách từ chính cái cầu. */
                 ctx.fillStyle = '#4fb6e0';
-                ctx.fillRect(p.x - 600 * s, p.y + 4 * s, 1200 * s, 60 * s);
+                ctx.fillRect(p.x - 300 * s, p.y + 2 * s, 600 * s, 26 * s);
                 ctx.strokeStyle = '#f0a03c';
-                ctx.lineWidth = Math.max(2, 32 * s);
+                ctx.lineWidth = Math.max(1.5, 11 * s);
                 ctx.lineCap = 'round';
                 ctx.beginPath();
                 for (var b = 0; b < 3; b++) {
-                    ctx.moveTo(p.x - 420 * s + b * 300 * s, p.y - 10 * s);
-                    ctx.quadraticCurveTo(p.x - 270 * s + b * 300 * s, p.y - 150 * s,
-                        p.x - 120 * s + b * 300 * s, p.y - 10 * s);
+                    ctx.moveTo(p.x - 210 * s + b * 150 * s, p.y - 4 * s);
+                    ctx.quadraticCurveTo(p.x - 135 * s + b * 150 * s, p.y - 52 * s,
+                        p.x - 60 * s + b * 150 * s, p.y - 4 * s);
                 }
                 ctx.stroke();
                 ctx.fillStyle = '#f0a03c';
-                ctx.beginPath(); ctx.arc(p.x + 460 * s, p.y - 60 * s, 40 * s, 0, 6.284); ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x + 230 * s, p.y - 22 * s, 15 * s, 0, 6.284); ctx.fill();
             }
 
             /* Nhãn tên. Chỉ hiện khi đã tới gần — hiện từ xa thì cả bầu trời
@@ -1300,14 +1319,20 @@
                 ctx.textAlign = 'center';
                 var tw = ctx.measureText(label).width;
                 var ly = clamp(p.y - Math.max(60, 240 * s), 40, H - 60);
+                /* Kéo nhãn về trong màn. Bay sát ngay trên một thắng cảnh thì
+                 * chỗ chiếu của nó rơi ra ngoài mép, và bản đầu để nhãn rơi
+                 * theo — hiện ra một cái tên dán ở rìa trái chẳng dính vào cái
+                 * gì, trông như một lỗi hiển thị. Kéo về thì nó vẫn chỉ đúng
+                 * hướng, chỉ là đứng ở mép. */
+                var lx = clamp(p.x, tw / 2 + 18, W - tw / 2 - 18);
                 ctx.fillStyle = shot ? 'rgba(60,160,90,0.92)' : 'rgba(20,32,50,0.78)';
-                roundRect(ctx, p.x - tw / 2 - 12, ly - 15, tw + 24, 24, 12);
+                roundRect(ctx, lx - tw / 2 - 12, ly - 15, tw + 24, 24, 12);
                 ctx.fill();
                 ctx.fillStyle = '#fff';
-                ctx.fillText((shot ? '📷 ' : '') + label, p.x, ly + 2);
+                ctx.fillText((shot ? '📷 ' : '') + label, lx, ly + 2);
                 ctx.strokeStyle = shot ? 'rgba(60,160,90,0.6)' : 'rgba(255,255,255,0.5)';
                 ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(p.x, ly + 9); ctx.lineTo(p.x, p.y - 8); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(lx, ly + 9); ctx.lineTo(p.x, p.y - 8); ctx.stroke();
             }
             ctx.restore();
         }
