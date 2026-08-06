@@ -826,8 +826,12 @@ body {
     /* Phủ toàn màn hình, không lề, không gap */
     .app-wrapper { padding: 0 !important; gap: 0 !important; }
 
-    /* Ẩn nav bar + footer — dành hết không gian cho game */
-    .unified-nav { display: none !important; }
+    /* Nav bar giữ lại nhưng siêu gọn */
+    .unified-nav { padding: 4px 8px; border-radius: 0; gap: 6px; }
+    .brand-title { font-size: 0.85rem; }
+    .brand-img { width: 24px; height: 24px; border-radius: 6px; }
+    .btn { padding: 6px 8px; font-size: 0.78rem; border-radius: 10px; }
+    .btn span { display: none; }
     .site-footer { display: none !important; }
 
     /* game-viewport chiếm toàn bộ phần còn lại, bỏ viền và bo tròn */
