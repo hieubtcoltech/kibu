@@ -1257,10 +1257,6 @@
         if (pts.length < 2) return;
 
         ctx.save();
-        /* Bãi cỏ sân bay quanh đường băng, cắt tỉa nên nhạt hơn đồng ruộng —
-         * không có nó thì dải bê-tông trôi lơ lửng giữa cánh đồng. */
-        ctx.fillStyle = '#b9cf9c';
-        band(pts, 200);
         /* Bê-tông tối hẳn: đây là thứ bé phải nhìn thấy từ xa nhất trong cả
          * chuyến bay, nên nó phải là mảng tương phản mạnh nhất với nền xanh. */
         ctx.fillStyle = '#464c56';
