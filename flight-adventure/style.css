@@ -344,11 +344,44 @@ body {
 
 .pad { display: flex; gap: 8px; pointer-events: auto; align-items: flex-end; }
 
-/* Cụm bốn hướng xếp hình chữ thập: lên và xuống chồng nhau ở giữa, trái phải
-   hai bên. Một ngón cái đặt vào giữa là với tới cả bốn. */
-.pad-mid { display: flex; flex-direction: column; gap: 8px; }
-.pad-mid .touch-btn { height: 58px; }
-.pad-l, .pad-r { height: 124px; }
+/* ---- Joystick ảo cảm ứng ---- */
+.joystick-zone {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    touch-action: none;
+}
+
+.joystick-base {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    background: rgba(7, 18, 32, 0.5);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.joystick-knob {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 38%, rgba(255,255,255,0.28), rgba(58, 167, 224, 0.45));
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    /* Center by default */
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: box-shadow 0.15s ease;
+    pointer-events: none; /* Joystick zone handles all touch */
+}
+
+.joystick-knob.active {
+    box-shadow: 0 0 18px rgba(58, 167, 224, 0.6);
+    background: radial-gradient(circle at 38% 38%, rgba(255,255,255,0.4), rgba(58, 167, 224, 0.65));
+}
 
 .touch-btn {
     width: 72px;
@@ -758,9 +791,8 @@ body {
     .round-btn { width: 48px; height: 48px; font-size: 1.3rem; }
     .touch-btn { width: 56px; height: 56px; border-radius: 16px; font-size: 1.25rem; }
     .pad { gap: 6px; }
-    .pad-mid { gap: 6px; }
-    .pad-mid .touch-btn { height: 48px; }
-    .pad-l, .pad-r { height: 102px; }
+    .joystick-zone { width: 110px; height: 110px; }
+    .joystick-knob { width: 44px; height: 44px; }
 
     .photo-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
     .over-actions .big-btn { font-size: 0.7rem; padding: 10px 5px; min-height: 42px; }
@@ -774,8 +806,8 @@ body {
     .brand-title { font-size: 0.9rem; }
     .site-footer { display: none; }
     .touch-btn { width: 50px; height: 50px; }
-    .pad-mid .touch-btn { height: 44px; }
-    .pad-l, .pad-r { height: 92px; }
+    .joystick-zone { width: 100px; height: 100px; }
+    .joystick-knob { width: 40px; height: 40px; }
     .round-btn { width: 40px; height: 40px; font-size: 1.1rem; }
     .hud-right { right: 8px; gap: 6px; }
     .touch-row { bottom: 8px; left: 8px; right: 8px; }
@@ -810,7 +842,6 @@ body {
     .touch-row { bottom: 6px; left: 6px; right: 6px; }
     .touch-btn { width: 52px; height: 52px; border-radius: 14px; font-size: 1.15rem; }
     .pad { gap: 5px; }
-    .pad-mid { gap: 4px; }
-    .pad-mid .touch-btn { height: 44px; }
-    .pad-l, .pad-r { height: 96px; }
+    .joystick-zone { width: 105px; height: 105px; }
+    .joystick-knob { width: 42px; height: 42px; }
 }

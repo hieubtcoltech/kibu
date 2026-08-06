@@ -136,17 +136,20 @@
                 </div>
             </div>
 
-            <!-- HAI CỤM NÚT, HAI GÓC DƯỚI. Phím bấm bám sát 2 góc lề màn hình thiết bị giúp ngón tay chạm tối ưu -->
+            <!-- ĐIỀU KHIỂN CẢM ỨNG: Joystick ảo bên trái, ga bên phải -->
             <div id="touch-row" class="touch-row" hidden>
+                <!-- JOYSTICK ẢO: Chạm và kéo để lái 4 hướng mượt mà -->
                 <div class="pad pad-left">
-                    <button id="btn-left" class="touch-btn pad-l"><span>◀</span></button>
-                    <div class="pad-mid">
-                        <button id="btn-up" class="touch-btn pad-u"><span>▲</span></button>
-                        <div style="height: 4px; display: block;"></div>
-                        <button id="btn-down" class="touch-btn pad-d"><span>▼</span></button>
+                    <div id="joystick-zone" class="joystick-zone">
+                        <div class="joystick-base"></div>
+                        <div id="joystick-knob" class="joystick-knob"></div>
                     </div>
-                    <button id="btn-right" class="touch-btn pad-r"><span>▶</span></button>
                 </div>
+                <!-- Giữ nguyên 4 nút ẩn để game.js holdBtn() vẫn hoạt động -->
+                <button id="btn-left" style="display:none;"></button>
+                <button id="btn-right" style="display:none;"></button>
+                <button id="btn-up" style="display:none;"></button>
+                <button id="btn-down" style="display:none;"></button>
                 <div class="pad pad-right">
                     <button id="btn-slow" class="touch-btn btn-thr"><span>🐢</span></button>
                     <button id="btn-fast" class="touch-btn btn-thr btn-go"><span>🚀</span></button>

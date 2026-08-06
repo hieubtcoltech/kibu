@@ -2443,10 +2443,84 @@
     }
 
     function wireInput() {
-        holdBtn('btn-up', function () { setPitch(1); }, function () { setPitch(0); });
-        holdBtn('btn-down', function () { setPitch(-1); }, function () { setPitch(0); });
-        holdBtn('btn-left', function () { setTurn(-1); }, function () { setTurn(0); });
-        holdBtn('btn-right', function () { setTurn(1); }, function () { setTurn(0); });
+        /* =================== JOYSTICK ẢO ===================
+         * Ngón tay chạm vào vùng joystick-zone, kéo theo hướng muốn bay.
+         * Knob di chuyển mượt mà theo ngón tay, giá trị pitch/turn được
+         * tính từ khoảng cách tương đối so với tâm — giống cần lái thật.
+         * Dead-zone 18% ngăn bé vô tình bay lệch khi chạm nhẹ. */
+        var jZone = el('joystick-zone');
+        var jKnob = el('joystick-knob');
+        var jActive = false;
+        var jPointerId = null;
+
+        function getJoystickCenter() {
+            var rect = jZone.getBoundingClientRect();
+            return { cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2, r: rect.width / 2 };
+        }
+
+        function updateJoystick(clientX, clientY) {
+            var c = getJoystickCenter();
+            var dx = clientX - c.cx;
+            var dy = clientY - c.cy;
+            var dist = Math.sqrt(dx * dx + dy * dy);
+            var maxR = c.r - 4; // knob stays inside base circle
+            if (dist > maxR) { dx = dx / dist * maxR; dy = dy / dist * maxR; dist = maxR; }
+
+            // Move knob visually
+            jKnob.style.left = (c.r + dx) + 'px';
+            jKnob.style.top = (c.r + dy) + 'px';
+
+            // Normalize to -1..1
+            var nx = dx / maxR;
+            var ny = -dy / maxR; // invert Y: up = positive pitch
+
+            // Dead-zone 18%
+            var DEAD = 0.18;
+            var turnVal = Math.abs(nx) > DEAD ? (nx > 0 ? 1 : -1) : 0;
+            var pitchVal = Math.abs(ny) > DEAD ? (ny > 0 ? 1 : -1) : 0;
+
+            setTurn(turnVal);
+            setPitch(pitchVal);
+        }
+
+        function resetJoystick() {
+            jActive = false;
+            jPointerId = null;
+            jKnob.classList.remove('active');
+            jKnob.style.left = '50%';
+            jKnob.style.top = '50%';
+            jKnob.style.transform = 'translate(-50%, -50%)';
+            setPitch(0);
+            setTurn(0);
+        }
+
+        jZone.addEventListener('pointerdown', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            Sfx.wake();
+            jActive = true;
+            jPointerId = e.pointerId;
+            jZone.setPointerCapture(e.pointerId);
+            jKnob.classList.add('active');
+            jKnob.style.transform = 'translate(-50%, -50%)'; // keep centered offset
+            updateJoystick(e.clientX, e.clientY);
+        });
+
+        jZone.addEventListener('pointermove', function (e) {
+            if (!jActive || e.pointerId !== jPointerId) return;
+            e.preventDefault();
+            jKnob.style.transform = 'translate(-50%, -50%)';
+            updateJoystick(e.clientX, e.clientY);
+        });
+
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) {
+            jZone.addEventListener(ev, function (e) {
+                if (e.pointerId !== jPointerId) return;
+                resetJoystick();
+            });
+        });
+
+        // Throttle buttons (right side) — giữ nguyên holdBtn
         holdBtn('btn-fast', function () { P.thrUp = 1; }, function () { P.thrUp = 0; });
         holdBtn('btn-slow', function () { P.thrDn = 1; }, function () { P.thrDn = 0; });
 
