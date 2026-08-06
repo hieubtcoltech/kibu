@@ -801,11 +801,11 @@ body .app-wrapper {
     background-position: center;
 }
 
-.pc-lake { background: linear-gradient(160deg, #8fe0c8, #2f8f9e); }
-.pc-river { background: linear-gradient(160deg, #a7e6ff, #3f8ad8); }
-.pc-pass { background: linear-gradient(160deg, #cbd8e6, #5d7a92); }
-.pc-beach { background: linear-gradient(160deg, #ffe6b0, #58c2e0); }
-.pc-bridge { background: linear-gradient(160deg, #ffc078, #e0663a); }
+.pc-lake { background-image: linear-gradient(160deg, #8fe0c8, #2f8f9e); }
+.pc-river { background-image: linear-gradient(160deg, #a7e6ff, #3f8ad8); }
+.pc-pass { background-image: linear-gradient(160deg, #cbd8e6, #5d7a92); }
+.pc-beach { background-image: linear-gradient(160deg, #ffe6b0, #58c2e0); }
+.pc-bridge { background-image: linear-gradient(160deg, #ffc078, #e0663a); }
 
 .photo-card b { font-family: var(--font-display); font-size: 0.86rem; color: #fff; }
 .photo-card span { font-size: 0.71rem; color: #9fb4c6; line-height: 1.35; }
@@ -828,11 +828,18 @@ body .app-wrapper {
 .photo-view-title { font-size: clamp(1.5rem, 5vw, 2.2rem); }
 .photo-view-fact { max-width: 56ch; }
 
-.photo-view-pic.pc-lake { background: linear-gradient(160deg, #8fe0c8, #2f8f9e); }
-.photo-view-pic.pc-river { background: linear-gradient(160deg, #a7e6ff, #3f8ad8); }
-.photo-view-pic.pc-pass { background: linear-gradient(160deg, #cbd8e6, #5d7a92); }
-.photo-view-pic.pc-beach { background: linear-gradient(160deg, #ffe6b0, #58c2e0); }
-.photo-view-pic.pc-bridge { background: linear-gradient(160deg, #ffc078, #e0663a); }
+.photo-view-pic.pc-lake { background-image: linear-gradient(160deg, #8fe0c8, #2f8f9e); }
+.photo-view-pic.pc-river { background-image: linear-gradient(160deg, #a7e6ff, #3f8ad8); }
+.photo-view-pic.pc-pass { background-image: linear-gradient(160deg, #cbd8e6, #5d7a92); }
+.photo-view-pic.pc-beach { background-image: linear-gradient(160deg, #ffe6b0, #58c2e0); }
+.photo-view-pic.pc-bridge { background-image: linear-gradient(160deg, #ffc078, #e0663a); }
+
+.pc-pic,
+.photo-view-pic {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
 
 /* ---------------- Màn hạ cánh xong ----------------
    Một tấm huy hiệu to làm chủ, rồi con dấu và mấy con số. Không có bảng liệt
