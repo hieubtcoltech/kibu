@@ -48,6 +48,12 @@
      * chủ, để đổi sang sinh ô gạch từ tệp này mà mặt trang không xê dịch. */
     var GAMES = [
         {
+            dir: 'spider-climb', slug: 'spider-climb', tile: 'tile-spider',
+            en: 'Spider Climb', vi: 'Người Nhện Leo Tháp',
+            topics: ['action', 'physics'], players: '1', added: '2026-08-06',
+            keywords: 'spider climb nguoi nhen leo thap game nguoi nhen leo toa nha endless climber wall jump skyscraper web shot drone laser zone climbing arcade high score daily climb hardcore'
+        },
+        {
             dir: 'block-tower', slug: 'block-tower', tile: 'tile-blocktower',
             en: 'Block Tower', vi: 'Tháp Khối',
             topics: ['puzzle', 'action'], players: '1', added: '2026-08-04',

@@ -1,0 +1,764 @@
+/* =========================================================
+   SPIDER CLIMB — giao diện quanh hai toà nhà
+   ---------------------------------------------------------
+   Cả thành phố, người nhện và mọi mối nguy do canvas vẽ. Tệp
+   này chỉ lo phần HTML bao quanh: bảng điểm, nút bắn tơ, và
+   mấy bảng phủ.
+
+   Tông nền tối và lạnh để bầu trời trong canvas — sáng sớm,
+   hoàng hôn cam, đêm giông — nổi hẳn lên như một khung tranh
+   sáng giữa phòng tối.
+   ========================================================= */
+
+:root {
+    --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+    --font-main: 'Nunito', system-ui, sans-serif;
+
+    --bg-dark: #070b16;
+    --card-bg: rgba(13, 19, 36, 0.82);
+    --card-border: rgba(255, 255, 255, 0.12);
+
+    --red: #ff3b52;
+    --web: #ffffff;
+    --sky: #4bd7ff;
+    --gold: #ffd75e;
+    --lime: #8fe870;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-dark);
+    background-image:
+        radial-gradient(circle at 18% 10%, rgba(255, 59, 82, 0.14), transparent 46%),
+        radial-gradient(circle at 84% 22%, rgba(75, 215, 255, 0.14), transparent 46%),
+        radial-gradient(circle at 50% 110%, rgba(140, 100, 255, 0.16), transparent 58%);
+    color: #fff;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.app-wrapper {
+    width: 100%;
+    max-width: 1320px;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 16px 16px;
+    gap: 12px;
+}
+
+/* ---------------- Thanh trên ---------------- */
+.unified-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 10px 18px;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+    flex-shrink: 0;
+}
+
+.brand { display: flex; align-items: center; gap: 10px; }
+
+/* Ảnh biểu tượng game. Phải khai cỡ ở đây — tệp icon.jpg là ảnh vuông 512px,
+   thiếu dòng này thì nó hiện nguyên cỡ và đội cả thanh trên cao hơn nửa màn. */
+.brand-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    object-fit: cover;
+    display: block;
+}
+
+.brand-icon {
+    font-size: 1.7rem;
+    filter: drop-shadow(0 0 10px rgba(255, 59, 82, 0.6));
+    display: inline-block;
+}
+
+.brand-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, var(--red), var(--gold), var(--sky));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.btn {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    padding: 9px 16px;
+    min-height: 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.07);
+    color: #e2e8f0;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.btn.is-off { opacity: 0.5; }
+
+/* ---------------- Khung chơi ---------------- */
+.game-viewport {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+    background: #060a14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    container-type: size;
+}
+
+/* Sân giữ đúng tỉ lệ canvas — game.js đặt --stage-w/--stage-h theo khổ thật.
+   aspect-ratio một mình không đủ: nó chỉ suy ra chiều còn lại khi một chiều để
+   auto, nên phải tự tính bề ngang bằng đơn vị theo khung chứa. */
+.stage {
+    --stage-w: 540;
+    --stage-h: 960;
+    position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--stage-w) / var(--stage-h);
+    max-width: 100%;
+    max-height: 100%;
+    min-width: 0;
+    /* Cả trò chơi là CHẠM. Không chặn thì trình duyệt điện thoại nuốt cú chạm
+       thành cuộn trang, và mọi cú nhảy đều hụt. */
+    touch-action: none;
+}
+
+@supports (width: 1cqh) {
+    .stage { width: min(100cqw, 100cqh * var(--stage-w) / var(--stage-h)); }
+}
+
+#game-canvas { position: absolute; inset: 0; }
+#game-canvas canvas { display: block; touch-action: none; }
+
+/* ---------------- Bảng điểm ---------------- */
+/* Nằm sát mép trên, KHÔNG đè xuống giữa: giữa sân là khe hai toà nhà, cũng
+   chính là chỗ mọi mối nguy bay qua. Bản thiết kế đòi bảng điểm tránh xa đường
+   nhảy, và ở game này đường nhảy đúng là chính giữa màn hình. */
+.hud {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px 0;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.hud[hidden] { display: none; }
+
+.hud-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    width: 100%;
+    justify-content: center;
+}
+
+.hud-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    padding: 4px 12px;
+    border-radius: 12px;
+    background: rgba(6, 10, 22, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.hud-main { border-color: rgba(255, 215, 94, 0.4); }
+.hud-main b { color: var(--gold); }
+
+.hud-label {
+    font-family: var(--font-display);
+    font-size: 0.58rem;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    color: #93a3bd;
+}
+
+.hud-box b {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #fff;
+}
+
+.hud-row-2 {
+    gap: 12px;
+    font-size: 0.95rem;
+    letter-spacing: 2px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+}
+
+.hud-web { letter-spacing: 3px; }
+
+.hud-power {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.82rem;
+    letter-spacing: 0.5px;
+    color: var(--lime);
+}
+
+/* Hệ số nhân: to, ngay dưới bảng điểm, và chỉ hiện khi đã có chuỗi ≥3 — hiện
+   suốt thì thành một con số x1 nằm chết trên màn, chẳng ai nhìn nữa. */
+.hud-combo {
+    position: absolute;
+    top: 96px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.hud-combo[hidden] { display: none; }
+
+.hud-combo b {
+    font-family: var(--font-display);
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--gold);
+}
+
+/* Dải báo vùng mới. Nằm ở 30% chiều cao chứ không giữa màn — giữa màn là chỗ
+   người chơi đang nhìn để nhảy. */
+.zone-banner {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%, -8px);
+    padding: 9px 22px;
+    border-radius: 999px;
+    background: rgba(6, 10, 22, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.zone-banner span { font-size: 1.2rem; }
+.zone-banner.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------------- Nút bắn tơ ---------------- */
+.web-btn {
+    position: absolute;
+    right: 3.5%;
+    bottom: 4.5%;
+    width: 86px;
+    height: 86px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.5);
+    background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.28), rgba(10, 16, 32, 0.72));
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    z-index: 6;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
+    touch-action: none;
+}
+
+.web-btn[hidden] { display: none; }
+.web-btn:active { transform: scale(0.93); }
+.web-ico { font-size: 1.85rem; line-height: 1; }
+
+.web-cap {
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #cfe0f5;
+}
+
+/* ---------------- Bảng phủ ---------------- */
+.screen {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(4, 7, 16, 0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    overflow-y: auto;
+}
+
+.screen.hidden { display: none; }
+
+.panel {
+    width: 100%;
+    max-width: 600px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 26px;
+    padding: 24px 24px 20px;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 13px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.panel-small { max-width: 470px; }
+.panel-emoji { font-size: 2.6rem; line-height: 1; }
+
+.panel-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 4vw, 2.1rem);
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, var(--red), var(--gold), var(--sky));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.panel-desc {
+    font-size: 0.97rem;
+    color: #cbd5e1;
+    line-height: 1.55;
+    max-width: 46ch;
+}
+
+.panel-desc b { color: #fff; }
+
+/* Dải sáu vùng ở màn chào: cho thấy ngay leo cao thì được xem những gì. Đây là
+   lý do chính để bấm chơi lại lần nữa, nên nó phải nằm ngay trước mắt. */
+.zone-strip {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
+
+.zn {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    color: #0d1220;
+    white-space: nowrap;
+}
+
+.z1 { background: linear-gradient(135deg, #ffd9a0, #ffb861); }
+.z2 { background: linear-gradient(135deg, #a9d8f5, #4bd7ff); }
+.z3 { background: linear-gradient(135deg, #dfeef7, #9de8ff); }
+.z4 { background: linear-gradient(135deg, #ffb361, #ff7a5c); }
+.z5 { background: linear-gradient(135deg, #6f86c4, #2b3d6b); color: #eaf2ff; }
+.z6 { background: linear-gradient(135deg, #b07aff, #ff7ae0); color: #23093a; }
+
+.wallet {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.w-item {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.9rem;
+    padding: 6px 13px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #cbd5e1;
+}
+
+.w-item b { color: #fff; }
+
+.mode-row {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.mode-btn {
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 11px 10px;
+    min-height: 46px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.06);
+    color: #dce6f5;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: all 0.18s ease;
+}
+
+.mode-btn:hover { background: rgba(255, 255, 255, 0.13); transform: translateY(-2px); }
+
+/* ---------------- Nhiệm vụ & kỷ lục ---------------- */
+.mission-box, .records {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 11px 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.box-title {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 1.8px;
+    color: #8ea0bb;
+}
+
+.mission-list { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+
+.mission {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.05);
+    text-align: left;
+}
+
+.mission-text { font-size: 0.87rem; color: #dbe4f0; }
+
+.mission-prize {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    color: var(--gold);
+    white-space: nowrap;
+}
+
+.mission-done {
+    padding: 8px 12px;
+    border-radius: 11px;
+    background: rgba(143, 232, 112, 0.14);
+    border: 1px solid rgba(143, 232, 112, 0.4);
+    color: var(--lime);
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.mission-done b { color: #fff; }
+
+.rec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 6px;
+}
+
+.rec {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 11px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 0.8rem;
+    color: #a9b8ce;
+}
+
+.rec b { font-family: var(--font-display); color: #fff; font-size: 0.95rem; }
+
+/* ---------------- Trang phục ---------------- */
+.suit-list {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+}
+
+.suit {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: #dbe4f0;
+    cursor: pointer;
+    font-family: var(--font-main);
+    transition: all 0.18s ease;
+    text-align: left;
+}
+
+.suit:hover { background: rgba(255, 255, 255, 0.11); transform: translateY(-2px); }
+.suit.is-on { border-color: var(--gold); background: rgba(255, 215, 94, 0.13); }
+.suit.is-locked { opacity: 0.72; }
+
+.suit-dot {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 3px solid #000;
+    flex-shrink: 0;
+}
+
+.suit-name { flex: 1; font-size: 0.85rem; font-weight: 700; }
+
+.suit-tag {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    color: var(--gold);
+    white-space: nowrap;
+}
+
+/* ---------------- Hướng dẫn & kết thúc ---------------- */
+.help-list {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    list-style: none;
+    color: #cbd5e1;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+
+.help-list li { padding-left: 24px; position: relative; }
+
+.help-list li::before {
+    content: '🕸';
+    position: absolute;
+    left: 0;
+    font-size: 0.82rem;
+}
+
+.help-list b { color: #fff; }
+
+.final-grid { width: 100%; display: flex; flex-direction: column; gap: 7px; }
+
+.score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.93rem;
+    color: #cbd5e1;
+}
+
+.score-row b { color: #fff; font-size: 1.15rem; }
+
+.best-line {
+    font-family: var(--font-display);
+    font-size: 0.92rem;
+    color: #94a3b8;
+}
+
+.best-line b { color: var(--gold); font-size: 1.15rem; }
+
+.new-best {
+    margin-left: 8px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255, 215, 94, 0.2);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+}
+
+.new-best[hidden] { display: none; }
+
+.over-actions {
+    display: flex;
+    gap: 9px;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.over-actions .big-btn { flex: 1; min-width: 170px; }
+
+.big-btn {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 14px 24px;
+    min-height: 52px;
+    border-radius: 18px;
+    border: none;
+    cursor: pointer;
+    color: #2a0207;
+    background: linear-gradient(135deg, var(--red), #ff8a3d);
+    box-shadow: 0 10px 26px rgba(255, 59, 82, 0.32);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+    width: 100%;
+    text-decoration: none;
+}
+
+.big-btn:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(255, 59, 82, 0.45); }
+.big-btn:active { transform: translateY(0); }
+
+.big-btn.btn-ghost {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    box-shadow: none;
+}
+
+.big-btn.btn-revive {
+    background: linear-gradient(135deg, #4bd7ff, #7a8cff);
+    color: #04121c;
+    box-shadow: 0 10px 26px rgba(75, 215, 255, 0.32);
+}
+
+.big-btn[hidden] { display: none; }
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 26px;
+    transform: translate(-50%, 20px);
+    padding: 10px 20px;
+    border-radius: 999px;
+    background: rgba(8, 12, 24, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    font-family: var(--font-display);
+    font-weight: 700;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s ease;
+    z-index: 60;
+}
+
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------------- Màn nhỏ ---------------- */
+@media (max-width: 760px) {
+    .app-wrapper { padding: 8px 8px 10px; gap: 8px; }
+    .unified-nav { padding: 8px 10px; border-radius: 16px; gap: 8px; }
+    .brand-title { font-size: 1.1rem; }
+    .brand-img { width: 30px; height: 30px; }
+    .btn { padding: 8px 11px; font-size: 0.84rem; }
+    .btn span { display: none; }
+    .nav-actions { gap: 6px; }
+    .game-viewport { border-radius: 18px; }
+    .panel { padding: 18px 15px 16px; border-radius: 20px; }
+    .over-actions { flex-direction: column; }
+    .over-actions .big-btn { min-width: 0; }
+    .hud-box { padding: 3px 9px; }
+    .hud-box b { font-size: 1.02rem; }
+    .web-btn { width: 74px; height: 74px; }
+    .web-ico { font-size: 1.6rem; }
+    .hud-combo { top: 84px; }
+    .hud-combo b { font-size: 1.6rem; }
+}
+
+/* Điện thoại xoay ngang: màn chỉ cao chừng 420px mà thanh trên với chân trang
+   ăn mất gần nửa. Game này lại dựng đứng nên càng cần chừa chỗ. */
+@media (max-height: 520px) and (orientation: landscape) {
+    .app-wrapper { padding: 6px 8px 6px; gap: 6px; }
+    .unified-nav { padding: 5px 10px; border-radius: 14px; }
+    .brand-title { font-size: 1rem; }
+    .brand-img { width: 26px; height: 26px; }
+    .btn { min-height: 38px; padding: 6px 10px; }
+    .site-footer { display: none; }
+    .web-btn { width: 62px; height: 62px; }
+    .web-cap { display: none; }
+}
+
+/* Trên máy cảm ứng, bảng chọn dài hơn màn hình và nút BẮT ĐẦU trôi xuống dưới
+   đáy — người chơi không thấy nút, tưởng game hỏng. Ghim nó lại. */
+@media (hover: none) and (pointer: coarse) {
+    #menu-overlay .big-btn {
+        position: sticky;
+        bottom: 6px;
+        z-index: 5;
+    }
+}

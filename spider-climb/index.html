@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Spider Climb - Free Online Kids Game | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Spider Climb online for free on KIBU Games! Climb endlessly between two skyscrapers, jump wall to wall, dodge drones and lasers, and fire your web.">
+    <meta name="keywords" content="Spider Climb, endless climber, wall jump game, spider hero, skyscraper game, nguoi nhen leo toa nha, game leo nha, tro choi nguoi nhen, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/spider-climb/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/spider-climb/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/spider-climb/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/spider-climb/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/spider-climb/">
+    <meta property="og:title" content="Spider Climb - Free Online Game | KIBU Games">
+    <meta property="og:description" content="Climb endlessly between two skyscrapers. Jump wall to wall, dodge drones and lasers, fire your web.">
+    <meta property="og:image" content="https://kibugames.com/spider-climb/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/spider-climb/">
+    <meta name="twitter:title" content="Spider Climb - Free Online Game">
+    <meta name="twitter:description" content="Play Spider Climb free on KIBU Games in English & Vietnamese.">
+    <meta name="twitter:image" content="https://kibugames.com/spider-climb/og-image.jpg">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Spider Climb",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/spider-climb/",
+      "genre": "Endless Arcade",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome nạp KHÔNG CHẶN hiển thị: media="print" khiến trình duyệt coi
+         nó là CSS cho máy in nên tải song song, xong mới đổi thành "all". -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
+    <link rel="stylesheet" href="/spider-climb/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <!-- Google Analytics (GA4) — cấu hình dùng chung ở /analytics.js -->
+    <script type="module" src="/analytics.js"></script>
+    <!-- Favicon -->
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body>
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
+                    <img src="/logo.svg" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <img src="/spider-climb/icon.jpg" alt="" class="brand-img"
+                        onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><span class="brand-icon">🕷️</span>
+                    <h1 class="brand-title">SPIDER CLIMB</h1>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button id="btn-help" class="btn">
+                    <i class="fa-solid fa-circle-question"></i> <span>How to play</span>
+                </button>
+                <button id="btn-pause" class="btn">
+                    <i class="fa-solid fa-pause"></i> <span>Pause</span>
+                </button>
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+                </button>
+                <button id="btn-nav-menu" class="btn">
+                    <i class="fa-solid fa-list"></i> <span>Menu</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="game-viewport">
+            <!-- Khung sân giữ đúng tỉ lệ canvas 540×960, do game.js đặt vào
+                 --stage-w/--stage-h. Dựng đứng vì đây là game điện thoại: leo
+                 lên thì chiều cao mới là thứ đáng có. -->
+            <div class="stage">
+                <div id="game-canvas"></div>
+
+                <div id="hud" class="hud" hidden>
+                    <div class="hud-row">
+                        <div class="hud-box hud-main">
+                            <span class="hud-label">HEIGHT</span>
+                            <b id="hud-height">0 m</b>
+                        </div>
+                        <div class="hud-box">
+                            <span class="hud-label">SCORE</span>
+                            <b id="hud-score">0</b>
+                        </div>
+                        <div class="hud-box">
+                            <span class="hud-label">COINS</span>
+                            <b id="hud-coins">0</b>
+                        </div>
+                    </div>
+                    <div class="hud-row hud-row-2">
+                        <span id="hud-lives" class="hud-lives">❤❤❤</span>
+                        <span id="hud-web" class="hud-web">🕸🕸🕸</span>
+                        <span id="hud-power" class="hud-power"></span>
+                    </div>
+                    <div id="hud-combo" class="hud-combo" hidden>
+                        <span class="hud-label">COMBO</span><b id="hud-combo-val">x1</b>
+                    </div>
+                    <div id="zone-banner" class="zone-banner"></div>
+                </div>
+
+                <!-- Nút bắn tơ: ở góc phải dưới, vừa tầm ngón cái, và cố ý nằm
+                     XA đường bay giữa khe để không che mất mối nguy. -->
+                <button id="btn-web" class="web-btn" hidden aria-label="Web shot">
+                    <span class="web-ico">🕸</span>
+                    <span class="web-cap">WEB</span>
+                </button>
+            </div>
+
+            <!-- Màn chào -->
+            <div id="menu-overlay" class="screen">
+                <div class="panel">
+                    <div class="panel-emoji">🕷️🏙️</div>
+                    <h2 class="panel-title">SPIDER CLIMB</h2>
+                    <p class="panel-desc">
+                        Two towers, one endless climb. <b>Tap to leap</b> to the other wall,
+                        <b>fire your web</b> at whatever is in the way, and see how high the
+                        city lets you get.
+                    </p>
+
+                    <!-- Tên vùng để NGUYÊN VẸN như lúc chạy trong game, không rút
+                         gọn: có vậy sáu dòng dịch trong i18n.js mới dùng chung được
+                         cho cả dải này, dải báo vùng mới và màn kết thúc. -->
+                    <div class="zone-strip">
+                        <span class="zn z1">🌅 Street Morning</span>
+                        <span class="zn z2">🏙️ Skyscraper District</span>
+                        <span class="zn z3">☁️ Cloudline</span>
+                        <span class="zn z4">🌇 Construction Sunset</span>
+                        <span class="zn z5">⛈️ Night Storm</span>
+                        <span class="zn z6">🌌 Sky Fantasy</span>
+                    </div>
+
+                    <div class="wallet">
+                        <span class="w-item">🪙 <b id="menu-coins">0</b></span>
+                        <span class="w-item">💎 <b id="menu-gems">0</b></span>
+                        <span class="w-item">🏆 <b id="menu-bestm">0 m</b></span>
+                        <span class="w-item">⭐ <b id="menu-best">0</b></span>
+                    </div>
+
+                    <button id="btn-play" class="big-btn"><i class="fa-solid fa-play"></i> START CLIMBING</button>
+
+                    <div class="mode-row">
+                        <button id="btn-daily" class="mode-btn"><i class="fa-solid fa-calendar-day"></i> Daily Climb</button>
+                        <button id="btn-hardcore" class="mode-btn"><i class="fa-solid fa-fire"></i> Hardcore</button>
+                    </div>
+                    <div class="mode-row">
+                        <button id="btn-shop" class="mode-btn"><i class="fa-solid fa-shirt"></i> Suits</button>
+                        <button id="btn-missions" class="mode-btn"><i class="fa-solid fa-list-check"></i> Missions</button>
+                    </div>
+
+                    <div class="mission-box">
+                        <span class="box-title">TODAY'S MISSIONS</span>
+                        <div id="menu-missions" class="mission-list"></div>
+                    </div>
+
+                    <div class="records">
+                        <span class="box-title">YOUR RECORDS</span>
+                        <div class="rec-grid">
+                            <div class="rec"><span>Longest combo</span><b id="rec-combo">x0</b></div>
+                            <div class="rec"><span>Drones webbed</span><b id="rec-drones">0</b></div>
+                            <div class="rec"><span>Fastest to 300 m</span><b id="rec-sprint">—</b></div>
+                            <div class="rec"><span>Daily Climb best</span><b id="rec-daily">0 m</b></div>
+                            <div class="rec"><span>Hardcore best</span><b id="rec-hard">0 m</b></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn -->
+            <div id="help-overlay" class="screen hidden">
+                <div class="panel panel-small">
+                    <div class="panel-emoji">🎮</div>
+                    <h2 class="panel-title">HOW TO PLAY</h2>
+                    <ul class="help-list">
+                        <li><b>You climb by yourself</b> while you hang on a wall. That never stops.</li>
+                        <li><b>Tap anywhere</b> to leap across to the other tower. Time it before the wall ahead is blocked.</li>
+                        <li><b>Falling?</b> Tap again to shoot a web line and catch the wall - each catch costs one web shot. Fall off the bottom and it costs a life.</li>
+                        <li><b>Tap the WEB button</b> to shoot down drones, birds and loose gear. The dashed ring shows what you will hit.</li>
+                        <li>Glass makes you slide, cracked panels break if you hang on, live cables shock - but your web can cut them.</li>
+                        <li>Coins sit on the risky side. Land a clean jump to keep your combo and your score multiplier climbing.</li>
+                        <li>Keyboard: space to jump, F to shoot web, P to pause.</li>
+                    </ul>
+                    <button id="btn-help-back" class="big-btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                </div>
+            </div>
+
+            <!-- Tạm dừng -->
+            <div id="pause-overlay" class="screen hidden">
+                <div class="panel panel-small">
+                    <div class="panel-emoji">⏸️</div>
+                    <h2 class="panel-title">PAUSED</h2>
+                    <p class="panel-desc">The city will wait for you.</p>
+                    <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> KEEP CLIMBING</button>
+                </div>
+            </div>
+
+            <!-- Trang phục -->
+            <div id="shop-overlay" class="screen hidden">
+                <div class="panel">
+                    <div class="panel-emoji">🕸️</div>
+                    <h2 class="panel-title">SUITS</h2>
+                    <p class="panel-desc">Every suit climbs exactly the same. They just look better doing it.</p>
+                    <p class="best-line">🪙 <b id="shop-coins">0</b></p>
+                    <div id="suit-list" class="suit-list"></div>
+                    <button id="btn-shop-back" class="big-btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                </div>
+            </div>
+
+            <!-- Nhiệm vụ -->
+            <div id="missions-overlay" class="screen hidden">
+                <div class="panel">
+                    <div class="panel-emoji">📋</div>
+                    <h2 class="panel-title">MISSIONS</h2>
+                    <p class="panel-desc">Finish one and a new one takes its place.</p>
+                    <div id="mission-list" class="mission-list"></div>
+                    <button id="btn-missions-back" class="big-btn btn-ghost"><i class="fa-solid fa-arrow-left"></i> BACK</button>
+                </div>
+            </div>
+
+            <!-- Kết thúc -->
+            <div id="over-overlay" class="screen hidden">
+                <div class="panel">
+                    <div class="panel-emoji">🕸️</div>
+                    <h2 class="panel-title">RUN OVER</h2>
+                    <div class="final-grid">
+                        <div class="score-row"><span>Height</span><b id="over-height">0 m</b></div>
+                        <div class="score-row"><span>Score</span><b id="over-score">0</b></div>
+                        <div class="score-row"><span>Coins</span><b id="over-coins">0</b></div>
+                        <div class="score-row"><span>Best combo</span><b id="over-combo">x0</b></div>
+                        <div class="score-row"><span>Reached</span><b id="over-zone">Street Morning</b></div>
+                    </div>
+                    <div id="over-missions" class="mission-list"></div>
+                    <p class="best-line">Best score: <b id="over-best">0</b>
+                        <span id="over-new" class="new-best" hidden>NEW BEST!</span></p>
+                    <div class="over-actions">
+                        <button id="btn-revive" class="big-btn btn-revive" hidden><i class="fa-solid fa-heart"></i> REVIVE · 2 💎</button>
+                        <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> CLIMB AGAIN</button>
+                        <button id="btn-over-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> MENU</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> <a href="/" class="footer-home">KIBU Games</a> - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <a class="footer-contact is-facebook" href="https://www.facebook.com/kibugames.official/"
+                    target="_blank" rel="noopener" title="Follow on Facebook" aria-label="Follow on Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a class="footer-contact is-telegram" href="https://t.me/coolkitty007"
+                    target="_blank" rel="noopener" title="Chat on Telegram" aria-label="Chat on Telegram">
+                    <i class="fa-brands fa-telegram"></i>
+                </a>
+                <a class="footer-contact is-whatsapp" href="https://wa.me/84988100942"
+                    target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/spider-climb/rules.js"></script>
+    <script src="/spider-climb/game.js"></script>
+</body>
+</html>

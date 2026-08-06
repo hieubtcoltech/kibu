@@ -8,6 +8,7 @@
     "serve": "node server.js",
     "dev": "node server.js 3000",
     "check:games": "node check-games.js",
+    "check:spider-climb": "node spider-climb/check-climb.js && node spider-climb/check-play.js",
     "make:home": "node make-home.js",
     "check:bounce-hoops": "node bounce-hoops/check-levels.js",
     "check:melon-drop": "node melon-drop/check-physics.js",
