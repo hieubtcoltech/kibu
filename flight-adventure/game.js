@@ -992,11 +992,9 @@
      *
      * Đi từ xa về gần để dải gần đè lên dải xa — không có thứ tự ấy thì đỉnh
      * núi phía sau chồng lên sườn đồi phía trước. */
-    /* Càng nhiều dải càng mượt, mà mỗi dải chỉ tốn một nét tô chữ nhật. 80 đã
-     * ổn khi bay cao, nhưng lúc cất cánh sát đất vẫn thấy các mảng cỏ lặp lại
-     * ở phần gần màn hình; 140 làm các bước màu nhỏ lại đủ để mắt đọc thành
-     * một mặt đất liền. */
-    var BANDS = 140;
+    /* Càng nhiều dải càng mượt, mà mỗi dải chỉ tốn một nét tô chữ nhật. 46 dải
+     * để lại mấy bậc thang thấy rõ ở khúc gần; 80 thì hết bậc mà vẫn rẻ. */
+    var BANDS = 80;
 
     function drawGround() {
         var rt = G.route, s = skyOf();
@@ -1261,8 +1259,8 @@
         ctx.save();
         /* Bãi cỏ sân bay quanh đường băng, cắt tỉa nên nhạt hơn đồng ruộng —
          * không có nó thì dải bê-tông trôi lơ lửng giữa cánh đồng. */
-        ctx.fillStyle = 'rgba(185,207,156,0.14)';
-        band(pts, 48);
+        ctx.fillStyle = '#b9cf9c';
+        band(pts, 200);
         /* Bê-tông tối hẳn: đây là thứ bé phải nhìn thấy từ xa nhất trong cả
          * chuyến bay, nên nó phải là mảng tương phản mạnh nhất với nền xanh. */
         ctx.fillStyle = '#464c56';
