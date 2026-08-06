@@ -2070,41 +2070,83 @@
         ctx.restore();
     }
 
-    /* Mây trôi. Cả bầu trời chỉ có MỘT chiều gió, vì gió là một thứ — bản
-     * trước cho mỗi đám lắc lư quanh chỗ của nó bằng một hàm sin, nên chúng
-     * đứng yên tại chỗ mà rung, không đám nào đi đến đâu cả.
+    /* Đậm nhạt của tầng mây. Hỏi thẳng vùng nào khai weather 'mist' chứ không
+     * chép lại mốc mét vào đây — chép thì có ngày dời vùng mà quên dời mây.
+     * Dâng lên trước khi vào tầng và tan dần sau khi ra, chứ không bật tắt
+     * đánh cái ở ranh giới. */
+    function mistAmt() {
+        var m = metresNow(), best = 0, i;
+        for (i = 0; i < R.ZONES.length; i++) {
+            var z = R.ZONES[i];
+            if (z.weather !== 'mist') continue;
+            var a = clamp(Math.min((m - z.from + 350) / 350, (z.to + 200 - m) / 500), 0, 1);
+            if (a > best) best = a;
+        }
+        return best;
+    }
+
+    /* MÂY, hai lớp — và hai lớp ấy là hai KHOẢNG CÁCH khác nhau, chứ không
+     * phải hai kiểu vẽ.
      *
-     * Và đám to trôi nhanh hơn đám nhỏ: to là gần, gần là lướt qua mắt nhanh
-     * hơn. Đó cũng là cách chúng khai độ sâu — cùng một cơn gió, nhưng đám gần
-     * qua hết trời trong non hai phút, còn đám xa mất tới năm phút rưỡi. */
+     * Bản trước chỉ có một lớp: đám to bằng nửa màn hình, trượt 0,35 lần máy
+     * quay. Sai cả hai đầu. To thế thì mắt đọc ra "mây ngay trước mặt", mà mây
+     * ngay trước mặt thì không thể ở tít chân trời; trượt nhanh thế thì mây
+     * chạy theo tốc độ leo của người nhện — trong khi mây thật cách mình hàng
+     * cây số, leo một trăm mét nó gần như không nhúc nhích.
+     *
+     * Nên: mây trời thì NHỎ, NHẠT, DẸT, và gần như đứng im. Mây to chỉ được vẽ
+     * ở đúng một chỗ — lúc mình chui qua tầng mây — vì ở đó nó mới thật sự ở
+     * cách mình vài mét, và ở đó nó mới có quyền lướt vụt qua. */
     function drawClouds() {
-        var zm = zoneMix();
-        var misty = zm.z.weather === 'mist' || zm.n.weather === 'mist';
         ctx.save();
         ctx.fillStyle = '#ffffff';
+
+        /* ---- lớp trời: xa hàng cây số ---- */
         for (var i = 0; i < 9; i++) {
-            var band = 900;
-            var s = 0.6 + hash2(i, 5) * 1.1;
-            var dp = (s - 0.6) / 1.1;                    // 0 xa nhất … 1 gần nhất
-            /* càng gần càng trượt theo máy quay nhiều */
-            var wy = ((hash2(i, 3) * band * 6) - G.camY * (0.22 + dp * 0.26)) % (band * 6);
-            wy = ((wy % (band * 6)) + band * 6) % (band * 6);
-            if (wy > H + 160) continue;
-            var span = W + 340;
-            var cx = ((hash2(i, 4) * span + G.t * (2.6 + dp * 6)) % span + span) % span - 170;
-            ctx.globalAlpha = misty ? 0.5 : 0.26;
-            puff(cx, wy, 62 * s);
+            var band = 2400;
+            var s = 0.30 + hash2(i, 5) * 0.34;           // bán kính 19 … 40
+            var dp = (s - 0.30) / 0.34;                  // 0 xa nhất … 1 đỡ xa
+            var wy = (((hash2(i, 3) * band) - G.camY * (0.05 + dp * 0.05)) % band + band) % band - 200;
+            if (wy > H + 140 || wy < -140) continue;
+            /* Cả bầu trời một chiều gió, vì gió là MỘT thứ — bản trước cho mỗi
+             * đám lắc lư quanh chỗ của nó bằng một hàm sin, nên chúng đứng yên
+             * tại chỗ mà rung, không đám nào đi đến đâu cả. */
+            var span = W + 300;
+            var cx = ((hash2(i, 4) * span + G.t * (1.5 + dp * 2.2)) % span + span) % span - 150;
+            ctx.globalAlpha = 0.13 + dp * 0.1;
+            puff(cx, wy, 62 * s, 0.5);
+        }
+
+        /* ---- lớp mình đang chui qua: chỉ ở tầng Cloudline ---- */
+        var mist = mistAmt();
+        if (mist > 0.01) {
+            for (var j = 0; j < 5; j++) {
+                var nb = 900;
+                var ny = (((hash2(j, 61) * nb) - G.camY * 0.85) % nb + nb) % nb - 240;
+                if (ny > H + 240 || ny < -240) continue;
+                var nx = hash2(j, 63) * (W + 400) - 200 + Math.sin(G.t * 0.06 + j) * 26;
+                ctx.globalAlpha = mist * (0.26 + hash2(j, 65) * 0.2);
+                puff(nx, ny, 120 + hash2(j, 67) * 80, 0.62);
+            }
         }
         ctx.restore();
     }
 
-    function puff(x, y, r) {
+    /* Đám mây: bốn khối tròn chồng lên nhau, rồi ép dẹt theo chiều đứng. Ép
+     * dẹt mới ra mây — nhìn từ dưới lên thì mây bao giờ cũng bè ngang, chỉ có
+     * đám ngay trên đầu mới thấy được chiều dày của nó. */
+    function puff(x, y, r, flat) {
+        var k = flat == null ? 1 : flat;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(1, k);
         ctx.beginPath();
-        ctx.arc(x, y, r * 0.62, 0, 6.284);
-        ctx.arc(x + r * 0.55, y + 6, r * 0.48, 0, 6.284);
-        ctx.arc(x - r * 0.58, y + 8, r * 0.42, 0, 6.284);
-        ctx.arc(x + r * 0.1, y - r * 0.32, r * 0.44, 0, 6.284);
+        ctx.arc(0, 0, r * 0.62, 0, 6.284);
+        ctx.arc(r * 0.55, 6, r * 0.48, 0, 6.284);
+        ctx.arc(-r * 0.58, 8, r * 0.42, 0, 6.284);
+        ctx.arc(r * 0.1, -r * 0.32, r * 0.44, 0, 6.284);
         ctx.fill();
+        ctx.restore();
     }
 
     function drawWeather() {
