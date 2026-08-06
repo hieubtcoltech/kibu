@@ -871,8 +871,11 @@
         g.addColorStop(0, s.top);
         g.addColorStop(0.62, s.mid);
         g.addColorStop(1, s.low);
+        /* Tô kín cả màn chứ không chỉ tới đường chân trời. Mặt đất vẽ sau và
+         * đè lên, nên phần dưới không bao giờ lộ ra — còn tô đúng tới chân
+         * trời thì hễ máy quay chúc lên là hở một dải chưa tô ở dưới. */
         ctx.fillStyle = g;
-        ctx.fillRect(0, 0, W, Math.max(0, hz + 30));
+        ctx.fillRect(0, 0, W, H);
 
         /* Mặt trời ở xa hàng trăm cây số nên nó gần như đứng yên — chỉ trượt
          * theo cú bẻ lái, đúng như nhìn từ buồng lái thật. */
@@ -899,8 +902,17 @@
 
     function drawGround() {
         var rt = G.route, s = skyOf();
-        var prevY = null;
 
+        /* THỢ SƠN: đi từ XA VỀ GẦN, mỗi dải tô từ đường chân trời của chính nó
+         * XUỐNG HẾT ĐÁY MÀN. Dải gần hơn nằm thấp hơn nên nó phủ lại phần
+         * dưới, chừa lại đúng phần trên của dải xa — và thế là đỉnh núi phía
+         * sau vẫn nhô lên trên sườn đồi phía trước, không cần bộ đệm chiều sâu
+         * nào cả.
+         *
+         * Bản đầu em tô ngược: chỉ tô khi dải mới CAO HƠN dải trước, mà đi từ
+         * xa về gần thì dải sau bao giờ cũng thấp hơn — nên dải xa nhất tô kín
+         * cả màn hình rồi mọi dải sau đó bị bỏ qua sạch. Nhìn ra thì mặt đất
+         * chiếm nửa trên còn bầu trời nằm dưới đáy: cả thế giới lộn ngược. */
         for (var i = BANDS; i >= 0; i--) {
             /* Chia khoảng cách theo luỹ thừa chứ không đều: gần thì cần dày
              * dải, xa thì mấy chục cây số dồn vào vài dải cũng không ai thấy. */
@@ -909,18 +921,13 @@
             var wx = cam.x + d;
             var g = R.groundAt(rt, wx);
             var p = proj(wx, g, cam.z);
-            if (!p) continue;
-            var y = p.y;
-            if (prevY == null) prevY = H + 40;
-            if (y < prevY) {
-                var seg = R.segmentAt(rt, wx);
-                var c = terrainColour(seg.seg.kind);
-                var col = seg.k > 0 ? mix(c[1], terrainColour(seg.next.kind)[1], seg.k) : c[1];
-                /* càng xa càng chìm vào màu trời */
-                ctx.fillStyle = mix(col, s.haze, haze(d) * 0.92);
-                ctx.fillRect(0, y - 1, W, prevY - y + 2);
-                prevY = y;
-            }
+            if (!p || p.y > H) continue;
+            var seg = R.segmentAt(rt, wx);
+            var c = terrainColour(seg.seg.kind);
+            var col = seg.k > 0 ? mix(c[1], terrainColour(seg.next.kind)[1], seg.k) : c[1];
+            /* càng xa càng chìm vào màu trời */
+            ctx.fillStyle = mix(col, s.haze, haze(d) * 0.92);
+            ctx.fillRect(0, p.y, W, H - p.y + 2);
         }
 
         drawGroundGrid();
@@ -1058,7 +1065,11 @@
             }
         } else if (o.kind === 'hills' || o.kind === 'mountains') {
             if (r1 > 0.3) {
-                var th = (70 + r2 * 90) * s;
+                /* Cây cao chừng hai mươi mét, không phải một trăm. Bản đầu em
+                 * để 70–160 m và trên màn chúng ra mấy cái nêm xanh to bằng
+                 * quả đồi — mắt mất luôn thước đo, không còn biết mình đang
+                 * bay cao hay thấp. */
+                var th = (17 + r2 * 15) * s;
                 ctx.fillStyle = o.kind === 'mountains' ? '#3f6b47' : '#2f7a3d';
                 ctx.beginPath();
                 ctx.moveTo(p.x, p.y - th);
@@ -1068,7 +1079,7 @@
             }
             if (o.kind === 'mountains' && o.g > 1250 && r2 > 0.55) {
                 ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                ctx.fillRect(p.x - 60 * s, p.y - 8 * s, 120 * s, 14 * s);
+                ctx.fillRect(p.x - 90 * s, p.y - 10 * s, 180 * s, 16 * s);
             }
         } else if (o.kind === 'coast') {
             ctx.fillStyle = 'rgba(255,255,255,0.65)';
