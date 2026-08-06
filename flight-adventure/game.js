@@ -2534,18 +2534,6 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-        ctx.lineWidth = clamp(W * 0.002, 1, 2.4);
-        for (var slab = 1; slab < 7; slab++) {
-            var st = slab / 7;
-            var y = topY + (bottomY - topY) * Math.pow(st, 1.45);
-            var half = topHalf + (bottomHalf - topHalf) * Math.pow(st, 1.08);
-            ctx.beginPath();
-            ctx.moveTo(center - half, y);
-            ctx.lineTo(center + half, y);
-            ctx.stroke();
-        }
-
         ctx.strokeStyle = 'rgba(235, 242, 248, 0.82)';
         ctx.lineWidth = clamp(W * 0.0026, 1.4, 3.2);
         ctx.beginPath();
@@ -2556,13 +2544,16 @@
         ctx.stroke();
 
         ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-        for (var i = 0; i < 7; i++) {
-            var t0 = 0.08 + i * 0.125;
-            var t1 = t0 + 0.056;
-            var y0 = topY + (bottomY - topY) * Math.pow(t0, 1.42);
-            var y1 = topY + (bottomY - topY) * Math.pow(t1, 1.42);
-            var w0 = clamp((topHalf + (bottomHalf - topHalf) * Math.pow(t0, 1.08)) * 0.11, 3, 18);
-            var w1 = clamp((topHalf + (bottomHalf - topHalf) * Math.pow(t1, 1.08)) * 0.11, 4, 22);
+        for (var i = 0; i < 8; i++) {
+            var t0 = 0.11 + i * 0.108;
+            var t1 = t0 + 0.046;
+            if (t0 > 0.94) break;
+            var y0 = topY + (bottomY - topY) * Math.pow(t0, 1.36);
+            var y1 = topY + (bottomY - topY) * Math.pow(t1, 1.36);
+            var half0 = topHalf + (bottomHalf - topHalf) * Math.pow(t0, 1.08);
+            var half1 = topHalf + (bottomHalf - topHalf) * Math.pow(t1, 1.08);
+            var w0 = clamp(half0 * 0.055, 2.2, 10);
+            var w1 = clamp(half1 * 0.055, 2.8, 12);
             ctx.beginPath();
             ctx.moveTo(center - w0, y0);
             ctx.lineTo(center + w0, y0);
@@ -2570,15 +2561,6 @@
             ctx.lineTo(center - w1, y1);
             ctx.closePath();
             ctx.fill();
-        }
-
-        var thresholdY = topY + (bottomY - topY) * 0.16;
-        var thresholdHalf = topHalf + (bottomHalf - topHalf) * Math.pow(0.16, 1.08);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.86)';
-        for (var m = -2; m <= 2; m++) {
-            if (m === 0) continue;
-            var markX = center + m * thresholdHalf * 0.18;
-            ctx.fillRect(markX - 2, thresholdY, 4, clamp(W * 0.012, 8, 18));
         }
 
         ctx.restore();
