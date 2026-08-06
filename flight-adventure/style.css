@@ -33,6 +33,12 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html {
+    overflow: hidden;
+    height: 100%;
+    width: 100%;
+}
+
 body {
     font-family: var(--font-main);
     background-color: var(--bg-dark);
@@ -41,7 +47,8 @@ body {
         radial-gradient(circle at 86% 20%, rgba(255, 215, 94, 0.13), rgba(255, 215, 94, 0) 46%),
         radial-gradient(circle at 50% 112%, rgba(111, 208, 140, 0.14), rgba(111, 208, 140, 0) 58%);
     color: #fff;
-    min-height: 100vh;
+    height: 100%;
+    width: 100%;
     overflow: hidden;
     display: flex;
     flex-direction: column;
