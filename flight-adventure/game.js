@@ -1460,7 +1460,7 @@
             ctx.globalAlpha = 0.34 * (1 - h * 0.85);
             ctx.fillStyle = '#123';
             ctx.beginPath();
-            ctx.ellipse(sp.x, sp.y, 46 * sp.s, 12 * sp.s, 0, 0, 6.284);
+            ctx.ellipse(sp.x, sp.y, 24 * sp.s, 6 * sp.s, 0, 0, 6.284);
             ctx.fill();
             ctx.restore();
         }
