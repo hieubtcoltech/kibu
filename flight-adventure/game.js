@@ -1252,11 +1252,15 @@
         var pts = [];
         var n = 18;
         var startX = arriving ? rw.x0 : rw.x0 - 500;
-        for (var i = 0; i <= n; i++) {
-            var wx = startX + (rw.x1 - startX) * (i / n);
-            var l = proj(wx, rw.y, -RW_HALF), r = proj(wx, rw.y, RW_HALF);
-            if (!l || !r) continue;
-            pts.push({ l: l, r: r, wx: wx });
+        var visStart = Math.max(startX, cam.x + R.NEAR);
+        var endX = rw.x1;
+        if (visStart < endX) {
+            for (var i = 0; i <= n; i++) {
+                var wx = visStart + (endX - visStart) * (i / n);
+                var l = proj(wx, rw.y, -RW_HALF), r = proj(wx, rw.y, RW_HALF);
+                if (!l || !r) continue;
+                pts.push({ l: l, r: r, wx: wx });
+            }
         }
         if (pts.length < 2) return;
 
