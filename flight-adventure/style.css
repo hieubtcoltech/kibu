@@ -37,9 +37,9 @@ body {
     font-family: var(--font-main);
     background-color: var(--bg-dark);
     background-image:
-        radial-gradient(circle at 16% 8%, rgba(58, 167, 224, 0.16), transparent 46%),
-        radial-gradient(circle at 86% 20%, rgba(255, 215, 94, 0.13), transparent 46%),
-        radial-gradient(circle at 50% 112%, rgba(111, 208, 140, 0.14), transparent 58%);
+        radial-gradient(circle at 16% 8%, rgba(58, 167, 224, 0.16), rgba(58, 167, 224, 0) 46%),
+        radial-gradient(circle at 86% 20%, rgba(255, 215, 94, 0.13), rgba(255, 215, 94, 0) 46%),
+        radial-gradient(circle at 50% 112%, rgba(111, 208, 140, 0.14), rgba(111, 208, 140, 0) 58%);
     color: #fff;
     min-height: 100vh;
     overflow: hidden;
