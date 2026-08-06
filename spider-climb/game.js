@@ -267,6 +267,12 @@
         laserCharge: function () { this.tone(600, 1700, 0.55, 'sawtooth', 0.02); },
         laserFire: function () { this.hit(0.2, 0.09, 2400, 'bandpass'); this.tone(1800, 400, 0.16, 'square', 0.035); },
         gust: function () { this.hit(0.85, 0.07, 700, 'bandpass'); },
+        /* Cánh chim bồ câu bung ra: hai tiếng phành phạch ngắn, đục, không có
+         * cao độ — nghe là biết có cái gì vừa bật lên khỏi gờ ngay cạnh mình. */
+        wings: function () {
+            this.hit(0.12, 0.075, 900, 'bandpass');
+            this.hit(0.14, 0.06, 700, 'bandpass', 0.11);
+        },
         thunder: function () { this.hit(0.9, 0.13, 260, 'lowpass'); },
         /* Tiếng nạp của tia nhắm vào mình: rít lên dần, nghe là biết ngẩng lên
          * tìm vòng sáng. Khác hẳn tiếng ục ục của sấm xa, để hai thứ không lẫn
@@ -369,6 +375,9 @@
 
     var parts = [];
     var pops = [];
+    /* Chim vừa bị đánh động khỏi gờ, đang bay ngang khe. Không phải hạt trang
+     * trí — chúng ĐỤNG được, xem stepFlock. */
+    var flock = [];
 
     function addPart(x, y, vx, vy, life, col, size, kind) {
         if (parts.length > 260) return;
@@ -424,7 +433,7 @@
 
         G.camY = P.y + H * R.CAM_ANCHOR;
         G.world.ensure(G.camY + H);
-        parts.length = 0; pops.length = 0;
+        parts.length = 0; pops.length = 0; flock.length = 0;
 
         G.phase = 'play';
         /* Nhả tiêu điểm khỏi cái nút vừa bấm.
@@ -1048,6 +1057,91 @@
         }
     }
 
+    /* ---- CHIM ĐẬU TRÊN GỜ ----------------------------------------------
+     *
+     * Gờ nào có chim, và mấy con: suy thẳng từ toạ độ. Chỗ vẽ và chỗ tính va
+     * chạm hỏi chung hàm này nên không bao giờ lệch nhau — con chim mắt thấy
+     * đúng là con chim vai đụng phải.
+     *
+     * Chúng đậu ở CẠNH NGOÀI của gờ, tức là ngay trên đường bay của người
+     * chơi, chứ không nép vào tường. Nép vào tường thì chúng chỉ là hình vẽ. */
+    function perchN(b) {
+        if (b.type !== 'ac' && b.type !== 'balcony') return 0;
+        if (hash2(Math.round(b.y0), 41) >= 0.4) return 0;
+        return 1 + Math.floor(hash2(Math.round(b.y0), 43) * 2);   // 1 hoặc 2 con
+    }
+
+    /* Đánh động cả ổ. Con chim rời gờ KHÔNG teo nhỏ bay vào chân trời — nó bật
+     * thẳng ra giữa khe, to bằng con chim bay ngang trong game, và xô được
+     * người chơi. Chim thật đậu ngay cạnh mà giật mình thì nó bay VÀO MẶT
+     * mình, chứ không lễ phép bay ra xa; còn đàn nhỏ tít ngoài trời kia mới là
+     * thứ để ngắm. Chúng chỉ XÔ chứ không giết: người chơi tự leo tới chỗ ấy,
+     * và cái giá phải trả là độ cao với chuỗi liên hoàn, không phải một mạng. */
+    function flushPerch(b) {
+        var n = perchN(b);
+        if (!n) return;
+        b.pij = 1;
+        var fx = G.world.wallX(b.side, (b.y0 + b.y1) / 2);
+        var dir = b.side === SIDE_L ? 1 : -1;          // hướng bung ra khỏi tường
+        for (var i = 0; i < n; i++) {
+            flock.push({
+                x: fx + dir * (16 + i * 15),
+                y: b.y1 + 6,
+                dir: dir,
+                /* Rùn người một nhịp trước khi bật lên. Không có nhịp này thì
+                 * con chim hiện ra giữa khe như từ trên trời rơi xuống; có nó
+                 * thì mắt kịp thấy "nó sắp bay" trước khi phải né. */
+                wait: 0.26 + i * 0.17,
+                t: 0,
+                vx: dir * (120 + i * 34),
+                vy: 130 - i * 26
+            });
+        }
+        Sfx.wings();
+        burst(fx + dir * 18, b.y1 + 6, 5, 'rgba(226,232,242,0.75)', 70, 'dust');
+    }
+
+    function stepFlock(dt) {
+        /* Đi ngang tầm gờ nào thì ổ chim trên gờ ấy bay lên. Quét cả mảng vật
+         * cản, nhưng prune giữ mảng ngắn và phép loại đầu tiên chỉ là một phép
+         * trừ, nên rẻ. */
+        var bs = G.world.blockers, i;
+        for (i = 0; i < bs.length; i++) {
+            var b = bs[i];
+            if (b.pij || Math.abs(b.y1 - P.y) > 170) continue;
+            if (!perchN(b)) continue;
+            if (Math.abs(P.x - G.world.wallX(b.side, (b.y0 + b.y1) / 2)) > 200) continue;
+            flushPerch(b);
+        }
+
+        for (i = flock.length - 1; i >= 0; i--) {
+            var f = flock[i];
+            f.t += dt;
+            if (f.wait > 0) { f.wait -= dt; continue; }
+
+            /* Mỗi cú đập cánh là một cú hẫng lên rồi trôi xuống, nên đường bay
+             * gợn sóng chứ không phải một đường thẳng kẻ bằng thước. */
+            f.vx += f.dir * 70 * dt;
+            f.x += f.vx * dt;
+            f.y += (f.vy + Math.sin(f.t * 9) * 60) * dt;
+
+            var e = gapEdges(f.y);
+            if (f.t > 5 || f.y > G.camY + 90 || f.y < G.camY - H - 90 ||
+                f.x < e.l - 90 || f.x > e.r + 90) { flock.splice(i, 1); continue; }
+
+            var d = Math.hypot(f.x - P.x, f.y - P.y);
+            if (d < 15 + R.PLAYER_R * 0.75) {
+                /* Chỗ hồi sinh được chọn theo mối nguy CỐ ĐỊNH, mà con chim thì
+                 * vừa mới bay tới — nên nó phải nể quãng bất tử, không thì có
+                 * lúc vừa sống lại đã bị xô ngay. */
+                if (P.state !== 'fall' && P.invuln <= 0) bumpOff('BIRD!');
+            } else if (d < 15 + R.PLAYER_R + R.NEAR_MISS_PX && !f.near) {
+                f.near = 1;
+                nearMiss(f.x, f.y);
+            } else if (d > 15 + R.PLAYER_R + R.NEAR_MISS_PX * 1.6) f.near = 0;
+        }
+    }
+
     /* Tia laser đang ở pha nào: 'off' | 'charge' | 'fire' */
     function laserPhase(m) {
         var t = ((G.hz / m.period) + m.phase) % 1;
@@ -1316,6 +1410,7 @@
         stepStorm(dt, d);
 
         stepMovers(dt * (G.power.slow > 0 ? 0.42 : 1));
+        stepFlock(dt * (G.power.slow > 0 ? 0.42 : 1));
         /* Nền gió đổi theo việc đang làm: bám tường thì chỉ là hơi thở của thành
          * phố, bò nhanh thì rít lên, còn rơi thì ù hẳn — và đó cũng chính là
          * TIẾNG BÁO RƠI mà bản thiết kế đòi, khỏi cần thêm tiếng nào nữa. */
@@ -1795,6 +1890,23 @@
         ctx.stroke();
     }
 
+    /* Chim cỡ GẦN: thân liền hai cánh quét về sau, vẽ một nét kín. Con chim
+     * bay ngang khe và con vừa bật khỏi gờ dùng chung hàm này, vì với người
+     * chơi chúng là một thứ — một con chim to chắn đường. Vẽ hai kiểu khác
+     * nhau thì con thứ hai trông như thứ trang trí, và người chơi không né. */
+    function bigBird(x, y, s, flap, col, beak) {
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.quadraticCurveTo(x - 15 * s, y - (12 + flap * 8) * s, x - 26 * s, y - 2 * s);
+        ctx.quadraticCurveTo(x - 14 * s, y + 3 * s, x, y + 4 * s);
+        ctx.quadraticCurveTo(x + 14 * s, y + 3 * s, x + 26 * s, y - 2 * s);
+        ctx.quadraticCurveTo(x + 15 * s, y - (12 + flap * 8) * s, x, y);
+        ctx.fill();
+        ctx.fillStyle = beak;
+        ctx.beginPath(); ctx.arc(x, y + s, 5 * s, 0, 6.284); ctx.fill();
+    }
+
     /* Đàn chim, máy bay đêm, và pháo hoa. Tất cả suy từ đồng hồ chứ không giữ
      * trạng thái — trừ pháo hoa, thứ duy nhất cần nhớ mình nổ lúc nào. */
     function drawSkyLife() {
@@ -2220,43 +2332,35 @@
             var dir = b.side === SIDE_L ? 1 : -1;
             var hh = yB - yA;
 
-            /* CHIM BỒ CÂU ĐẬU TRÊN GỜ, và bay tán loạn khi người nhện tới gần.
+            /* CHIM BỒ CÂU ĐẬU TRÊN GỜ.
              *
              * Chi tiết nhỏ nhất trong cả game, mà em nghĩ là đáng nhất: nó biến
              * cục điều hoà từ một khối chắn đường thành một chỗ có ai đó đang
              * sống. Và nó phản ứng với người chơi — thứ trang trí nào cũng đẹp,
              * nhưng thứ trang trí BIẾT có mình mới làm thành phố thành thật.
              *
-             * Con nào đậu ở đâu suy từ toạ độ nên không nhấp nháy, còn lúc bay
-             * đi thì nhớ vào chính vật cản ấy. Chúng không đụng vào ai. */
-            if ((b.type === 'ac' || b.type === 'balcony') && hash2(Math.round(b.y0), 41) < 0.4) {
-                if (b.pij == null) b.pij = 0;
-                if (!b.pij && Math.abs(P.y - b.y1) < 150 && Math.abs(P.x - fx) < 190) b.pij = G.t;
+             * Ở đây chỉ có phần ĐẬU. Lúc bay lên chúng rời khỏi vật cản, thành
+             * chim to bay giữa khe (flushPerch/drawFlock) — con chim rời gờ là
+             * một mối nguy, không phải một vệt trang trí teo dần. */
+            var np = perchN(b);
+            if (np && !b.pij) {
                 ctx.save();
-                ctx.strokeStyle = 'rgba(52,64,84,0.8)';
-                ctx.fillStyle = 'rgba(72,86,110,0.9)';
-                ctx.lineWidth = 2;
-                var np = 2 + Math.floor(hash2(Math.round(b.y0), 43) * 2);
+                ctx.fillStyle = 'rgba(72,86,110,0.92)';
                 for (var pI = 0; pI < np; pI++) {
-                    var pox = fx + dir * (14 + pI * 15);
+                    var pox = fx + dir * (16 + pI * 15);
                     var poy = yA - 5;
-                    if (b.pij) {
-                        /* bay vọt lên và tản ra */
-                        var fT = G.t - b.pij;
-                        if (fT > 2.2) continue;
-                        pox += dir * fT * (60 + pI * 26);
-                        poy -= fT * (90 + pI * 20);
-                        ctx.globalAlpha = clamp(1 - fT / 2.2, 0, 1) * 0.85;
-                        birdMark(pox, poy, 7, 0.4 + 0.6 * Math.abs(Math.sin(G.t * 16 + pI)));
-                    } else {
-                        ctx.globalAlpha = 0.9;
-                        ctx.beginPath();
-                        ctx.ellipse(pox, poy, 5, 4, 0, 0, 6.284);
-                        ctx.fill();
-                        ctx.beginPath();
-                        ctx.arc(pox + dir * 4, poy - 4, 2.4, 0, 6.284);
-                        ctx.fill();
-                    }
+                    /* Thỉnh thoảng rụt cổ một cái, lệch nhịp nhau — đứng im
+                     * tuyệt đối thì trông như hai hòn sỏi đặt trên gờ. */
+                    var bob = Math.sin(G.t * 1.7 + pI * 2.3) > 0.94 ? 1.5 : 0;
+                    ctx.beginPath();
+                    ctx.ellipse(pox, poy + bob, 6, 4.6, 0, 0, 6.284);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(pox + dir * 5, poy - 4 + bob, 2.8, 0, 6.284);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,176,58,0.9)';
+                    ctx.fillRect(pox + dir * 7, poy - 4.5 + bob, dir * 3, 1.6);
+                    ctx.fillStyle = 'rgba(72,86,110,0.92)';
                 }
                 ctx.restore();
             }
@@ -2388,17 +2492,7 @@
                     ctx.stroke();
                 }
             } else if (m.kind === 'bird') {
-                ctx.fillStyle = '#2c3444';
-                var flap = Math.sin(G.hz * 12) * 0.6;
-                ctx.beginPath();
-                ctx.moveTo(pos.x, py);
-                ctx.quadraticCurveTo(pos.x - 15, py - 12 - flap * 8, pos.x - 26, py - 2);
-                ctx.quadraticCurveTo(pos.x - 14, py + 3, pos.x, py + 4);
-                ctx.quadraticCurveTo(pos.x + 14, py + 3, pos.x + 26, py - 2);
-                ctx.quadraticCurveTo(pos.x + 15, py - 12 - flap * 8, pos.x, py);
-                ctx.fill();
-                ctx.fillStyle = '#ffb03a';
-                ctx.beginPath(); ctx.arc(pos.x, py + 1, 5, 0, 6.284); ctx.fill();
+                bigBird(pos.x, py, 1, Math.sin(G.hz * 12) * 0.6, '#2c3444', '#ffb03a');
             } else if (m.kind === 'debris') {
                 ctx.save();
                 ctx.translate(pos.x, py);
@@ -2468,6 +2562,34 @@
      * trọng: cái cửa sổ phải NẰM SẴN trên tường từ xa. Chỉ vẽ lúc hắn thò ra
      * thì đúng là bất ngờ thật, nhưng là kiểu bất ngờ của một cái bẫy hiện ra
      * từ hư không. Ở đây bất ngờ nằm ở chỗ không biết cửa sổ NÀO sẽ mở. */
+    /* Chim vừa bật khỏi gờ. Nhịp rùn người vẽ nguyên tư thế đậu nhưng cánh đã
+     * nhổm lên — người chơi đọc được "nó sắp bay" chứ không chỉ nghe thấy. */
+    function drawFlock() {
+        for (var i = 0; i < flock.length; i++) {
+            var f = flock[i];
+            var py = sy(f.y);
+            if (py < -70 || py > H + 70) continue;
+            if (f.wait > 0) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(72,86,110,0.92)';
+                var crouch = 1 - f.wait / 0.6;
+                ctx.beginPath();
+                ctx.ellipse(f.x, py + 1, 6.5, 4.2, 0, 0, 6.284); ctx.fill();
+                ctx.strokeStyle = 'rgba(72,86,110,0.92)';
+                ctx.lineWidth = 3; ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(f.x - 5, py);
+                ctx.lineTo(f.x - 2, py - 6 - crouch * 7);
+                ctx.moveTo(f.x + 5, py);
+                ctx.lineTo(f.x + 2, py - 6 - crouch * 7);
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                bigBird(f.x, py, 0.9, Math.sin(f.t * 15) * 0.75, '#3a4459', '#ffb03a');
+            }
+        }
+    }
+
     function drawThug(m) {
         var yy = sy(m.y + R.THUG_H / 2);
         if (yy < -90 || yy > H + 90) return;
@@ -2917,6 +3039,7 @@
         drawBlockers();
         drawPickups();
         drawMovers();
+        drawFlock();
         if (G.phase !== 'menu') drawPlayer();
         drawBolt();
         drawParticles();
@@ -3318,7 +3441,7 @@
          * 1 900 dòng vẽ mỗi giây sáu mươi lần thì thứ đáng sợ không phải luật
          * chơi sai, mà là một dòng ném lỗi ở khung hình thứ mười nghìn. */
         window.ClimbDebug = { G: G, P: P, tap: doJump, tapDir: doJumpTo, web: fireWeb,
-            start: startRun, R: R, pos: moverPos, hud: syncHud };
+            start: startRun, R: R, pos: moverPos, hud: syncHud, flock: flock, perchN: perchN };
 
         requestAnimationFrame(frame);
     }

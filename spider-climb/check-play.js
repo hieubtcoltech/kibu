@@ -243,6 +243,11 @@ function restOnPlainWall(maxFrames) {
 
 const deathBy = {};
 const seen = { jumped: 0, webbed: 0, caught: 0, fell: 0, bumped: 0, overs: 0 };
+/* Chim đậu trên gờ, bị đánh động thì bay ra giữa khe thành mối nguy XÔ được.
+ * Đo hai thứ: nó có bao giờ bay lên không, và lúc bay thì có bao giờ thật sự
+ * đứng chắn đường không — con chim bay ra mà không bao giờ cắt ngang lối leo
+ * thì vẫn chỉ là hình trang trí, dù có mã va chạm. */
+let flushSeen = 0, flushCross = 0, flockPrev = 0;
 let lastState = P.state;
 let botBlockedSeen = false, botHesitate = false;
 
@@ -333,6 +338,12 @@ for (let f = 0; f < FRAMES; f++) {
         if (!nanSeen) { nanSeen = true; fail(`khung hình ${f}: có NaN chui vào (x=${P.x} y=${P.y} score=${G.score} cam=${G.camY})`); }
         break;
     }
+    if (D.flock.length > flockPrev) flushSeen += D.flock.length - flockPrev;
+    flockPrev = D.flock.length;
+    for (const b of D.flock) {
+        if (b.wait <= 0 && Math.abs(b.y - P.y) < 90 && Math.abs(b.x - P.x) < 120) flushCross++;
+    }
+
     const m = (G.maxY - 900) / R.PX_PER_M;
     if (m > maxM) maxM = m;
     if (G.score > maxScore) maxScore = G.score;
@@ -359,6 +370,8 @@ ok(maxScore > 500, `điểm cao nhất mới ${Math.round(maxScore)}`);
 ok(drawCalls > 10000, `phần vẽ mới gọi ${drawCalls} lần — hình như không vẽ gì`);
 ok(seen.jumped > 20, `mới nhảy sang tường kia ${seen.jumped} lần`);
 ok(seen.fell > 0, 'chưa lần nào rơi — nhánh rơi và tự cứu chưa được soát');
+ok(flushSeen > 0, 'chưa con chim đậu nào bị đánh động — nhánh chim bay ra chắn đường chưa được soát');
+ok(flushCross > 0, 'chim có bay ra nhưng chưa lần nào cắt ngang lối leo — nó vẫn chỉ là hình trang trí');
 /* Con bọ không phải lúc nào cũng chết đủ ba lần trong quãng chơi ngắn, nên
  * nếu chưa hết mạng lần nào thì ép nó đi hết đường ấy. Việc cần soát là "hết
  * mạng thì có sang được màn kết thúc rồi chơi lại được không", chứ không phải
@@ -1186,6 +1199,7 @@ ok(getEl('hud-lives').innerHTML.length > 0, 'ô MẠNG trên bảng điểm tr�
 /* ------------------------------------------------------------------ *
  * KẾT QUẢ
  * ------------------------------------------------------------------ */
+console.log(`  chim đậu bị đánh động: ${flushSeen} con bay ra · ${flushCross} khung hình cắt ngang lối leo`);
 console.log(`  leo cao nhất ${Math.round(maxM)} m · điểm cao nhất ${Math.round(maxScore)}`);
 console.log(`  nhảy ${seen.jumped} · rơi ${seen.fell} · bám lại ${seen.caught} · bắn tơ ${seen.webbed} · hết mạng ${seen.overs}`);
 console.log('  chết vì: ' + (Object.keys(deathBy).length
