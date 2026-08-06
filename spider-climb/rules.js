@@ -150,6 +150,15 @@
     var WEB_MAX = 3;               // số lần bắn tơ giữ trong người
     var WEB_RECHARGE = 6.2;        // giây nạp lại một lần bắn
     var WEB_RANGE = 430;           // tầm bắn
+    /* Hồi sinh xong thì phía trên phải quang bấy nhiêu điểm ảnh.
+     *
+     * 300 là chừng một giây rưỡi leo lúc mới xuất phát. Đây không phải con số
+     * cho đẹp: chỗ hồi sinh chỉ cần "bám được" thôi thì có thể là chỗ ngay
+     * dưới một cục điều hoà — bám được thật, nhưng leo một cái là đâm, rơi
+     * tiếp, mất mạng tiếp. Mất mạng vì mình chơi dở thì chịu, mất mạng vì chỗ
+     * game đặt mình vào thì không ai chịu được. */
+    var RESPAWN_CLEAR = 300;
+
     var LIVES = 3;                 // số lần rơi được cứu trong một lượt
     var NEAR_MISS_PX = 46;         // sát bao nhiêu thì tính là "né sát"
 
@@ -1251,6 +1260,7 @@
         BOLT_GAP_MIN: BOLT_GAP_MIN, BOLT_GAP_MAX: BOLT_GAP_MAX, BOLT_GRACE: BOLT_GRACE,
         CRACK_HOLD: CRACK_HOLD, WEB_MAX: WEB_MAX, WEB_RECHARGE: WEB_RECHARGE,
         WEB_RANGE: WEB_RANGE, LIVES: LIVES, NEAR_MISS_PX: NEAR_MISS_PX,
+        RESPAWN_CLEAR: RESPAWN_CLEAR,
         SIDE_L: SIDE_L, SIDE_R: SIDE_R,
         ZONES: ZONES, zoneAt: zoneAt, zoneIndexAt: zoneIndexAt,
         difficulty: difficulty, curve: curve,

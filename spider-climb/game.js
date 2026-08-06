@@ -669,40 +669,94 @@
         toast(reason || 'Careful!');
     }
 
-    /* Đặt lại người chơi lên chỗ bám được gần nhất phía trên máy quay. Quét từ
-     * dưới lên để rơi lại đúng vào tầm nhìn — đặt bừa vào giữa màn thì có lúc
-     * rơi thẳng vào một mối nguy đang bay ngang, mà chết ngay sau khi hồi sinh
-     * là kiểu chết ức nhất. */
-    function respawn(soft) {
-        var base = G.camY - H * R.CAM_ANCHOR;
-        for (var dy = 0; dy < H * 0.8; dy += 12) {
-            for (var s = 0; s < 2; s++) {
-                var side = s === 0 ? SIDE_L : SIDE_R;
-                if (spotFree(side, base + dy) && !nearHazard(base + dy)) {
-                    P.side = side; P.y = base + dy;
-                    P.x = wallHold(side, P.y);
-                    P.state = 'cling'; P.vx = 0; P.vy = 0; P.crack = 0;
-                    P.face = side === SIDE_L ? 1 : -1;
-                    P.invuln = soft ? 2.6 : 2.2;
-                    P.web = Math.max(P.web, 1);
-                    return;
-                }
-            }
+    /* Leo lên từ (side, y) thì đi được bao xa mới vướng? Trả về tối đa
+     * RESPAWN_CLEAR — quá ngần ấy là đủ rồi, không cần đo tiếp.
+     *
+     * Tính cả mấy thứ không phải "vật cản" theo nghĩa hẹp nhưng vẫn chặn một
+     * quãng leo yên ổn: dây điện đang sống, gã đang thò ra, và MÉP TRÊN ô kính
+     * — hồi sinh ngay dưới mép kính thì leo hai bước là kính vỡ. */
+    function headroom(side, y) {
+        var w = G.world;
+        for (var d = 0; d <= R.RESPAWN_CLEAR; d += 12) {
+            var yy = y + d;
+            if (!spotFree(side, yy)) return d;
+            var sf = w.surfaceAt(side, yy);
+            if (sf && sf.kind === 'glass' && sf.y1 - yy < R.GLASS_WARN) return d;
+            if (sf && sf.kind === 'cracked' && d > 40) return d;
         }
-        /* Không tìm được chỗ nào sạch thì cứ đặt lên tường trái và bật miễn
-         * nhiễm dài hơn — thà bất thường một nhịp còn hơn kẹt vòng lặp. */
-        P.side = SIDE_L; P.y = base + 60; P.x = wallHold(SIDE_L, P.y);
-        P.state = 'cling'; P.vx = 0; P.vy = 0; P.invuln = 3;
+        return R.RESPAWN_CLEAR;
     }
 
-    function nearHazard(y) {
-        var mv = G.world.movers;
+    /* Đặt lại người chơi sau khi mất một mạng.
+     *
+     * Đây là chỗ anh Hiếu lo, và lo đúng: bản trước chỉ hỏi "điểm này có bám
+     * được không" rồi lấy điểm đầu tiên hợp lệ. Bám được ≠ đi tiếp được — nó
+     * có thể là chỗ ngay dưới một cục điều hoà, và người chơi leo một cái là
+     * đâm, rơi tiếp, mất mạng tiếp. Ba mạng bay trong sáu giây mà chẳng làm gì
+     * sai cả.
+     *
+     * Nay chỗ hồi sinh phải có ĐƯỜNG ĐI: quang ít nhất RESPAWN_CLEAR phía
+     * trên, không mối nguy nào lảng vảng gần. Quét cả hai tường, chấm điểm,
+     * lấy chỗ tốt nhất — và nếu cả màn không có chỗ nào đủ tốt thì vẫn lấy chỗ
+     * tốt nhất trong số đã xét, chứ không thả bừa lên tường trái như trước. */
+    function respawn(soft) {
+        var base = G.camY - H * R.CAM_ANCHOR;
+        var best = null;
+        for (var dy = -60; dy < H * 0.72; dy += 12) {
+            for (var s = 0; s < 2; s++) {
+                var side = s === 0 ? SIDE_L : SIDE_R;
+                var y = base + dy;
+                if (!spotFree(side, y)) continue;
+                var room = headroom(side, y);
+                var danger = hazardNear(side, y);
+                /* Điểm: đường đi là chính, mối nguy trừ nặng, và hơi nghiêng về
+                 * chỗ thấp để người chơi còn thấy đường phía trên mình. */
+                var score = room - danger * 260 - Math.abs(dy) * 0.12;
+                if (!best || score > best.score) {
+                    best = { side: side, y: y, score: score, room: room };
+                }
+                /* đủ tốt rồi thì thôi, khỏi quét nốt màn hình */
+                if (room >= R.RESPAWN_CLEAR && !danger) { best.done = true; break; }
+            }
+            if (best && best.done) break;
+        }
+        if (!best) best = { side: SIDE_L, y: base + 60, room: 0 };
+
+        P.side = best.side;
+        P.y = best.y;
+        P.x = wallHold(best.side, P.y);
+        P.state = 'cling'; P.vx = 0; P.vy = 0; P.crack = 0;
+        P.glassOn = null; P.glassT = 0;
+        P.face = best.side === SIDE_L ? 1 : -1;
+        /* Chỗ càng chật thì càng cho thêm thời gian miễn nhiễm */
+        P.invuln = (soft ? 2.6 : 2.2) + (best.room < R.RESPAWN_CLEAR ? 1.2 : 0);
+        /* Luôn còn ít nhất một lần bắn tơ để tự cứu. Hết tơ mà vừa hồi sinh
+         * xong lại rơi thì không còn cách nào thoát, và đó đúng là cái vòng
+         * lặp cần chặn. */
+        P.web = Math.max(P.web, 1);
+        P.webT = 0;
+        /* Huỷ tia sét đang nhắm và dời tia kế tiếp ra xa: vừa đứng dậy đã bị
+         * sét đón sẵn thì oan quá. */
+        G.bolt = null;
+        G.boltT = Math.max(G.boltT, R.BOLT_GRACE);
+    }
+
+    /* Có mối nguy nào lảng vảng quanh chỗ này không. Rộng tay hơn hẳn phép va
+     * chạm — ở đây thà bỏ qua một chỗ đứng tốt còn hơn thả người chơi xuống
+     * ngay trước mũi một con máy bay. */
+    function hazardNear(side, y) {
+        var mv = G.world.movers, n = 0;
         for (var i = 0; i < mv.length; i++) {
             var m = mv[i];
-            var my = m.y != null ? m.y : (m.y0 + m.y1) / 2;
-            if (Math.abs(my - y) < 90 && !m.dead) return true;
+            if (m.dead) continue;
+            var my = m.y != null ? m.y : (m.ry != null ? m.ry : (m.y0 + m.y1) / 2);
+            if (Math.abs(my - y) > 200) continue;
+            /* mấy đứa bám tường chỉ đáng ngại nếu ở cùng bên */
+            if ((m.kind === 'thug' || m.kind === 'sentry' || m.kind === 'platform' ||
+                 m.kind === 'rival' || m.kind === 'swing') && m.side !== side) continue;
+            n++;
         }
-        return false;
+        return n;
     }
 
     /* ---- bắn tơ ---- */

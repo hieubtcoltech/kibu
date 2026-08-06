@@ -825,7 +825,76 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 12. NGỒI YÊN THÌ PHẢI CHẾT
+ * 12. HỒI SINH XONG PHẢI CÒN ĐƯỜNG ĐI
+ *     Anh Hiếu lo đúng chỗ: chỗ hồi sinh chỉ "bám được" thôi thì có thể là chỗ
+ *     ngay dưới một cục điều hoà — leo một cái là đâm, rơi tiếp, mất mạng
+ *     tiếp, ba mạng bay trong sáu giây mà chẳng làm gì sai cả.
+ *
+ *     Phép soát này dựng hẳn một bức tường dày đặc vật cản rồi ném người nhện
+ *     xuống vực, nhiều lần liền, và hỏi hai câu: chỗ nó đứng dậy có quang phía
+ *     trên không, và cứ để yên thì nó có leo được một quãng tử tế không.
+ * ------------------------------------------------------------------ */
+{
+    getEl('btn-play').dispatch('click');
+    step(20);
+
+    const y0 = P.y;
+    const w = G.world;
+    w.blockers.length = 0;
+    w.surfaces.length = 0;
+    w.movers.length = 0;
+    w.cursor = y0 + 20000;                 // khoá bộ sinh, tự bày trận
+
+    /* Rải vật cản so le dày nhất mức luật cho phép, suốt hai màn hình. Đây là
+     * trường hợp xấu nhất mà màn thật có thể sinh ra. */
+    let side = 0;
+    for (let yy = y0 - 400; yy < y0 + 1800; yy += 200) {
+        if (w.blocker(side, yy, 120, 'ac')) side = 1 - side;
+    }
+    const planted = w.blockers.length;
+    ok(planted >= 4, `chỉ bày được ${planted} vật cản, chưa đủ để thử`);
+
+    let worst = Infinity, loops = 0;
+    for (let round = 0; round < 6; round++) {
+        G.lives = 9;
+        P.invuln = 0;
+        P.web = R.WEB_MAX;
+        P.y = G.camY - 960 - 80;           // ném thẳng ra khỏi đáy màn
+        P.state = 'fall';
+        step(1);                            // mất một mạng rồi hồi sinh
+
+        ok(P.state === 'cling', 'hồi sinh xong mà không bám vào tường nào');
+
+        /* (a) chỗ đứng dậy phải quang phía trên */
+        let room = 0;
+        for (let d = 0; d <= R.RESPAWN_CLEAR; d += 12) {
+            if (!w.canCling(P.side, P.y + d)) break;
+            room = d;
+        }
+        if (room < worst) worst = room;
+
+        /* (b) để yên thì phải leo được, không được rơi lại ngay */
+        const yStart = P.y;
+        let fellAgain = false;
+        for (let i = 0; i < 90; i++) {      // một giây rưỡi, không bấm gì cả
+            step(1);
+            if (P.state === 'fall') { fellAgain = true; break; }
+        }
+        if (fellAgain) loops++;
+        ok(!fellAgain,
+            `hồi sinh xong, không bấm gì mà đã rơi lại — đúng cái vòng lặp cần chặn (lần ${round + 1})`);
+        ok(P.y > yStart, `hồi sinh xong mà không leo lên được (lần ${round + 1})`);
+    }
+    ok(worst >= R.RESPAWN_CLEAR - 24,
+        `có lần hồi sinh chỉ còn ${worst} điểm ảnh quang phía trên, cần ${R.RESPAWN_CLEAR}`);
+    console.log(`  hồi sinh giữa ${planted} vật cản: quang ít nhất ${worst} điểm ảnh · rơi lại ${loops}/6 lần`);
+
+    if (G.phase === 'over') getEl('btn-over-menu').dispatch('click');
+    else getEl('btn-nav-menu').dispatch('click');
+}
+
+/* ------------------------------------------------------------------ *
+ * 13. NGỒI YÊN THÌ PHẢI CHẾT
  *    Nghe buồn cười nhưng đây là phép soát "game có ăn thua thật không".
  *    Không bấm gì mà vẫn leo mãi thì mọi thứ còn lại đều vô nghĩa.
  * ------------------------------------------------------------------ */
@@ -841,7 +910,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 13. BA CHẾ ĐỘ
+ * 14. BA CHẾ ĐỘ
  * ------------------------------------------------------------------ */
 [['btn-play', 'endless'], ['btn-daily', 'daily'], ['btn-hardcore', 'hardcore']].forEach(([btn, mode]) => {
     getEl(btn).dispatch('click');
@@ -865,7 +934,7 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
 }
 
 /* ------------------------------------------------------------------ *
- * 14. CỬA HÀNG VÀ NHIỆM VỤ
+ * 15. CỬA HÀNG VÀ NHIỆM VỤ
  * ------------------------------------------------------------------ */
 {
     getEl('btn-over-menu').dispatch('click');
