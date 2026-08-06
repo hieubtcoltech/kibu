@@ -2149,6 +2149,9 @@
             
             // Vẽ rada 4 hướng chỉ thị góc bay của máy bay
             if (G.phase === 'fly' || G.phase === 'pause') drawRadarCompass();
+
+            // Vẽ hướng dẫn lệch hướng đường bay hỗ trợ bé tự bẻ lái
+            if (G.phase === 'fly') drawNavigationGuidance();
         } else {
             drawMenuScene();
         }
@@ -2158,6 +2161,61 @@
             ctx.fillStyle = 'rgba(255,255,255,' + (G.flash * 0.75) + ')';
             ctx.fillRect(0, 0, W, H);
         }
+    }
+
+    function drawNavigationGuidance() {
+        var devZ = P.z;
+        var devH = P.heading;
+        
+        var needTurnLeft = false;
+        var needTurnRight = false;
+        
+        // Nếu lệch quá xa làn đường trung tâm (Z = 0) hoặc góc lái quay quá sâu
+        if (devZ < -800 || devH < -0.26) {
+            needTurnRight = true;
+        } else if (devZ > 800 || devH > 0.26) {
+            needTurnLeft = true;
+        }
+        
+        if (!needTurnLeft && !needTurnRight) return;
+        
+        ctx.save();
+        
+        var flash = Math.abs(Math.sin(G.t * 4.5));
+        var label = "";
+        var arrow = "";
+        
+        if (needTurnRight) {
+            label = isVi() ? "RẼ PHẢI ĐỂ QUAY LẠI ĐƯỜNG BAY" : "TURN RIGHT TO RETURN TO ROUTE";
+            arrow = "▶▶▶";
+        } else {
+            label = isVi() ? "RẼ TRÁI ĐỂ QUAY LẠI ĐƯỜNG BAY" : "TURN LEFT TO RETURN TO ROUTE";
+            arrow = "◀◀◀";
+        }
+        
+        ctx.font = '800 9.5px Nunito, sans-serif';
+        ctx.textAlign = 'center';
+        
+        var fullText = needTurnRight ? (label + " " + arrow) : (arrow + " " + label);
+        var tw = ctx.measureText(fullText).width;
+        
+        var ly = 168; // Nằm phía trên bảng điều khiển lái
+        var lx = W / 2;
+        
+        // Vẽ thẻ hướng dẫn bo góc mờ ảo
+        ctx.fillStyle = 'rgba(7, 18, 30, 0.85)';
+        ctx.strokeStyle = needTurnRight ? 'rgba(34, 197, 94, ' + (0.3 + flash * 0.7) + ')' : 'rgba(56, 189, 248, ' + (0.3 + flash * 0.7) + ')';
+        ctx.lineWidth = 1.5;
+        roundRect(ctx, lx - tw / 2 - 14, ly - 14, tw + 28, 20, 6);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Màu chữ nổi bật nhấp nháy
+        ctx.fillStyle = needTurnRight ? '#4ade80' : '#38bdf8'; // màu xanh lá cho rẽ phải, xanh dương cho rẽ trái
+        if (flash > 0.5) ctx.fillStyle = '#ffffff';
+        
+        ctx.fillText(fullText, lx, ly + 2);
+        ctx.restore();
     }
 
     function drawRain(stormWeight) {
