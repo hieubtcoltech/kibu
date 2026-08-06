@@ -18,7 +18,6 @@
 
     var R = window.FlightRules;
     var W = R.W, H = R.H;
-    var PPM = R.PPM, VPM = R.VPM, GROUND_Y = R.GROUND_Y;
 
     function el(id) { return document.getElementById(id); }
     function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
@@ -265,6 +264,9 @@
 
     var P = {
         x: 0,                 // mét dọc tuyến
+        z: 0,                 // mét lệch sang hai bên trục tuyến
+        vz: 0,                // tốc độ lệch ngang
+        turn: 0,              // -1…1, nút trái phải đang giữ
         alt: 0,               // mét trên mực nước biển
         spd: 0,               // m/s
         throttle: 0,          // 0…1, ga người chơi đặt
@@ -276,7 +278,7 @@
         /* Nút nào đang được giữ. Khai ở đây chứ không gắn thêm dọc đường —
          * một biến chỉ hiện ra khi ai đó bấm nút là một biến không ai đọc nổi
          * bằng cách nhìn vào chỗ khai trạng thái. */
-        pitchHeld: false, thrUp: 0, thrDn: 0
+        pitchHeld: false, turnHeld: false, thrUp: 0, thrDn: 0
     };
 
     var parts = [];
@@ -336,6 +338,7 @@
         P.x = rw.x0 + 120;
         P.alt = rw.y;
         P.spd = 0;
+        P.z = 0; P.vz = 0; P.turn = 0; P.turnHeld = false;
         P.throttle = 0;
         P.pitch = 0;
         P.vs = 0; P.bank = 0;
@@ -346,6 +349,8 @@
          * tuyến thứ hai thêm vào là thanh hành trình tự nói đúng tên. */
         el('pg-from').textContent = name(G.route.fromCity);
         el('pg-to').textContent = name(G.route.toCity);
+
+        snapCam();
 
         showScreen(null);
         el('hud').hidden = false;
@@ -453,6 +458,30 @@
         P.alt += P.vs * dt;
         P.x += P.spd * dt;
 
+        /* ---- BẺ SANG TRÁI PHẢI ----
+         *
+         * Chiều thứ ba, và là lý do cả phần nhìn được làm lại. Trước đây trái
+         * phải không có chỗ nào để đi; nay nó đi thật, và vòng mây thì nằm rải
+         * hai bên nên muốn xuyên qua là phải bẻ lái.
+         *
+         * Trên mặt đất thì bánh xe giữ máy bay trên đường băng — lăn ngang ra
+         * bãi cỏ không phải là thứ một đứa bé cần học. */
+        var wantVZ = P.onGround ? 0 : P.turn * R.LAT_SPEED * clamp(P.spd / R.SPD_CRUISE, 0.3, 1);
+        P.vz = lerp(P.vz, wantVZ, clamp(dt * R.LAT_EASE, 0, 1));
+        P.z += P.vz * dt;
+        if (!G.auto && !P.turnHeld) P.turn = lerp(P.turn, 0, clamp(dt * R.LEVEL_EASE, 0, 1));
+
+        /* Ra quá xa thì trò chơi nhẹ nhàng đẩy về, và nói một câu. Bản mô tả
+         * viết "the game gently turns the plane back" — chữ đáng giá nhất
+         * trong câu ấy là "gently": không chặn cứng, không quay ngoắt, chỉ là
+         * một bàn tay đặt lên cánh. */
+        if (Math.abs(P.z) > R.LAT_MAX) {
+            var over = Math.abs(P.z) - R.LAT_MAX;
+            P.z -= (P.z > 0 ? 1 : -1) * Math.min(over, 90 * dt);
+            P.vz = lerp(P.vz, (P.z > 0 ? -1 : 1) * 40, clamp(dt * 2, 0, 1));
+            say('far', T('Let us turn back towards the route.'), 2.6);
+        }
+
         /* Buông tay thì cần lái tự về giữa */
         if (!G.auto && !P.pitchHeld) P.pitch = lerp(P.pitch, 0, clamp(dt * R.LEVEL_EASE, 0, 1));
 
@@ -541,6 +570,7 @@
         if (P.alt > R.ALT_MAX) { P.alt = R.ALT_MAX; if (P.vs > 0) P.vs = 0; }
 
         stepLeg(dt, dep, arr);
+        stepCam(dt);
         stepPickups();
         stepParticles(dt);
 
@@ -548,8 +578,11 @@
         var f = clamp(P.spd / R.SPD_MAX, 0, 1);
         Sfx.engine(0.02 + 0.055 * f, 280 + 620 * f, 52 + 46 * f);
 
-        /* độ nghiêng vẽ ra: suy từ tốc độ lên xuống, không phải một biến riêng */
-        P.bank = lerp(P.bank, clamp(P.vs / R.CLIMB_RATE, -1, 1), clamp(dt * 4, 0, 1));
+        /* Độ nghiêng cánh suy từ tốc độ LỆCH NGANG, không phải một biến riêng.
+         * Máy bay thật nghiêng cánh để rẽ, nên cú nghiêng chính là cú rẽ đang
+         * diễn ra — vẽ nó bằng một biến riêng thì có ngày hai thứ lệch nhau và
+         * mắt thấy máy bay nghiêng sang trái mà nó bay sang phải. */
+        P.bank = lerp(P.bank, clamp(P.vz / R.LAT_SPEED, -1, 1), clamp(dt * 4, 0, 1));
 
         syncHud(false);
     }
@@ -583,6 +616,9 @@
         }
         var err = wantAlt - P.alt;
         P.pitch = clamp(err / 260, -1, 1);
+        /* Tự lái thì cũng tự về trục tuyến — hạ cánh mà lệch ba cây số sang
+         * bên thì không thấy đường băng đâu cả. */
+        P.turn = clamp(-P.z / 600, -1, 1);
     }
 
     /* ---- các chặng của chuyến bay ---- */
@@ -690,7 +726,7 @@
         G.shake = 9;
         P.gear = true;
         Sfx.touchdown();
-        burst(W * R.PLANE_SX, GROUND_Y - gnd * VPM, 14, 'rgba(255,255,255,0.8)', 130);
+        burst(W / 2, H * 0.62, 14, 'rgba(255,255,255,0.8)', 130);
         say('down', T('Great! We are on the runway.'), 3);
         el('btn-land').hidden = true;
     }
@@ -702,18 +738,18 @@
             if (G.ringDone[i]) continue;
             o = R.ringAt(rt, i);
             if (!o || Math.abs(o.x - P.x) > 400) continue;
-            if (R.hitPx(o.x - P.x, o.alt - P.alt, R.RING_PX)) {
+            if (R.hitBall(o.x - P.x, o.alt - P.alt, o.z - P.z, R.RING_R)) {
                 G.ringDone[i] = 1;
                 G.rings++;
                 Sfx.ring();
-                burst(W * R.PLANE_SX, GROUND_Y - P.alt * VPM, 16, 'rgba(150,230,255,0.9)', 150);
+                burst(W / 2, H * 0.5, 16, 'rgba(150,230,255,0.9)', 150);
             }
         }
         for (i = 0; i < R.starCount(rt); i++) {
             if (G.starDone[i]) continue;
             o = R.starAt(rt, i);
             if (!o || Math.abs(o.x - P.x) > 300) continue;
-            if (R.hitPx(o.x - P.x, o.alt - P.alt, R.STAR_PX)) {
+            if (R.hitBall(o.x - P.x, o.alt - P.alt, o.z - P.z, R.STAR_PICK)) {
                 G.starDone[i] = 1;
                 G.stars++;
                 Sfx.star(G.stars);
@@ -757,149 +793,193 @@
     }
 
     /* ========================================================================
-     *  8. TOẠ ĐỘ MÀN HÌNH
+     *  8. MÁY QUAY BÁM ĐUÔI VÀ PHÉP CHIẾU
+     * ------------------------------------------------------------------------
+     *  Máy quay ngồi chếch trên và sau đuôi máy bay, nhìn về phía trước. Cả
+     *  trò chơi — mặt đất, nhà cửa, vòng mây, chính chiếc máy bay — đi qua
+     *  đúng MỘT phép chiếu ở đây.
+     *
+     *  Một phép chiếu duy nhất là chuyện sống còn, không phải chuyện gọn gàng:
+     *  hai phép thì có ngày vật này trông như ở trước vật kia mà mã lại tính
+     *  nó ở sau, và không ai tìm ra vì sao.
      * ======================================================================*/
-    function sx(x) { return (x - P.x) * PPM + W * R.PLANE_SX; }
-    function sy(alt) { return GROUND_Y - alt * VPM; }
+    var cam = { x: 0, alt: 0, z: 0, pitch: 0 };
+
+    /* Đặt máy quay đúng chỗ ngay lập tức, không bám mềm. Dùng lúc bắt đầu
+     * chuyến và lúc dựng màn chờ — không có nó thì khung hình đầu tiên máy
+     * quay còn nằm ở gốc toạ độ và cả thế giới vụt vào chỗ từ hư không. */
+    function snapCam() {
+        cam.x = P.x - R.CAM_BACK;
+        cam.alt = P.alt + R.CAM_UP;
+        cam.z = P.z * 0.82;
+        cam.pitch = 0;
+    }
+
+    function stepCam(dt) {
+        var back = R.CAM_BACK, up = R.CAM_UP;
+        cam.x = P.x - back;
+        /* Máy quay bám mềm theo độ cao và độ lệch chứ không dính cứng. Dính
+         * cứng thì bẻ lái một cái là cả thế giới giật sang bên; bám mềm thì
+         * máy bay nhích ra khỏi giữa màn một chút rồi máy quay đuổi theo, và
+         * chính cái nhích ấy mới cho mắt thấy là mình VỪA BẺ LÁI. */
+        var k = clamp(dt * 3.2, 0, 1);
+        cam.alt = lerp(cam.alt, P.alt + up, k);
+        cam.z = lerp(cam.z, P.z * 0.82, k);
+        /* Chúc máy quay theo tốc độ lên xuống: leo lên thì thấy nhiều trời
+         * hơn, chúc xuống thì thấy nhiều đất hơn. */
+        cam.pitch = lerp(cam.pitch, clamp(P.vs / R.CLIMB_RATE, -1, 1) * 46, k);
+    }
+
+    function horizonY() { return R.HORIZON + cam.pitch; }
+
+    /* Chiếu một điểm thế giới (x dọc tuyến, alt độ cao, z lệch ngang) lên màn.
+     * Trả null nếu nó ở sau lưng máy quay. */
+    function proj(x, alt, z) {
+        var d = x - cam.x;
+        if (d < R.NEAR) return null;
+        var s = R.FOCAL / d;
+        return {
+            x: W / 2 + (z - cam.z) * s,
+            y: horizonY() + (cam.alt - alt) * s,
+            s: s, d: d
+        };
+    }
+
+    /* Sương mù theo khoảng cách: xa thì nhạt dần về màu trời. Không có nó thì
+     * ngọn núi cách hai mươi cây số vẫn đậm y như cái nhà ngay dưới cánh, và
+     * mắt mất hẳn cảm giác xa gần. */
+    function haze(d) { return clamp((d - 2200) / (R.VIEW_FAR - 2200), 0, 1); }
 
     /* ========================================================================
      *  9. VẼ
      * ======================================================================*/
 
-    /* Bảng màu của bầu trời theo giờ trong ngày. Buổi sáng cho tuyến đầu —
-     * bản mô tả đòi "bright and friendly", mà sáng sớm là thứ ánh sáng duy
-     * nhất vừa sáng vừa dịu. */
+    /* Bảng màu bầu trời theo giờ trong ngày. Buổi sáng cho tuyến đầu — bản mô
+     * tả đòi "bright and friendly", mà sáng sớm là thứ ánh sáng duy nhất vừa
+     * sáng vừa dịu. */
     var SKIES = {
-        morning: { top: '#3ea8e5', mid: '#9fd8f2', low: '#ffe6c2', sun: '#fff3c4', sunY: 0.42 },
-        sunset: { top: '#3a3d7a', mid: '#e8756b', low: '#ffc978', sun: '#fff0b0', sunY: 0.62 }
+        morning: { top: '#2f8fd8', mid: '#8ed2f0', low: '#dff0f7', haze: '#dff0f7', sun: '#fff3c4' },
+        sunset: { top: '#3a3d7a', mid: '#e8756b', low: '#ffc978', haze: '#ffd9a8', sun: '#fff0b0' }
     };
 
     function skyOf() { return SKIES[G.route ? G.route.sky : 'morning'] || SKIES.morning; }
 
     function drawSky() {
         var s = skyOf();
-        var g = ctx.createLinearGradient(0, 0, 0, GROUND_Y);
+        var hz = horizonY();
+        var g = ctx.createLinearGradient(0, -60, 0, hz + 30);
         g.addColorStop(0, s.top);
-        g.addColorStop(0.55, s.mid);
+        g.addColorStop(0.62, s.mid);
         g.addColorStop(1, s.low);
         ctx.fillStyle = g;
-        ctx.fillRect(0, 0, W, GROUND_Y + 4);
+        ctx.fillRect(0, 0, W, Math.max(0, hz + 30));
 
-        /* Mặt trời đứng gần yên một chỗ — nó ở xa hàng trăm cây số, nên bay
-         * hai mươi sáu cây số thì nó nhích được đúng một tí. */
-        var sunX = W * 0.78 - (P.x / G.route.len) * 90;
-        var sunY = GROUND_Y * s.sunY;
-        var gg = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 190);
+        /* Mặt trời ở xa hàng trăm cây số nên nó gần như đứng yên — chỉ trượt
+         * theo cú bẻ lái, đúng như nhìn từ buồng lái thật. */
+        var sunX = W * 0.74 - cam.z * 0.012;
+        var sunY = hz - 118;
+        var gg = ctx.createRadialGradient(sunX, sunY, 8, sunX, sunY, 200);
         gg.addColorStop(0, 'rgba(255,247,214,0.95)');
-        gg.addColorStop(0.3, 'rgba(255,240,180,0.35)');
+        gg.addColorStop(0.32, 'rgba(255,240,180,0.32)');
         gg.addColorStop(1, 'rgba(255,240,180,0)');
         ctx.fillStyle = gg;
-        ctx.fillRect(sunX - 190, sunY - 190, 380, 380);
+        ctx.fillRect(sunX - 200, sunY - 200, 400, 400);
         ctx.fillStyle = s.sun;
-        ctx.beginPath(); ctx.arc(sunX, sunY, 30, 0, 6.284); ctx.fill();
-    }
-
-    /* Mây ba lớp. Lớp xa gần như đứng im, lớp gần lướt qua nhanh — cùng một
-     * cơn gió, khác nhau ở khoảng cách. Đây là thứ duy nhất nói cho mắt biết
-     * bầu trời có CHIỀU SÂU, mà không có chiều sâu thì bay như trượt trên
-     * một tấm giấy dán tường. */
-    function drawClouds(layer) {
-        var par = [0.10, 0.28, 0.62][layer];
-        var n = [7, 6, 4][layer];
-        var scale = [0.55, 0.85, 1.35][layer];
-        var alpha = [0.42, 0.62, 0.9][layer];
-        var band = 15000;
-        ctx.save();
-        ctx.fillStyle = '#ffffff';
-        for (var i = 0; i < n * 3; i++) {
-            var cx0 = hash(i, layer * 7 + 1) * band;
-            var wx = ((cx0 - P.x * par) % band + band) % band;
-            var px = (wx - band / 2) * PPM * 0.55 + W / 2;
-            if (px < -320 || px > W + 320) continue;
-            var alt = 900 + hash(i, layer * 7 + 2) * 2300;
-            var py = sy(alt) - layer * 6;
-            if (py < -160 || py > GROUND_Y) continue;
-            ctx.globalAlpha = alpha;
-            puff(px, py, 46 * scale * (0.7 + hash(i, layer + 5) * 0.7));
-        }
-        ctx.restore();
-    }
-
-    function puff(x, y, r) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.scale(1, 0.52);
-        ctx.beginPath();
-        ctx.arc(0, 0, r * 0.62, 0, 6.284);
-        ctx.arc(r * 0.6, 8, r * 0.46, 0, 6.284);
-        ctx.arc(-r * 0.62, 10, r * 0.42, 0, 6.284);
-        ctx.arc(r * 0.08, -r * 0.34, r * 0.46, 0, 6.284);
-        ctx.fill();
-        ctx.restore();
+        ctx.beginPath(); ctx.arc(sunX, sunY, 28, 0, 6.284); ctx.fill();
     }
 
     /* ---- MẶT ĐẤT ----
-     * Vẽ theo cột, mỗi cột rộng 10 điểm ảnh, hỏi thẳng groundAt(). Không giữ
-     * mảng đỉnh núi nào cả: cùng một hàm sinh ra hình vẽ và cùng hàm ấy quyết
-     * định máy bay có va không, nên mắt và mã không bao giờ lệch nhau. */
-    var TERRAIN_COL = 10;
+     * Vẽ thành từng dải ngang theo KHOẢNG CÁCH: dải xa mỏng, dải gần dày, đúng
+     * như phối cảnh sinh ra. Mỗi dải hỏi thẳng groundAt() ở quãng ấy, nên hình
+     * vẽ và chỗ máy bay va chạm là cùng một con số.
+     *
+     * Đi từ xa về gần để dải gần đè lên dải xa — không có thứ tự ấy thì đỉnh
+     * núi phía sau chồng lên sườn đồi phía trước. */
+    var BANDS = 46;
 
-    /* Màu mặt đất từng vùng: đỉnh sáng, chân tối. Thành phố KHÔNG phải màu
-     * xám bê-tông — nhìn từ trên cao xuống một thành phố Việt Nam thì thứ
-     * chiếm gần hết mặt đất vẫn là cây và ruộng, nhà chỉ là mấy chấm mọc lên
-     * giữa đó. Bản đầu em tô xám cả dải, và trên máy thật nó ra một tấm bê-tông
-     * trải dài từ Hà Nội tới Đà Nẵng. */
-    function terrainColour(kind) {
-        return {
-            city: ['#a9c19a', '#6d8f68'],
-            fields: ['#a8dc7c', '#5fa246'],
-            hills: ['#7cc667', '#3f8a44'],
-            mountains: ['#94a58f', '#4d5b4b'],
-            coast: ['#f0dfb0', '#cfae7c'],
-            sea: ['#3fa9d8', '#1f7fae']
-        }[kind] || ['#a8dc7c', '#5fa246'];
-    }
+    function drawGround() {
+        var rt = G.route, s = skyOf();
+        var prevY = null;
 
-    function drawTerrain() {
-        var rt = G.route;
-        var x0 = P.x - (W * R.PLANE_SX) / PPM - 40;
-        var cols = Math.ceil(W / TERRAIN_COL) + 3;
-
-        /* dải sau (mờ, lệch lên) tạo chiều sâu cho dãy núi */
-        for (var pass = 0; pass < 2; pass++) {
-            var back = pass === 0;
-            var topY = H;
-            ctx.beginPath();
-            ctx.moveTo(-20, H + 20);
-            for (var i = 0; i <= cols; i++) {
-                var wx = x0 + i * TERRAIN_COL / PPM;
-                var g = R.groundAt(rt, wx);
-                if (back) g = g * 1.28 + 60;
-                var py = sy(g);
-                if (py < topY) topY = py;
-                ctx.lineTo(i * TERRAIN_COL - 20, py);
+        for (var i = BANDS; i >= 0; i--) {
+            /* Chia khoảng cách theo luỹ thừa chứ không đều: gần thì cần dày
+             * dải, xa thì mấy chục cây số dồn vào vài dải cũng không ai thấy. */
+            var t = i / BANDS;
+            var d = R.NEAR + (R.VIEW_FAR - R.NEAR) * t * t;
+            var wx = cam.x + d;
+            var g = R.groundAt(rt, wx);
+            var p = proj(wx, g, cam.z);
+            if (!p) continue;
+            var y = p.y;
+            if (prevY == null) prevY = H + 40;
+            if (y < prevY) {
+                var seg = R.segmentAt(rt, wx);
+                var c = terrainColour(seg.seg.kind);
+                var col = seg.k > 0 ? mix(c[1], terrainColour(seg.next.kind)[1], seg.k) : c[1];
+                /* càng xa càng chìm vào màu trời */
+                ctx.fillStyle = mix(col, s.haze, haze(d) * 0.92);
+                ctx.fillRect(0, y - 1, W, prevY - y + 2);
+                prevY = y;
             }
-            ctx.lineTo(W + 40, H + 20);
-            ctx.closePath();
-
-            var seg = R.segmentAt(rt, P.x);
-            var c = terrainColour(seg.seg.kind);
-            var cn = terrainColour(seg.next.kind);
-            var top = seg.k > 0 ? mix(c[0], cn[0], seg.k) : c[0];
-            var bot = seg.k > 0 ? mix(c[1], cn[1], seg.k) : c[1];
-            /* Dải màu chạy từ ĐỈNH THẬT của mặt đất trong khung hình này xuống
-             * đáy màn. Bản đầu em neo nó ở độ cao 2 200 m cố định, nên lúc bay
-             * qua đồng bằng — nơi mặt đất chỉ cao vài chục mét — cả dải nằm ở
-             * mãi đuôi màu và mặt đất ra một mảng tối đều tịt, không còn thấy
-             * đâu là sườn đâu là chân. */
-            var grad = ctx.createLinearGradient(0, topY - 6, 0, GROUND_Y + 80);
-            grad.addColorStop(0, back ? fade(top, 0.55) : top);
-            grad.addColorStop(1, back ? fade(bot, 0.55) : bot);
-            ctx.fillStyle = grad;
-            ctx.fill();
         }
 
-        drawGroundDetail();
+        drawGroundGrid();
+        drawGroundProps();
+    }
+
+    /* ---- LƯỚI RUỘNG ----
+     * Mấy đường bờ ruộng chạy dọc, hội tụ về điểm tụ. Đây là thứ DUY NHẤT nói
+     * cho mắt biết mình vừa bẻ lái sang trái hay sang phải — mặt đất trơn thì
+     * bẻ lái xong nhìn y hệt lúc chưa bẻ, và cái nút trái phải hoá vô nghĩa.
+     * Kẻ ô thế này là cách rẻ nhất để một mặt phẳng khai ra nó là mặt phẳng. */
+    function drawGroundGrid() {
+        var rt = G.route;
+        ctx.save();
+        ctx.lineWidth = 1.6;
+
+        /* đường dọc, cách nhau 420 m theo chiều ngang */
+        var GZ = 420;
+        var z0 = Math.floor((cam.z - 5200) / GZ) * GZ;
+        for (var z = z0; z < cam.z + 5200; z += GZ) {
+            ctx.beginPath();
+            var drawn = 0;
+            for (var i = 0; i <= 16; i++) {
+                var t = i / 16;
+                var d = 120 + (9000 - 120) * t * t;
+                var wx = cam.x + d;
+                var p = proj(wx, R.groundAt(rt, wx), z);
+                if (!p) continue;
+                if (drawn++) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
+            }
+            ctx.strokeStyle = 'rgba(255,255,255,0.13)';
+            ctx.stroke();
+        }
+
+        /* đường ngang, cách nhau 900 m theo chiều bay — cái này cho thấy mình
+         * đang TIẾN, và tiến nhanh cỡ nào */
+        var GX = 900;
+        var x0 = Math.ceil((cam.x + 180) / GX) * GX;
+        for (var wx2 = x0; wx2 < cam.x + 9000; wx2 += GX) {
+            var g = R.groundAt(rt, wx2);
+            var a = proj(wx2, g, cam.z - 5200), b = proj(wx2, g, cam.z + 5200);
+            if (!a || !b) continue;
+            ctx.strokeStyle = 'rgba(255,255,255,' + (0.15 * (1 - haze(wx2 - cam.x))) + ')';
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    function terrainColour(kind) {
+        return {
+            city: ['#a9c19a', '#7fa070'],
+            fields: ['#a8dc7c', '#74b855'],
+            hills: ['#7cc667', '#4f9a4e'],
+            mountains: ['#94a58f', '#5d6f58'],
+            coast: ['#f0dfb0', '#dcc48c'],
+            sea: ['#3fa9d8', '#2a8fc0']
+        }[kind] || ['#a8dc7c', '#74b855'];
     }
 
     function mix(a, b, t) {
@@ -911,126 +991,219 @@
         }
         return o;
     }
-    function fade(hexc, t) {
-        return mix(hexc, '#cfe6f5', t);
-    }
 
-    /* Chi tiết trên mặt đất: nhà, cây, sóng, thuyền. Chọn theo vùng, đặt theo
-     * toạ độ nên đứng yên. Đây là thứ trả lời câu "dưới kia là chỗ nào" — mà
-     * cả trò chơi này là để trả lời đúng câu ấy. */
-    function drawGroundDetail() {
+    /* ---- ĐỒ VẬT TRÊN MẶT ĐẤT ----
+     * Nhà, cây, sóng, thuyền. Chỗ đứng suy từ toạ độ nên chúng không nhấp
+     * nháy, và cỡ vẽ suy từ hệ số chiếu nên chúng tự lớn lên khi tới gần —
+     * không có một dòng nào chỉnh tay theo khoảng cách. */
+    function drawGroundProps() {
         var rt = G.route;
-        var x0 = P.x - (W * R.PLANE_SX) / PPM;
-        var span = W / PPM;
-        var step = 90;                       // mét giữa hai chi tiết
-        var i0 = Math.floor(x0 / step) - 1;
-        var n = Math.ceil(span / step) + 3;
+        var STEP = 330;                         // mét giữa hai cụm theo chiều bay
+        var x0 = Math.ceil((cam.x + 200) / STEP) * STEP;
+        var list = [];
 
-        for (var k = 0; k < n; k++) {
-            var idx = i0 + k;
-            var wx = idx * step + hash(idx, 1) * 60;
+        for (var wx = x0; wx < cam.x + 8600; wx += STEP) {
             var kind = R.segmentAt(rt, wx).seg.kind;
             var g = R.groundAt(rt, wx);
-            var px = sx(wx), py = sy(g);
-            if (px < -60 || px > W + 60) continue;
-            var r1 = hash(idx, 2), r2 = hash(idx, 3);
-
-            if (kind === 'city') {
-                /* Ba khối nhà một cụm, cao thấp khác nhau, có mái sẫm và một
-                 * vệt bóng dưới chân. Bản đầu mỗi chỗ đúng một khối chữ nhật
-                 * xám nhạt, và trên máy thật chúng ra mấy cái cọc cắm rời rạc
-                 * chứ không ra một thành phố. */
-                var nb = 2 + (r1 > 0.6 ? 1 : 0);
-                for (var bI = 0; bI < nb; bI++) {
-                    var bw = 8 + hash(idx, bI + 21) * 7;
-                    var bh = 16 + hash(idx, bI + 31) * 52;
-                    var bx = px - 14 + bI * 13;
-                    ctx.fillStyle = 'rgba(40,55,70,0.22)';
-                    ctx.fillRect(bx - 2, py - 1, bw + 5, 4);
-                    ctx.fillStyle = hash(idx, bI + 41) > 0.5 ? '#dfe7ee' : '#c3cfda';
-                    ctx.fillRect(bx, py - bh, bw, bh);
-                    ctx.fillStyle = '#8a97a6';
-                    ctx.fillRect(bx, py - bh, bw, 3);
-                    ctx.fillStyle = 'rgba(120,150,180,0.55)';
-                    for (var wI = 0; wI < 4; wI++) {
-                        var wy2 = py - bh + 8 + wI * 11;
-                        if (wy2 > py - 5) break;
-                        if (hash(idx, bI * 7 + wI + 9) > 0.6) continue;
-                        ctx.fillRect(bx + 2, wy2, bw - 4, 3);
-                    }
-                }
-            } else if (kind === 'fields') {
-                ctx.fillStyle = r1 > 0.5 ? '#79bd52' : '#96d76e';
-                ctx.fillRect(px - 26, py, 52, 7);
-                if (r2 > 0.78) {
-                    ctx.fillStyle = '#d9694a';
-                    ctx.fillRect(px - 4, py - 7, 9, 7);
-                }
-            } else if (kind === 'hills' || kind === 'mountains') {
-                if (r1 > 0.42) {
-                    ctx.fillStyle = kind === 'mountains' ? '#3d6b46' : '#2f7a3d';
-                    ctx.beginPath();
-                    ctx.moveTo(px, py - 12 - r2 * 8);
-                    ctx.lineTo(px + 6, py + 1);
-                    ctx.lineTo(px - 6, py + 1);
-                    ctx.closePath(); ctx.fill();
-                }
-                if (kind === 'mountains' && g > 1250 && r2 > 0.6) {
-                    ctx.fillStyle = 'rgba(255,255,255,0.75)';
-                    ctx.fillRect(px - 9, py, 18, 4);
-                }
-            } else if (kind === 'coast') {
-                ctx.fillStyle = 'rgba(255,255,255,0.7)';
-                ctx.fillRect(px - 16, py + 2 + Math.sin(G.t * 1.6 + idx) * 1.5, 30, 2.5);
+            for (var lane = -2; lane <= 2; lane++) {
+                var idx = Math.round(wx / STEP) * 8 + lane;
+                var z = lane * 1020 + (hash(idx, 1) - 0.5) * 640;
+                if (Math.abs(z - cam.z) > 4200) continue;
+                var p = proj(wx + hash(idx, 5) * 180, g, z);
+                if (!p || p.x < -140 || p.x > W + 140 || p.y > H + 120) continue;
+                list.push({ p: p, kind: kind, idx: idx, g: g, wx: wx, z: z });
             }
         }
+        /* xa vẽ trước, gần vẽ sau — thứ tự này là tất cả những gì thay cho một
+         * bộ đệm chiều sâu thật */
+        list.sort(function (a, b) { return b.p.d - a.p.d; });
+        for (var i = 0; i < list.length; i++) prop(list[i]);
     }
 
-    /* ---- ĐƯỜNG BĂNG ---- */
+    function prop(o) {
+        var p = o.p, idx = o.idx, s = p.s;
+        var fade = 1 - haze(p.d);
+        if (fade < 0.06) return;
+        ctx.save();
+        ctx.globalAlpha = fade;
+        var r1 = hash(idx, 2), r2 = hash(idx, 3);
+
+        if (o.kind === 'city') {
+            var n = 2 + (r1 > 0.55 ? 1 : 0);
+            for (var b = 0; b < n; b++) {
+                var bw = (26 + hash(idx, b + 21) * 26) * s;
+                var bh = (60 + hash(idx, b + 31) * 210) * s;
+                var bx = p.x + (b - 1) * 34 * s;
+                if (bh < 0.6) continue;
+                ctx.fillStyle = hash(idx, b + 41) > 0.5 ? '#e6edf3' : '#cbd6e0';
+                ctx.fillRect(bx, p.y - bh, bw, bh);
+                ctx.fillStyle = '#93a3b3';
+                ctx.fillRect(bx, p.y - bh, bw, Math.max(1, 5 * s));
+                ctx.fillStyle = 'rgba(120,150,180,0.5)';
+                for (var w = 0; w < 5; w++) {
+                    var wy = p.y - bh + 22 * s + w * 34 * s;
+                    if (wy > p.y - 8 * s) break;
+                    if (hash(idx, b * 7 + w + 9) > 0.6) continue;
+                    ctx.fillRect(bx + 5 * s, wy, bw - 10 * s, Math.max(1, 9 * s));
+                }
+            }
+        } else if (o.kind === 'fields') {
+            ctx.fillStyle = r1 > 0.5 ? 'rgba(110,180,80,0.5)' : 'rgba(150,210,110,0.5)';
+            ctx.fillRect(p.x - 150 * s, p.y - 26 * s, 300 * s, 30 * s);
+            if (r2 > 0.72) {
+                ctx.fillStyle = '#d9694a';
+                ctx.fillRect(p.x - 14 * s, p.y - 34 * s, 28 * s, 18 * s);
+                ctx.fillStyle = '#8b5a3c';
+                ctx.fillRect(p.x - 14 * s, p.y - 16 * s, 28 * s, 16 * s);
+            }
+        } else if (o.kind === 'hills' || o.kind === 'mountains') {
+            if (r1 > 0.3) {
+                var th = (70 + r2 * 90) * s;
+                ctx.fillStyle = o.kind === 'mountains' ? '#3f6b47' : '#2f7a3d';
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - th);
+                ctx.lineTo(p.x + th * 0.34, p.y);
+                ctx.lineTo(p.x - th * 0.34, p.y);
+                ctx.closePath(); ctx.fill();
+            }
+            if (o.kind === 'mountains' && o.g > 1250 && r2 > 0.55) {
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.fillRect(p.x - 60 * s, p.y - 8 * s, 120 * s, 14 * s);
+            }
+        } else if (o.kind === 'coast') {
+            ctx.fillStyle = 'rgba(255,255,255,0.65)';
+            ctx.fillRect(p.x - 130 * s, p.y + Math.sin(G.t * 1.6 + idx) * 4 * s, 260 * s, 7 * s);
+        }
+        ctx.restore();
+    }
+
+    /* ---- MÂY ----
+     * Mấy khối tròn đặt ở toạ độ thật, chiếu như mọi thứ khác — nên bay xuyên
+     * qua một đám mây là bay xuyên qua thật, nó phình to ra rồi trôi vụt qua
+     * hai bên. Bản 2D cũ chỉ dán mây lên nền, không bao giờ tới gần được. */
+    var CLOUD_GAP = 560;
+
+    function drawClouds() {
+        var x0 = Math.ceil((cam.x + 120) / CLOUD_GAP) * CLOUD_GAP;
+        var list = [];
+        for (var wx = x0; wx < cam.x + 13000; wx += CLOUD_GAP) {
+            var idx = Math.round(wx / CLOUD_GAP);
+            if (hash(idx, 71) > 0.6) continue;
+            var z = (hash(idx, 73) - 0.5) * 7000;
+            var alt = 900 + hash(idx, 77) * 2200;
+            var p = proj(wx, alt, z);
+            if (!p || p.x < -300 || p.x > W + 300) continue;
+            list.push({ p: p, r: (150 + hash(idx, 79) * 190) });
+        }
+        list.sort(function (a, b) { return b.p.d - a.p.d; });
+        ctx.save();
+        ctx.fillStyle = '#ffffff';
+        for (var i = 0; i < list.length; i++) {
+            var o = list[i];
+            ctx.globalAlpha = 0.42 + 0.4 * (1 - haze(o.p.d));
+            puff(o.p.x, o.p.y, o.r * o.p.s);
+        }
+        ctx.restore();
+    }
+
+    function puff(x, y, r) {
+        if (r < 1.2) return;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.scale(1, 0.56);
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.62, 0, 6.284);
+        ctx.arc(r * 0.6, r * 0.14, r * 0.46, 0, 6.284);
+        ctx.arc(-r * 0.62, r * 0.17, r * 0.42, 0, 6.284);
+        ctx.arc(r * 0.08, -r * 0.34, r * 0.46, 0, 6.284);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    /* ---- ĐƯỜNG BĂNG ----
+     * Một hình thang, bốn góc chiếu thật. Đây là thứ mà phối cảnh làm được còn
+     * bản 2D thì không: nhìn thấy đường băng chạy thẳng về phía mình, biết
+     * ngay mình đang lệch sang trái hay sang phải bao nhiêu. */
+    var RW_HALF = 34;              // nửa bề rộng đường băng, mét
+
     function drawRunway(rw, arriving) {
-        var y = sy(rw.y);
-        var a = sx(rw.x0), b = sx(rw.x1);
-        if (b < -80 || a > W + 80) return;
-        /* Bãi cỏ sân bay quanh đường băng: không có nó thì dải bê-tông trôi lơ
-         * lửng trên nền đồng ruộng và mắt không đọc ra "đây là một sân bay". */
+        var pts = [];
+        var n = 12;
+        for (var i = 0; i <= n; i++) {
+            var wx = rw.x0 + (rw.x1 - rw.x0) * (i / n);
+            var l = proj(wx, rw.y, -RW_HALF), r = proj(wx, rw.y, RW_HALF);
+            if (!l || !r) continue;
+            pts.push({ l: l, r: r, wx: wx });
+        }
+        if (pts.length < 2) return;
+
+        ctx.save();
+        /* bãi cỏ sân bay quanh nó, không thì dải bê-tông trôi lơ lửng */
         ctx.fillStyle = '#8fae7c';
-        ctx.fillRect(a - 40, y - 2, b - a + 80, 20);
-        ctx.fillStyle = '#565c66';
-        ctx.fillRect(a, y - 5, b - a, 15);
-        ctx.fillStyle = '#6d747f';
-        ctx.fillRect(a, y - 5, b - a, 2);
+        band(pts, 170);
+        ctx.fillStyle = '#5b626d';
+        band(pts, RW_HALF);
+        /* vạch tim đứt quãng */
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
-        for (var x = a + 24; x < b - 24; x += 46) ctx.fillRect(x, y + 1, 24, 2.6);
-        /* Đèn đầu đường băng: bốn chấm sáng nhấp nháy so le. Bản mô tả gọi
-         * chúng là thứ dẫn đường, nên chúng phải là thứ SÁNG NHẤT trong khung
-         * hình lúc hạ cánh — mắt trẻ con đi theo chỗ sáng nhất. */
+        for (var k = 0; k < pts.length - 1; k++) {
+            if (k % 2) continue;
+            var a = proj(pts[k].wx, rw.y, -3), b = proj(pts[k].wx, rw.y, 3);
+            var c = proj(pts[k + 1].wx, rw.y, 3), d = proj(pts[k + 1].wx, rw.y, -3);
+            if (!a || !b || !c || !d) continue;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y);
+            ctx.closePath(); ctx.fill();
+        }
+        /* Đèn đầu đường băng nhấp nháy so le — thứ SÁNG NHẤT khung hình lúc hạ
+         * cánh, vì mắt trẻ con đi theo chỗ sáng nhất. */
         if (arriving) {
-            for (var i = 0; i < 5; i++) {
-                var lx = a + i * 15;
-                var blink = Math.sin(G.t * 7 - i * 0.7) > -0.2;
+            for (var i2 = 0; i2 < 7; i2++) {
+                var lz = -RW_HALF - 30 + i2 * ((RW_HALF + 30) * 2 / 6);
+                var p = proj(rw.x0 - 40, rw.y + 8, lz);
+                if (!p) continue;
+                var blink = Math.sin(G.t * 7 - i2 * 0.6) > -0.2;
                 ctx.fillStyle = blink ? '#fff3a8' : 'rgba(255,243,168,0.25)';
-                ctx.beginPath(); ctx.arc(lx, y - 8, 3.4, 0, 6.284); ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x, p.y, Math.max(1.5, 9 * p.s), 0, 6.284); ctx.fill();
             }
+        }
+        ctx.restore();
+
+        function band(list, half) {
+            ctx.beginPath();
+            var started = false, i3;
+            for (i3 = 0; i3 < list.length; i3++) {
+                var q = proj(list[i3].wx, rw.y, -half);
+                if (!q) continue;
+                if (started) ctx.lineTo(q.x, q.y); else { ctx.moveTo(q.x, q.y); started = true; }
+            }
+            for (i3 = list.length - 1; i3 >= 0; i3--) {
+                var q2 = proj(list[i3].wx, rw.y, half);
+                if (!q2) continue;
+                ctx.lineTo(q2.x, q2.y);
+            }
+            ctx.closePath(); ctx.fill();
         }
     }
 
-    /* ---- ĐƯỜNG TRƯỢT HẠ CÁNH ----
-     * Một vệt chấm sáng chỉ thẳng xuống đầu đường băng. Trẻ con không đọc
-     * được góc chúc, nhưng "bay men theo mấy chấm sáng" thì đứa nào cũng làm
-     * được — và đó là toàn bộ phần dạy hạ cánh của trò chơi này. */
+    /* ---- VỆT SÁNG DẪN HẠ CÁNH ----
+     * Mấy vòng sáng treo giữa trời, đúng trên trục đường băng, chúc dần xuống.
+     * Trẻ con không đọc được góc chúc, nhưng "chui qua mấy cái vòng sáng" thì
+     * đứa nào cũng làm được — và đó là toàn bộ phần dạy hạ cánh của game này. */
     function drawGlide() {
         if (G.leg !== 'approach' && G.leg !== 'final') return;
         var rt = G.route;
         ctx.save();
-        for (var i = 0; i < 26; i++) {
-            var wx = P.x + 260 + i * 420;
+        for (var i = 0; i < 22; i++) {
+            var wx = Math.ceil((P.x + 300) / 500) * 500 + i * 500;
             if (wx > rt.len) break;
-            var a = R.glideAlt(rt, wx);
-            var px = sx(wx), py = sy(a);
-            if (px < -30 || px > W + 30) continue;
-            var tw = 0.45 + 0.55 * Math.abs(Math.sin(G.t * 3 - i * 0.5));
-            ctx.fillStyle = 'rgba(255,255,255,' + (tw * 0.85) + ')';
-            ctx.beginPath(); ctx.arc(px, py, 3.6, 0, 6.284); ctx.fill();
+            var p = proj(wx, R.glideAlt(rt, wx), 0);
+            if (!p || p.x < -60 || p.x > W + 60) continue;
+            var tw = 0.4 + 0.6 * Math.abs(Math.sin(G.t * 3 - i * 0.5));
+            ctx.strokeStyle = 'rgba(255,255,255,' + (tw * 0.8 * (1 - haze(p.d))) + ')';
+            ctx.lineWidth = Math.max(1.4, 8 * p.s);
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, Math.max(3, 46 * p.s), 0, 6.284);
+            ctx.stroke();
         }
         ctx.restore();
     }
@@ -1042,79 +1215,86 @@
         var rt = G.route;
         for (var i = 0; i < rt.landmarks.length; i++) {
             var lm = rt.landmarks[i];
-            var px = sx(lm.at);
-            if (px < -220 || px > W + 220) continue;
             var g = R.groundAt(rt, lm.at);
-            var py = sy(g);
+            var p = proj(lm.at, g, lm.z || 0);
+            if (!p || p.x < -320 || p.x > W + 320) continue;
+            var s = p.s, fade = 1 - haze(p.d);
+            if (fade < 0.05) continue;
             var shot = G.shots.indexOf(lm.en) >= 0;
 
             ctx.save();
+            ctx.globalAlpha = fade;
             if (lm.kind === 'lake') {
                 ctx.fillStyle = '#3fa9d8';
-                ctx.beginPath(); ctx.ellipse(px, py - 3, 44, 9, 0, 0, 6.284); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(p.x, p.y, 320 * s, 74 * s, 0, 0, 6.284); ctx.fill();
                 ctx.fillStyle = '#2f8f4a';
-                ctx.beginPath(); ctx.arc(px + 6, py - 4, 5, 0, 6.284); ctx.fill();
+                ctx.beginPath(); ctx.arc(p.x + 40 * s, p.y - 6 * s, 34 * s, 0, 6.284); ctx.fill();
                 ctx.fillStyle = '#c8963e';
-                ctx.fillRect(px + 4, py - 14, 5, 10);
+                ctx.fillRect(p.x + 28 * s, p.y - 74 * s, 26 * s, 70 * s);
             } else if (lm.kind === 'river') {
                 ctx.strokeStyle = '#4fb6e0';
-                ctx.lineWidth = 7; ctx.lineCap = 'round';
+                ctx.lineWidth = Math.max(2, 58 * s);
+                ctx.lineCap = 'round';
                 ctx.beginPath();
-                ctx.moveTo(px - 70, py + 2);
-                ctx.quadraticCurveTo(px - 20, py - 9, px + 14, py + 1);
-                ctx.quadraticCurveTo(px + 46, py + 9, px + 82, py - 2);
+                ctx.moveTo(p.x - 500 * s, p.y + 20 * s);
+                ctx.quadraticCurveTo(p.x - 140 * s, p.y - 60 * s, p.x + 90 * s, p.y + 8 * s);
+                ctx.quadraticCurveTo(p.x + 320 * s, p.y + 70 * s, p.x + 600 * s, p.y - 14 * s);
                 ctx.stroke();
             } else if (lm.kind === 'pass') {
                 ctx.strokeStyle = '#e6dcc4';
-                ctx.lineWidth = 3.5;
+                ctx.lineWidth = Math.max(1.6, 26 * s);
                 ctx.beginPath();
-                ctx.moveTo(px - 58, py + 12);
-                ctx.quadraticCurveTo(px, py - 16, px + 58, py + 10);
+                ctx.moveTo(p.x - 400 * s, p.y + 80 * s);
+                ctx.quadraticCurveTo(p.x, p.y - 110 * s, p.x + 400 * s, p.y + 70 * s);
                 ctx.stroke();
-                ctx.fillStyle = 'rgba(255,255,255,0.55)';
-                ctx.beginPath(); ctx.ellipse(px, py + 4, 52, 8, 0, 0, 6.284); ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.beginPath(); ctx.ellipse(p.x, p.y + 26 * s, 360 * s, 54 * s, 0, 0, 6.284); ctx.fill();
             } else if (lm.kind === 'beach') {
                 ctx.fillStyle = '#f2e2b6';
-                ctx.fillRect(px - 80, py - 2, 160, 8);
-                ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                ctx.fillRect(px - 80, py + 5 + Math.sin(G.t * 2) * 1.5, 160, 2.5);
-                for (var u = 0; u < 4; u++) {
+                ctx.fillRect(p.x - 560 * s, p.y - 14 * s, 1120 * s, 56 * s);
+                ctx.fillStyle = 'rgba(255,255,255,0.82)';
+                ctx.fillRect(p.x - 560 * s, p.y + 34 * s + Math.sin(G.t * 2) * 6 * s, 1120 * s, 16 * s);
+                for (var u = 0; u < 5; u++) {
                     ctx.fillStyle = '#ff7a59';
-                    ctx.beginPath(); ctx.arc(px - 50 + u * 32, py - 6, 4, Math.PI, 0); ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(p.x - 340 * s + u * 170 * s, p.y - 20 * s, 24 * s, Math.PI, 0);
+                    ctx.fill();
                 }
             } else if (lm.kind === 'bridge') {
+                ctx.fillStyle = '#4fb6e0';
+                ctx.fillRect(p.x - 600 * s, p.y + 4 * s, 1200 * s, 60 * s);
                 ctx.strokeStyle = '#f0a03c';
-                ctx.lineWidth = 5; ctx.lineCap = 'round';
+                ctx.lineWidth = Math.max(2, 32 * s);
+                ctx.lineCap = 'round';
                 ctx.beginPath();
-                ctx.moveTo(px - 62, py - 2);
-                for (var s = 0; s < 3; s++) {
-                    ctx.quadraticCurveTo(px - 42 + s * 42, py - 24, px - 20 + s * 42, py - 2);
+                for (var b = 0; b < 3; b++) {
+                    ctx.moveTo(p.x - 420 * s + b * 300 * s, p.y - 10 * s);
+                    ctx.quadraticCurveTo(p.x - 270 * s + b * 300 * s, p.y - 150 * s,
+                        p.x - 120 * s + b * 300 * s, p.y - 10 * s);
                 }
                 ctx.stroke();
                 ctx.fillStyle = '#f0a03c';
-                ctx.beginPath();
-                ctx.arc(px + 66, py - 8, 6, 0, 6.284); ctx.fill();
-                ctx.fillStyle = '#4fb6e0';
-                ctx.fillRect(px - 80, py + 4, 170, 6);
+                ctx.beginPath(); ctx.arc(p.x + 460 * s, p.y - 60 * s, 40 * s, 0, 6.284); ctx.fill();
             }
 
             /* Nhãn tên. Chỉ hiện khi đã tới gần — hiện từ xa thì cả bầu trời
              * đầy chữ, mà chữ thì đứa bé sáu tuổi bỏ qua hết. */
             var near = Math.abs(lm.at - P.x) < R.PHOTO_RANGE;
-            if (near || shot) {
+            if (near || (shot && p.d < 3000)) {
                 var label = name(lm);
+                ctx.globalAlpha = 1;
                 ctx.font = '700 15px Baloo 2, Nunito, sans-serif';
                 ctx.textAlign = 'center';
                 var tw = ctx.measureText(label).width;
-                var ly = py - 44;
-                ctx.fillStyle = shot ? 'rgba(60,160,90,0.92)' : 'rgba(20,32,50,0.75)';
-                roundRect(ctx, px - tw / 2 - 12, ly - 15, tw + 24, 24, 12);
+                var ly = clamp(p.y - Math.max(60, 240 * s), 40, H - 60);
+                ctx.fillStyle = shot ? 'rgba(60,160,90,0.92)' : 'rgba(20,32,50,0.78)';
+                roundRect(ctx, p.x - tw / 2 - 12, ly - 15, tw + 24, 24, 12);
                 ctx.fill();
                 ctx.fillStyle = '#fff';
-                ctx.fillText((shot ? '📷 ' : '') + label, px, ly + 2);
+                ctx.fillText((shot ? '📷 ' : '') + label, p.x, ly + 2);
                 ctx.strokeStyle = shot ? 'rgba(60,160,90,0.6)' : 'rgba(255,255,255,0.5)';
                 ctx.lineWidth = 2;
-                ctx.beginPath(); ctx.moveTo(px, ly + 9); ctx.lineTo(px, py - 12); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(p.x, ly + 9); ctx.lineTo(p.x, p.y - 8); ctx.stroke();
             }
             ctx.restore();
         }
@@ -1122,39 +1302,52 @@
 
     /* ---- VÒNG MÂY VÀ SAO ---- */
     function drawPickups() {
-        var rt = G.route, i, o, px, py;
+        var rt = G.route, i, o, p;
+        var list = [];
         for (i = 0; i < R.ringCount(rt); i++) {
             if (G.ringDone[i]) continue;
             o = R.ringAt(rt, i);
             if (!o) continue;
-            px = sx(o.x);
-            if (px < -100 || px > W + 100) continue;
-            py = sy(o.alt);
-            var pulse = 1 + Math.sin(G.t * 3 + i) * 0.05;
-            ctx.save();
-            ctx.strokeStyle = 'rgba(150,235,255,0.95)';
-            ctx.lineWidth = 7;
-            ctx.beginPath(); ctx.arc(px, py, R.RING_PX * pulse, 0, 6.284); ctx.stroke();
-            ctx.strokeStyle = 'rgba(255,255,255,0.85)';
-            ctx.lineWidth = 2.5;
-            ctx.beginPath(); ctx.arc(px, py, R.RING_PX * pulse - 5, 0, 6.284); ctx.stroke();
-            ctx.restore();
+            p = proj(o.x, o.alt, o.z);
+            if (!p || p.d > 7000 || p.x < -200 || p.x > W + 200) continue;
+            list.push({ p: p, ring: 1, i: i });
         }
         for (i = 0; i < R.starCount(rt); i++) {
             if (G.starDone[i]) continue;
             o = R.starAt(rt, i);
             if (!o) continue;
-            px = sx(o.x);
-            if (px < -40 || px > W + 40) continue;
-            py = sy(o.alt) + Math.sin(G.t * 2 + i) * 4;
-            drawStar(px, py, 15, '#ffd75e');
+            p = proj(o.x, o.alt, o.z);
+            if (!p || p.d > 5000 || p.x < -80 || p.x > W + 80) continue;
+            list.push({ p: p, ring: 0, i: i });
+        }
+        list.sort(function (a, b) { return b.p.d - a.p.d; });
+
+        for (i = 0; i < list.length; i++) {
+            var it = list[i], q = it.p;
+            var fade = 1 - haze(q.d) * 0.7;
+            ctx.save();
+            ctx.globalAlpha = fade;
+            if (it.ring) {
+                var rr = R.RING_R * q.s;
+                var pulse = 1 + Math.sin(G.t * 3 + it.i) * 0.04;
+                ctx.strokeStyle = 'rgba(150,235,255,0.95)';
+                ctx.lineWidth = Math.max(2, 16 * q.s);
+                ctx.beginPath(); ctx.arc(q.x, q.y, rr * pulse, 0, 6.284); ctx.stroke();
+                ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+                ctx.lineWidth = Math.max(1, 6 * q.s);
+                ctx.beginPath(); ctx.arc(q.x, q.y, rr * pulse - 9 * q.s, 0, 6.284); ctx.stroke();
+            } else {
+                drawStar(q.x, q.y + Math.sin(G.t * 2 + it.i) * 10 * q.s,
+                    Math.max(4, R.STAR_R * q.s), '#ffd75e');
+            }
+            ctx.restore();
         }
     }
 
     function drawStar(x, y, r, col) {
         ctx.save();
         ctx.translate(x, y);
-        ctx.rotate(Math.sin(G.t * 1.3 + x) * 0.15);
+        ctx.rotate(Math.sin(G.t * 1.3 + x * 0.01) * 0.15);
         ctx.fillStyle = col;
         ctx.beginPath();
         for (var i = 0; i < 10; i++) {
@@ -1166,85 +1359,88 @@
         ctx.restore();
     }
 
-    /* ---- MÁY BAY ----
-     * Nhìn nghiêng, mũi sang phải, thân tròn và ngắn — càng tròn càng thân
-     * thiện. Có cả ô cửa buồng lái để bé thấy "có người ngồi trong ấy", và
-     * người ấy là mình. */
+    /* ---- MÁY BAY, NHÌN TỪ SAU ĐUÔI ----
+     * Đây là chỗ góc nhìn mới trả công: nhìn từ sau thì hai cánh dang đều hai
+     * bên, và cú NGHIÊNG CÁNH lúc bẻ lái hiện ra rõ mồn một. Nhìn nghiêng kiểu
+     * 2D thì cú bẻ lái không có hình gì để mà thấy cả.
+     */
     function drawPlane() {
-        var px = W * R.PLANE_SX;
-        var py = sy(P.alt);
+        var p = proj(P.x, P.alt, P.z);
+        if (!p) return;
+        var s = clamp(p.s, 0.4, 3.4) * 34;          // cỡ vẽ
         ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(-P.bank * 0.22);
+        ctx.translate(p.x, p.y);
+        ctx.rotate(-P.bank * 0.5);
 
-        /* vệt khói mảnh phía sau khi bay nhanh */
-        if (P.spd > R.SPD_CRUISE * 0.8 && !P.onGround) {
-            ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-            ctx.lineWidth = 3; ctx.lineCap = 'round';
+        /* vệt khói hai đầu cánh khi bay nhanh */
+        if (P.spd > R.SPD_CRUISE * 0.85 && !P.onGround) {
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = s * 0.07;
+            ctx.lineCap = 'round';
+            var tl = (P.spd - R.SPD_CRUISE * 0.85) * 0.5;
             ctx.beginPath();
-            ctx.moveTo(-34, 2);
-            ctx.lineTo(-34 - (P.spd - R.SPD_CRUISE * 0.8) * 0.5, 2);
+            ctx.moveTo(-s * 0.92, s * 0.06); ctx.lineTo(-s * 0.92, s * 0.06 + tl * 0.1);
+            ctx.moveTo(s * 0.92, s * 0.06); ctx.lineTo(s * 0.92, s * 0.06 + tl * 0.1);
             ctx.stroke();
         }
 
-        /* cánh sau */
-        ctx.fillStyle = '#e05a4a';
-        ctx.beginPath();
-        ctx.moveTo(-26, -1); ctx.lineTo(-34, -17); ctx.lineTo(-20, -2);
-        ctx.closePath(); ctx.fill();
-
-        /* thân */
-        ctx.fillStyle = '#f4f7fb';
-        roundRect(ctx, -32, -8, 62, 16, 8); ctx.fill();
-        /* mũi */
-        ctx.beginPath();
-        ctx.moveTo(26, -8); ctx.quadraticCurveTo(40, 0, 26, 8); ctx.closePath();
-        ctx.fill();
-
-        /* dải màu dọc thân */
-        ctx.fillStyle = '#3aa7e0';
-        roundRect(ctx, -30, -1, 58, 5, 3); ctx.fill();
-
-        /* cánh chính, vẽ SAU thân nên nó nằm phía trước — nhìn nghiêng thì
-         * cánh gần mắt hơn thân */
+        /* đuôi đứng */
         ctx.fillStyle = '#d94f42';
         ctx.beginPath();
-        ctx.moveTo(6, 0); ctx.lineTo(-14, 20); ctx.lineTo(4, 21); ctx.lineTo(16, 2);
+        ctx.moveTo(0, -s * 0.18);
+        ctx.lineTo(-s * 0.09, -s * 0.62);
+        ctx.lineTo(s * 0.09, -s * 0.62);
         ctx.closePath(); ctx.fill();
 
-        /* buồng lái */
-        ctx.fillStyle = '#2b4a68';
+        /* cánh: một dải dài hơi vểnh lên hai đầu */
+        ctx.fillStyle = '#e05a4a';
         ctx.beginPath();
-        ctx.moveTo(14, -7); ctx.quadraticCurveTo(25, -7, 27, -1); ctx.lineTo(14, -1);
+        ctx.moveTo(-s * 1.0, -s * 0.02);
+        ctx.quadraticCurveTo(0, s * 0.16, s * 1.0, -s * 0.02);
+        ctx.lineTo(s * 0.96, s * 0.1);
+        ctx.quadraticCurveTo(0, s * 0.28, -s * 0.96, s * 0.1);
         ctx.closePath(); ctx.fill();
-        ctx.fillStyle = 'rgba(190,235,255,0.9)';
-        ctx.fillRect(16, -6, 8, 4);
 
-        /* càng: chỉ thò ra lúc còn thấp — mắt đọc được "sắp chạm đất rồi" */
+        /* hai động cơ dưới cánh */
+        ctx.fillStyle = '#4a5666';
+        roundRect(ctx, -s * 0.62, s * 0.06, s * 0.2, s * 0.13, s * 0.06); ctx.fill();
+        roundRect(ctx, s * 0.42, s * 0.06, s * 0.2, s * 0.13, s * 0.06); ctx.fill();
+
+        /* thân, nhìn từ sau là một khối tròn dựng đứng */
+        ctx.fillStyle = '#f4f7fb';
+        roundRect(ctx, -s * 0.17, -s * 0.28, s * 0.34, s * 0.5, s * 0.16); ctx.fill();
+        ctx.fillStyle = '#3aa7e0';
+        ctx.fillRect(-s * 0.17, -s * 0.02, s * 0.34, s * 0.08);
+
+        /* càng, chỉ thò ra lúc còn thấp — mắt đọc được "sắp chạm đất rồi" */
         if (P.gear) {
-            ctx.strokeStyle = '#4a5666'; ctx.lineWidth = 2.5;
+            ctx.strokeStyle = '#3b4655';
+            ctx.lineWidth = Math.max(1, s * 0.05);
             ctx.beginPath();
-            ctx.moveTo(14, 7); ctx.lineTo(14, 14);
-            ctx.moveTo(-14, 7); ctx.lineTo(-14, 14);
+            ctx.moveTo(-s * 0.5, s * 0.16); ctx.lineTo(-s * 0.5, s * 0.34);
+            ctx.moveTo(s * 0.5, s * 0.16); ctx.lineTo(s * 0.5, s * 0.34);
+            ctx.moveTo(0, s * 0.2); ctx.lineTo(0, s * 0.36);
             ctx.stroke();
-            ctx.fillStyle = '#2b3441';
-            ctx.beginPath(); ctx.arc(14, 15, 3.2, 0, 6.284); ctx.fill();
-            ctx.beginPath(); ctx.arc(-14, 15, 3.2, 0, 6.284); ctx.fill();
         }
         ctx.restore();
 
-        /* Bóng đổ trên mặt đất. Nó làm được một việc mà không con số nào làm
-         * nổi: cho mắt thấy máy bay đang ở CÁCH mặt đất bao xa. Càng thấp
-         * bóng càng nhỏ và càng đậm. */
-        var gy = sy(R.groundAt(G.route, P.x));
-        var h = clamp((P.alt - R.groundAt(G.route, P.x)) / 2200, 0, 1);
-        ctx.save();
-        ctx.globalAlpha = 0.35 * (1 - h);
-        ctx.fillStyle = '#123';
-        ctx.beginPath();
-        ctx.ellipse(px, gy + 3, 30 - h * 16, 5 - h * 3, 0, 0, 6.284);
-        ctx.fill();
-        ctx.restore();
+        /* BÓNG ĐỔ TRÊN MẶT ĐẤT.
+         * Nó làm được một việc mà không con số nào làm nổi: cho mắt thấy máy
+         * bay đang cách mặt đất bao xa, và đang lệch sang bên nào. Càng thấp
+         * bóng càng to và càng đậm — lúc sắp chạm đường băng thì bóng chạy tới
+         * gặp máy bay, và đó là tín hiệu hạ cánh dễ đọc nhất trong cả game. */
+        var g = R.groundAt(G.route, P.x);
+        var sp = proj(P.x, g, P.z);
+        if (sp) {
+            var h = clamp((P.alt - g) / 2000, 0, 1);
+            ctx.save();
+            ctx.globalAlpha = 0.34 * (1 - h * 0.85);
+            ctx.fillStyle = '#123';
+            ctx.beginPath();
+            ctx.ellipse(sp.x, sp.y, 46 * sp.s, 12 * sp.s, 0, 0, 6.284);
+            ctx.fill();
+            ctx.restore();
+        }
     }
 
     function drawParticles() {
@@ -1263,18 +1459,16 @@
         if (G.shake > 0) ctx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
 
         drawSky();
-        drawClouds(0);
         if (G.route) {
-            drawTerrain();
+            drawGround();
             drawRunway(R.departRunway(G.route), false);
             drawRunway(R.arriveRunway(G.route), true);
             drawLandmarks();
-            drawClouds(1);
             drawGlide();
             drawPickups();
+            drawClouds();
             if (G.phase === 'fly' || G.phase === 'pause') drawPlane();
             drawParticles();
-            drawClouds(2);
         }
         ctx.restore();
 
@@ -1454,6 +1648,7 @@
     }
 
     function setPitch(v) { P.pitch = v; P.pitchHeld = v !== 0; }
+    function setTurn(v) { P.turn = v; P.turnHeld = v !== 0; }
 
     function setAutoBtn() {
         el('btn-auto').classList.toggle('is-on', G.auto);
@@ -1462,6 +1657,8 @@
     function wireInput() {
         holdBtn('btn-up', function () { setPitch(1); }, function () { setPitch(0); });
         holdBtn('btn-down', function () { setPitch(-1); }, function () { setPitch(0); });
+        holdBtn('btn-left', function () { setTurn(-1); }, function () { setTurn(0); });
+        holdBtn('btn-right', function () { setTurn(1); }, function () { setTurn(0); });
         holdBtn('btn-fast', function () { P.thrUp = 1; }, function () { P.thrUp = 0; });
         holdBtn('btn-slow', function () { P.thrDn = 1; }, function () { P.thrDn = 0; });
 
@@ -1488,21 +1685,28 @@
             if (e.repeat) return;
             var k = e.key;
             if (G.phase !== 'fly') return;
-            if (k === 'ArrowUp' || k === 'w' || k === 'W') { e.preventDefault(); Sfx.wake(); setPitch(1); }
-            else if (k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); Sfx.wake(); setPitch(-1); }
-            else if (k === 'ArrowRight' || k === 'd' || k === 'D') { e.preventDefault(); Sfx.wake(); P.thrUp = 1; }
-            else if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); P.thrDn = 1; }
+            /* Bốn mũi tên là BỐN HƯỚNG BAY, đúng như tay đặt lên cần lái. Ga
+             * chuyển sang W/S — bản trước gán ga vào mũi tên trái phải, mà giờ
+             * trái phải là một hướng đi thật thì cách gán ấy không còn chỗ
+             * đứng nào. */
+            if (k === 'ArrowUp') { e.preventDefault(); Sfx.wake(); setPitch(1); }
+            else if (k === 'ArrowDown') { e.preventDefault(); Sfx.wake(); setPitch(-1); }
+            else if (k === 'ArrowLeft') { e.preventDefault(); Sfx.wake(); setTurn(-1); }
+            else if (k === 'ArrowRight') { e.preventDefault(); Sfx.wake(); setTurn(1); }
+            else if (k === 'w' || k === 'W') { e.preventDefault(); Sfx.wake(); P.thrUp = 1; }
+            else if (k === 's' || k === 'S') { e.preventDefault(); P.thrDn = 1; }
             else if (k === ' ') { e.preventDefault(); Sfx.wake(); takePhoto(); }
             else if (k === 'p' || k === 'P' || k === 'Escape') togglePause();
         });
         window.addEventListener('keyup', function (e) {
             var k = e.key;
-            if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === 'ArrowDown' || k === 's' || k === 'S') setPitch(0);
-            if (k === 'ArrowRight' || k === 'd' || k === 'D') P.thrUp = 0;
-            if (k === 'ArrowLeft' || k === 'a' || k === 'A') P.thrDn = 0;
+            if (k === 'ArrowUp' || k === 'ArrowDown') setPitch(0);
+            if (k === 'ArrowLeft' || k === 'ArrowRight') setTurn(0);
+            if (k === 'w' || k === 'W') P.thrUp = 0;
+            if (k === 's' || k === 'S') P.thrDn = 0;
         });
         window.addEventListener('blur', function () {
-            setPitch(0); P.thrUp = 0; P.thrDn = 0;
+            setPitch(0); setTurn(0); P.thrUp = 0; P.thrDn = 0;
         });
     }
 
@@ -1589,15 +1793,19 @@
         wireInput();
         wireButtons();
 
+        /* Màn chờ có cảnh thật phía sau: đúng tuyến ấy, đúng bộ sinh ấy, chỉ
+         * là không ai lái. Bản mô tả đòi màn đầu "immediately show the flying
+         * theme" — mà không gì nói đúng chủ đề hơn chính trò chơi. */
         G.route = R.ROUTES[0];
-        P.x = 2000; P.alt = 1400; P.spd = R.SPD_CRUISE;
+        P.x = 2000; P.alt = 1400; P.spd = R.SPD_CRUISE; P.z = 0;
+        snapCam();
         renderRoutes();
         showScreen('menu-overlay');
 
         window.FlightDebug = {
             G: G, P: P, R: R, start: startFlight, update: update, draw: draw,
             photo: takePhoto, hud: syncHud, Sfx: Sfx, store: store,
-            setPitch: setPitch, backToMenu: backToMenu
+            setPitch: setPitch, setTurn: setTurn, backToMenu: backToMenu
         };
 
         requestAnimationFrame(frame);

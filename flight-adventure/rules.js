@@ -40,29 +40,43 @@
      * cần biết cái gì SẮP tới, chứ cái đã qua thì không cần nữa. */
     var PLANE_SX = 0.32;
 
-    /* HAI TỈ LỆ, CỐ Ý KHÁC NHAU.
+    /* ================================================================
+     * MÁY QUAY BÁM ĐUÔI — phép chiếu phối cảnh
+     * ----------------------------------------------------------------
+     * Bản đầu vẽ NGANG, kiểu 2D: máy bay đứng nghiêng một chỗ, thế giới
+     * trôi từ phải sang trái. Chạy được, nhưng nó kể sai câu chuyện —
+     * bé không "đang lái máy bay", bé đang xem một cuộn phim trôi qua.
      *
-     * Ngang 0,9 điểm ảnh mỗi mét: ở tốc độ ga giữa thì cảnh vật trôi chừng
-     * 144 điểm ảnh mỗi giây — đủ để thấy mình đang bay, chưa tới mức chóng mặt.
+     * Nay máy quay ngồi CHẾCH TRÊN VÀ SAU ĐUÔI, nhìn về phía trước.
+     * Thấy được cả chiếc máy bay lẫn khoảng không quanh nó, và quan
+     * trọng nhất: có chiều thứ ba để lái. Trái phải không còn là một
+     * thứ trang trí nữa mà là một hướng đi thật.
      *
-     * Đứng chỉ 0,115: nén lại gần tám lần. Đây là một lời nói dối cố ý, và nó
-     * là lời nói dối ĐÁNG GIÁ NHẤT trong cả trò chơi. Vẽ đúng tỉ lệ thì bay ở
-     * độ cao ngắm cảnh là mặt đất tụt hẳn ra khỏi màn hình, và cả game hoá
-     * thành một khung trời trắng — mà "ngắm cảnh" chính là toàn bộ lý do trò
-     * chơi này tồn tại. Nén lại thì lúc nào cũng thấy đủ ba thứ cùng lúc: máy
-     * bay, mặt đất, và khoảng cách giữa hai cái đó.
+     * Phép chiếu là phép chiếu phối cảnh thẳng thớm, không mẹo mực:
      *
-     * Máy quay KHÔNG trôi theo chiều đứng. Độ cao 0 luôn ở đúng một chỗ trên
-     * màn hình, nên bé nhìn một cái là biết mình đang cao hay thấp — không
-     * phải suy từ con số nào cả. */
-    var PPM = 0.9;                 // điểm ảnh mỗi mét, chiều ngang
-    var VPM = 0.115;               // điểm ảnh mỗi mét, chiều đứng
-    /* Độ cao 0 nằm ở đây trên màn hình. Đặt ở 512 thì dải mặt đất chỉ còn 88
-     * điểm ảnh — nhìn trên máy thật ra một vệt xám mỏng dưới đáy, và cả khung
-     * hình thành ra một bầu trời rỗng. Hạ xuống 468 thì mặt đất được 132 điểm
-     * ảnh, đủ chỗ cho nhà cửa, sông và bãi biển hiện ra thành hình. Trần bay
-     * 3 400 m vẫn nằm gọn trong màn (y = 77). */
-    var GROUND_Y = 468;
+     *     d  = wx - cam.x            (mét trước mặt máy quay)
+     *     s  = FOCAL / d             (một mét ở đó bằng bấy nhiêu điểm ảnh)
+     *     px = W/2 + (wz - cam.z) * s
+     *     py = HORIZON + (cam.alt - walt) * s
+     *
+     * Mọi thứ trong game — mặt đất, nhà cửa, vòng mây, chính chiếc máy
+     * bay — đều đi qua đúng bốn dòng ấy. Một phép chiếu duy nhất thì
+     * không bao giờ có chuyện vật này ở trước vật kia trong mắt mà lại
+     * ở sau nó trong mã.
+     * ================================================================ */
+    var FOCAL = 560;               // tiêu cự, điểm ảnh
+    var HORIZON = 236;             // đường chân trời nằm ở đây khi bay bằng
+    var CAM_BACK = 210;            // máy quay lùi sau máy bay bấy nhiêu mét
+    var CAM_UP = 34;               // và cao hơn nó bấy nhiêu
+    var NEAR = 26;                 // gần hơn ngần này thì không vẽ (chia cho 0)
+    var VIEW_FAR = 16000;          // xa hơn ngần này thì chìm hẳn vào sương mù
+
+    /* Bay lệch sang hai bên được bao xa. Ra ngoài thì trò chơi nhẹ nhàng đẩy
+     * về — bản mô tả viết "if the player flies too far away, the game gently
+     * turns the plane back", và chữ đáng giá nhất trong câu ấy là "gently". */
+    var LAT_MAX = 2600;            // mét lệch tối đa so với trục tuyến
+    var LAT_SPEED = 165;           // m/s khi bẻ hết sang một bên
+    var LAT_EASE = 2.2;            // bẻ và trả lái mượt cỡ nào
 
     /* ------------------------------------------------------------------ *
      * 2. HẰNG SỐ BAY
@@ -109,14 +123,33 @@
      * ------------------------------------------------------------------ */
     var PHOTO_RANGE = 1500;        // trong ngần này mét thì nút máy ảnh sáng lên
 
-    /* Bán kính vòng mây và ngôi sao tính bằng ĐIỂM ẢNH, không phải mét.
+    /* Bán kính vòng mây và ngôi sao, tính bằng MÉT trong thế giới thật.
      *
-     * Vì hai tỉ lệ trên khác nhau tám lần, nên một vòng tròn khai bằng mét sẽ
-     * vẽ ra thành cái ellipse dẹt lét, mà chỗ đụng lại tính theo mét — mắt
-     * thấy một hình, mã tính một hình khác, và đứa bé bay xuyên qua giữa vòng
-     * mà trò chơi bảo trượt. Khai bằng điểm ảnh thì mắt thấy sao, tính vậy. */
-    var RING_PX = 62;
-    var STAR_PX = 34;
+     * Sang phối cảnh thì đây mới là cách khai đúng: một hình cầu bán kính 105 m
+     * chiếu lên màn thành một hình tròn bán kính 105·s, tự to lên khi tới gần
+     * và nhỏ đi khi ra xa, không cần một dòng nào chỉnh tay. Bản 2D cũ phải
+     * khai bằng điểm ảnh vì hai tỉ lệ ngang dọc khác nhau tám lần và một vòng
+     * tròn thật sẽ ra hình ô-van dẹt. */
+    /* Vòng rộng 160 m bán kính, sao 95 m. Máy soát cho con bọ lái thẳng tới
+     * từng vòng, và với bán kính 105 nó vẫn trượt hai cái — trượt có 111 m và
+     * 123 m, tức là lái gần đúng mà vẫn hụt. Với một đứa bé sáu tuổi thì "gần
+     * đúng mà vẫn hụt" là kiểu thất bại tệ nhất: nó không dạy được gì cả, chỉ
+     * làm bé nghĩ mình dở. Nới cửa ra thì gần đúng là qua, còn lệch hẳn thì
+     * vẫn trượt — và đó mới là thứ dạy được. */
+    var RING_R = 160;
+    /* Sao vẽ nhỏ (75 m) nhưng NHẶT ĐƯỢC TỪ XA (210 m).
+     *
+     * Tách hai con số ra là cố ý, và không phải để gian lận. Vòng mây là một
+     * cái cửa: chui đúng qua giữa mới tính, và cảm giác "vừa lách qua" chính
+     * là phần thưởng. Sao thì khác hẳn — bản mô tả gọi chúng là "gentle
+     * floating stars", tức là thứ bé lượm được trên đường chứ không phải thứ
+     * bé phải nhắm. Vẽ to bằng tầm nhặt thì nó lấn át cả cái vòng và trông
+     * như một mặt trời; vẽ nhỏ mà nhặt hẹp thì đo được rằng bé bay đúng
+     * đường vẫn trượt ba trên năm cái.
+     *
+     * Nên: nhỏ để nhìn, rộng để nhặt. */
+    var STAR_R = 75;
+    var STAR_PICK = 210;
 
     /* ------------------------------------------------------------------ *
      * 4. HẠ CÁNH
@@ -212,31 +245,31 @@
             ],
             landmarks: [
                 {
-                    at: 2400, kind: 'lake', ground: 0,
+                    at: 2400, kind: 'lake', z: -520,
                     en: 'Hoan Kiem Lake', vi: 'Hồ Hoàn Kiếm',
                     factEn: 'A famous lake in the middle of Hanoi.',
                     factVi: 'Một cái hồ nổi tiếng ở giữa Hà Nội.'
                 },
                 {
-                    at: 10600, kind: 'river', ground: 120,
+                    at: 10600, kind: 'river', z: 640,
                     en: 'Winding River', vi: 'Dòng Sông Uốn Khúc',
                     factEn: 'Rivers carry water from the mountains to the sea.',
                     factVi: 'Sông mang nước từ núi ra tới biển.'
                 },
                 {
-                    at: 15200, kind: 'pass', ground: 900,
+                    at: 15200, kind: 'pass', z: -380,
                     en: 'Hai Van Pass', vi: 'Đèo Hải Vân',
                     factEn: 'A mountain road high above the sea.',
                     factVi: 'Một con đèo chạy cao trên mặt biển.'
                 },
                 {
-                    at: 19400, kind: 'beach', ground: 0,
+                    at: 19400, kind: 'beach', z: 760,
                     en: 'My Khe Beach', vi: 'Biển Mỹ Khê',
                     factEn: 'A long sandy beach beside the city.',
                     factVi: 'Một bãi cát dài ngay cạnh thành phố.'
                 },
                 {
-                    at: 22600, kind: 'bridge', ground: 0,
+                    at: 22600, kind: 'bridge', z: -300,
                     en: 'Dragon Bridge', vi: 'Cầu Rồng',
                     factEn: 'A bridge shaped like a dragon.',
                     factVi: 'Một cây cầu mang hình con rồng.'
@@ -381,34 +414,132 @@
      *    những vòng ấy ở đúng những chỗ ấy, và tuyến dài bao nhiêu cũng không
      *    phải sinh trước cái gì.
      * ------------------------------------------------------------------ */
-    var RING_GAP = 1450;
-    var RING_FROM = 4200, RING_TO = 20200;
+    /* Đụng vào vòng/sao không. Ba chiều thật, khoảng cách thật — mà vì mọi
+     * thứ đều chiếu qua chung một phép, cái mắt thấy đúng là cái này tính. */
+    function hitBall(dx, dAlt, dz, r) {
+        return dx * dx + dAlt * dAlt + dz * dz < r * r;
+    }
 
-    /* Đụng vào vòng/sao không: đo trong không gian MÀN HÌNH, đúng thứ mắt
-     * thấy. Cả chỗ vẽ, chỗ tính và máy soát đều gọi hàm này. */
-    function hitPx(dxMetre, dAltMetre, rPx) {
-        var dx = dxMetre * PPM, dy = dAltMetre * VPM;
-        return dx * dx + dy * dy < rPx * rPx;
+    var RING_GAP = 1450;
+    var RING_FROM = 4200;          // đủ xa để cất cánh xong và ổn định
+    var RING_END_PAD = 1400;       // và dừng trước lúc được mời hạ cánh
+
+    /* CHUỖI VÒNG MÂY — và chữ "chuỗi" là cả bài học ở đây.
+     *
+     * Bản đầu em rải mỗi vòng một chỗ ngẫu nhiên: độ cao bốc từ hàm băm, độ
+     * lệch ngang bốc từ hàm băm. Máy soát cho một con bọ lái THẲNG tới từng
+     * vòng một, và nó chỉ qua được 2 trên 12.
+     *
+     * Lý do là số học chứ không phải tay lái. Hai vòng cách nhau 1 450 m, ở
+     * tốc độ ga giữa là chín giây. Trong chín giây máy bay bẻ ngang được chừng
+     * 1 500 m và leo được 300 m. Mà rải ngẫu nhiên thì hai vòng liền nhau có
+     * thể lệch nhau 3 200 m ngang và 1 250 m dọc. Bay tới không kịp — không
+     * phải khó, mà là KHÔNG THỂ. Đứa bé sẽ tưởng tại mình dở.
+     *
+     * Nay mỗi vòng đặt theo vòng TRƯỚC NÓ, và bước nhảy bị kẹp trong đúng cái
+     * mà máy bay bay nổi trong quãng thời gian ấy. Đường bay nối các vòng lại
+     * thành một dải lượn mềm — vừa bay được, vừa đẹp hơn hẳn kiểu rải hạt.
+     *
+     * Chỗ nào địa hình dựng lên nhanh hơn sức leo (sườn núi đá vôi) thì bỏ
+     * hẳn vòng ấy đi, thà thiếu một vòng còn hơn treo nó ở chỗ không ai tới.
+     */
+    function ringChain(route) {
+        if (route._rings) return route._rings;
+        /* Dừng hẳn trước lúc trò chơi mời hạ cánh. Máy soát bắt được: hai
+         * vòng cuối nằm sau mốc ấy, và bé nào cũng bỏ chúng lại — không phải
+         * vì khó, mà vì đúng lúc ấy trò chơi bảo bé quay ra lo hạ cánh. Treo
+         * phần thưởng ở chỗ mình vừa bảo người ta đừng nhìn tới là một kiểu
+         * thất hứa lặng lẽ. */
+        var last = route.landStart - RING_END_PAD;
+        var n = Math.floor((last - RING_FROM) / RING_GAP) + 1;
+        var dt = RING_GAP / SPD_CRUISE;
+        var dzMax = LAT_SPEED * dt * 0.55;      // chừa lại cho quãng vào cua
+        var upMax = CLIMB_RATE * dt * 0.8;
+        var dnMax = DESCEND_RATE * dt * 0.8;
+        var out = [], alt = null, z = 0, i;
+        for (i = 0; i < n; i++) {
+            var x = RING_FROM + i * RING_GAP;
+            var floor = floorAt(route, x) + 150;
+            var wantAlt = clamp(1250 + Math.sin(i * 0.55 + 0.6) * 420, floor, ALT_MAX - 500);
+            var wantZ = Math.sin(i * 0.9) * 900 + Math.sin(i * 0.37 + 1.7) * 300;
+            if (alt === null) {
+                /* VÒNG ĐẦU TIÊN PHẢI VỚI TỚI ĐƯỢC TỪ CÚ CẤT CÁNH.
+                 *
+                 * Máy soát bắt được: bản trước vòng đầu treo ở 1 487 m ngay
+                 * quãng 4 200 m, mà từ lúc rời đường băng tới đó chỉ có hai
+                 * mươi tư giây — cần leo 60 m mỗi giây trong khi máy bay leo
+                 * nổi 34. Bé lái đúng hoàn hảo vẫn trượt bốn vòng đầu, và
+                 * trượt ngay lúc vừa mới học lái xong. Đặt thấp rồi để cả
+                 * chuỗi leo dần lên thì vòng nào cũng tới được. */
+                alt = Math.max(floor, 620);
+                z = 0;                       // thẳng trục, đúng hướng vừa cất cánh
+            }
+            else {
+                alt += clamp(wantAlt - alt, -dnMax, upMax);
+                z += clamp(wantZ - z, -dzMax, dzMax);
+            }
+            out.push(alt < floor - 1 ? null : { i: i, x: x, alt: alt, z: z });
+        }
+        route._rings = out;
+        return out;
     }
 
     function ringAt(route, i) {
-        var x = RING_FROM + i * RING_GAP;
-        if (x > RING_TO) return null;
-        var g = groundAt(route, x);
-        var alt = g + 620 + hash(i, 3) * 1250;
-        return { i: i, x: x, alt: clamp(alt, 500, ALT_MAX - 400) };
+        var c = ringChain(route);
+        return (i < 0 || i >= c.length) ? null : c[i];
     }
-    function ringCount(route) { return Math.floor((RING_TO - RING_FROM) / RING_GAP) + 1; }
+    function ringCount(route) { return ringChain(route).length; }
 
-    var STAR_GAP = 700;
-    function starAt(route, i) {
-        var x = RING_FROM + 380 + i * STAR_GAP;
-        if (x > RING_TO) return null;
-        if (hash(i, 11) > 0.55) return null;         // thưa thôi, không rải kín trời
-        var g = groundAt(route, x);
-        return { i: i, x: x, alt: clamp(g + 420 + hash(i, 13) * 1500, 380, ALT_MAX - 300) };
+    /* Sao treo GIỮA hai vòng, ngay trên đường nối chúng. Bay men theo dải vòng
+     * mây thì nhặt được sao mà không phải rẽ thêm đâu cả — phần thưởng cho
+     * việc đi đúng đường, chứ không phải một việc thứ hai phải làm. */
+    function starCount(route) { return Math.max(0, ringCount(route) - 1); }
+
+    /* Bao nhiêu vòng THẬT SỰ có mặt — chỗ nào địa hình dựng quá nhanh thì
+     * chuỗi bỏ trống. Máy soát đếm bằng con số này chứ không bằng chiều dài
+     * mảng, không thì nó đòi bé chui qua cả mấy cái lỗ trống. */
+    function ringReal(route) {
+        var c = ringChain(route), n = 0;
+        for (var i = 0; i < c.length; i++) if (c[i]) n++;
+        return n;
     }
-    function starCount(route) { return Math.floor((RING_TO - RING_FROM) / STAR_GAP) + 1; }
+
+    function starAt(route, i) {
+        var c = ringChain(route);
+        var a = c[i], b = c[i + 1];
+        if (!a || !b) return null;
+        if (hash(i, 11) > 0.62) return null;          // thưa thôi, không rải kín trời
+        /* ĐẶT NGAY TRÊN ĐƯỜNG VÀO VÒNG KẾ TIẾP.
+         *
+         * Ba lần đo mới ra chỗ đúng, và hai lần đầu sai vì em đoán thay vì
+         * đo. Đặt giữa hai vòng: lệch 150–330 m khỏi lối bay thật. Kéo về
+         * phía vòng vừa qua: còn tệ hơn, 240–300 m.
+         *
+         * Đo mới hiểu: máy bay bẻ ngang 165 m mỗi giây trong khi bay tới chỉ
+         * 160 — nên nó chụm về đúng hướng vòng kế tiếp chỉ sau NỬA quãng, rồi
+         * giữ nguyên hướng ấy mà bay nốt. Lối bay không phải đường thẳng nối
+         * hai vòng, mà là một cú bẻ sớm rồi một đoạn thẳng dài.
+         *
+         * Nên sao treo ngay trên đoạn thẳng ấy: cùng độ cao và độ lệch với
+         * vòng sắp tới, chỉ lùi lại 620 m. Bay đúng vào vòng thì tự nhiên
+         * nhặt được sao trên đường vào — phần thưởng cho việc ĐI ĐÚNG, chứ
+         * không phải một việc thứ hai phải làm. */
+        return {
+            i: i,
+            x: b.x - 620,
+            alt: b.alt + (hash(i, 13) - 0.5) * 70,
+            z: b.z + (hash(i, 17) - 0.5) * 70
+        };
+    }
+
+    /* Bao nhiêu vòng THẬT SỰ có mặt — chỗ nào địa hình dựng quá nhanh thì
+     * chuỗi bỏ trống. Máy soát đếm bằng con số này chứ không bằng chiều dài
+     * mảng, không thì nó đòi bé chui qua cả mấy cái lỗ trống. */
+    function ringReal(route) {
+        var c = ringChain(route), n = 0;
+        for (var i = 0; i < c.length; i++) if (c[i]) n++;
+        return n;
+    }
 
     /* ------------------------------------------------------------------ *
      * 9. XẾP HẠNG HẠ CÁNH
@@ -428,13 +559,17 @@
         ALT_MAX: ALT_MAX, ALT_CRUISE: ALT_CRUISE,
         CIRCLE_GIVE_UP: CIRCLE_GIVE_UP, GLIDE_ALT: GLIDE_ALT, glideSink: glideSink,
         LEVEL_EASE: LEVEL_EASE, SAFE_CLEAR: SAFE_CLEAR, RESCUE_LIFT: RESCUE_LIFT,
-        PHOTO_RANGE: PHOTO_RANGE, RING_PX: RING_PX, STAR_PX: STAR_PX, hitPx: hitPx,
-        PPM: PPM, VPM: VPM, GROUND_Y: GROUND_Y,
+        PHOTO_RANGE: PHOTO_RANGE, RING_R: RING_R, STAR_R: STAR_R, STAR_PICK: STAR_PICK,
+        hitBall: hitBall,
+        FOCAL: FOCAL, HORIZON: HORIZON, CAM_BACK: CAM_BACK, CAM_UP: CAM_UP,
+        NEAR: NEAR, VIEW_FAR: VIEW_FAR,
+        LAT_MAX: LAT_MAX, LAT_SPEED: LAT_SPEED, LAT_EASE: LAT_EASE,
         LAND_GREAT: LAND_GREAT, LAND_NICE: LAND_NICE,
         ROUTES: ROUTES, routeById: routeById,
         segmentAt: segmentAt, groundAt: groundAt, floorAt: floorAt,
         departRunway: departRunway, arriveRunway: arriveRunway, glideAlt: glideAlt,
-        ringAt: ringAt, ringCount: ringCount, starAt: starAt, starCount: starCount,
+        ringAt: ringAt, ringCount: ringCount, ringReal: ringReal,
+        starAt: starAt, starCount: starCount,
         landRating: landRating,
         clamp: clamp, lerp: lerp, smooth: smooth, hash: hash
     };

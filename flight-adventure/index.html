@@ -141,9 +141,17 @@
                 <!-- HAI CỤM NÚT, HAI GÓC DƯỚI. Một bên lên xuống, một bên ga.
                      Đặt hai đầu màn để hai ngón cái không phải với nhau. -->
                 <div id="touch-row" class="touch-row" hidden>
+                    <!-- BỐN HƯỚNG, xếp hình chữ thập. Bé đặt một ngón cái lên
+                         giữa là với tới cả bốn nút, đúng như mọi tay cầm mà bé
+                         từng thấy. Xếp hàng ngang thì lên xuống với trái phải
+                         trông như bốn thứ ngang hàng nhau, mà chúng không phải. -->
                     <div class="pad pad-left">
-                        <button id="btn-up" class="touch-btn"><span>▲</span></button>
-                        <button id="btn-down" class="touch-btn"><span>▼</span></button>
+                        <button id="btn-left" class="touch-btn pad-l"><span>◀</span></button>
+                        <div class="pad-mid">
+                            <button id="btn-up" class="touch-btn pad-u"><span>▲</span></button>
+                            <button id="btn-down" class="touch-btn pad-d"><span>▼</span></button>
+                        </div>
+                        <button id="btn-right" class="touch-btn pad-r"><span>▶</span></button>
                     </div>
                     <div class="pad pad-right">
                         <button id="btn-slow" class="touch-btn btn-thr"><span>🐢</span></button>
@@ -172,7 +180,7 @@
                         <h2 class="panel-title">HOW TO FLY</h2>
                         <ul class="help-list">
                             <li><b>🚀 Speed up</b> to roll down the runway, then <b>▲ pull up</b> to fly.</li>
-                            <li><b>▲ ▼</b> or the arrow keys make the plane go up and down.</li>
+                            <li><b>▲ ▼ ◀ ▶</b> or the arrow keys fly up, down, left and right.</li>
                             <li>Fly through the <b>glowing rings</b> and collect <b>stars</b>.</li>
                             <li>When a famous place appears, press <b>📷</b> to take a photo.</li>
                             <li>Near the end, press <b>🛬</b> and the game helps you land.</li>

@@ -335,7 +335,13 @@ body {
 
 .touch-row[hidden] { display: none; }
 
-.pad { display: flex; gap: 10px; pointer-events: auto; }
+.pad { display: flex; gap: 8px; pointer-events: auto; align-items: flex-end; }
+
+/* Cụm bốn hướng xếp hình chữ thập: lên và xuống chồng nhau ở giữa, trái phải
+   hai bên. Một ngón cái đặt vào giữa là với tới cả bốn. */
+.pad-mid { display: flex; flex-direction: column; gap: 8px; }
+.pad-mid .touch-btn { height: 58px; }
+.pad-l, .pad-r { height: 124px; }
 
 .touch-btn {
     width: 72px;
@@ -715,8 +721,11 @@ body {
     .guide { font-size: 0.82rem; padding: 8px 14px; bottom: 126px; }
 
     .round-btn { width: 48px; height: 48px; font-size: 1.3rem; }
-    .touch-btn { width: 60px; height: 60px; border-radius: 18px; font-size: 1.4rem; }
-    .pad { gap: 8px; }
+    .touch-btn { width: 56px; height: 56px; border-radius: 16px; font-size: 1.25rem; }
+    .pad { gap: 6px; }
+    .pad-mid { gap: 6px; }
+    .pad-mid .touch-btn { height: 48px; }
+    .pad-l, .pad-r { height: 102px; }
 
     .photo-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
     .over-actions .big-btn { font-size: 0.7rem; padding: 10px 5px; min-height: 42px; }

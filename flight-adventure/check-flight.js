@@ -13,7 +13,7 @@
  * Đứa bé thì không. Nó giữ nút chúc mũi suốt ba phút để xem cái gì xảy ra. Nó
  * buông hết tay ra rồi đi lấy sữa. Nó bấm hai nút ngược nhau cùng lúc.
  *
- * Nên ở đây có SÁU CON BỌ, mỗi con dở một kiểu, và cả sáu đều phải tới được
+ * Nên ở đây có BẢY CON BỌ, mỗi con dở một kiểu, và cả bảy đều phải tới được
  * Đà Nẵng. Con nào kẹt lại là một đứa bé thật sẽ kẹt lại.
  *
  * Dựng đủ một bộ DOM giả để game.js chạy thật — cố ý KHÔNG dùng jsdom, thêm
@@ -173,7 +173,7 @@ function step(n) {
     return true;
 }
 
-console.log('soát tuyến ' + R.ROUTES.length + ' — mỗi tuyến sáu kiểu bé bấm\n');
+console.log('soát tuyến ' + R.ROUTES.length + ' — mỗi tuyến bảy kiểu bé bấm\n');
 
 /* ------------------------------------------------------------------ *
  * 3. DỮ LIỆU TUYẾN CÓ HỢP LỆ KHÔNG
@@ -224,14 +224,26 @@ for (const rt of R.ROUTES) {
     }
     ok(worst > -3, `${tag}: đường trượt hạ cánh chui xuống dưới mặt đất ${Math.round(-worst)} m ở quãng ${worstX}`);
 
-    /* Vòng mây phải với tới được: nằm trong tầm bay, và không nằm dưới đất. */
-    let ringsBad = 0;
+    /* Vòng mây và sao phải VỚI TỚI ĐƯỢC: trong tầm cao, trên mặt đất, và
+     * nằm trong dải ngang mà trò chơi cho phép bay. Cái thứ ba là cái mới,
+     * và là cái dễ sai nhất — đặt một vòng ở 3 000 m lệch sang bên trong khi
+     * trò chơi kéo về ở 2 600 thì nó treo đó cả đời, nhìn thấy mà không bao
+     * giờ chạm được. Không có gì làm hỏng một trò chơi cho trẻ con nhanh hơn
+     * một phần thưởng cố tình bày ra ngoài tầm với. */
+    let ringsBad = 0, starsBad = 0;
     for (let i = 0; i < R.ringCount(rt); i++) {
         const o = R.ringAt(rt, i);
         if (!o) continue;
         if (o.alt > R.ALT_MAX - 60 || o.alt < R.floorAt(rt, o.x)) ringsBad++;
+        else if (Math.abs(o.z) > R.LAT_MAX - R.RING_R) ringsBad++;
     }
-    ok(ringsBad === 0, `${tag}: ${ringsBad} vòng mây nằm ngoài tầm bay hoặc chìm dưới mặt đất`);
+    for (let i = 0; i < R.starCount(rt); i++) {
+        const o = R.starAt(rt, i);
+        if (!o) continue;
+        if (Math.abs(o.z) > R.LAT_MAX - R.STAR_PICK) starsBad++;
+    }
+    ok(ringsBad === 0, `${tag}: ${ringsBad} vòng mây nằm ngoài tầm với`);
+    ok(starsBad === 0, `${tag}: ${starsBad} ngôi sao nằm ngoài tầm với`);
 }
 
 /* ------------------------------------------------------------------ *
@@ -301,6 +313,16 @@ const BOTS = [
         }
     },
     {
+        id: 'be-lai-mai',
+        what: 'bé giữ nút bẻ trái suốt chuyến, muốn xem bay ra khỏi bản đồ thì sao',
+        think(t) {
+            P.thrUp = 1;
+            D.setTurn(-1);
+            D.setPitch(G.leg === 'ready' || G.leg === 'roll'
+                ? (P.spd >= R.ROTATE_SPD ? 1 : 0) : 0);
+        }
+    },
+    {
         id: 'nut-phep',
         what: 'bé bấm nút phép rồi ngồi xem, chỉ thỉnh thoảng chụp ảnh',
         think(t) {
@@ -324,7 +346,7 @@ for (const rt of R.ROUTES) {
         D.start(rt.id);
         P.thrUp = 0; P.thrDn = 0;
         bot._h = 0; bot._leg = '';
-        let t = 0, landed = false, stuck = 0, lastX = -1;
+        let t = 0, landed = false, stuck = 0, lastX = -1, maxZ = 0;
         const legsSeen = {};
 
         for (let f = 0; f < MAX_SECS * FPS; f++) {
@@ -333,10 +355,19 @@ for (const rt of R.ROUTES) {
             t += DT;
             legsSeen[G.leg] = 1;
 
-            if (!Number.isFinite(P.x) || !Number.isFinite(P.alt) || !Number.isFinite(P.spd)) {
-                fail(`${rt.id}/${bot.id}: có NaN chui vào (x=${P.x} alt=${P.alt} spd=${P.spd})`);
+            if (!Number.isFinite(P.x) || !Number.isFinite(P.alt) ||
+                !Number.isFinite(P.spd) || !Number.isFinite(P.z)) {
+                fail(`${rt.id}/${bot.id}: có NaN chui vào (x=${P.x} alt=${P.alt} spd=${P.spd} z=${P.z})`);
                 break;
             }
+            /* KHÔNG ĐƯỢC BAY MẤT HÚT SANG BÊN. Bản mô tả hứa trò chơi sẽ nhẹ
+             * nhàng đưa về; hứa mà không giữ thì bé giữ nút bẻ trái ba mươi
+             * giây là mặt đất trống trơn và không còn gì để nhìn nữa. */
+            if (Math.abs(P.z) > R.LAT_MAX + 260) {
+                fail(`${rt.id}/${bot.id}: bay lệch ${Math.round(Math.abs(P.z))} m khỏi trục tuyến, quá xa hơn mức trò chơi hứa kéo về (${R.LAT_MAX})`);
+                break;
+            }
+            if (Math.abs(P.z) > maxZ) maxZ = Math.abs(P.z);
             /* Mặt đất là SÀN, không phải thứ đi xuyên qua được. */
             if (P.alt < R.groundAt(G.route, P.x) - 4) {
                 fail(`${rt.id}/${bot.id}: máy bay chui xuống dưới mặt đất ${Math.round(R.groundAt(G.route, P.x) - P.alt)} m ở quãng ${Math.round(P.x)}`);
@@ -394,10 +425,15 @@ for (const rt of R.ROUTES) {
                 `${rt.id}/${bot.id}: hạng hạ cánh là "${G.rating}", không nằm trong ba hạng đã khai`);
             ok(getEl('done-overlay').classList.contains('hidden') === false,
                 `${rt.id}/${bot.id}: hạ cánh xong mà màn kết quả không hiện ra`);
+            /* Hạ cánh xong phải ở gần trục đường băng. Chạm đất cách tim
+             * đường băng một cây số thì đấy là chạm xuống ruộng, không phải
+             * hạ cánh — mà mã vẫn vui vẻ ghi là hạ cánh. */
+            ok(Math.abs(P.z) < 120,
+                `${rt.id}/${bot.id}: chạm đất lệch ${Math.round(Math.abs(P.z))} m khỏi tim đường băng`);
             report.push({
                 bot: bot.id, secs: t, rating: G.rating, circled: G.circled,
                 stars: G.stars, rings: G.rings, shots: G.shots.length,
-                legs: Object.keys(legsSeen).length
+                legs: Object.keys(legsSeen).length, maxZ: maxZ
             });
         }
         D.backToMenu();
@@ -447,6 +483,89 @@ for (const rt of R.ROUTES) {
 }
 
 /* ------------------------------------------------------------------ *
+ * 6b. VÒNG MÂY CÓ CHUI QUA ĐƯỢC KHÔNG
+ *
+ *    Sang phối cảnh thì vòng mây nằm rải cả sang hai bên, nên muốn xuyên qua
+ *    là phải BẺ LÁI — đó chính là lý do có chiều thứ ba. Nhưng "phải bẻ lái"
+ *    và "bẻ lái tới nơi kịp" là hai chuyện: vòng đặt lệch quá hoặc cách nhau
+ *    quá gần thì dù lái đúng vẫn không tới. Con bọ này lái thẳng tới vòng gần
+ *    nhất và đếm xem qua được mấy cái.
+ * ------------------------------------------------------------------ */
+{
+    const rt = R.ROUTES[0];
+    D.start(rt.id);
+    let got = 0; const near = {}, nearS = {};
+    for (let f = 0; f < MAX_SECS * FPS; f++) {
+        P.thrUp = P.throttle < 0.55 ? 1 : 0;
+        P.thrDn = P.throttle > 0.72 ? 1 : 0;
+        if (G.leg === 'ready' || G.leg === 'roll') {
+            D.setPitch(P.spd >= R.ROTATE_SPD ? 1 : 0);
+        } else {
+            /* nhắm vòng chưa lấy gần nhất còn ở phía trước */
+            let tgt = null;
+            for (let i = 0; i < R.ringCount(rt); i++) {
+                if (G.ringDone[i]) continue;
+                const o = R.ringAt(rt, i);
+                if (!o || o.x < P.x + 120) continue;
+                tgt = o; break;
+            }
+            if (tgt && G.leg !== 'approach' && G.leg !== 'final') {
+                D.setPitch(R.clamp((tgt.alt - P.alt) / 220, -1, 1));
+                D.setTurn(R.clamp((tgt.z - P.z) / 300, -1, 1));
+            } else {
+                D.setTurn(R.clamp(-P.z / 400, -1, 1));
+                const want = G.leg === 'approach' || G.leg === 'final'
+                    ? R.glideAlt(G.route, P.x) : R.groundAt(G.route, P.x) + 1000;
+                D.setPitch(R.clamp((want - P.alt) / 220, -1, 1));
+            }
+        }
+        if (!step(1)) break;
+        if (process.env.RINGDBG) {
+            for (let i = 0; i < R.ringCount(rt); i++) {
+                if (G.ringDone[i]) continue;
+                const o = R.ringAt(rt, i);
+                if (!o) continue;
+                const d = Math.hypot(o.x - P.x, o.alt - P.alt, o.z - P.z);
+                near[i] = Math.min(near[i] == null ? 1e9 : near[i], d);
+            }
+            for (let i = 0; i < R.starCount(rt); i++) {
+                if (G.starDone[i]) continue;
+                const o = R.starAt(rt, i);
+                if (!o) continue;
+                const d = Math.hypot(o.x - P.x, o.alt - P.alt, o.z - P.z);
+                nearS[i] = Math.min(nearS[i] == null ? 1e9 : nearS[i], d);
+            }
+        }
+        if (G.phase === 'done') break;
+    }
+    if (process.env.RINGDBG) {
+        for (let i = 0; i < R.ringCount(rt); i++) {
+            const o = R.ringAt(rt, i);
+            if (!o) { console.log(`   vòng ${i}: bỏ (địa hình)`); continue; }
+            console.log(`   vòng ${i}: ${G.ringDone[i] ? 'QUA' : 'trượt, gần nhất ' + Math.round(near[i]) + ' m'}` +
+                ` (alt ${Math.round(o.alt)} z ${Math.round(o.z)})`);
+        }
+        for (let i = 0; i < R.starCount(rt); i++) {
+            if (!R.starAt(rt, i)) continue;
+            console.log(`   sao ${i}: ${G.starDone[i] ? 'NHẶT' : 'trượt, gần nhất ' + Math.round(nearS[i]) + ' m'}`);
+        }
+    }
+    got = G.rings;
+    const total = R.ringReal(rt);
+    let starTotal = 0;
+    for (let i = 0; i < R.starCount(rt); i++) if (R.starAt(rt, i)) starTotal++;
+    ok(got >= total - 1,
+        `lái thẳng tới từng vòng mà chỉ qua được ${got}/${total} — có vòng đặt lệch quá hoặc quá sát vòng trước`);
+    /* Sao treo trên đường vào vòng, nên bay đúng vòng là phải lượm được gần
+     * hết. Trượt nhiều tức là sao đang treo ở chỗ không ai bay qua — nhìn
+     * thấy suốt mà chẳng bao giờ chạm, và bé không hiểu tại sao. */
+    ok(G.stars >= starTotal - 1,
+        `bay đúng đường vòng mà chỉ nhặt được ${G.stars}/${starTotal} sao — sao đang treo lệch khỏi lối bay`);
+    console.log(`  vòng mây: lái thẳng tới thì qua được ${got}/${total}, và nhặt ${G.stars}/${starTotal} sao trên đường`);
+    D.backToMenu();
+}
+
+/* ------------------------------------------------------------------ *
  * 7. VỆT SÁNG DẪN ĐƯỜNG CÓ THẬT SỰ DẪN TỚI ĐƯỜNG BĂNG KHÔNG
  * ------------------------------------------------------------------ */
 {
@@ -466,8 +585,31 @@ for (const rt of R.ROUTES) {
 console.log('');
 for (const r of report) {
     console.log(`  ${r.bot.padEnd(12)} ${Math.round(r.secs).toString().padStart(3)} giây · ${r.rating.padEnd(8)}` +
-        ` · lượn lại ${r.circled} · ⭐${r.stars} 💍${r.rings} 📷${r.shots} · qua ${r.legs} chặng`);
+        ` · lượn lại ${r.circled} · lệch ${Math.round(r.maxZ).toString().padStart(4)} m` +
+        ` · ⭐${r.stars} 💍${r.rings} 📷${r.shots} · qua ${r.legs} chặng`);
 }
+/* ------------------------------------------------------------------ *
+ * 8. CÓ VẼ NỔI SÁU MƯƠI KHUNG HÌNH MỘT GIÂY KHÔNG
+ *
+ *    Phối cảnh tốn hơn hẳn kiểu vẽ ngang: mặt đất chia dải, lưới ruộng, nhà
+ *    cửa rải theo chiều sâu — mỗi thứ một ít, cộng lại thì máy tính của
+ *    người lớn vẫn mượt còn máy tính bảng của bé thì giật. Đếm số nét vẽ mỗi
+ *    khung là cách rẻ nhất để biết trước, thay vì đợi ai đó than.
+ * ------------------------------------------------------------------ */
+{
+    const rt = R.ROUTES[0];
+    D.start(rt.id);
+    G.auto = true;
+    for (let i = 0; i < 240; i++) step(1);        // bay lên đã, khỏi đo lúc còn trên đường băng
+    const before = drawCalls;
+    for (let i = 0; i < 120; i++) step(1);
+    const perFrame = (drawCalls - before) / 120;
+    ok(perFrame < 1400,
+        `mỗi khung hình vẽ ${Math.round(perFrame)} nét — quá dày, máy yếu sẽ giật`);
+    console.log(`  nét vẽ mỗi khung hình: ${Math.round(perFrame)}`);
+    D.backToMenu();
+}
+
 console.log(`\n  ${drawCalls} lời gọi vẽ\n`);
 
 if (fails.length) {
