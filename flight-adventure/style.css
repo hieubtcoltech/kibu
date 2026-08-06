@@ -59,6 +59,27 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
+.brand { display: flex; align-items: center; gap: 10px; }
+
+/* PHẢI KHAI CỠ Ở ĐÂY.
+   icon.png là ảnh vuông 512 điểm ảnh. Thiếu đúng bốn dòng này thì trình duyệt
+   hiện nó nguyên cỡ và cái thanh trên đội cao gần nửa màn hình — đúng thứ anh
+   Hiếu chụp gửi. site-chrome.css cố ý không đụng vào, vì mỗi game một cỡ
+   riêng; nên game nào cũng phải tự khai, và game nào quên cũng vỡ y hệt. */
+.brand-img {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    object-fit: cover;
+    display: block;
+}
+
+.brand-icon {
+    font-size: 1.7rem;
+    filter: drop-shadow(0 0 10px rgba(58, 167, 224, 0.6));
+    display: inline-block;
+}
+
 .btn {
     font-family: var(--font-display);
     font-weight: 700;
@@ -679,6 +700,7 @@ body {
     .app-wrapper { padding: 8px 8px 10px; gap: 8px; }
     .unified-nav { padding: 8px 10px; border-radius: 16px; gap: 8px; }
     .brand-title { font-size: 1rem; }
+    .brand-img { width: 28px; height: 28px; }
     .btn { padding: 8px 11px; font-size: 0.82rem; }
     .btn span { display: none; }
     .game-viewport { border-radius: 18px; }
