@@ -552,10 +552,9 @@
     }
     function ringCount(route) { return ringChain(route).length; }
 
-    /* Sao treo GIỮA hai vòng, ngay trên đường nối chúng. Bay men theo dải vòng
-     * mây thì nhặt được sao mà không phải rẽ thêm đâu cả — phần thưởng cho
-     * việc đi đúng đường, chứ không phải một việc thứ hai phải làm. */
-    function starCount(route) { return Math.max(0, ringChain(route).length - 1); }
+    /* Không dùng sao lơ lửng nữa. Vòng mây đã đủ làm hướng bay chính; các
+     * quả cầu vàng không thêm quyết định gameplay nào nên để bằng 0. */
+    function starCount(route) { return 0; }
 
     /* Bao nhiêu vòng THẬT SỰ có mặt — chỗ nào địa hình dựng quá nhanh thì
      * chuỗi bỏ trống. Máy soát đếm bằng con số này chứ không bằng chiều dài
