@@ -1176,52 +1176,132 @@
         if (o.kind === 'city') {
             var n = 2 + (r1 > 0.55 ? 1 : 0);
             for (var b = 0; b < n; b++) {
-                var bw = (26 + hash(idx, b + 21) * 26) * s;
-                var bh = (60 + hash(idx, b + 31) * 210) * s;
-                var bx = p.x + (b - 1) * 34 * s;
+                var bw = (28 + hash(idx, b + 21) * 28) * s;
+                var bh = (70 + hash(idx, b + 31) * 220) * s;
+                var bx = p.x + (b - 1) * 36 * s;
                 if (bh < 0.6) continue;
-                ctx.fillStyle = hash(idx, b + 41) > 0.5 ? '#e6edf3' : '#cbd6e0';
+
+                // Cửa sổ kính phản quang gradient cho nhà cao tầng hiện đại
+                var bGrad = ctx.createLinearGradient(bx, p.y - bh, bx + bw, p.y);
+                if (hash(idx, b + 41) > 0.5) {
+                    bGrad.addColorStop(0, '#2563eb'); // xanh dương sapphire sang trọng
+                    bGrad.addColorStop(0.5, '#1d4ed8');
+                    bGrad.addColorStop(1, '#1e3a8a');
+                } else {
+                    bGrad.addColorStop(0, '#475569'); // màu thép xám hiện đại
+                    bGrad.addColorStop(0.5, '#334155');
+                    bGrad.addColorStop(1, '#1e293b');
+                }
+                ctx.fillStyle = bGrad;
                 ctx.fillRect(bx, p.y - bh, bw, bh);
-                ctx.fillStyle = '#93a3b3';
-                ctx.fillRect(bx, p.y - bh, bw, Math.max(1, 5 * s));
-                ctx.fillStyle = 'rgba(120,150,180,0.5)';
-                for (var w = 0; w < 5; w++) {
-                    var wy = p.y - bh + 22 * s + w * 34 * s;
-                    if (wy > p.y - 8 * s) break;
-                    if (hash(idx, b * 7 + w + 9) > 0.6) continue;
-                    ctx.fillRect(bx + 5 * s, wy, bw - 10 * s, Math.max(1, 9 * s));
+
+                // Đường viền sáng bóng bẩy dọc cạnh trái nhà
+                ctx.fillStyle = 'rgba(255,255,255,0.18)';
+                ctx.fillRect(bx, p.y - bh, bw * 0.12, bh);
+
+                // Cột thu lôi / Anten trên đỉnh tòa nhà
+                if (hash(idx, b + 51) > 0.62) {
+                    ctx.strokeStyle = '#94a3b8';
+                    ctx.lineWidth = Math.max(1, 1.2 * s);
+                    ctx.beginPath();
+                    ctx.moveTo(bx + bw * 0.5, p.y - bh);
+                    ctx.lineTo(bx + bw * 0.5, p.y - bh - 16 * s);
+                    ctx.stroke();
+                    // Đèn cảnh báo nhấp nháy đỏ trên đỉnh anten
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath();
+                    ctx.arc(bx + bw * 0.5, p.y - bh - 16 * s, Math.max(1.5, 2.5 * s), 0, 6.284);
+                    ctx.fill();
+                }
+
+                // Vẽ các ô cửa sổ sáng đèn lung linh
+                ctx.fillStyle = '#fef08a'; // màu vàng ấm áp
+                var rows = Math.floor(bh / (14 * s));
+                var cols = Math.floor(bw / (10 * s));
+                for (var r = 1; r < rows - 1; r++) {
+                    if (hash(idx, b * 3 + r) > 0.45) continue; // chọn ngẫu nhiên các tầng sáng đèn
+                    for (var c = 1; c < cols - 1; c++) {
+                        if (hash(idx, b * 7 + c + r) > 0.5) continue;
+                        ctx.fillRect(bx + c * 10 * s, p.y - bh + r * 14 * s, 3.5 * s, 5 * s);
+                    }
                 }
             }
         } else if (o.kind === 'fields') {
-            ctx.fillStyle = r1 > 0.5 ? 'rgba(110,180,80,0.5)' : 'rgba(150,210,110,0.5)';
-            ctx.fillRect(p.x - 150 * s, p.y - 26 * s, 300 * s, 30 * s);
-            if (r2 > 0.72) {
-                ctx.fillStyle = '#d9694a';
-                ctx.fillRect(p.x - 14 * s, p.y - 34 * s, 28 * s, 18 * s);
-                ctx.fillStyle = '#8b5a3c';
-                ctx.fillRect(p.x - 14 * s, p.y - 16 * s, 28 * s, 16 * s);
+            // Thảm cỏ ruộng xanh mướt bo tròn
+            ctx.fillStyle = r1 > 0.5 ? '#86efac' : '#a7f3d0';
+            ctx.beginPath();
+            ctx.ellipse(p.x, p.y, 160 * s, 26 * s, 0, 0, 6.284);
+            ctx.fill();
+
+            if (r2 > 0.65) {
+                // Nhà tranh nhỏ xinh ở đồng quê: Tường trắng sữa
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(p.x - 14 * s, p.y - 18 * s, 28 * s, 18 * s);
+
+                // Mái nhà màu đỏ gạch nổi bật hình tam giác
+                ctx.fillStyle = '#f43f5e';
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - 28 * s);
+                ctx.lineTo(p.x + 17 * s, p.y - 18 * s);
+                ctx.lineTo(p.x - 17 * s, p.y - 18 * s);
+                ctx.closePath();
+                ctx.fill();
+
+                // Cửa ra vào màu gỗ ấm áp
+                ctx.fillStyle = '#d97706';
+                ctx.fillRect(p.x - 4 * s, p.y - 10 * s, 8 * s, 10 * s);
+
+                // Cửa sổ tròn màu xanh da trời phản chiếu
+                ctx.fillStyle = '#38bdf8';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y - 20 * s, 3.5 * s, 0, 6.284);
+                ctx.fill();
             }
         } else if (o.kind === 'hills' || o.kind === 'mountains') {
-            if (r1 > 0.3) {
-                /* Cây cao chừng hai mươi mét, không phải một trăm. Bản đầu em
-                 * để 70–160 m và trên màn chúng ra mấy cái nêm xanh to bằng
-                 * quả đồi — mắt mất luôn thước đo, không còn biết mình đang
-                 * bay cao hay thấp. */
-                var th = (17 + r2 * 15) * s;
-                ctx.fillStyle = o.kind === 'mountains' ? '#3f6b47' : '#2f7a3d';
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y - th);
-                ctx.lineTo(p.x + th * 0.34, p.y);
-                ctx.lineTo(p.x - th * 0.34, p.y);
-                ctx.closePath(); ctx.fill();
+            if (r1 > 0.35) {
+                var th = (18 + r2 * 16) * s;
+                // Thân cây thông bằng gỗ nâu sẫm
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(p.x - th * 0.05, p.y - th * 0.16, th * 0.1, th * 0.16);
+
+                // Tán lá thông 3 tầng xếp chồng tuyệt đẹp
+                var layers = 3;
+                var baseCol = o.kind === 'mountains' ? '#0f5132' : '#15803d';
+                var lightCol = o.kind === 'mountains' ? '#146c43' : '#166534';
+                
+                for (var l = 0; l < layers; l++) {
+                    var ly0 = p.y - th * (0.12 + l * 0.28);
+                    var ly1 = p.y - th * (0.52 + l * 0.26);
+                    var lw = th * (0.38 - l * 0.11);
+
+                    var gr = ctx.createLinearGradient(p.x - lw, ly0, p.x + lw, ly0);
+                    gr.addColorStop(0, baseCol);
+                    gr.addColorStop(0.5, lightCol);
+                    gr.addColorStop(1, baseCol);
+                    ctx.fillStyle = gr;
+
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, ly1);
+                    ctx.lineTo(p.x + lw, ly0);
+                    ctx.lineTo(p.x - lw, ly0);
+                    ctx.closePath();
+                    ctx.fill();
+                }
             }
             if (o.kind === 'mountains' && o.g > 1250 && r2 > 0.55) {
-                ctx.fillStyle = 'rgba(255,255,255,0.8)';
-                ctx.fillRect(p.x - 90 * s, p.y - 10 * s, 180 * s, 16 * s);
+                // Đỉnh núi phủ tuyết trắng tinh khôi ở những vùng núi cao
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - th);
+                ctx.lineTo(p.x + th * 0.1, p.y - th * 0.72);
+                ctx.lineTo(p.x - th * 0.1, p.y - th * 0.72);
+                ctx.closePath();
+                ctx.fill();
             }
         } else if (o.kind === 'coast') {
-            ctx.fillStyle = 'rgba(255,255,255,0.65)';
-            ctx.fillRect(p.x - 130 * s, p.y + Math.sin(G.t * 1.6 + idx) * 4 * s, 260 * s, 7 * s);
+            // Con sóng bờ biển cuộn nhẹ nhàng
+            ctx.fillStyle = 'rgba(255,255,255,0.72)';
+            ctx.fillRect(p.x - 130 * s, p.y + Math.sin(G.t * 1.6 + idx) * 4 * s, 260 * s, 6 * s);
         }
         ctx.restore();
     }
