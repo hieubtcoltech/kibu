@@ -891,6 +891,100 @@
         ctx.beginPath(); ctx.arc(sunX, sunY, 28, 0, 6.284); ctx.fill();
     }
 
+    function drawDistantRidges() {
+        var hz = horizonY();
+        ctx.save();
+        ctx.fillStyle = 'rgba(62,105,122,0.16)';
+        ctx.beginPath();
+        ctx.moveTo(0, hz + 18);
+        for (var x = 0; x <= W + 80; x += 80) {
+            var y = hz + 10 + Math.sin(x * 0.012 + cam.x * 0.0009) * 10 +
+                Math.sin(x * 0.027 + 2.1) * 5;
+            ctx.lineTo(x, y);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+
+        ctx.fillStyle = 'rgba(43,85,95,0.14)';
+        ctx.beginPath();
+        ctx.moveTo(0, hz + 34);
+        for (var x2 = 0; x2 <= W + 80; x2 += 70) {
+            var y2 = hz + 30 + Math.sin(x2 * 0.018 - cam.x * 0.0011) * 13;
+            ctx.lineTo(x2, y2);
+        }
+        ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+        ctx.restore();
+    }
+
+    function drawMenuScene() {
+        var hz = horizonY();
+        drawDistantRidges();
+        var g = ctx.createLinearGradient(0, hz, 0, H);
+        g.addColorStop(0, '#b7d8ac');
+        g.addColorStop(0.48, '#8fb57e');
+        g.addColorStop(1, '#5f875c');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, hz, W, H - hz);
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1.4;
+        for (var i = 0; i < 9; i++) {
+            var y = hz + 28 + i * 34;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.bezierCurveTo(W * 0.28, y - 20, W * 0.62, y + 20, W, y - 8);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(57,103,64,0.2)';
+        ctx.beginPath();
+        ctx.moveTo(W * 0.42, H);
+        ctx.lineTo(W * 0.49, hz + 44);
+        ctx.lineTo(W * 0.51, hz + 44);
+        ctx.lineTo(W * 0.64, H);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(54,60,70,0.72)';
+        ctx.beginPath();
+        ctx.moveTo(W * 0.38, H);
+        ctx.lineTo(W * 0.49, hz + 52);
+        ctx.lineTo(W * 0.51, hz + 52);
+        ctx.lineTo(W * 0.68, H);
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.78)';
+        ctx.beginPath();
+        ctx.moveTo(W * 0.52, H);
+        ctx.lineTo(W * 0.5, hz + 56);
+        ctx.lineTo(W * 0.505, hz + 56);
+        ctx.lineTo(W * 0.56, H);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        ctx.translate(W * 0.29, hz - 32 + Math.sin(G.t * 1.4) * 5);
+        ctx.rotate(-0.12);
+        ctx.globalAlpha = 0.9;
+        ctx.strokeStyle = 'rgba(18,32,48,0.7)';
+        ctx.lineWidth = 4;
+        ctx.lineJoin = 'round';
+        ctx.fillStyle = '#f5f8fc';
+        roundRect(ctx, -24, -9, 48, 19, 10); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#e05a4a';
+        ctx.beginPath();
+        ctx.moveTo(-54, 3); ctx.lineTo(0, -12); ctx.lineTo(54, 3);
+        ctx.lineTo(45, 12); ctx.lineTo(0, 6); ctx.lineTo(-45, 12);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#3aa7e0';
+        ctx.fillRect(-15, -4, 30, 7);
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-92, 20); ctx.bezierCurveTo(-54, 6, -28, 3, -4, 8);
+        ctx.stroke();
+        ctx.restore();
+    }
+
     /* ---- MẶT ĐẤT ----
      * Vẽ thành từng dải ngang theo KHOẢNG CÁCH: dải xa mỏng, dải gần dày, đúng
      * như phối cảnh sinh ra. Mỗi dải hỏi thẳng groundAt() ở quãng ấy, nên hình
@@ -904,6 +998,7 @@
 
     function drawGround() {
         var rt = G.route, s = skyOf();
+        drawDistantRidges();
 
         /* THỢ SƠN: đi từ XA VỀ GẦN, mỗi dải tô từ đường chân trời của chính nó
          * XUỐNG HẾT ĐÁY MÀN. Dải gần hơn nằm thấp hơn nên nó phủ lại phần
@@ -1172,6 +1267,10 @@
         band(pts, RW_HALF);
         ctx.fillStyle = '#6d747f';
         band(pts, RW_HALF * 0.92);
+        ctx.fillStyle = 'rgba(255,255,255,0.28)';
+        band(pts, RW_HALF * 0.82);
+        ctx.fillStyle = '#6d747f';
+        band(pts, RW_HALF * 0.74);
         /* vạch tim đứt quãng */
         ctx.fillStyle = 'rgba(255,255,255,0.92)';
         for (var k = 0; k < pts.length - 1; k++) {
@@ -1182,6 +1281,16 @@
             ctx.beginPath();
             ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(c.x, c.y); ctx.lineTo(d.x, d.y);
             ctx.closePath(); ctx.fill();
+        }
+        for (var e = 0; e < pts.length; e += 2) {
+            var lp = proj(pts[e].wx, rw.y + 4, -RW_HALF - 9);
+            var rp = proj(pts[e].wx, rw.y + 4, RW_HALF + 9);
+            if (!lp || !rp) continue;
+            if (lp.y > H - 125 || rp.y > H - 125) continue;
+            var aEdge = 0.22 + 0.38 * (1 - haze(lp.d));
+            ctx.fillStyle = 'rgba(255,245,178,' + aEdge + ')';
+            ctx.beginPath(); ctx.arc(lp.x, lp.y, clamp(5.5 * lp.s, 1.2, 4.2), 0, 6.284); ctx.fill();
+            ctx.beginPath(); ctx.arc(rp.x, rp.y, clamp(5.5 * rp.s, 1.2, 4.2), 0, 6.284); ctx.fill();
         }
         /* Đèn đầu đường băng nhấp nháy so le — thứ SÁNG NHẤT khung hình lúc hạ
          * cánh, vì mắt trẻ con đi theo chỗ sáng nhất. */
@@ -1376,6 +1485,9 @@
             if (it.ring) {
                 var rr = R.RING_R * q.s;
                 var pulse = 1 + Math.sin(G.t * 3 + it.i) * 0.04;
+                ctx.strokeStyle = 'rgba(88,205,255,0.22)';
+                ctx.lineWidth = Math.max(5, 34 * q.s);
+                ctx.beginPath(); ctx.arc(q.x, q.y, rr * pulse, 0, 6.284); ctx.stroke();
                 ctx.strokeStyle = 'rgba(150,235,255,0.95)';
                 ctx.lineWidth = Math.max(2, 16 * q.s);
                 ctx.beginPath(); ctx.arc(q.x, q.y, rr * pulse, 0, 6.284); ctx.stroke();
@@ -1414,12 +1526,20 @@
         var p = proj(P.x, P.alt, P.z);
         if (!p) return;
         /* Cỡ vẽ. 34 làm sải cánh chiếm gần một phần năm bề ngang màn hình —
-         * máy bay che mất chính cái nó đang bay tới. 23 thì vừa: đủ to để
-         * thấy rõ cú nghiêng cánh, đủ nhỏ để còn thấy đường. */
-        var s = clamp(p.s, 0.4, 3.4) * 23;
+         * máy bay che mất chính cái nó đang bay tới. 28 thì vừa: rõ hơn ở
+         * màn nhỏ, nhưng vẫn chừa đủ đường băng và vòng mây phía trước. */
+        var s = clamp(p.s, 0.4, 3.7) * 28;
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(-P.bank * 0.5);
+
+        ctx.save();
+        ctx.globalAlpha = 0.22;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.ellipse(0, s * 0.06, s * 1.18, s * 0.38, 0, 0, 6.284);
+        ctx.fill();
+        ctx.restore();
 
         /* vệt khói hai đầu cánh khi bay nhanh */
         if (P.spd > R.SPD_CRUISE * 0.85 && !P.onGround) {
@@ -1467,6 +1587,8 @@
         ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#3aa7e0';
         ctx.fillRect(-s * 0.2, -s * 0.02, s * 0.4, s * 0.09);
+        ctx.fillStyle = 'rgba(255,255,255,0.65)';
+        ctx.fillRect(-s * 0.15, -s * 0.19, s * 0.3, s * 0.08);
 
         /* càng, chỉ thò ra lúc còn thấp — mắt đọc được "sắp chạm đất rồi" */
         if (P.gear) {
@@ -1525,6 +1647,8 @@
             drawClouds();
             if (G.phase === 'fly' || G.phase === 'pause') drawPlane();
             drawParticles();
+        } else {
+            drawMenuScene();
         }
         ctx.restore();
 
