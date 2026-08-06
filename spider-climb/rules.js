@@ -43,6 +43,12 @@
     var GAP_MIN = 190;             // khe hẹp nhất — nhảy nhanh, nhịp gấp
     var GAP_DEF = 258;             // khe thường
     var GAP_MAX = 336;             // khe rộng nhất — bay lâu, hở sườn lâu
+    /* Mỗi điểm ảnh bề rộng khe đổi đi phải trải trên ít nhất bấy nhiêu điểm
+     * ảnh chiều cao. 6 cho ra độ dốc chừng 0,17 — leo 300 điểm ảnh mỗi giây
+     * thì khe nở ra chừng 50 mỗi giây, người chơi bị kéo ngang 25. Đủ chậm để
+     * thành một chuyển động chứ không phải một cú giật. */
+    var GAP_RAMP = 6;
+    var GAP_RAMP_MIN = 240;        // và dù đổi ít tới đâu cũng trải chừng này
 
     /* Khoảng trống BẮT BUỘC trên tường đối diện, tính từ hai đầu một vật cản.
      * Đây là con số giữ cho game công bằng: bị chặn bên này thì bên kia phải
@@ -597,11 +603,41 @@
         }
     };
 
+    /* Đổi bề rộng khe, đạt tới `gap` ở độ cao `y`.
+     *
+     * HAI CHỖ PHẢI CẨN THẬN, và chỗ thứ nhất là một lỗi thật anh Hiếu bắt được:
+     * "đang rộng thì hẹp hoặc ngược lại", đổi đột ngột giữa lúc đang leo.
+     *
+     * 1. PHẢI NEO LẠI BỀ RỘNG HIỆN TẠI TRƯỚC ĐÃ.
+     *    gapAt() nội suy giữa hai mốc, và khi y nằm sau mốc CUỐI thì nó trả về
+     *    thẳng giá trị của mốc ấy. Nghĩa là mỗi lần đẩy thêm một mốc mới lên
+     *    trên, cả quãng từ mốc cuối cũ tới đó — vốn đang phẳng — bỗng thành một
+     *    đoạn dốc. Mà quãng ấy có thể chứa đúng chỗ người chơi đang đứng: bề
+     *    rộng khe ngay dưới chân họ bị viết lại trong MỘT khung hình, hai bức
+     *    tường giật một cái, và người chơi bị kéo ngang theo.
+     *    Đo thử trước khi sửa: cùng một độ cao, 258 nhảy xuống 230.
+     *    Nay neo một mốc giữ nguyên giá trị hiện tại ở ngay đầu quãng sắp sinh,
+     *    nên mọi thứ phía dưới đóng băng vĩnh viễn.
+     *
+     * 2. ĐỔI PHẢI ĐỦ THOAI THOẢI.
+     *    Khuôn màn hay xin đổi 48 điểm ảnh bề rộng trong vòng 60 điểm ảnh chiều
+     *    cao — dốc gấp năm lần cần thiết, mắt đọc ra một cái gãy khúc. Nay mỗi
+     *    điểm ảnh bề rộng phải trải trên ít nhất sáu điểm ảnh chiều cao; xin
+     *    gấp hơn thì mốc bị đẩy lên cao cho vừa. */
     World.prototype.gapTo = function (y, gap) {
         gap = Math.max(GAP_MIN, Math.min(GAP_MAX, gap));
         var last = this.gapKeys[this.gapKeys.length - 1];
+
+        /* Neo: giữ nguyên bề rộng hiện tại tới tận chỗ bắt đầu đổi */
+        var anchorY = Math.max(last.y, this.cursor);
+        if (anchorY > last.y) {
+            this.gapKeys.push({ y: anchorY, gap: last.gap });
+            last = this.gapKeys[this.gapKeys.length - 1];
+        }
         if (y <= last.y) return;
-        this.gapKeys.push({ y: y, gap: gap });
+
+        var span = Math.max(GAP_RAMP_MIN, Math.abs(gap - last.gap) * GAP_RAMP);
+        this.gapKeys.push({ y: Math.max(y, last.y + span), gap: gap });
     };
 
     World.prototype.wind = function (y0, h, dir, str) {
@@ -1253,6 +1289,7 @@
     return {
         W: W, H: H, PX_PER_M: PX_PER_M,
         GAP_MIN: GAP_MIN, GAP_DEF: GAP_DEF, GAP_MAX: GAP_MAX,
+        GAP_RAMP: GAP_RAMP, GAP_RAMP_MIN: GAP_RAMP_MIN,
         CLEAR: CLEAR, SAME_SIDE_MIN: SAME_SIDE_MIN, SURFACE_CLEAR: SURFACE_CLEAR,
         MIN_WINDOW: MIN_WINDOW,
         CLIMB_BASE: CLIMB_BASE, CLIMB_MAX: CLIMB_MAX, CLIMB_BOOST: CLIMB_BOOST,

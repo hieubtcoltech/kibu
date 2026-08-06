@@ -33,11 +33,21 @@ const SEEDS = parseInt(process.argv[2], 10) || 40;
 const UP_TO_M = 12000;
 const UP_TO_Y = UP_TO_M * R.PX_PER_M;
 
+/* Trần độ dốc của mặt tường, tính bằng điểm ảnh bề rộng khe trên mỗi điểm ảnh
+ * chiều cao.
+ *
+ * GAP_RAMP nói bề rộng phải trải trên bao nhiêu chiều cao — nhưng đó là dốc
+ * TRUNG BÌNH. Đường nội suy là cô-sin, cố ý phẳng ở hai đầu để không có góc
+ * gãy, nên phần giữa bù lại bằng cách dốc hơn đúng π/2 lần. Bản đầu em lấy
+ * thẳng 1/GAP_RAMP làm trần rồi so với đỉnh dốc, và cả ba mươi hạt giống đều
+ * "không đạt" — con số thì đúng, chỉ là em so nhầm hai đại lượng khác nhau. */
+const SLOPE_MAX = (Math.PI / 2) / R.GAP_RAMP;
+
 const fails = [];
 const warn = [];
 const stats = {
     patterns: {}, blockers: 0, surfaces: 0, movers: 0, pickups: 0,
-    minGap: Infinity, maxGap: -Infinity, restEvery: []
+    minGap: Infinity, maxGap: -Infinity, steepest: 0, restEvery: []
 };
 
 function fail(msg) { if (fails.length < 40) fails.push(msg); }
@@ -97,15 +107,55 @@ for (let s = 1; s <= SEEDS; s++) {
         }
     }
 
-    /* ---- 5. bề rộng khe ---- */
-    for (let y = 900; y < UP_TO_Y; y += 40) {
+    /* ---- 5. bề rộng khe: trong khoảng, và ĐỔI THOAI THOẢI ---- */
+    let prevG = w.gapAt(900), steepest = 0;
+    for (let y = 900; y < UP_TO_Y; y += 8) {
         const g = w.gapAt(y);
         if (g < R.GAP_MIN - 0.5 || g > R.GAP_MAX + 0.5) {
             fail(`hạt ${s}: khe rộng ${Math.round(g)} ở ${Math.round(y / R.PX_PER_M)} m, ngoài khoảng cho phép`);
             break;
         }
+        /* Độ dốc: bề rộng đổi bao nhiêu trên mỗi điểm ảnh chiều cao. Dốc quá
+         * thì mắt đọc ra một cái gãy khúc, và người chơi đang bám tường bị kéo
+         * ngang giật cục. */
+        const slope = Math.abs(g - prevG) / 8;
+        if (slope > steepest) steepest = slope;
+        if (slope > SLOPE_MAX + 0.02) {
+            fail(`hạt ${s}: khe đổi rộng quá gấp ở ${Math.round(y / R.PX_PER_M)} m ` +
+                `(${slope.toFixed(3)} mỗi điểm ảnh, trần ${SLOPE_MAX.toFixed(3)})`);
+            break;
+        }
+        prevG = g;
         if (g < stats.minGap) stats.minGap = g;
         if (g > stats.maxGap) stats.maxGap = g;
+    }
+    if (steepest > stats.steepest) stats.steepest = steepest;
+
+    /* ---- 5b. SINH THÊM MÀN KHÔNG ĐƯỢC ĐỔI KHE Ở PHÍA DƯỚI ----
+     * Đây là lỗi anh Hiếu bắt được: "đang rộng thì hẹp hoặc ngược lại". gapAt()
+     * trả về thẳng giá trị mốc cuối khi y nằm sau nó, nên mỗi lần đẩy thêm một
+     * mốc lên trên là cả quãng đang phẳng bỗng thành đoạn dốc — và quãng ấy có
+     * thể chứa đúng chỗ người chơi đang đứng. Hai bức tường giật một cái ngay
+     * dưới chân họ, mà chẳng có gì báo lỗi cả.
+     *
+     * Phép soát: nhớ bề rộng ở một loạt độ cao, sinh thêm màn, rồi hỏi lại. */
+    {
+        const w2 = new R.World(s * 7919 + 13);
+        let g2 = 0;
+        while (w2.cursor < 9000 && g2++ < 400) w2.ensure(9000);
+        const spots = [];
+        for (let y = 1000; y < w2.cursor - 200; y += 350) spots.push(y);
+        const before = spots.map(y => w2.gapAt(y));
+        g2 = 0;
+        while (w2.cursor < 30000 && g2++ < 400) w2.ensure(30000);
+        for (let i = 0; i < spots.length; i++) {
+            const drift = Math.abs(w2.gapAt(spots[i]) - before[i]);
+            if (drift > 0.5) {
+                fail(`hạt ${s}: sinh thêm màn phía trên làm khe ở ${Math.round(spots[i] / R.PX_PER_M)} m ` +
+                    `đổi ${drift.toFixed(1)} điểm ảnh — tường giật ngay dưới chân người chơi`);
+                break;
+            }
+        }
     }
 
     /* ---- 6. cửa sổ an toàn của mối nguy tuần hoàn ---- */
@@ -322,7 +372,8 @@ const restAvg = stats.restEvery.length
 console.log(`  mỗi hạt trung bình: ${Math.round(stats.blockers / SEEDS)} vật cản · ` +
     `${Math.round(stats.surfaces / SEEDS)} mặt xấu · ${Math.round(stats.movers / SEEDS)} mối nguy động · ` +
     `${Math.round(stats.pickups / SEEDS)} vật phẩm`);
-console.log(`  khe: hẹp nhất ${Math.round(stats.minGap)} · rộng nhất ${Math.round(stats.maxGap)}`);
+console.log(`  khe: hẹp nhất ${Math.round(stats.minGap)} · rộng nhất ${Math.round(stats.maxGap)}` +
+    ` · dốc nhất ${stats.steepest.toFixed(3)} mỗi điểm ảnh (trần ${SLOPE_MAX.toFixed(3)})`);
 console.log(`  khuôn dùng tới: ${used}/${R.PATTERNS.length}${unused.length ? ' — chưa dùng: ' + unused.join(', ') : ''}`);
 console.log(`  cứ ${restAvg} đoạn lại có một đoạn nghỉ`);
 console.log('');
