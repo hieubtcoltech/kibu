@@ -303,6 +303,11 @@ body .app-wrapper {
     animation: camPulse 0.9s ease-in-out infinite alternate;
 }
 
+.btn-view.is-on {
+    border-color: #38bdf8;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.22), 0 0 18px rgba(56, 189, 248, 0.45);
+}
+
 @keyframes camPulse {
     from { transform: scale(1); }
     to { transform: scale(1.1); }

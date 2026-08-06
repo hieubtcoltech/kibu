@@ -68,7 +68,11 @@
     var HORIZON = 236;             // đường chân trời nằm ở đây khi bay bằng
     var CAM_BACK = 210;            // máy quay lùi sau máy bay bấy nhiêu mét
     var CAM_UP = 34;               // và cao hơn nó bấy nhiêu
+    var CAM_COCKPIT_FWD = 11;      // mắt phi công lệch về phía mũi máy bay
+    var CAM_COCKPIT_UP = 2.8;      // độ cao mắt trong buồng lái
+    var CAM_COCKPIT_FOCAL = 640;   // góc nhìn rộng hơn một chút khi ngồi trong
     var NEAR = 26;                 // gần hơn ngần này thì không vẽ (chia cho 0)
+    var NEAR_COCKPIT = 3.5;        // buồng lái nhìn gần hơn — cần ngưỡng thấp hơn
     var VIEW_FAR = 16000;          // xa hơn ngần này thì chìm hẳn vào sương mù
 
     /* Bay lệch sang hai bên được bao xa. Ra ngoài thì trò chơi nhẹ nhàng đẩy
@@ -619,6 +623,8 @@
         PHOTO_RANGE: PHOTO_RANGE, RING_R: RING_R, STAR_R: STAR_R, STAR_PICK: STAR_PICK,
         hitBall: hitBall,
         FOCAL: FOCAL, HORIZON: HORIZON, CAM_BACK: CAM_BACK, CAM_UP: CAM_UP,
+        CAM_COCKPIT_FWD: CAM_COCKPIT_FWD, CAM_COCKPIT_UP: CAM_COCKPIT_UP,
+        CAM_COCKPIT_FOCAL: CAM_COCKPIT_FOCAL, NEAR_COCKPIT: NEAR_COCKPIT,
         NEAR: NEAR, VIEW_FAR: VIEW_FAR,
         LAT_MAX: LAT_MAX, LAT_SPEED: LAT_SPEED, LAT_EASE: LAT_EASE,
         LAND_GREAT: LAND_GREAT, LAND_NICE: LAND_NICE,

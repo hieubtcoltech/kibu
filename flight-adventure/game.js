@@ -267,7 +267,8 @@
         flash: 0,             // chớp trắng của máy ảnh
         shake: 0,
         landVS: 0, landSpd: 0, rating: '',
-        photoHint: null       // thắng cảnh đang trong tầm chụp
+        photoHint: null,      // thắng cảnh đang trong tầm chụp
+        view: 'chase'         // chase | cockpit
     };
 
     var P = {
@@ -341,6 +342,7 @@
         G.flash = 0; G.shake = 0;
         G.landVS = 0; G.landSpd = 0; G.rating = '';
         G.photoHint = null;
+        G.view = 'chase';
         parts.length = 0;
 
         var rw = R.departRunway(G.route);
@@ -368,6 +370,7 @@
         el('btn-photo').classList.remove('is-hot');
         syncHud(true);
         setAutoBtn();
+        setViewBtn();
         Sfx.wake();
         say('ready', T('Ready to fly? Hold the green button!'), 4.5);
         /* Nhả tiêu điểm khỏi nút vừa bấm, không thì phím cách sau đó bấm lại
@@ -839,25 +842,35 @@
      * ======================================================================*/
     var cam = { x: 0, alt: 0, z: 0, pitch: 0, yaw: 0 };
 
+    function isCockpitView() {
+        return G.view === 'cockpit' && (G.phase === 'fly' || G.phase === 'pause');
+    }
+
+    function camOffsets() {
+        if (isCockpitView()) {
+            return { back: -R.CAM_COCKPIT_FWD, up: R.CAM_COCKPIT_UP, pitchMul: 38 };
+        }
+        var takeoff = G.leg === 'ready' || G.leg === 'roll';
+        return { back: takeoff ? 240 : R.CAM_BACK, up: takeoff ? 56 : R.CAM_UP, pitchMul: 46 };
+    }
+
     /* Đặt máy quay đúng chỗ ngay lập tức, không bám mềm. Dùng lúc bắt đầu
      * chuyến và lúc dựng màn chờ — không có nó thì khung hình đầu tiên máy
      * quay còn nằm ở gốc toạ độ và cả thế giới vụt vào chỗ từ hư không. */
     function snapCam() {
-        var back = (G.leg === 'ready' || G.leg === 'roll') ? 240 : R.CAM_BACK;
-        var up = (G.leg === 'ready' || G.leg === 'roll') ? 56 : R.CAM_UP;
+        var off = camOffsets();
         cam.yaw = P.heading;
-        cam.x = P.x - back * Math.cos(cam.yaw);
-        cam.z = P.z - back * Math.sin(cam.yaw);
-        cam.alt = P.alt + up;
-        cam.pitch = 0;
+        cam.x = P.x - off.back * Math.cos(cam.yaw);
+        cam.z = P.z - off.back * Math.sin(cam.yaw);
+        cam.alt = P.alt + off.up;
+        cam.pitch = clamp(P.vs / R.CLIMB_RATE, -1, 1) * off.pitchMul;
     }
 
     function stepCam(dt) {
-        var back = (G.leg === 'ready' || G.leg === 'roll') ? 240 : R.CAM_BACK;
-        var up = (G.leg === 'ready' || G.leg === 'roll') ? 56 : R.CAM_UP;
-        
+        var off = camOffsets();
+
         // Quay camera bám theo hướng bay của máy bay
-        var kYaw = clamp(dt * 3.6, 0, 1);
+        var kYaw = clamp(dt * (isCockpitView() ? 4.4 : 3.6), 0, 1);
         // Normalize angle difference to interpolate correctly
         var diff = P.heading - cam.yaw;
         if (diff > Math.PI) diff -= Math.PI * 2;
@@ -866,18 +879,18 @@
         if (cam.yaw > Math.PI) cam.yaw -= Math.PI * 2;
         if (cam.yaw < -Math.PI) cam.yaw += Math.PI * 2;
 
-        cam.x = P.x - back * Math.cos(cam.yaw);
-        cam.z = P.z - back * Math.sin(cam.yaw);
+        cam.x = P.x - off.back * Math.cos(cam.yaw);
+        cam.z = P.z - off.back * Math.sin(cam.yaw);
 
         /* Máy quay bám mềm theo độ cao và độ lệch chứ không dính cứng. Dính
          * cứng thì bẻ lái một cái là cả thế giới giật sang bên; bám mềm thì
          * máy bay nhích ra khỏi giữa màn một chút rồi máy quay đuổi theo, và
          * chính cái nhích ấy mới cho mắt thấy là mình VỪA BẺ LÁI. */
-        var k = clamp(dt * 3.2, 0, 1);
-        cam.alt = lerp(cam.alt, P.alt + up, k);
+        var k = clamp(dt * (isCockpitView() ? 5.2 : 3.2), 0, 1);
+        cam.alt = lerp(cam.alt, P.alt + off.up, k);
         /* Chúc máy quay theo tốc độ lên xuống: leo lên thì thấy nhiều trời
          * hơn, chúc xuống thì thấy nhiều đất hơn. */
-        cam.pitch = lerp(cam.pitch, clamp(P.vs / R.CLIMB_RATE, -1, 1) * 46, k);
+        cam.pitch = lerp(cam.pitch, clamp(P.vs / R.CLIMB_RATE, -1, 1) * off.pitchMul, k);
     }
 
     function horizonY() { return R.HORIZON + cam.pitch; }
@@ -890,9 +903,11 @@
         var cos = Math.cos(cam.yaw || 0);
         var sin = Math.sin(cam.yaw || 0);
         var d = dx * cos + dz * sin;
-        if (d < R.NEAR) return null;
+        var near = isCockpitView() ? R.NEAR_COCKPIT : R.NEAR;
+        var focal = isCockpitView() ? R.CAM_COCKPIT_FOCAL : R.FOCAL;
+        if (d < near) return null;
         var zProj = -dx * sin + dz * cos;
-        var s = R.FOCAL / d;
+        var s = focal / d;
         return {
             x: W / 2 + zProj * s,
             y: horizonY() + (cam.alt - alt) * s,
@@ -2145,6 +2160,125 @@
         ctx.restore();
     }
 
+    /* Khung buồng lái vẽ chồng lên cảnh — chỉ khi góc nhìn từ trong. Bé thấy
+     * kính chắn gió, bảng điều khiển đơn giản, và mép cánh khi nghiêng. */
+    function drawCockpitOverlay() {
+        if (!isCockpitView()) return;
+
+        var dashH = clamp(H * 0.19, 72, 128);
+        var sideW = clamp(W * 0.075, 18, 42);
+        var topH = clamp(H * 0.055, 22, 38);
+        var bankTilt = P.bank * 0.42;
+
+        ctx.save();
+        ctx.translate(W / 2, H / 2);
+        ctx.rotate(bankTilt);
+        ctx.translate(-W / 2, -H / 2);
+
+        /* Khung trên — viền kính chắn gió */
+        var topGrad = ctx.createLinearGradient(0, 0, 0, topH);
+        topGrad.addColorStop(0, 'rgba(8, 16, 28, 0.96)');
+        topGrad.addColorStop(1, 'rgba(8, 16, 28, 0.55)');
+        ctx.fillStyle = topGrad;
+        ctx.fillRect(0, 0, W, topH);
+
+        /* Trụ A-pillar hai bên */
+        var sideGradL = ctx.createLinearGradient(0, 0, sideW, 0);
+        sideGradL.addColorStop(0, 'rgba(6, 14, 26, 0.98)');
+        sideGradL.addColorStop(1, 'rgba(6, 14, 26, 0.08)');
+        ctx.fillStyle = sideGradL;
+        ctx.fillRect(0, topH * 0.4, sideW, H - dashH);
+
+        var sideGradR = ctx.createLinearGradient(W - sideW, 0, W, 0);
+        sideGradR.addColorStop(0, 'rgba(6, 14, 26, 0.08)');
+        sideGradR.addColorStop(1, 'rgba(6, 14, 26, 0.98)');
+        ctx.fillStyle = sideGradR;
+        ctx.fillRect(W - sideW, topH * 0.4, sideW, H - dashH);
+
+        /* Bảng điều khiển phía dưới */
+        var dashGrad = ctx.createLinearGradient(0, H - dashH, 0, H);
+        dashGrad.addColorStop(0, 'rgba(10, 20, 34, 0.72)');
+        dashGrad.addColorStop(0.35, 'rgba(14, 26, 42, 0.96)');
+        dashGrad.addColorStop(1, 'rgba(6, 12, 22, 1)');
+        ctx.fillStyle = dashGrad;
+        ctx.fillRect(0, H - dashH, W, dashH);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(sideW * 0.6, H - dashH + 2);
+        ctx.quadraticCurveTo(W / 2, H - dashH - 8, W - sideW * 0.6, H - dashH + 2);
+        ctx.stroke();
+
+        /* Gợi ý mép cánh khi nghiêng */
+        if (Math.abs(P.bank) > 0.08 && !P.onGround) {
+            var wingA = 0.16 + Math.abs(P.bank) * 0.22;
+            ctx.fillStyle = 'rgba(248, 251, 255, ' + wingA + ')';
+            if (P.bank > 0) {
+                ctx.beginPath();
+                ctx.moveTo(0, H - dashH - 6);
+                ctx.lineTo(sideW + 28, H - dashH + 18);
+                ctx.lineTo(0, H - dashH + 36);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(W, H - dashH - 6);
+                ctx.lineTo(W - sideW - 28, H - dashH + 18);
+                ctx.lineTo(W, H - dashH + 36);
+                ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        /* Ba đồng hồ đơn giản: tốc độ, la bàn, độ cao */
+        var cx = W / 2;
+        var cy = H - dashH * 0.52;
+        var gaugeR = clamp(dashH * 0.28, 18, 30);
+
+        function drawGauge(gx, label, value, unit, accent) {
+            ctx.save();
+            ctx.translate(gx, cy);
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+            ctx.lineWidth = 1.4;
+            ctx.beginPath();
+            ctx.arc(0, 0, gaugeR, 0, 6.284);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.strokeStyle = accent;
+            ctx.lineWidth = 2.2;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(0, 0, gaugeR - 4, Math.PI * 0.75, Math.PI * 0.75 + Math.PI * 1.5 * clamp(value, 0, 1));
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+            ctx.font = '800 ' + clamp(gaugeR * 0.55, 10, 14) + 'px Nunito, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, 0, -2);
+            ctx.font = '700 ' + clamp(gaugeR * 0.42, 8, 11) + 'px Nunito, sans-serif';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
+            ctx.fillText(unit, 0, gaugeR * 0.42);
+            ctx.restore();
+        }
+
+        var spdNorm = clamp((P.spd - R.SPD_MIN) / (R.SPD_MAX - R.SPD_MIN), 0, 1);
+        var altNorm = clamp(P.alt / R.ALT_MAX, 0, 1);
+        var hdgDeg = Math.round((P.heading * 180 / Math.PI) % 360);
+        if (hdgDeg < 0) hdgDeg += 360;
+        var hdgNorm = hdgDeg / 360;
+
+        var gap = clamp(W * 0.11, 36, 72);
+        drawGauge(cx - gap, Math.round(P.spd * 3.6), spdNorm, 'km/h', '#38bdf8');
+        drawGauge(cx, hdgDeg + '°', hdgNorm, 'HDG', '#34d399');
+        drawGauge(cx + gap, Math.round(P.alt), altNorm, 'm', '#fbbf24');
+
+        ctx.restore();
+    }
+
     function draw() {
         ctx.save();
         if (G.shake > 0) ctx.translate((Math.random() - 0.5) * G.shake, (Math.random() - 0.5) * G.shake);
@@ -2158,7 +2292,9 @@
             drawGlide();
             drawPickups();
             drawClouds();
-            if (G.phase === 'fly' || G.phase === 'pause') drawPlane();
+            if (G.phase === 'fly' || G.phase === 'pause') {
+                if (!isCockpitView()) drawPlane();
+            }
             drawParticles();
             
             // Vẽ hiệu ứng giông bão nếu có
@@ -2167,10 +2303,12 @@
             if (w.storm > 0.3) drawStormWarning(w.storm);
             
             // Vẽ rada 4 hướng chỉ thị góc bay của máy bay
-            if (G.phase === 'fly' || G.phase === 'pause') drawRadarCompass();
+            if ((G.phase === 'fly' || G.phase === 'pause') && !isCockpitView()) drawRadarCompass();
 
             // Vẽ hướng dẫn lệch hướng đường bay hỗ trợ bé tự bẻ lái
             if (G.phase === 'fly') drawNavigationGuidance();
+
+            if (G.phase === 'fly' || G.phase === 'pause') drawCockpitOverlay();
         } else {
             drawMenuScene();
         }
@@ -2461,6 +2599,25 @@
         el('btn-auto').classList.toggle('is-on', G.auto);
     }
 
+    function setViewBtn() {
+        var btn = el('btn-view');
+        var cockpit = G.view === 'cockpit';
+        btn.classList.toggle('is-on', cockpit);
+        btn.textContent = cockpit ? '✈️' : '🧑‍✈️';
+        btn.title = cockpit ? T('Outside view') : T('Cockpit view');
+    }
+
+    function toggleView() {
+        if (G.phase !== 'fly' && G.phase !== 'pause') return;
+        G.view = G.view === 'cockpit' ? 'chase' : 'cockpit';
+        snapCam();
+        setViewBtn();
+        Sfx.wake();
+        say('view', G.view === 'cockpit'
+            ? T('Cockpit view! Look through the windshield.')
+            : T('Outside view! You can see the whole plane.'), 2.8);
+    }
+
     function wireInput() {
         /* =================== JOYSTICK ẢO ===================
          * Ngón tay chạm vào vùng joystick-zone, kéo theo hướng muốn bay.
@@ -2544,6 +2701,7 @@
         holdBtn('btn-slow', function () { P.thrDn = 1; }, function () { P.thrDn = 0; });
 
         el('btn-photo').addEventListener('click', function (e) { e.preventDefault(); takePhoto(); });
+        el('btn-view').addEventListener('click', function (e) { e.preventDefault(); toggleView(); });
         el('btn-auto').addEventListener('click', function (e) {
             e.preventDefault();
             G.auto = !G.auto;
@@ -2577,6 +2735,7 @@
             else if (k === 'w' || k === 'W') { e.preventDefault(); Sfx.wake(); P.thrUp = 1; }
             else if (k === 's' || k === 'S') { e.preventDefault(); P.thrDn = 1; }
             else if (k === ' ') { e.preventDefault(); Sfx.wake(); takePhoto(); }
+            else if (k === 'v' || k === 'V') { e.preventDefault(); Sfx.wake(); toggleView(); }
             else if (k === 'p' || k === 'P' || k === 'Escape') togglePause();
         });
         window.addEventListener('keyup', function (e) {
@@ -2673,6 +2832,7 @@
 
         wireInput();
         wireButtons();
+        setViewBtn();
 
         /* Màn chờ có cảnh thật phía sau: đúng tuyến ấy, đúng bộ sinh ấy, chỉ
          * là không ai lái. Bản mô tả đòi màn đầu "immediately show the flying
@@ -2686,7 +2846,8 @@
         window.FlightDebug = {
             G: G, P: P, R: R, start: startFlight, update: update, draw: draw,
             photo: takePhoto, hud: syncHud, Sfx: Sfx, store: store,
-            setPitch: setPitch, setTurn: setTurn, backToMenu: backToMenu
+            setPitch: setPitch, setTurn: setTurn, backToMenu: backToMenu,
+            toggleView: toggleView
         };
 
         requestAnimationFrame(frame);
