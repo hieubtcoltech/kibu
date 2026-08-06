@@ -3250,7 +3250,7 @@
         for (var j = 0; j < pops.length; j++) {
             var q = pops[j];
             ctx.globalAlpha = clamp(q.life / 0.9, 0, 1);
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 2.5;
             ctx.strokeStyle = 'rgba(0,0,0,0.55)';
             ctx.strokeText(q.text, q.x, sy(q.y));
             ctx.fillStyle = q.col;
