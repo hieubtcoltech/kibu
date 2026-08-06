@@ -809,14 +809,17 @@
      * chuyến và lúc dựng màn chờ — không có nó thì khung hình đầu tiên máy
      * quay còn nằm ở gốc toạ độ và cả thế giới vụt vào chỗ từ hư không. */
     function snapCam() {
-        cam.x = P.x - R.CAM_BACK;
-        cam.alt = P.alt + R.CAM_UP;
+        var back = (G.leg === 'ready' || G.leg === 'roll') ? 240 : R.CAM_BACK;
+        var up = (G.leg === 'ready' || G.leg === 'roll') ? 56 : R.CAM_UP;
+        cam.x = P.x - back;
+        cam.alt = P.alt + up;
         cam.z = P.z * 0.82;
         cam.pitch = 0;
     }
 
     function stepCam(dt) {
-        var back = R.CAM_BACK, up = R.CAM_UP;
+        var back = (G.leg === 'ready' || G.leg === 'roll') ? 240 : R.CAM_BACK;
+        var up = (G.leg === 'ready' || G.leg === 'roll') ? 56 : R.CAM_UP;
         cam.x = P.x - back;
         /* Máy quay bám mềm theo độ cao và độ lệch chứ không dính cứng. Dính
          * cứng thì bẻ lái một cái là cả thế giới giật sang bên; bám mềm thì
@@ -1248,8 +1251,9 @@
     function drawRunway(rw, arriving) {
         var pts = [];
         var n = 18;
+        var startX = arriving ? rw.x0 : rw.x0 - 500;
         for (var i = 0; i <= n; i++) {
-            var wx = rw.x0 + (rw.x1 - rw.x0) * (i / n);
+            var wx = startX + (rw.x1 - startX) * (i / n);
             var l = proj(wx, rw.y, -RW_HALF), r = proj(wx, rw.y, RW_HALF);
             if (!l || !r) continue;
             pts.push({ l: l, r: r, wx: wx });
@@ -1566,35 +1570,33 @@
         ctx.translate(p.x, p.y);
         ctx.rotate(-P.bank * 0.5);
 
+        /* Bóng mờ nhẹ của máy bay */
         ctx.save();
-        ctx.globalAlpha = 0.18;
-        ctx.fillStyle = '#ffffff';
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = '#000000';
         ctx.beginPath();
-        ctx.ellipse(0, s * 0.06, s * 1.35, s * 0.42, 0, 0, 6.284);
+        ctx.ellipse(0, s * 0.08, s * 1.35, s * 0.38, 0, 0, 6.284);
         ctx.fill();
         ctx.restore();
 
-        /* vệt khói hai đầu cánh khi bay nhanh */
+        /* Vệt khói hai đầu cánh khi bay nhanh */
         if (P.spd > R.SPD_CRUISE * 0.85 && !P.onGround) {
-            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-            ctx.lineWidth = s * 0.07;
+            ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+            ctx.lineWidth = s * 0.06;
             ctx.lineCap = 'round';
             var tl = (P.spd - R.SPD_CRUISE * 0.85) * 0.5;
             ctx.beginPath();
-            ctx.moveTo(-s * 0.92, s * 0.06); ctx.lineTo(-s * 0.92, s * 0.06 + tl * 0.1);
-            ctx.moveTo(s * 0.92, s * 0.06); ctx.lineTo(s * 0.92, s * 0.06 + tl * 0.1);
+            ctx.moveTo(-s * 1.22, s * 0.02); ctx.lineTo(-s * 1.22, s * 0.02 + tl * 0.12);
+            ctx.moveTo(s * 1.22, s * 0.02); ctx.lineTo(s * 1.22, s * 0.02 + tl * 0.12);
             ctx.stroke();
         }
 
-        /* Máy bay phản lực thương mại nhìn từ sau: thân trắng dài, cánh xuôi,
-         * hai động cơ dưới cánh và đuôi đứng xanh. Silhouette này gần với
-         * airliner/Boeing hơn kiểu máy bay đồ chơi cánh đỏ trước đây. */
-        ctx.strokeStyle = 'rgba(24,40,58,0.85)';
+        ctx.strokeStyle = 'rgba(20,35,52,0.9)';
         ctx.lineWidth = Math.max(1.2, s * 0.045);
         ctx.lineJoin = 'round';
 
-        /* cánh chính xuôi ra sau */
-        ctx.fillStyle = '#e8edf3';
+        /* Cánh chính: thiết kế khí động học cao cấp với dải sơn trang trí màu xanh đậm */
+        ctx.fillStyle = '#f8fbff';
         ctx.beginPath();
         ctx.moveTo(-s * 1.24, s * 0.02);
         ctx.lineTo(-s * 0.24, -s * 0.13);
@@ -1606,7 +1608,8 @@
         ctx.lineTo(-s * 1.05, s * 0.16);
         ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        ctx.fillStyle = '#d7dee8';
+        /* Viền mép sau cánh & Ailerons (Màu xám kim loại sang trọng) */
+        ctx.fillStyle = '#cbd5e1';
         ctx.beginPath();
         ctx.moveTo(-s * 0.92, s * 0.12); ctx.lineTo(-s * 0.18, s * 0.04);
         ctx.lineTo(-s * 0.08, s * 0.1); ctx.lineTo(-s * 0.78, s * 0.24);
@@ -1616,33 +1619,51 @@
         ctx.lineTo(s * 0.08, s * 0.1); ctx.lineTo(s * 0.78, s * 0.24);
         ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        /* hai động cơ turbofan */
+        /* Hai động cơ phản lực Turbofan với luồng lửa đỏ cam rực rỡ */
         drawJetEngine(-s * 0.58, s * 0.1, s);
         drawJetEngine(s * 0.58, s * 0.1, s);
 
-        /* thân máy bay */
+        /* Thân máy bay dạng trụ tròn 3D bóng bẩy */
         var fus = ctx.createLinearGradient(-s * 0.22, 0, s * 0.22, 0);
-        fus.addColorStop(0, '#cfd8e3');
-        fus.addColorStop(0.28, '#f8fbff');
-        fus.addColorStop(0.72, '#f8fbff');
-        fus.addColorStop(1, '#b9c6d4');
+        fus.addColorStop(0, '#b2c2d4');
+        fus.addColorStop(0.25, '#ffffff');
+        fus.addColorStop(0.75, '#ffffff');
+        fus.addColorStop(1, '#97a8bd');
         ctx.fillStyle = fus;
         roundRect(ctx, -s * 0.22, -s * 0.38, s * 0.44, s * 0.72, s * 0.21);
         ctx.fill(); ctx.stroke();
 
-        ctx.fillStyle = '#2f8fd8';
-        ctx.fillRect(-s * 0.2, -s * 0.04, s * 0.4, s * 0.08);
-        ctx.fillStyle = 'rgba(18,47,83,0.9)';
-        ctx.beginPath(); ctx.ellipse(0, -s * 0.26, s * 0.14, s * 0.08, 0, 0, 6.284); ctx.fill();
+        /* Buồng lái kính phản quang màu xanh dương hiện đại */
+        var glass = ctx.createLinearGradient(0, -s * 0.32, 0, -s * 0.2);
+        glass.addColorStop(0, '#1a3a60');
+        glass.addColorStop(0.5, '#2b78c5');
+        glass.addColorStop(1, '#5bb0ff');
+        ctx.fillStyle = glass;
+        ctx.beginPath();
+        ctx.ellipse(0, -s * 0.26, s * 0.14, s * 0.07, 0, 0, 6.284);
+        ctx.fill();
+        ctx.strokeStyle = '#0f2035';
+        ctx.lineWidth = Math.max(1, s * 0.02);
+        ctx.stroke();
 
-        /* đuôi đứng và hai cánh đuôi */
-        ctx.fillStyle = '#1f76bd';
+        /* Đuôi đứng & Dải màu nhận diện của KIBU Airlines */
+        ctx.fillStyle = '#1e40af'; // Màu xanh Royal Blue cao cấp
         ctx.beginPath();
         ctx.moveTo(0, -s * 0.3);
-        ctx.lineTo(-s * 0.12, -s * 0.66);
-        ctx.lineTo(s * 0.12, -s * 0.66);
+        ctx.lineTo(-s * 0.12, -s * 0.68);
+        ctx.lineTo(s * 0.12, -s * 0.68);
         ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#dbe3ee';
+
+        /* Dải logo vàng Gold mỏng trên đuôi đứng */
+        ctx.fillStyle = '#eab308';
+        ctx.beginPath();
+        ctx.moveTo(0, -s * 0.45);
+        ctx.lineTo(-s * 0.09, -s * 0.58);
+        ctx.lineTo(s * 0.09, -s * 0.58);
+        ctx.closePath(); ctx.fill();
+
+        /* Hai cánh đuôi ngang màu trắng */
+        ctx.fillStyle = '#f1f5f9';
         ctx.beginPath();
         ctx.moveTo(-s * 0.56, -s * 0.28); ctx.lineTo(-s * 0.1, -s * 0.38); ctx.lineTo(-s * 0.08, -s * 0.27);
         ctx.closePath(); ctx.fill(); ctx.stroke();
@@ -1650,15 +1671,50 @@
         ctx.moveTo(s * 0.56, -s * 0.28); ctx.lineTo(s * 0.1, -s * 0.38); ctx.lineTo(s * 0.08, -s * 0.27);
         ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        /* càng, chỉ thò ra lúc còn thấp — mắt đọc được "sắp chạm đất rồi" */
+        /* Đèn tín hiệu định vị hàng hải (Navigation Lights) nhấp nháy */
+        var lit = Math.sin(G.t * 8) > 0;
+        ctx.save();
+        if (lit) {
+            // Đèn xanh lá bên cánh phải (Right Wingtip - Green)
+            var gGlow = ctx.createRadialGradient(s * 1.24, s * 0.02, 1, s * 1.24, s * 0.02, s * 0.24);
+            gGlow.addColorStop(0, '#ffffff');
+            gGlow.addColorStop(0.3, '#22c55e');
+            gGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = gGlow;
+            ctx.beginPath(); ctx.arc(s * 1.24, s * 0.02, s * 0.24, 0, 6.284); ctx.fill();
+
+            // Đèn đỏ bên cánh trái (Left Wingtip - Red)
+            var rGlow = ctx.createRadialGradient(-s * 1.24, s * 0.02, 1, -s * 1.24, s * 0.02, s * 0.24);
+            rGlow.addColorStop(0, '#ffffff');
+            rGlow.addColorStop(0.3, '#ef4444');
+            rGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = rGlow;
+            ctx.beginPath(); ctx.arc(-s * 1.24, s * 0.02, s * 0.24, 0, 6.284); ctx.fill();
+
+            // Đèn báo hiệu nhấp nháy đỏ trên đỉnh đuôi (Tail Strobe - Red Beacon)
+            var beacon = ctx.createRadialGradient(0, -s * 0.68, 1, 0, -s * 0.68, s * 0.18);
+            beacon.addColorStop(0, '#ffffff');
+            beacon.addColorStop(0.4, '#ef4444');
+            beacon.addColorStop(1, 'transparent');
+            ctx.fillStyle = beacon;
+            ctx.beginPath(); ctx.arc(0, -s * 0.68, s * 0.18, 0, 6.284); ctx.fill();
+        }
+        ctx.restore();
+
+        /* Càng đáp (chỉ hạ khi bay thấp hoặc lăn trên đường băng) */
         if (P.gear) {
-            ctx.strokeStyle = '#3b4655';
-            ctx.lineWidth = Math.max(1, s * 0.05);
-            ctx.beginPath();
-            ctx.moveTo(-s * 0.5, s * 0.16); ctx.lineTo(-s * 0.5, s * 0.34);
-            ctx.moveTo(s * 0.5, s * 0.16); ctx.lineTo(s * 0.5, s * 0.34);
-            ctx.moveTo(0, s * 0.2); ctx.lineTo(0, s * 0.36);
-            ctx.stroke();
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = Math.max(1.2, s * 0.05);
+            // Càng trái
+            ctx.beginPath(); ctx.moveTo(-s * 0.44, s * 0.14); ctx.lineTo(-s * 0.44, s * 0.36); ctx.stroke();
+            ctx.fillStyle = '#0f172a';
+            ctx.beginPath(); ctx.arc(-s * 0.44, s * 0.36, s * 0.06, 0, 6.284); ctx.fill();
+            // Càng phải
+            ctx.beginPath(); ctx.moveTo(s * 0.44, s * 0.14); ctx.lineTo(s * 0.44, s * 0.36); ctx.stroke();
+            ctx.beginPath(); ctx.arc(s * 0.44, s * 0.36, s * 0.06, 0, 6.284); ctx.fill();
+            // Càng mũi
+            ctx.beginPath(); ctx.moveTo(0, s * 0.2); ctx.lineTo(0, s * 0.38); ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, s * 0.38, s * 0.055, 0, 6.284); ctx.fill();
         }
         ctx.restore();
 
@@ -1667,10 +1723,10 @@
          * bay đang cách mặt đất bao xa, và đang lệch sang bên nào. Càng thấp
          * bóng càng to và càng đậm — lúc sắp chạm đường băng thì bóng chạy tới
          * gặp máy bay, và đó là tín hiệu hạ cánh dễ đọc nhất trong cả game. */
-        var g = R.groundAt(G.route, P.x);
-        var sp = proj(P.x, g, P.z);
+        var gGround = R.groundAt(G.route, P.x);
+        var sp = proj(P.x, gGround, P.z);
         if (sp) {
-            var h = clamp((P.alt - g) / 2000, 0, 1);
+            var h = clamp((P.alt - gGround) / 2000, 0, 1);
             ctx.save();
             ctx.globalAlpha = 0.34 * (1 - h * 0.85);
             ctx.fillStyle = '#123';
@@ -1680,14 +1736,35 @@
             ctx.restore();
         }
 
+        /* Vẽ động cơ Turbofan */
         function drawJetEngine(x, y, sc) {
             ctx.save();
             ctx.translate(x, y);
-            ctx.fillStyle = '#c9d2dd';
+            // Thân động cơ (màu vỏ kim loại bóng)
+            var engFus = ctx.createLinearGradient(-sc * 0.18, 0, sc * 0.18, 0);
+            engFus.addColorStop(0, '#94a3b8');
+            engFus.addColorStop(0.3, '#f1f5f9');
+            engFus.addColorStop(0.7, '#f1f5f9');
+            engFus.addColorStop(1, '#64748b');
+            ctx.fillStyle = engFus;
             ctx.beginPath(); ctx.ellipse(0, 0, sc * 0.18, sc * 0.14, 0, 0, 6.284); ctx.fill(); ctx.stroke();
-            ctx.fillStyle = '#2d3746';
-            ctx.beginPath(); ctx.ellipse(0, 0, sc * 0.1, sc * 0.08, 0, 0, 6.284); ctx.fill();
-            ctx.fillStyle = 'rgba(255,255,255,0.55)';
+
+            // Lõi động cơ (Nozzle) màu xám sẫm
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath(); ctx.ellipse(0, 0, sc * 0.12, sc * 0.09, 0, 0, 6.284); ctx.fill();
+
+            // Luồng lửa phản lực màu cam hồng rực rỡ
+            var jetGlow = ctx.createRadialGradient(0, 0, sc * 0.02, 0, 0, sc * 0.08);
+            jetGlow.addColorStop(0, '#ffffff');
+            jetGlow.addColorStop(0.2, '#fde047'); // Vàng sáng
+            jetGlow.addColorStop(0.5, '#f97316'); // Cam
+            jetGlow.addColorStop(0.9, '#ef4444'); // Đỏ
+            jetGlow.addColorStop(1, 'transparent');
+            ctx.fillStyle = jetGlow;
+            ctx.beginPath(); ctx.ellipse(0, 0, sc * 0.09, sc * 0.07, 0, 0, 6.284); ctx.fill();
+
+            // Điểm sáng phản chiếu bên ngoài vỏ động cơ
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
             ctx.beginPath(); ctx.ellipse(-sc * 0.04, -sc * 0.04, sc * 0.04, sc * 0.025, 0, 0, 6.284); ctx.fill();
             ctx.restore();
         }
