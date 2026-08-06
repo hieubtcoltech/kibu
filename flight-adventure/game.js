@@ -2316,7 +2316,7 @@
         ctx.stroke();
         ctx.globalAlpha = 1;
 
-        drawCockpitRunwayView(deckY, sideW);
+        drawCockpitRunwayApron(deckY, sideW);
 
         /* Mũi máy bay hiện thấp dưới kính, tạo cảm giác đang ngồi sau táp-lô. */
         var noseW = clamp(W * 0.42, 120, 250);
@@ -2501,20 +2501,20 @@
         ctx.restore();
     }
 
-    function drawCockpitRunwayView(deckY, sideW) {
+    function drawCockpitRunwayApron(deckY, sideW) {
         var rt = G.route;
         if (!rt || !isCockpitView()) return;
         var dep = R.departRunway(rt);
         var arr = R.arriveRunway(rt);
         var onDep = P.x >= dep.x0 - 80 && P.x <= dep.x1 + 80 && Math.abs(P.z) < RW_HALF * 2.2;
-        var onArr = P.x >= arr.x0 - 220 && P.x <= arr.x1 + 120 && Math.abs(P.z) < RW_HALF * 2.4;
+        var onArr = P.x >= arr.x0 - 80 && P.x <= arr.x1 + 80 && Math.abs(P.z) < RW_HALF * 2.2;
         if (!onDep && !onArr) return;
 
         var center = W / 2 - clamp(P.z * 0.22, -W * 0.18, W * 0.18);
-        var topY = clamp(horizonY() + 18, H * 0.32, deckY - 98);
-        var bottomY = deckY + 16;
-        var topHalf = clamp(W * 0.035, 18, 44);
-        var bottomHalf = clamp(W * 0.5, 170, W * 0.6);
+        var topY = clamp(horizonY() + 52, H * 0.31, deckY - 48);
+        var bottomY = deckY + 18;
+        var topHalf = clamp(W * 0.14 + Math.abs(P.z) * 0.02, 70, W * 0.26);
+        var bottomHalf = clamp(W * 0.48, 170, W * 0.58);
 
         ctx.save();
         ctx.beginPath();
@@ -2522,9 +2522,9 @@
         ctx.clip();
 
         var grad = ctx.createLinearGradient(0, topY, 0, bottomY);
-        grad.addColorStop(0, 'rgba(104, 114, 126, 0.9)');
-        grad.addColorStop(0.52, 'rgba(82, 92, 104, 0.94)');
-        grad.addColorStop(1, 'rgba(50, 58, 68, 0.98)');
+        grad.addColorStop(0, 'rgba(90, 100, 112, 0.62)');
+        grad.addColorStop(0.55, 'rgba(98, 108, 121, 0.82)');
+        grad.addColorStop(1, 'rgba(54, 61, 72, 0.94)');
         ctx.fillStyle = grad;
         ctx.beginPath();
         ctx.moveTo(center - topHalf, topY);
@@ -2534,34 +2534,23 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.strokeStyle = 'rgba(235, 242, 248, 0.82)';
-        ctx.lineWidth = clamp(W * 0.0026, 1.4, 3.2);
+        ctx.strokeStyle = 'rgba(235, 242, 248, 0.65)';
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(center - topHalf * 1.14, topY);
-        ctx.lineTo(center - bottomHalf * 1.01, bottomY);
-        ctx.moveTo(center + topHalf * 1.14, topY);
-        ctx.lineTo(center + bottomHalf * 1.01, bottomY);
+        ctx.moveTo(center - topHalf * 1.08, topY);
+        ctx.lineTo(center - bottomHalf * 1.02, bottomY);
+        ctx.moveTo(center + topHalf * 1.08, topY);
+        ctx.lineTo(center + bottomHalf * 1.02, bottomY);
         ctx.stroke();
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-        for (var i = 0; i < 8; i++) {
-            var t0 = 0.11 + i * 0.108;
-            var t1 = t0 + 0.046;
-            if (t0 > 0.94) break;
-            var y0 = topY + (bottomY - topY) * Math.pow(t0, 1.36);
-            var y1 = topY + (bottomY - topY) * Math.pow(t1, 1.36);
-            var half0 = topHalf + (bottomHalf - topHalf) * Math.pow(t0, 1.08);
-            var half1 = topHalf + (bottomHalf - topHalf) * Math.pow(t1, 1.08);
-            var w0 = clamp(half0 * 0.055, 2.2, 10);
-            var w1 = clamp(half1 * 0.055, 2.8, 12);
-            ctx.beginPath();
-            ctx.moveTo(center - w0, y0);
-            ctx.lineTo(center + w0, y0);
-            ctx.lineTo(center + w1, y1);
-            ctx.lineTo(center - w1, y1);
-            ctx.closePath();
-            ctx.fill();
-        }
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.lineWidth = clamp(W * 0.008, 4, 10);
+        ctx.lineCap = 'round';
+        var stripeTop = topY + (bottomY - topY) * 0.22;
+        ctx.beginPath();
+        ctx.moveTo(center, stripeTop);
+        ctx.lineTo(center, bottomY - 12);
+        ctx.stroke();
 
         ctx.restore();
     }
@@ -2573,10 +2562,8 @@
         drawSky();
         if (G.route) {
             drawGround();
-            if (!isCockpitView()) {
-                drawRunway(R.departRunway(G.route), false);
-                drawRunway(R.arriveRunway(G.route), true);
-            }
+            drawRunway(R.departRunway(G.route), false);
+            drawRunway(R.arriveRunway(G.route), true);
             drawLandmarks();
             drawGlide();
             drawPickups();
