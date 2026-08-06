@@ -660,8 +660,8 @@
         ['<b>Giữ nút LEO</b> để bò lên nhanh hơn. Đi được xa hơn, nhưng thời gian nhìn thấy thứ phía trước cũng ngắn lại.',
             '<b>Hold the CLIMB button</b> to scramble up faster. You cover more ground, but you get less time to read what is coming.'],
         ['LEO', 'CLIMB', 'x'],
-        ['Chơi bằng bàn phím: mũi tên lên để leo nhanh, mũi tên trái phải để bay sang tháp bên ấy, phím cách để bay sang tường đối diện, phím F để bắn tơ, phím P để tạm dừng.',
-            'Keyboard: up arrow to climb fast, left and right to leap to that tower, space to leap across, F to shoot web, P to pause.'],
+        ['Chơi bằng bàn phím: mũi tên lên để leo nhanh, mũi tên trái phải để bay sang tháp bên ấy, phím cách để bắn tơ, phím P để tạm dừng.',
+            'Keyboard: up arrow to climb fast, left and right to leap to that tower, space to shoot web, P to pause.'],
 
         /* ---------- Block Tower (block-tower) ---------- */
         ['Tháp Khối', 'Block Tower'],

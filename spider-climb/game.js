@@ -345,6 +345,14 @@
         parts.length = 0; pops.length = 0;
 
         G.phase = 'play';
+        /* Nhả tiêu điểm khỏi cái nút vừa bấm.
+         *
+         * Trình duyệt để phím cách "bấm lại" phần tử đang có tiêu điểm. Bấm
+         * chuột vào BẮT ĐẦU LEO xong, cái nút ấy vẫn đang được chọn — nên phát
+         * bắn tơ đầu tiên bằng phím cách sẽ bấm trúng nút BẮT ĐẦU và khởi động
+         * lại cả lượt chơi. Chỉ xảy ra khi vào bằng chuột rồi chơi bằng bàn
+         * phím, nên rất dễ lọt qua mọi lần thử. */
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
         showScreen(null);
         el('hud').hidden = false;
         touchButtons(true);
@@ -418,6 +426,14 @@
         G.revived = true;
         G.lives = 2;
         G.phase = 'play';
+        /* Nhả tiêu điểm khỏi cái nút vừa bấm.
+         *
+         * Trình duyệt để phím cách "bấm lại" phần tử đang có tiêu điểm. Bấm
+         * chuột vào BẮT ĐẦU LEO xong, cái nút ấy vẫn đang được chọn — nên phát
+         * bắn tơ đầu tiên bằng phím cách sẽ bấm trúng nút BẮT ĐẦU và khởi động
+         * lại cả lượt chơi. Chỉ xảy ra khi vào bằng chuột rồi chơi bằng bàn
+         * phím, nên rất dễ lọt qua mọi lần thử. */
+        if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
         showScreen(null);
         touchButtons(true);
         respawn(true);
@@ -2048,14 +2064,16 @@
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); P.fastKey = true; }
                 else if (G.phase === 'menu') { e.preventDefault(); startRun('endless'); }
             } else if (k === ' ') {
-                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJump(); }
+                /* Phím cách là BẮN TƠ, không phải nhảy. Trái phải đã tới được
+                 * cả hai tháp rồi nên không còn việc gì cho một phím "nhảy sang
+                 * bên kia" nữa — mà phím cách thì to nhất bàn phím, để nó làm
+                 * cái việc duy nhất cần bấm gấp là đúng chỗ. */
+                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); fireWeb(); }
                 else if (G.phase === 'menu') { e.preventDefault(); startRun('endless'); }
             } else if (k === 'ArrowLeft' || k === 'a' || k === 'A') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJumpTo(-1); }
             } else if (k === 'ArrowRight' || k === 'd' || k === 'D') {
                 if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); doJumpTo(1); }
-            } else if (k === 'f' || k === 'F' || k === 'e' || k === 'E' || k === 'Shift') {
-                if (G.phase === 'play') { e.preventDefault(); Sfx.wake(); fireWeb(); }
             } else if (k === 'p' || k === 'P' || k === 'Escape') {
                 togglePause();
             }

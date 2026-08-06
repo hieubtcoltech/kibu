@@ -399,11 +399,20 @@ ok(getEl('hud-lives').textContent.length > 0, 'ô MẠNG trên bảng điểm tr
     press(stay);
     ok(P.state === 'cling', `bấm ${stay} khi đang bám đúng tường ấy mà vẫn nhảy đi`);
 
-    /* phím cách vẫn phải nhảy như cũ */
+    /* PHÍM CÁCH LÀ BẮN TƠ. Soát bằng số tơ còn lại chứ không bằng "có ném lỗi
+     * không" — đổi ý nghĩa một phím là loại thay đổi mà mọi thứ vẫn chạy êm ru
+     * dù nó nối vào nhầm chỗ. Và nó KHÔNG được làm người nhện rời tường. */
     while (P.state !== 'cling') step(1);
+    /* Đặt sẵn một con máy bay ngay trước mặt. Không có mục tiêu thì fireWeb()
+     * không tiêu đạn, và phép soát sẽ "đạt" mà chẳng chứng minh được gì —
+     * đúng kiểu phép soát tự an ủi mình. */
+    G.world.mover('drone', { y: P.y + 80, period: 4 });
+    P.web = R.WEB_MAX;
+    const webBefore = P.web;
     press(' ');
-    ok(P.state === 'jump', 'phím cách không còn nhảy được');
-    for (let i = 0; i < 90 && P.state === 'jump'; i++) step(1);
+    ok(P.web === webBefore - 1,
+        `phím cách không tiêu lần bắn tơ nào (còn ${P.web}/${webBefore}) — nó chưa nối vào chỗ bắn tơ`);
+    ok(P.state !== 'jump', 'phím cách vẫn làm người nhện nhảy — lẽ ra chỉ bắn tơ');
 
     /* MŨI TÊN LÊN LÀ LEO NHANH, KHÔNG PHẢI NHẢY.
      *
