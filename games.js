@@ -48,6 +48,12 @@
      * chủ, để đổi sang sinh ô gạch từ tệp này mà mặt trang không xê dịch. */
     var GAMES = [
         {
+            dir: 'flight-adventure', slug: 'flight-adventure', tile: 'tile-flight',
+            en: 'Flight Adventure Kids', vi: 'Bé Tập Lái Máy Bay',
+            topics: ['learning', 'physics'], players: '1', added: '2026-08-06',
+            keywords: 'flight adventure kids may bay game may bay cho be tap lai may bay flight simulator for children airplane game flying game ha noi da nang landmark photo travel album takeoff landing no crash calm relaxing'
+        },
+        {
             dir: 'spider-climb', slug: 'spider-climb', tile: 'tile-spider',
             en: 'Spider Climb', vi: 'Người Nhện Leo Tháp',
             topics: ['action', 'physics'], players: '1', added: '2026-08-06',

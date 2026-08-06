@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Flight Adventure Kids - Free Online Kids Game | KIBU Games</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Play Flight Adventure Kids free on KIBU Games! Fly a friendly airplane from Hanoi to Da Nang, take off, see famous landmarks, take photos and land safely. No crashes, no losing.">
+    <meta name="keywords" content="Flight Adventure Kids, kids flight simulator, airplane game for children, flying game, game may bay cho be, tap lai may bay, Hanoi Da Nang flight, landmark photo game, free online kids games, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/flight-adventure/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/flight-adventure/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/flight-adventure/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/flight-adventure/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/flight-adventure/">
+    <meta property="og:title" content="Flight Adventure Kids - Free Online Game | KIBU Games">
+    <meta property="og:description" content="Fly a friendly airplane across Vietnam, spot famous landmarks, take photos and land safely. A calm flying adventure for children.">
+    <meta property="og:image" content="https://kibugames.com/flight-adventure/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/flight-adventure/">
+    <meta name="twitter:title" content="Flight Adventure Kids - Free Online Game">
+    <meta name="twitter:description" content="Play Flight Adventure Kids free on KIBU Games in English & Vietnamese.">
+    <meta name="twitter:image" content="https://kibugames.com/flight-adventure/og-image.png">
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Flight Adventure Kids",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/flight-adventure/",
+      "genre": "Casual Flight Adventure",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500..800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
+    <link rel="stylesheet" href="/flight-adventure/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <script type="module" src="/analytics.js"></script>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body>
+    <div class="app-wrapper">
+        <header class="unified-nav">
+            <div class="nav-left">
+                <a href="/" class="nav-home" title="Home" aria-label="Home">
+                    <img src="/logo.svg" alt="KIBU Games">
+                </a>
+                <div class="brand">
+                    <img src="/flight-adventure/icon.png" alt="" class="brand-img"><span class="brand-icon">✈️</span>
+                    <h1 class="brand-title">FLIGHT ADVENTURE</h1>
+                </div>
+            </div>
+
+            <div class="nav-actions">
+                <button id="btn-help" class="btn">
+                    <i class="fa-solid fa-circle-question"></i> <span>How to play</span>
+                </button>
+                <button id="btn-pause" class="btn">
+                    <i class="fa-solid fa-pause"></i> <span>Pause</span>
+                </button>
+                <button id="btn-sound" class="btn">
+                    <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span>Sound</span>
+                </button>
+                <button id="btn-nav-menu" class="btn">
+                    <i class="fa-solid fa-list"></i> <span>Menu</span>
+                </button>
+            </div>
+        </header>
+
+        <main class="game-viewport">
+            <!-- Khung sân giữ đúng tỉ lệ canvas 960×600. NẰM NGANG, khác hẳn
+                 mấy game dựng đứng khác trên trang: bay thì thứ đáng có là
+                 đường chân trời và cái gì đang tới phía trước. -->
+            <div class="stage">
+                <div id="game-canvas"></div>
+
+                <!-- BẢNG ĐIỀU KHIỂN: ba con số và một thanh hành trình.
+                     Không nhãn chữ — biểu tượng nói đủ, mà nhãn chữ thì vừa
+                     phải dịch vừa làm ô vỡ dòng khi bản dịch dài hơn. -->
+                <div id="hud" class="hud" hidden>
+                    <div class="hud-top">
+                        <span class="hud-chip"><i class="fa-solid fa-gauge-high"></i><b id="hud-spd">0</b><em>km/h</em></span>
+                        <span class="hud-chip"><i class="fa-solid fa-arrow-up-from-ground-water"></i><b id="hud-alt">0</b><em>m</em></span>
+                        <span class="hud-chip chip-soft">⭐<b id="hud-star">0</b></span>
+                        <span class="hud-chip chip-soft">📷<b id="hud-photo">0/5</b></span>
+                    </div>
+
+                    <!-- Thanh hành trình: hai thành phố hai đầu, máy bay chạy ở
+                         giữa. Trẻ con không đọc phần trăm, nhưng "cái máy bay
+                         đã đi được đến đây" thì nhìn một cái là hiểu. -->
+                    <div class="progress">
+                        <span class="pg-city" id="pg-from">Hanoi</span>
+                        <div class="pg-track">
+                            <i id="progress-fill"></i>
+                            <span id="progress-plane">✈️</span>
+                        </div>
+                        <span class="pg-city" id="pg-to">Da Nang</span>
+                    </div>
+
+                    <div id="guide" class="guide"></div>
+
+                    <div class="hud-right">
+                        <button id="btn-photo" class="round-btn btn-photo" title="Take a photo">📷</button>
+                        <button id="btn-auto" class="round-btn btn-auto" title="Auto-help">🪄</button>
+                        <button id="btn-land" class="round-btn btn-land" title="Help me land" hidden>🛬</button>
+                    </div>
+                </div>
+
+                <!-- HAI CỤM NÚT, HAI GÓC DƯỚI. Một bên lên xuống, một bên ga.
+                     Đặt hai đầu màn để hai ngón cái không phải với nhau. -->
+                <div id="touch-row" class="touch-row" hidden>
+                    <div class="pad pad-left">
+                        <button id="btn-up" class="touch-btn"><span>▲</span></button>
+                        <button id="btn-down" class="touch-btn"><span>▼</span></button>
+                    </div>
+                    <div class="pad pad-right">
+                        <button id="btn-slow" class="touch-btn btn-thr"><span>🐢</span></button>
+                        <button id="btn-fast" class="touch-btn btn-thr btn-go"><span>🚀</span></button>
+                    </div>
+                </div>
+
+                <!-- ================= MÀN CHỌN TUYẾN ================= -->
+                <div id="menu-overlay" class="screen">
+                    <div class="panel">
+                        <div class="panel-emoji">✈️</div>
+                        <h2 class="panel-title">FLIGHT ADVENTURE KIDS</h2>
+                        <p class="panel-desc">Fly a friendly airplane, look at the world below, take photos of famous places, and land safely. You can never crash.</p>
+
+                        <div id="route-list" class="route-list"></div>
+
+                        <button id="btn-fly" class="big-btn btn-go-fly"><i class="fa-solid fa-plane-departure"></i> FLY NOW</button>
+                        <button id="btn-album" class="big-btn btn-ghost"><i class="fa-solid fa-book"></i> TRAVEL ALBUM</button>
+                    </div>
+                </div>
+
+                <!-- ================= HƯỚNG DẪN ================= -->
+                <div id="help-overlay" class="screen hidden">
+                    <div class="panel panel-small">
+                        <div class="panel-emoji">🧑‍✈️</div>
+                        <h2 class="panel-title">HOW TO FLY</h2>
+                        <ul class="help-list">
+                            <li><b>🚀 Speed up</b> to roll down the runway, then <b>▲ pull up</b> to fly.</li>
+                            <li><b>▲ ▼</b> or the arrow keys make the plane go up and down.</li>
+                            <li>Fly through the <b>glowing rings</b> and collect <b>stars</b>.</li>
+                            <li>When a famous place appears, press <b>📷</b> to take a photo.</li>
+                            <li>Near the end, press <b>🛬</b> and the game helps you land.</li>
+                            <li>Press <b>🪄</b> any time and the plane flies by itself.</li>
+                            <li>You can never crash. If you fly too low, the game lifts you up.</li>
+                        </ul>
+                        <button id="btn-help-close" class="big-btn">GOT IT</button>
+                    </div>
+                </div>
+
+                <!-- ================= TẠM DỪNG ================= -->
+                <div id="pause-overlay" class="screen hidden">
+                    <div class="panel panel-small">
+                        <div class="panel-emoji">⏸️</div>
+                        <h2 class="panel-title">PAUSED</h2>
+                        <button id="btn-resume" class="big-btn"><i class="fa-solid fa-play"></i> KEEP FLYING</button>
+                        <button id="btn-quit" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> MENU</button>
+                    </div>
+                </div>
+
+                <!-- ================= SỔ LƯU ================= -->
+                <div id="album-overlay" class="screen hidden">
+                    <div class="panel">
+                        <div class="panel-emoji">📔</div>
+                        <h2 class="panel-title">TRAVEL ALBUM</h2>
+                        <div class="album-top">
+                            <div class="al-stat"><b id="album-flights">0</b><span>Flights</span></div>
+                            <div class="al-stat"><b id="album-stars">0</b><span>Stars</span></div>
+                        </div>
+                        <h3 class="album-head">Airport stamps</h3>
+                        <div id="album-stamps" class="stamp-row"></div>
+                        <h3 class="album-head">Landmark photos</h3>
+                        <div id="album-photos" class="photo-grid"></div>
+                        <button id="btn-album-close" class="big-btn">BACK</button>
+                    </div>
+                </div>
+
+                <!-- ================= HẠ CÁNH XONG ================= -->
+                <div id="done-overlay" class="screen hidden">
+                    <div class="panel">
+                        <div class="landed-hero">
+                            <span class="lh-icon" id="done-rating-icon">🌟</span>
+                            <b class="lh-rating" id="done-rating">Great Landing</b>
+                            <span class="lh-route" id="done-route">Hanoi → Da Nang</span>
+                        </div>
+
+                        <div class="done-row">
+                            <div class="stamp big-stamp">
+                                <b id="done-stamp">DAD</b><span id="done-stamp-city">Da Nang</span>
+                            </div>
+                            <div class="done-tile"><span>⭐</span><b id="done-stars">0</b></div>
+                            <div class="done-tile"><span>💍</span><b id="done-rings">0/0</b></div>
+                        </div>
+
+                        <div id="done-photos" class="photo-grid"></div>
+
+                        <div class="over-actions">
+                            <button id="btn-again" class="big-btn"><i class="fa-solid fa-rotate-right"></i> FLY AGAIN</button>
+                            <button id="btn-done-album" class="big-btn btn-ghost"><i class="fa-solid fa-book"></i> ALBUM</button>
+                            <button id="btn-done-menu" class="big-btn btn-ghost"><i class="fa-solid fa-list"></i> MENU</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <p class="footer-credit"><i class="fa-solid fa-heart"></i> <a href="/" class="footer-home">KIBU Games</a> - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+            <div class="footer-tools">
+                <a class="footer-contact is-facebook" href="https://www.facebook.com/kibugames.official/"
+                    target="_blank" rel="noopener" title="Follow on Facebook" aria-label="Follow on Facebook">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </a>
+                <a class="footer-contact is-telegram" href="https://t.me/coolkitty007"
+                    target="_blank" rel="noopener" title="Chat on Telegram" aria-label="Chat on Telegram">
+                    <i class="fa-brands fa-telegram"></i>
+                </a>
+                <a class="footer-contact is-whatsapp" href="https://wa.me/84988100942"
+                    target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+                <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+                <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Đổi ngôn ngữ">
+                    <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <script src="/flight-adventure/rules.js"></script>
+    <script src="/flight-adventure/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,713 @@
+/* =========================================================
+   FLIGHT ADVENTURE KIDS — giao diện quanh khung bay
+   ---------------------------------------------------------
+   Cả bầu trời, mặt đất, máy bay và thắng cảnh do canvas vẽ.
+   Tệp này chỉ lo phần HTML bao quanh: bảng điều khiển, hai
+   cụm nút chạm, và mấy bảng phủ.
+
+   Tông nền tối và lạnh, để khung trời trong canvas — xanh
+   sáng, nắng vàng — bật hẳn lên như một ô cửa sổ máy bay
+   giữa một căn phòng tối.
+   ========================================================= */
+
+:root {
+    --font-display: 'Baloo 2', 'Nunito', system-ui, sans-serif;
+    --font-main: 'Nunito', system-ui, sans-serif;
+
+    --bg-dark: #071019;
+    --card-bg: rgba(11, 24, 40, 0.84);
+    --card-border: rgba(255, 255, 255, 0.13);
+
+    --sky: #3aa7e0;
+    --sun: #ffd75e;
+    --coral: #ff6b52;
+    --leaf: #6fd08c;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-dark);
+    background-image:
+        radial-gradient(circle at 16% 8%, rgba(58, 167, 224, 0.16), transparent 46%),
+        radial-gradient(circle at 86% 20%, rgba(255, 215, 94, 0.13), transparent 46%),
+        radial-gradient(circle at 50% 112%, rgba(111, 208, 140, 0.14), transparent 58%);
+    color: #fff;
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.brand-title {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, var(--sky), var(--sun));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.btn {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 9px 13px;
+    border-radius: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+    color: #e6f2fb;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.btn:hover { background: rgba(255, 255, 255, 0.14); transform: translateY(-2px); }
+
+/* ---------------- Khung sân ---------------- */
+.game-viewport {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    min-width: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+    background: #071019;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    container-type: size;
+}
+
+/* Sân giữ đúng tỉ lệ canvas — game.js đặt --stage-w/--stage-h theo khổ thật.
+   NẰM NGANG 960×600, cố ý khác mấy game dựng đứng trên trang: bay thì thứ
+   đáng nhìn là đường chân trời với cái gì đang tới phía trước. */
+.stage {
+    --stage-w: 960;
+    --stage-h: 600;
+    position: relative;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--stage-w) / var(--stage-h);
+    max-width: 100%;
+    max-height: 100%;
+    min-width: 0;
+    touch-action: none;
+}
+
+@supports (width: 1cqh) {
+    .stage { width: min(100cqw, 100cqh * var(--stage-w) / var(--stage-h)); }
+}
+
+#game-canvas { position: absolute; inset: 0; }
+#game-canvas canvas { display: block; touch-action: none; }
+
+/* ---------------- Bảng điều khiển ----------------
+   Cùng một luật với mọi bảng điểm trên trang này: bề ngang cố định và chữ số
+   dùng bộ đều nhau, nên số nhảy thế nào ô cũng không co giãn. Mắt đứa bé đang
+   dán vào cái vòng mây phía trước — góc màn hình mà giật liên tục thì mệt hơn
+   hẳn một bảng điểm xấu. */
+.hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+}
+
+.hud[hidden] { display: none; }
+
+.hud-top {
+    position: absolute;
+    top: 10px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+}
+
+.hud-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    padding: 6px 12px;
+    border-radius: 13px;
+    background: rgba(7, 18, 32, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #dff1ff;
+    font-size: 0.8rem;
+    min-width: 92px;
+    justify-content: center;
+}
+
+.hud-chip i { font-size: 0.82rem; color: #9fd8f2; align-self: center; }
+.hud-chip b { font-size: 1.05rem; color: #fff; }
+.hud-chip em { font-style: normal; font-size: 0.72rem; color: #9fb8cc; }
+.hud-chip.chip-soft { min-width: 74px; }
+
+/* ---- Thanh hành trình ----
+   Trẻ con không đọc phần trăm. Nhưng "cái máy bay đã đi được tới đây, còn
+   ngần này nữa là tới Đà Nẵng" thì nhìn một cái là hiểu, và đó là toàn bộ
+   việc mà thanh này phải làm. */
+.progress {
+    position: absolute;
+    top: 52px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: min(58%, 430px);
+}
+
+.pg-city {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.72rem;
+    color: #cfe6f5;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+    white-space: nowrap;
+}
+
+.pg-track {
+    position: relative;
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(7, 18, 32, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#progress-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--sky), var(--sun));
+    transition: width 0.25s linear;
+}
+
+#progress-plane {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translate(-50%, -55%);
+    font-size: 0.95rem;
+    transition: left 0.25s linear;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6));
+}
+
+/* ---- Lời nhắc ----
+   MỘT câu, giữa dưới, tự tan. Bản mô tả cấm "long reading" — mà một đứa bé
+   sáu tuổi đang lái máy bay thì không đọc nổi câu thứ hai. */
+.guide {
+    position: absolute;
+    left: 50%;
+    bottom: 122px;
+    transform: translateX(-50%) translateY(10px);
+    padding: 10px 20px;
+    border-radius: 16px;
+    background: rgba(7, 18, 32, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #fff;
+    white-space: nowrap;
+    max-width: 90%;
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    pointer-events: none;
+}
+
+.guide.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---- Ba nút tròn bên phải ---- */
+.hud-right {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: auto;
+}
+
+.round-btn {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.28);
+    background: rgba(7, 18, 32, 0.66);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-size: 1.6rem;
+    cursor: pointer;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.14s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.round-btn:active { transform: scale(0.93); }
+.round-btn[hidden] { display: none; }
+
+/* Nút máy ảnh SÁNG LÊN khi có thắng cảnh trong tầm. Đây là cách trò chơi nói
+   "nhìn kìa!" mà không cần một chữ nào — và không cần chữ thì không cần dịch,
+   không cần đọc, không cần biết chữ. */
+.btn-photo.is-hot {
+    border-color: var(--sun);
+    box-shadow: 0 0 0 4px rgba(255, 215, 94, 0.28), 0 0 26px rgba(255, 215, 94, 0.7);
+    animation: camPulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes camPulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+.btn-auto.is-on {
+    border-color: #b08bff;
+    box-shadow: 0 0 0 4px rgba(176, 139, 255, 0.28), 0 0 22px rgba(176, 139, 255, 0.6);
+}
+
+.btn-land {
+    border-color: var(--leaf);
+    box-shadow: 0 0 0 4px rgba(111, 208, 140, 0.24), 0 0 22px rgba(111, 208, 140, 0.55);
+}
+
+/* ---------------- Hai cụm nút chạm ----------------
+   Hai góc dưới, để hai ngón cái không phải với nhau. Trái là lên xuống, phải
+   là ga — cùng một bố cục với mọi tay cầm mà bé từng thấy. */
+.touch-row {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 14px 14px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.touch-row[hidden] { display: none; }
+
+.pad { display: flex; gap: 10px; pointer-events: auto; }
+
+.touch-btn {
+    width: 72px;
+    height: 72px;
+    border-radius: 22px;
+    border: 2px solid rgba(255, 255, 255, 0.24);
+    background: rgba(7, 18, 32, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 1.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.12s ease, background 0.15s ease;
+}
+
+.touch-btn.is-on { transform: scale(0.93); background: rgba(58, 167, 224, 0.4); }
+.btn-go { background: rgba(46, 140, 80, 0.55); border-color: rgba(150, 240, 180, 0.5); }
+.btn-go.is-on { background: rgba(60, 200, 110, 0.7); }
+
+/* ---------------- Bảng phủ ---------------- */
+.screen {
+    position: absolute;
+    inset: 0;
+    z-index: 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: radial-gradient(circle at 50% 40%, rgba(7, 18, 32, 0.86), rgba(4, 10, 18, 0.96));
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+.screen.hidden { display: none; }
+
+.panel {
+    width: 100%;
+    max-width: 620px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 26px;
+    padding: 22px 22px 18px;
+    text-align: center;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-height: 100%;
+    overflow-y: auto;
+}
+
+.panel-small { max-width: 470px; }
+.panel-emoji { font-size: 2.6rem; line-height: 1; }
+
+.panel-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 3.6vw, 2rem);
+    font-weight: 800;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, var(--sky), var(--sun), var(--coral));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.panel-desc {
+    font-size: 0.95rem;
+    color: #cbd9e5;
+    line-height: 1.55;
+    max-width: 46ch;
+}
+
+.help-list {
+    text-align: left;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #cbd9e5;
+    line-height: 1.5;
+}
+
+.help-list li { padding-left: 4px; }
+.help-list b { color: #fff; }
+
+.big-btn {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 14px 24px;
+    min-height: 52px;
+    border-radius: 18px;
+    border: none;
+    cursor: pointer;
+    color: #04202e;
+    background: linear-gradient(135deg, var(--sky), #7ae0c0);
+    box-shadow: 0 10px 26px rgba(58, 167, 224, 0.32);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+    width: 100%;
+}
+
+.big-btn:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(58, 167, 224, 0.45); }
+.big-btn:active { transform: translateY(0); }
+
+.big-btn.btn-go-fly {
+    background: linear-gradient(135deg, var(--sun), #ff9f43);
+    color: #33220a;
+    box-shadow: 0 10px 26px rgba(255, 176, 58, 0.36);
+}
+
+.big-btn.btn-ghost {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #e2e8f0;
+    box-shadow: none;
+}
+
+.big-btn[hidden] { display: none; }
+
+/* ---------------- Thẻ tuyến bay ----------------
+   Mỗi thẻ phải trả lời đúng ba câu, theo đúng thứ tự bé quan tâm: đi từ đâu
+   tới đâu, xa bao nhiêu, và có bao nhiêu chỗ để chụp ảnh. */
+.route-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.route-card {
+    width: 100%;
+    padding: 13px 16px;
+    border-radius: 18px;
+    background: linear-gradient(150deg, rgba(58, 167, 224, 0.14), rgba(255, 215, 94, 0.09));
+    border: 1px solid rgba(58, 167, 224, 0.34);
+    cursor: pointer;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.route-card:hover { transform: translateY(-2px); border-color: var(--sun); }
+
+.rc-map { display: flex; align-items: center; gap: 6px; }
+
+.rc-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--sun);
+    flex-shrink: 0;
+}
+
+.rc-line {
+    flex: 1;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0 6px, transparent 6px 12px);
+}
+
+.rc-plane { font-size: 0.9rem; }
+
+.rc-cities {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+}
+
+.rc-cities i { color: var(--sun); font-size: 0.8rem; }
+
+.rc-meta {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    font-size: 0.78rem;
+    color: #a9c2d6;
+}
+
+.rc-done { color: var(--leaf); font-weight: 800; }
+
+/* ---------------- Sổ lưu ---------------- */
+.album-top { display: flex; gap: 10px; width: 100%; }
+
+.al-stat {
+    flex: 1;
+    padding: 10px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.al-stat b { font-family: var(--font-display); font-size: 1.5rem; }
+.al-stat span { font-size: 0.72rem; color: #94a3b8; }
+
+.album-head {
+    align-self: flex-start;
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #8fb4cc;
+}
+
+.stamp-row { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+
+/* Con dấu sân bay: viền đứt, hơi nghiêng, đúng kiểu dấu đóng vào hộ chiếu.
+   Đây là phần thưởng chính của cả trò chơi — nó phải trông như một thứ được
+   ĐÓNG vào sổ, chứ không phải một dòng chữ được in ra. */
+.stamp {
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 2px dashed rgba(255, 215, 94, 0.7);
+    background: rgba(255, 215, 94, 0.1);
+    color: var(--sun);
+    font-family: var(--font-display);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    transform: rotate(-3deg);
+}
+
+.stamp b { font-size: 1.1rem; letter-spacing: 2px; }
+.stamp span { font-size: 0.75rem; color: #e8d9a8; }
+
+.big-stamp {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 10px 18px;
+}
+
+.big-stamp b { font-size: 1.5rem; }
+
+.photo-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 9px;
+}
+
+/* Tấm ảnh chụp được. Không có ảnh thật — mỗi thắng cảnh là một mảng màu riêng
+   cộng một chữ, và thế là đủ: điều bé nhớ không phải hình cái cầu, mà là
+   "mình đã tới đó và chụp được". */
+.photo-card {
+    padding: 8px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+}
+
+.pc-pic {
+    height: 54px;
+    border-radius: 10px;
+    background: linear-gradient(160deg, #7fd0ef, #3aa7e0);
+}
+
+.pc-lake { background: linear-gradient(160deg, #8fe0c8, #2f8f9e); }
+.pc-river { background: linear-gradient(160deg, #a7e6ff, #3f8ad8); }
+.pc-pass { background: linear-gradient(160deg, #cbd8e6, #5d7a92); }
+.pc-beach { background: linear-gradient(160deg, #ffe6b0, #58c2e0); }
+.pc-bridge { background: linear-gradient(160deg, #ffc078, #e0663a); }
+
+.photo-card b { font-family: var(--font-display); font-size: 0.86rem; color: #fff; }
+.photo-card span { font-size: 0.71rem; color: #9fb4c6; line-height: 1.35; }
+
+.no-photo { font-size: 0.85rem; color: #8fa6ba; grid-column: 1 / -1; }
+
+/* ---------------- Màn hạ cánh xong ----------------
+   Một tấm huy hiệu to làm chủ, rồi con dấu và mấy con số. Không có bảng liệt
+   kê — điều bé muốn biết chỉ có một: "con làm được không?". Trả lời câu ấy
+   bằng chữ to nhất màn hình. */
+.landed-hero {
+    width: 100%;
+    padding: 14px;
+    border-radius: 22px;
+    background: linear-gradient(160deg, rgba(255, 215, 94, 0.16), rgba(58, 167, 224, 0.1));
+    border: 1px solid rgba(255, 215, 94, 0.34);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.lh-icon { font-size: 2.6rem; line-height: 1; }
+
+.lh-rating {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 5vw, 2.1rem);
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff, var(--sun));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.lh-route { font-size: 0.86rem; color: #a9c2d6; }
+
+.done-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.done-tile {
+    flex: 1;
+    max-width: 120px;
+    padding: 10px 6px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.done-tile span { font-size: 1.3rem; line-height: 1; }
+.done-tile b { font-family: var(--font-display); font-size: 1.25rem; }
+
+/* Ba nút cuối nằm gọn TRÊN MỘT HÀNG. Cho xuống hàng thì trên màn hẹp chúng
+   thành ba khối to đùng đẩy hết phần thưởng ra ngoài tầm nhìn — mà đây đúng
+   là lúc bé chỉ muốn bấm BAY TIẾP thật nhanh. */
+.over-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+}
+
+.over-actions .big-btn {
+    font-size: 0.82rem;
+    letter-spacing: 0;
+    padding: 12px 8px;
+    min-height: 46px;
+}
+
+/* ---------------- Màn hẹp ---------------- */
+@media (max-width: 760px) {
+    .app-wrapper { padding: 8px 8px 10px; gap: 8px; }
+    .unified-nav { padding: 8px 10px; border-radius: 16px; gap: 8px; }
+    .brand-title { font-size: 1rem; }
+    .btn { padding: 8px 11px; font-size: 0.82rem; }
+    .btn span { display: none; }
+    .game-viewport { border-radius: 18px; }
+    .panel { padding: 18px 14px 15px; border-radius: 20px; gap: 10px; }
+
+    .hud-chip { min-width: 74px; padding: 5px 9px; font-size: 0.72rem; }
+    .hud-chip b { font-size: 0.92rem; }
+    .hud-chip em { display: none; }
+    .hud-chip.chip-soft { min-width: 58px; }
+    .progress { top: 46px; width: min(70%, 340px); }
+    .pg-city { font-size: 0.64rem; }
+    .guide { font-size: 0.82rem; padding: 8px 14px; bottom: 104px; }
+
+    .round-btn { width: 48px; height: 48px; font-size: 1.3rem; }
+    .touch-btn { width: 60px; height: 60px; border-radius: 18px; font-size: 1.4rem; }
+    .pad { gap: 8px; }
+
+    .photo-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+    .over-actions .big-btn { font-size: 0.7rem; padding: 10px 5px; min-height: 42px; }
+}
+
+/* Điện thoại xoay ngang: khung bay vốn nằm ngang nên vừa vặn hẳn, chỉ cần
+   dẹp bớt phần trang trí quanh nó. */
+@media (max-height: 520px) and (orientation: landscape) {
+    .app-wrapper { padding: 6px 8px 6px; gap: 6px; }
+    .unified-nav { padding: 5px 10px; border-radius: 14px; }
+    .brand-title { font-size: 0.95rem; }
+    .site-footer { display: none; }
+    .touch-btn { width: 54px; height: 54px; }
+    .round-btn { width: 44px; height: 44px; font-size: 1.2rem; }
+    .guide { bottom: 80px; }
+}

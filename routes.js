@@ -21,6 +21,7 @@
 
     /* folder on disk  →  slug in the URL (the game's own brand name) */
     var GAMES = [
+        { dir: 'flight-adventure', slug: 'flight-adventure' },
         { dir: 'fruit-crush', slug: 'fruit-crush' },
         { dir: 'shooter-game', slug: 'bot-arena' },
         { dir: 'racer-game', slug: 'neon-racer' },
