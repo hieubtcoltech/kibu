@@ -152,8 +152,9 @@
      * đường vẫn trượt ba trên năm cái.
      *
      * Nên: nhỏ để nhìn, rộng để nhặt. */
+    var RING_PICK = 1350;
     var STAR_R = 75;
-    var STAR_PICK = 210;
+    var STAR_PICK = 1350;
 
     /* ------------------------------------------------------------------ *
      * 4. HẠ CÁNH
@@ -163,7 +164,7 @@
      *    là "có trò chơi đỡ một tay", chứ không phải "hạ cánh kém".
      * ------------------------------------------------------------------ */
     var LAND_GREAT = { vs: 4.5, spd: 92 };    // êm và chậm
-    var LAND_NICE = { vs: 9.0, spd: 104 };
+    var LAND_NICE = { vs: 9.0, spd: 128 };
 
     /* Bay quá sân bay mấy vòng thì trò chơi cầm tay hẳn.
      *
@@ -522,7 +523,7 @@
             var x = RING_FROM + i * RING_GAP;
             var floor = floorAt(route, x) + 150;
             var wantAlt = clamp(1250 + Math.sin(i * 0.55 + 0.6) * 420, floor, ALT_MAX - 500);
-            var wantZ = Math.sin(i * 0.9) * 900 + Math.sin(i * 0.37 + 1.7) * 300;
+            var wantZ = Math.sin(i * 0.64) * 190 + Math.sin(i * 0.31 + 1.7) * 70;
             if (alt === null) {
                 /* VÒNG ĐẦU TIÊN PHẢI VỚI TỚI ĐƯỢC TỪ CÚ CẤT CÁNH.
                  *
@@ -549,12 +550,12 @@
         var c = ringChain(route);
         return (i < 0 || i >= c.length) ? null : c[i];
     }
-    function ringCount(route) { return 0; }
+    function ringCount(route) { return ringChain(route).length; }
 
     /* Sao treo GIỮA hai vòng, ngay trên đường nối chúng. Bay men theo dải vòng
      * mây thì nhặt được sao mà không phải rẽ thêm đâu cả — phần thưởng cho
      * việc đi đúng đường, chứ không phải một việc thứ hai phải làm. */
-    function starCount(route) { return 0; }
+    function starCount(route) { return Math.max(0, ringChain(route).length - 1); }
 
     /* Bao nhiêu vòng THẬT SỰ có mặt — chỗ nào địa hình dựng quá nhanh thì
      * chuỗi bỏ trống. Máy soát đếm bằng con số này chứ không bằng chiều dài
@@ -620,7 +621,7 @@
         ALT_MAX: ALT_MAX, ALT_CRUISE: ALT_CRUISE,
         CIRCLE_GIVE_UP: CIRCLE_GIVE_UP, GLIDE_ALT: GLIDE_ALT, glideSink: glideSink,
         LEVEL_EASE: LEVEL_EASE, SAFE_CLEAR: SAFE_CLEAR, RESCUE_LIFT: RESCUE_LIFT,
-        PHOTO_RANGE: PHOTO_RANGE, RING_R: RING_R, STAR_R: STAR_R, STAR_PICK: STAR_PICK,
+        PHOTO_RANGE: PHOTO_RANGE, RING_R: RING_R, RING_PICK: RING_PICK, STAR_R: STAR_R, STAR_PICK: STAR_PICK,
         hitBall: hitBall,
         FOCAL: FOCAL, HORIZON: HORIZON, CAM_BACK: CAM_BACK, CAM_UP: CAM_UP,
         CAM_COCKPIT_FWD: CAM_COCKPIT_FWD, CAM_COCKPIT_UP: CAM_COCKPIT_UP,

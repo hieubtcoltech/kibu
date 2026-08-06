@@ -261,6 +261,8 @@
         auto: false,          // nút "bay giúp con"
         helped: false,        // đã phải đỡ một tay lần nào chưa
         circled: 0,
+        unsafePitchT: 0,      // giữ chúi mũi quá lâu thì trò chơi cầm tay
+        unsafeTurnT: 0,       // giữ bẻ lái quá lâu thì trò chơi cầm tay
         stars: 0, rings: 0,
         shots: [],            // thắng cảnh đã chụp trong chuyến này
         ringDone: {}, starDone: {},
@@ -336,6 +338,7 @@
         G.leg = 'ready';
         G.t = 0;
         G.auto = false; G.helped = false; G.circled = 0;
+        G.unsafePitchT = 0; G.unsafeTurnT = 0;
         G.stars = 0; G.rings = 0;
         G.shots = [];
         G.ringDone = {}; G.starDone = {};
@@ -443,6 +446,8 @@
 
         var rt = G.route;
         var dep = R.departRunway(rt), arr = R.arriveRunway(rt);
+
+        guardUnsafeInput(dt, arr);
 
         /* ---- BAY GIÚP CON ----
          * Không phải chế độ tự động hoàn toàn: nó chỉ đặt hộ cần lái và ga,
@@ -623,6 +628,49 @@
         say('low', T('Careful! Let us lift you up a little.'), 2.4);
     }
 
+    function turnAutoHelp(key, text) {
+        if (G.auto) return;
+        G.auto = true;
+        G.helped = true;
+        G.unsafePitchT = 0;
+        G.unsafeTurnT = 0;
+        setAutoBtn();
+        Sfx.assist();
+        say(key, text, 3.2);
+    }
+
+    function guardUnsafeInput(dt, arr) {
+        if (G.auto || G.phase !== 'fly' || G.leg === 'ready' || G.leg === 'rollout') return;
+
+        var lowDive = P.alt < R.floorAt(G.route, P.x) + 260;
+        var belowGlide = (G.leg === 'approach' || G.leg === 'final') && P.alt < R.glideAlt(G.route, P.x) - 150;
+        if (!P.onGround && P.pitchHeld && P.pitch < -0.85 && (lowDive || belowGlide)) G.unsafePitchT += dt;
+        else G.unsafePitchT = Math.max(0, G.unsafePitchT - dt * 2.4);
+
+        if (!P.onGround && P.turnHeld && Math.abs(P.turn) > 0.85) G.unsafeTurnT += dt;
+        else G.unsafeTurnT = Math.max(0, G.unsafeTurnT - dt * 2.4);
+
+        /* Bé có thể thử giữ một nút mãi, nhưng trò chơi không được để chuyến
+         * bay mắc kẹt vì thế. Đợi vài giây để vẫn thấy tác dụng của nút, rồi
+         * mới cầm tay hẳn. */
+        if (G.unsafePitchT > 7.5) {
+            turnAutoHelp('pitchhelp', T('Let us level the airplane together.'), 3.2);
+            return;
+        }
+        if (G.unsafeTurnT > 8.5 || (G.leg === 'climb' && (P.x < -180 || Math.abs(P.heading) > 1.9))) {
+            turnAutoHelp('turnhelp', T('Let us turn back to the route.'), 3.2);
+            return;
+        }
+
+        /* Khi đã được mời hạ cánh, ưu tiên hoàn thành chuyến bay hơn là tôn
+         * trọng một chuỗi bấm loạn khiến máy bay vọt qua sân hoặc chệch xa. */
+        if (G.leg === 'approach' || G.leg === 'final') {
+            var tooSideways = Math.abs(P.z) > 520 || Math.abs(P.heading) > 0.72;
+            var tooPast = P.x > arr.x0 - 900 && !P.onGround && (P.alt > R.glideAlt(G.route, P.x) + 280 || P.spd > R.TOUCHDOWN_SPD + 70);
+            if (tooSideways || tooPast) turnAutoHelp('landhelp', T('Let us line up with the runway.'), 3.2);
+        }
+    }
+
     function autopilot(dt, arr) {
         var rt = G.route;
         var wantAlt;
@@ -683,8 +731,8 @@
              * nút ga rồi quên mất còn phải kéo lên — và cả chuyến bay không
              * được phép kết thúc ở đó. */
             if (P.x > dep.x1 - 260 && P.onGround && P.spd >= R.ROTATE_SPD) {
+                if (!P.pitchHeld || P.pitch < 0.3) G.helped = true;
                 P.pitch = 0.9;
-                G.helped = true;
             }
             return;
         }
@@ -719,7 +767,7 @@
              * Ở đây nó chỉ là một vòng lượn: kéo tuyến lùi lại, nói một câu vui
              * vẻ, thử lại. Bé không mất gì ngoài ba mươi giây được bay thêm —
              * mà bay thêm thì có phải là mất đâu. */
-            if (P.x > arr.x1 - 200 && !P.onGround) circleAround(arr);
+            if (P.x > arr.x1 - 200 && G.leg !== 'rollout') circleAround(arr);
             return;
         }
 
@@ -737,6 +785,10 @@
         P.x = G.route.landStart - 600;
         P.alt = R.GLIDE_ALT;
         P.vs = 0;
+        P.onGround = false;
+        P.heading = 0;
+        P.z = 0;
+        P.turn = 0;
         G.leg = 'approach';
         Sfx.assist();
         /* SAU HAI VÒNG THÌ CẦM TAY HẲN.
@@ -775,7 +827,7 @@
             if (G.ringDone[i]) continue;
             o = R.ringAt(rt, i);
             if (!o || Math.abs(o.x - P.x) > 400) continue;
-            if (R.hitBall(o.x - P.x, o.alt - P.alt, o.z - P.z, R.RING_R)) {
+            if (R.hitBall(o.x - P.x, o.alt - P.alt, o.z - P.z, R.RING_PICK || R.RING_R)) {
                 G.ringDone[i] = 1;
                 G.rings++;
                 Sfx.ring();
@@ -2160,14 +2212,19 @@
         ctx.restore();
     }
 
-    /* Khung buồng lái vẽ chồng lên cảnh — chỉ khi góc nhìn từ trong. Bé thấy
-     * kính chắn gió, bảng điều khiển đơn giản, và mép cánh khi nghiêng. */
+    /* Khung buồng lái vẽ chồng lên cảnh — chỉ khi góc nhìn từ trong. Hình
+     * cần giống "đang ngồi trong máy bay" hơn là một khung trang trí: kính
+     * chắn gió có trụ giữa, mũi máy bay thấp phía trước, táp-lô cong, yoke,
+     * cần ga và cụm đồng hồ đủ rõ ngay cả khi cầm điện thoại dọc. */
     function drawCockpitOverlay() {
         if (!isCockpitView()) return;
 
-        var dashH = clamp(H * 0.19, 72, 128);
-        var sideW = clamp(W * 0.075, 18, 42);
-        var topH = clamp(H * 0.055, 22, 38);
+        var narrow = W < 430;
+        var dashH = clamp(H * (narrow ? 0.21 : 0.22), 96, 150);
+        var sideW = clamp(W * 0.12, 28, 74);
+        var topH = clamp(H * 0.07, 30, 50);
+        var deckY = H - dashH;
+        var cx = W / 2;
         var bankTilt = P.bank * 0.42;
 
         ctx.save();
@@ -2175,39 +2232,117 @@
         ctx.rotate(bankTilt);
         ctx.translate(-W / 2, -H / 2);
 
-        /* Khung trên — viền kính chắn gió */
+        /* Viền trên của kính chắn gió, hơi dày như mép trần buồng lái. */
         var topGrad = ctx.createLinearGradient(0, 0, 0, topH);
-        topGrad.addColorStop(0, 'rgba(8, 16, 28, 0.96)');
-        topGrad.addColorStop(1, 'rgba(8, 16, 28, 0.55)');
+        topGrad.addColorStop(0, 'rgba(3, 8, 15, 0.98)');
+        topGrad.addColorStop(0.62, 'rgba(9, 18, 30, 0.92)');
+        topGrad.addColorStop(1, 'rgba(9, 18, 30, 0.36)');
         ctx.fillStyle = topGrad;
         ctx.fillRect(0, 0, W, topH);
-
-        /* Trụ A-pillar hai bên */
-        var sideGradL = ctx.createLinearGradient(0, 0, sideW, 0);
-        sideGradL.addColorStop(0, 'rgba(6, 14, 26, 0.98)');
-        sideGradL.addColorStop(1, 'rgba(6, 14, 26, 0.08)');
-        ctx.fillStyle = sideGradL;
-        ctx.fillRect(0, topH * 0.4, sideW, H - dashH);
-
-        var sideGradR = ctx.createLinearGradient(W - sideW, 0, W, 0);
-        sideGradR.addColorStop(0, 'rgba(6, 14, 26, 0.08)');
-        sideGradR.addColorStop(1, 'rgba(6, 14, 26, 0.98)');
-        ctx.fillStyle = sideGradR;
-        ctx.fillRect(W - sideW, topH * 0.4, sideW, H - dashH);
-
-        /* Bảng điều khiển phía dưới */
-        var dashGrad = ctx.createLinearGradient(0, H - dashH, 0, H);
-        dashGrad.addColorStop(0, 'rgba(10, 20, 34, 0.72)');
-        dashGrad.addColorStop(0.35, 'rgba(14, 26, 42, 0.96)');
-        dashGrad.addColorStop(1, 'rgba(6, 12, 22, 1)');
-        ctx.fillStyle = dashGrad;
-        ctx.fillRect(0, H - dashH, W, dashH);
-
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
         ctx.lineWidth = 1.2;
         ctx.beginPath();
-        ctx.moveTo(sideW * 0.6, H - dashH + 2);
-        ctx.quadraticCurveTo(W / 2, H - dashH - 8, W - sideW * 0.6, H - dashH + 2);
+        ctx.moveTo(sideW * 0.72, topH - 1);
+        ctx.quadraticCurveTo(cx, topH + 10, W - sideW * 0.72, topH - 1);
+        ctx.stroke();
+
+        /* Trụ kính trước: hai trụ bên nghiêng và một trụ giữa nhỏ giúp khung
+         * đọc thành kính chắn gió máy bay thay vì viền màn hình. */
+        function pillar(points, g0, g1) {
+            var minX = Math.min(points[0][0], points[1][0], points[2][0], points[3][0]);
+            var maxX = Math.max(points[0][0], points[1][0], points[2][0], points[3][0]);
+            var grad = ctx.createLinearGradient(minX, 0, maxX, 0);
+            grad.addColorStop(0, g0);
+            grad.addColorStop(1, g1);
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(points[0][0], points[0][1]);
+            for (var i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        pillar([
+            [0, topH * 0.48],
+            [sideW * 0.92, topH * 0.8],
+            [sideW * 0.5, deckY + 8],
+            [0, deckY + 30]
+        ], 'rgba(4, 10, 18, 0.98)', 'rgba(11, 22, 36, 0.58)');
+        pillar([
+            [W, topH * 0.48],
+            [W - sideW * 0.92, topH * 0.8],
+            [W - sideW * 0.5, deckY + 8],
+            [W, deckY + 30]
+        ], 'rgba(11, 22, 36, 0.58)', 'rgba(4, 10, 18, 0.98)');
+
+        var centerW = clamp(W * 0.018, 5, 13);
+        var centerGrad = ctx.createLinearGradient(cx - centerW, 0, cx + centerW, 0);
+        centerGrad.addColorStop(0, 'rgba(7, 15, 25, 0.08)');
+        centerGrad.addColorStop(0.45, 'rgba(5, 10, 18, 0.44)');
+        centerGrad.addColorStop(0.55, 'rgba(5, 10, 18, 0.52)');
+        centerGrad.addColorStop(1, 'rgba(7, 15, 25, 0.08)');
+        ctx.fillStyle = centerGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - centerW * 0.48, topH * 0.72);
+        ctx.lineTo(cx + centerW * 0.48, topH * 0.72);
+        ctx.lineTo(cx + centerW * 0.9, deckY + 4);
+        ctx.lineTo(cx - centerW * 0.9, deckY + 4);
+        ctx.closePath();
+        ctx.fill();
+
+        /* Gợi ý phản chiếu trên kính, rất nhẹ để không che đường băng. */
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = clamp(W * 0.006, 1.4, 3.4);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(sideW + W * 0.05, topH + 20);
+        ctx.lineTo(cx - W * 0.1, deckY - 36);
+        ctx.stroke();
+        ctx.globalAlpha = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(W - sideW - W * 0.02, topH + 26);
+        ctx.lineTo(cx + W * 0.13, deckY - 42);
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        /* Mũi máy bay hiện thấp dưới kính, tạo cảm giác đang ngồi sau táp-lô. */
+        var noseW = clamp(W * 0.42, 120, 250);
+        var noseH = clamp(dashH * 0.34, 32, 48);
+        var noseGrad = ctx.createLinearGradient(cx, deckY - noseH, cx, deckY + 12);
+        noseGrad.addColorStop(0, 'rgba(244, 248, 252, 0.86)');
+        noseGrad.addColorStop(0.55, 'rgba(206, 221, 232, 0.78)');
+        noseGrad.addColorStop(1, 'rgba(112, 132, 150, 0.62)');
+        ctx.fillStyle = noseGrad;
+        ctx.beginPath();
+        ctx.moveTo(cx - noseW * 0.5, deckY + 12);
+        ctx.quadraticCurveTo(cx, deckY - noseH, cx + noseW * 0.5, deckY + 12);
+        ctx.quadraticCurveTo(cx, deckY + noseH * 0.28, cx - noseW * 0.5, deckY + 12);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.24)';
+        ctx.stroke();
+
+        /* Táp-lô cong, tối ở dưới và có gờ sáng ở mép trên. */
+        var dashGrad = ctx.createLinearGradient(0, deckY - 12, 0, H);
+        dashGrad.addColorStop(0, 'rgba(14, 27, 42, 0.52)');
+        dashGrad.addColorStop(0.22, 'rgba(16, 31, 48, 0.97)');
+        dashGrad.addColorStop(1, 'rgba(4, 9, 17, 1)');
+        ctx.fillStyle = dashGrad;
+        ctx.beginPath();
+        ctx.moveTo(0, deckY + 24);
+        ctx.quadraticCurveTo(cx, deckY - 20, W, deckY + 24);
+        ctx.lineTo(W, H);
+        ctx.lineTo(0, H);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(sideW * 0.55, deckY + 14);
+        ctx.quadraticCurveTo(cx, deckY - 18, W - sideW * 0.55, deckY + 14);
         ctx.stroke();
 
         /* Gợi ý mép cánh khi nghiêng */
@@ -2216,53 +2351,88 @@
             ctx.fillStyle = 'rgba(248, 251, 255, ' + wingA + ')';
             if (P.bank > 0) {
                 ctx.beginPath();
-                ctx.moveTo(0, H - dashH - 6);
-                ctx.lineTo(sideW + 28, H - dashH + 18);
-                ctx.lineTo(0, H - dashH + 36);
+                ctx.moveTo(0, deckY - 12);
+                ctx.lineTo(sideW + 34, deckY + 22);
+                ctx.lineTo(0, deckY + 42);
                 ctx.closePath();
                 ctx.fill();
             } else {
                 ctx.beginPath();
-                ctx.moveTo(W, H - dashH - 6);
-                ctx.lineTo(W - sideW - 28, H - dashH + 18);
-                ctx.lineTo(W, H - dashH + 36);
+                ctx.moveTo(W, deckY - 12);
+                ctx.lineTo(W - sideW - 34, deckY + 22);
+                ctx.lineTo(W, deckY + 42);
                 ctx.closePath();
                 ctx.fill();
             }
         }
 
-        /* Ba đồng hồ đơn giản: tốc độ, la bàn, độ cao */
-        var cx = W / 2;
-        var cy = H - dashH * 0.52;
-        var gaugeR = clamp(dashH * 0.28, 18, 30);
+        /* Cụm đồng hồ: vòng tròn thật sự có kim, thêm đèn cảnh báo nhỏ để
+         * bảng trông giống buồng lái nhưng không biến thành bài kiểm tra. */
+        var cy = H - dashH * 0.53;
+        var gaugeR = clamp(narrow ? W * 0.082 : dashH * 0.24, 17, 30);
 
         function drawGauge(gx, label, value, unit, accent) {
             ctx.save();
             ctx.translate(gx, cy);
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-            ctx.lineWidth = 1.4;
+            var grd = ctx.createRadialGradient(-gaugeR * 0.35, -gaugeR * 0.35, 2, 0, 0, gaugeR);
+            grd.addColorStop(0, 'rgba(31, 48, 66, 0.98)');
+            grd.addColorStop(0.72, 'rgba(5, 10, 18, 0.98)');
+            grd.addColorStop(1, 'rgba(0, 0, 0, 1)');
+            ctx.fillStyle = grd;
+            ctx.strokeStyle = 'rgba(218, 232, 242, 0.26)';
+            ctx.lineWidth = 1.8;
             ctx.beginPath();
             ctx.arc(0, 0, gaugeR, 0, 6.284);
             ctx.fill();
             ctx.stroke();
 
-            ctx.strokeStyle = accent;
-            ctx.lineWidth = 2.2;
-            ctx.lineCap = 'round';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.lineWidth = 1;
+            for (var m = 0; m <= 6; m++) {
+                var aa = Math.PI * 0.75 + Math.PI * 1.5 * (m / 6);
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(aa) * (gaugeR - 5), Math.sin(aa) * (gaugeR - 5));
+                ctx.lineTo(Math.cos(aa) * (gaugeR - 1.5), Math.sin(aa) * (gaugeR - 1.5));
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.arc(0, 0, gaugeR - 4, Math.PI * 0.75, Math.PI * 0.75 + Math.PI * 1.5 * clamp(value, 0, 1));
+            ctx.arc(0, 0, gaugeR - 5, Math.PI * 0.75, Math.PI * 2.25);
             ctx.stroke();
 
+            var a = Math.PI * 0.75 + Math.PI * 1.5 * clamp(value, 0, 1);
+            ctx.strokeStyle = accent;
+            ctx.lineWidth = 2.4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(a) * (gaugeR - 8), Math.sin(a) * (gaugeR - 8));
+            ctx.stroke();
+            ctx.fillStyle = accent;
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, 6.284);
+            ctx.fill();
+
             ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-            ctx.font = '800 ' + clamp(gaugeR * 0.55, 10, 14) + 'px Nunito, sans-serif';
+            ctx.font = '800 ' + clamp(gaugeR * 0.5, 9, 13) + 'px Nunito, sans-serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(label, 0, -2);
-            ctx.font = '700 ' + clamp(gaugeR * 0.42, 8, 11) + 'px Nunito, sans-serif';
+            ctx.font = '700 ' + clamp(gaugeR * 0.34, 7, 10) + 'px Nunito, sans-serif';
             ctx.fillStyle = 'rgba(255, 255, 255, 0.62)';
             ctx.fillText(unit, 0, gaugeR * 0.42);
             ctx.restore();
+        }
+
+        function drawPanelBox(x, y, w, h) {
+            ctx.fillStyle = 'rgba(2, 7, 13, 0.46)';
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 1;
+            roundRect(ctx, x, y, w, h, 9);
+            ctx.fill();
+            ctx.stroke();
         }
 
         var spdNorm = clamp((P.spd - R.SPD_MIN) / (R.SPD_MAX - R.SPD_MIN), 0, 1);
@@ -2271,10 +2441,52 @@
         if (hdgDeg < 0) hdgDeg += 360;
         var hdgNorm = hdgDeg / 360;
 
-        var gap = clamp(W * 0.11, 36, 72);
+        var gap = clamp(W * (narrow ? 0.15 : 0.13), 40, 82);
         drawGauge(cx - gap, Math.round(P.spd * 3.6), spdNorm, 'km/h', '#38bdf8');
         drawGauge(cx, hdgDeg + '°', hdgNorm, 'HDG', '#34d399');
         drawGauge(cx + gap, Math.round(P.alt), altNorm, 'm', '#fbbf24');
+
+        var panelY = H - dashH * 0.2;
+        drawPanelBox(cx - gap - gaugeR, panelY - 11, gaugeR * 2 + gap * 2, 20);
+        var lampCols = ['#22c55e', '#38bdf8', '#facc15', '#fb7185', '#a78bfa'];
+        for (var li = 0; li < lampCols.length; li++) {
+            ctx.fillStyle = lampCols[li];
+            ctx.globalAlpha = li === 3 && P.alt > 70 ? 0.26 : 0.75;
+            ctx.beginPath();
+            ctx.arc(cx - 34 + li * 17, panelY - 1, 3.2, 0, 6.284);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        /* Cần lái/yoke và cần ga nằm sát đáy, chỉ là silhouette để không cản
+         * tầm nhìn nhưng đủ gợi đúng vị trí người chơi đang ngồi. */
+        ctx.strokeStyle = 'rgba(5, 10, 18, 0.92)';
+        ctx.lineWidth = clamp(W * 0.018, 5, 10);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cx, H - 14);
+        ctx.lineTo(cx, H - dashH * 0.26);
+        ctx.stroke();
+        ctx.lineWidth = clamp(W * 0.012, 4, 7);
+        ctx.beginPath();
+        ctx.arc(cx, H - dashH * 0.25, clamp(W * 0.09, 26, 48), Math.PI * 0.12, Math.PI * 0.88);
+        ctx.stroke();
+
+        var thrX = clamp(W - sideW - 34, cx + gap + gaugeR + 14, W - 24);
+        var thrY = H - dashH * 0.38;
+        drawPanelBox(thrX - 16, thrY - 28, 32, 58);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(thrX - 5, thrY + 22);
+        ctx.lineTo(thrX - 5, thrY - 18);
+        ctx.moveTo(thrX + 5, thrY + 22);
+        ctx.lineTo(thrX + 5, thrY - 18);
+        ctx.stroke();
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(thrX - 10, thrY + 18 - P.throttle * 38, 10, 6);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(thrX + 2, thrY + 12 - clamp(P.spd / R.SPD_MAX, 0, 1) * 32, 10, 6);
 
         ctx.restore();
     }

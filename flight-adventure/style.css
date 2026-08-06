@@ -800,7 +800,7 @@ body .app-wrapper {
     .app-wrapper { padding: 4px 6px 4px; gap: 4px; }
     .unified-nav { padding: 4px 8px; border-radius: 12px; }
     .brand-title { font-size: 0.9rem; }
-    .site-footer { display: none; }
+    .site-footer { display: none !important; }
     .touch-btn { width: 50px; height: 50px; }
     .joystick-zone { width: 100px; height: 100px; }
     .joystick-knob { width: 40px; height: 40px; }
@@ -820,13 +820,45 @@ body .app-wrapper {
    ========================================================= */
 @media (orientation: portrait) and (max-width: 768px) {
     /* Phủ toàn màn hình, không lề, không gap */
-    .app-wrapper { padding: 0 !important; gap: 0 !important; }
+    body { height: 100dvh; }
+    .app-wrapper {
+        height: 100dvh !important;
+        width: 100% !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        margin: 0 !important;
+    }
 
     /* Nav bar giữ lại nhưng siêu gọn */
-    .unified-nav { padding: 4px 8px; border-radius: 0; gap: 6px; }
-    .brand-title { font-size: 0.85rem; }
+    .unified-nav {
+        min-height: 44px;
+        padding: calc(4px + env(safe-area-inset-top, 0px)) 8px 4px;
+        border-radius: 0;
+        gap: 6px;
+        border-left: none;
+        border-right: none;
+    }
+    .nav-left { gap: 7px; flex: 1 1 auto; }
+    .nav-actions { gap: 5px; flex: 0 0 auto; }
+    .nav-home img { height: 32px; }
+    .brand { gap: 6px; }
+    .brand-icon { display: none; }
+    .brand-title {
+        max-width: 31vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-size: 0.82rem;
+        line-height: 1;
+    }
     .brand-img { width: 24px; height: 24px; border-radius: 6px; }
-    .btn { padding: 6px 8px; font-size: 0.78rem; border-radius: 10px; }
+    .btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        justify-content: center;
+        font-size: 0.76rem;
+        border-radius: 10px;
+    }
     .btn span { display: none; }
     .site-footer { display: none !important; }
 
@@ -835,26 +867,90 @@ body .app-wrapper {
         border-radius: 0;
         border: none;
         box-shadow: none;
+        min-height: 0;
     }
 
     /* HUD nén gọn sát mép trên */
-    .hud-top { gap: 4px; top: 6px; }
-    .hud-chip { min-width: 58px; padding: 3px 6px; font-size: 0.64rem; border-radius: 10px; }
-    .hud-chip b { font-size: 0.82rem; }
+    .hud-top {
+        justify-content: flex-start;
+        left: 6px;
+        right: 52px;
+        gap: 4px;
+        top: calc(6px + env(safe-area-inset-top, 0px));
+        overflow: hidden;
+    }
+    .hud-chip {
+        min-width: 0;
+        width: auto;
+        flex: 0 1 auto;
+        padding: 3px 6px;
+        gap: 4px;
+        font-size: 0.62rem;
+        border-radius: 10px;
+    }
+    .hud-chip b { font-size: 0.78rem; }
+    .hud-chip i { font-size: 0.68rem; }
     .hud-chip em { display: none; }
-    .progress { top: 36px; width: min(82%, 300px); }
+    .hud-chip.chip-soft { min-width: 48px; }
+    .progress {
+        top: calc(38px + env(safe-area-inset-top, 0px));
+        left: 8px;
+        right: 54px;
+        transform: none;
+        width: auto;
+        gap: 6px;
+    }
     .pg-city { font-size: 0.58rem; }
-    .guide { font-size: 0.76rem; padding: 5px 10px; bottom: 150px; }
+    .guide {
+        width: max-content;
+        max-width: calc(100% - 24px);
+        white-space: normal;
+        text-align: center;
+        font-size: 0.74rem;
+        line-height: 1.18;
+        padding: 6px 10px;
+        bottom: calc(136px + env(safe-area-inset-bottom, 0px));
+    }
 
     /* Nút phụ */
-    .round-btn { width: 38px; height: 38px; font-size: 1.05rem; }
-    .hud-right { right: 6px; gap: 4px; }
+    .round-btn { width: 42px; height: 42px; font-size: 1.08rem; }
+    .hud-right {
+        right: 7px;
+        top: calc(70px + env(safe-area-inset-top, 0px));
+        transform: none;
+        gap: 6px;
+    }
 
     /* Touch controls */
-    .touch-row { bottom: 10px; left: 8px; right: 8px; }
-    .touch-btn { width: 50px; height: 50px; border-radius: 14px; font-size: 1.15rem; }
-    .pad { gap: 5px; }
-    .joystick-zone { width: 110px; height: 110px; }
+    .touch-row {
+        left: 0;
+        right: 0;
+        bottom: 0;
+        padding: 0 12px calc(12px + env(safe-area-inset-bottom, 0px));
+        align-items: flex-end;
+    }
+    .touch-btn { width: 54px; height: 54px; border-radius: 16px; font-size: 1.16rem; }
+    .pad { gap: 7px; }
+    .pad-right { flex-direction: column-reverse; }
+    .joystick-zone { width: 112px; height: 112px; }
     .joystick-knob { width: 44px; height: 44px; }
+
+    .screen { padding: calc(8px + env(safe-area-inset-top, 0px)) 10px calc(10px + env(safe-area-inset-bottom, 0px)); }
+    .panel {
+        max-height: calc(100dvh - 22px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        border-radius: 18px;
+        padding: 14px 12px 12px;
+    }
 }
 
+@media (orientation: portrait) and (max-width: 380px) {
+    .brand-title { max-width: 24vw; font-size: 0.72rem; }
+    .nav-actions { gap: 3px; }
+    .btn { width: 29px; height: 29px; border-radius: 9px; }
+    .hud-chip { padding: 3px 5px; font-size: 0.58rem; }
+    .hud-chip b { font-size: 0.72rem; }
+    .round-btn { width: 38px; height: 38px; font-size: 1rem; }
+    .touch-btn { width: 50px; height: 50px; }
+    .joystick-zone { width: 104px; height: 104px; }
+    .joystick-knob { width: 40px; height: 40px; }
+}
