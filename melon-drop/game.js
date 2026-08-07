@@ -1339,8 +1339,10 @@
         }
 
         /* ---- lòng thùng ---- */
+        const wallW = Math.max(3, u * 0.09);
         ctx.save();
-        roundRect(r.x, r.y, r.w, r.h, 14);
+        ctx.beginPath();
+        ctx.rect(r.x, r.y, r.w, r.h);
         ctx.clip();
 
         const g = ctx.createLinearGradient(0, r.y, 0, r.y + r.h);
@@ -1370,10 +1372,12 @@
 
         ctx.restore();
 
-        /* ---- thành thùng ---- */
-        ctx.lineWidth = Math.max(3, u * 0.09);
+        /* ---- thành thùng ----
+         * Vẽ stroke ra ngoài vùng chơi. Nếu stroke nằm nửa trong nửa ngoài như
+         * mặc định, quả nằm sát tường sẽ bị viền cam/cyan che mất một miếng. */
+        ctx.lineWidth = wallW;
         ctx.strokeStyle = box.over ? '#ff5c6f' : (i === 0 ? '#ff9f1c' : '#18b7d8');
-        roundRect(r.x, r.y, r.w, r.h, 14);
+        roundRect(r.x - wallW / 2, r.y - wallW / 2, r.w + wallW, r.h + wallW, 14 + wallW / 2);
         ctx.stroke();
 
         ctx.restore();
