@@ -101,14 +101,14 @@
      * lúc phần gỡ lún chuyển sang sổ vận tốc giả thì đống quả nghỉ thật sự
      * đứng im tuyệt đối (đo được đúng 0,00000), nên xiết hẳn xuống được. */
     /* Sức cản lúc đi chậm — xem ghi chú ở movePositions() */
-    const CREEP_V = 0.6;        // chậm hơn ngần này ô/giây thì bắt đầu hãm
-    const CREEP_DAMP = 0.97;    // mỗi bước giữ lại bấy nhiêu phần
-    const STOP_V = 0.03;        // chậm hơn nữa thì dừng hẳn cho xong
+    const CREEP_V = 1.2;        // chậm hơn ngần này ô/giây thì bắt đầu hãm
+    const CREEP_DAMP = 0.86;    // mỗi bước giữ lại bấy nhiêu phần
+    const STOP_V = 0.08;        // chậm hơn nữa thì dừng hẳn cho xong
     const SPIN_FOLLOW = 0.12;   // vòng quay đuổi theo chuyển động nhanh chậm cỡ nào
     const SPIN_MIN = 0.06;      // chậm hơn ngần này rad/giây thì thôi quay hẳn
 
-    const SLEEP_D = 0.0015;     // nhúc nhích chưa tới ngần này ô mỗi bước thì coi như đứng yên
-    const SLEEP_T = 0.35;
+    const SLEEP_D = 0.004;      // nhúc nhích chưa tới ngần này ô mỗi bước thì coi như đứng yên
+    const SLEEP_T = 0.22;
 
     /* Đánh thức quả đang ngủ thì phải có cú chạm ra hồn. Mỗi bước trọng lực
      * cộng thêm 0,22 ô/giây vào quả nằm trên, nên hai quả chồng nhau lúc nào
@@ -777,35 +777,30 @@
             f.still = moved < SLEEP_D ? f.still + dt : 0;
         }
 
-        /* 2. Gộp đám: hai quả chạm nhau thì về chung một đám */
-        const root = new Array(n);
-        for (let i = 0; i < n; i++) root[i] = i;
-        const find = i => { while (root[i] !== i) { root[i] = root[root[i]]; i = root[i]; } return i; };
-
+        const supported = new Array(n).fill(false);
         for (let i = 0; i < n; i++) {
+            const p = a[i];
+            if (p.y + p.r > BH - ISLAND_GAP) supported[i] = true;
             for (let j = i + 1; j < n; j++) {
-                const p = a[i], q = a[j];
+                const q = a[j];
                 const dx = q.x - p.x, dy = q.y - p.y;
-                const rr = p.r + q.r + ISLAND_GAP;
+                const rr = p.r + q.r + 0.05;
                 if (dx * dx + dy * dy <= rr * rr) {
-                    const ri = find(i), rj = find(j);
-                    if (ri !== rj) root[ri] = rj;
+                    if (q.y > p.y + p.r * 0.25) supported[i] = true;
+                    if (p.y > q.y + q.r * 0.25) supported[j] = true;
                 }
             }
         }
 
-        /* 3. Đám nào cả làng đứng im VÀ có chân chạm sàn thì cho ngủ */
-        const allStill = new Map(), grounded = new Map();
+        /* 3. Quả nào đứng im và có điểm tựa thật thì cho ngủ riêng quả đó.
+         * Bản cũ bắt cả một "đảo" quả phải cùng đứng im mới ngủ. Chỉ một quả
+         * trên đỉnh còn lăn tăn là toàn bộ đống dưới đáy bị giữ thức, tiếp tục
+         * nhận trọng lực và truyền vi dao động qua lại mãi. Tách theo từng quả
+         * làm phần đã ổn định đứng hẳn, còn quả phía trên vẫn được rơi/lăn khi
+         * điểm tựa bên dưới đổi chỗ. */
         for (let i = 0; i < n; i++) {
-            const f = a[i], r = find(i);
-            if (!allStill.has(r)) { allStill.set(r, true); grounded.set(r, false); }
-            if (f.still <= SLEEP_T) allStill.set(r, false);
-            if (f.y + f.r > BH - ISLAND_GAP) grounded.set(r, true);
-        }
-
-        for (let i = 0; i < n; i++) {
-            const f = a[i], r = find(i);
-            const nap = allStill.get(r) && grounded.get(r);
+            const f = a[i];
+            const nap = f.still > SLEEP_T && supported[i];
             f.sleeping = nap;
             /* Quả ngủ thì vận tốc phải bằng không. Mấy hàm gỡ chồng lấn vẫn
              * cộng lực vào nó, mà ngủ thì không ai đem ra dùng — cứ thế cộng
