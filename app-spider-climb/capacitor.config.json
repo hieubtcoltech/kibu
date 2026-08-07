@@ -1,0 +1,17 @@
+{
+  "appId": "com.kibu.SpiderClimb",
+  "appName": "Spider Climb",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#070b16",
+    "scrollEnabled": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#070b16",
+      "showSpinner": false
+    }
+  }
+}

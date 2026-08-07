@@ -1,0 +1,25 @@
+{
+  "name": "spider-climb-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spider Climb — native app shell (iOS/Android) for the KIBU Games spider climb game",
+  "scripts": {
+    "build": "node build-www.js",
+    "sync": "npm run build && npx cap sync",
+    "ios": "npm run sync && npx cap open ios",
+    "icons": "node make-icons.js && npx @capacitor/assets generate --ios --iosProject ios/App",
+    "vendor": "node fetch-vendor.js",
+    "ipa": "npm run sync && node make-ipa.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/share": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2"
+  }
+}
