@@ -2546,15 +2546,15 @@
             [W, deckY + 30]
         ], 'rgba(11, 22, 36, 0.58)', 'rgba(4, 10, 18, 0.98)');
 
-        /* Gợi ý phản chiếu trên kính, rất nhẹ để không che đường băng. */
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = clamp(W * 0.006, 1.4, 3.4);
+        /* Gợi ý phản chiếu trên kính, thật mờ để không lấn tầm nhìn. */
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.055)';
+        ctx.lineWidth = clamp(W * 0.0035, 0.8, 1.8);
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(sideW + W * 0.05, topH + 20);
         ctx.lineTo(cx - W * 0.1, deckY - 36);
         ctx.stroke();
-        ctx.globalAlpha = 0.6;
+        ctx.globalAlpha = 0.35;
         ctx.beginPath();
         ctx.moveTo(W - sideW - W * 0.02, topH + 26);
         ctx.lineTo(cx + W * 0.13, deckY - 42);
