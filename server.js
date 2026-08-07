@@ -53,6 +53,8 @@ const MIME = {
        duyệt tải file về thay vì hiện ra, và Search Console có thể từ chối đọc
        vì Google đòi sitemap phải là text/xml hoặc application/xml. */
     '.xml': 'text/xml; charset=utf-8',
+    '.xsl': 'text/xsl; charset=utf-8',
+    '.xslt': 'text/xsl; charset=utf-8',
     '.map': 'application/json; charset=utf-8'
 };
 
