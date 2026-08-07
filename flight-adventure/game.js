@@ -1449,6 +1449,11 @@
                 if (Math.abs(z - cam.z) > 4200) continue;
                 var p = proj(wx + hash(idx, 5) * 180, g, z);
                 if (!p || p.x < -140 || p.x > W + 140 || p.y > H + 120) continue;
+                /* Prop mặt đất ở quá xa bị phối cảnh ép sát chân trời nên các
+                 * ô ruộng/sân nhìn như tấm bảng dựng đứng. Xa như vậy chỉ giữ
+                 * nền địa hình và lưới mờ, không dựng thêm đồ vật chi tiết. */
+                if (kind === 'fields' && p.d > 2600) continue;
+                if (kind === 'city' && p.d > 4200) continue;
                 list.push({ p: p, kind: kind, idx: idx, g: g, wx: wx, z: z });
             }
         }
@@ -1481,16 +1486,15 @@
             }
         } else if (o.kind === 'fields') {
             if (r2 < 0.32) {
-                drawGroundPoly(o, [[-150, -80], [96, -72], [130, 58], [-120, 82]], 'rgba(134,239,172,0.62)', 'rgba(236,253,245,0.22)', 1);
-                drawGroundPoly(o, [[-72, -28], [54, -20], [64, 30], [-62, 38]], '#38bdf8', 'rgba(255,255,255,0.38)', 1);
-                drawGroundLine(o, [[-144, 70], [-80, 18], [8, 0], [116, -46]], 'rgba(255,255,255,0.28)', Math.max(1, 2 * s));
+                drawGroundLine(o, [[-146, 66], [-92, 24], [-22, 10], [52, -22], [138, -48]],
+                    'rgba(56,189,248,0.42)', Math.max(1, 4 * s));
+                drawGroundLine(o, [[-120, -42], [-28, -18], [76, -34], [136, 8]],
+                    'rgba(255,255,255,0.22)', Math.max(1, 1.8 * s));
             } else if (r2 >= 0.32 && r2 < 0.62) {
-                drawGroundPoly(o, [[-142, -88], [-12, -90], [-18, 18], [-148, 20]], '#a7f3d0', 'rgba(255,255,255,0.18)', 1);
-                drawGroundPoly(o, [[-8, -88], [128, -78], [118, 22], [-18, 18]], '#86efac', 'rgba(255,255,255,0.16)', 1);
-                drawGroundPoly(o, [[-132, 28], [0, 20], [8, 98], [-118, 104]], '#bbf7d0', 'rgba(255,255,255,0.14)', 1);
-                drawGroundPoly(o, [[8, 20], [132, 24], [126, 102], [8, 98]], '#74b855', 'rgba(255,255,255,0.12)', 1);
-                drawGroundLine(o, [[-150, -30], [136, -26]], 'rgba(255,255,255,0.18)', Math.max(1, 1.4 * s));
-                drawGroundLine(o, [[-20, -96], [-16, 106]], 'rgba(255,255,255,0.18)', Math.max(1, 1.4 * s));
+                drawGroundLine(o, [[-150, -30], [136, -26]], 'rgba(255,255,255,0.2)', Math.max(1, 1.5 * s));
+                drawGroundLine(o, [[-20, -92], [-16, 102]], 'rgba(255,255,255,0.18)', Math.max(1, 1.5 * s));
+                drawGroundLine(o, [[-130, 52], [-58, 18], [28, 22], [132, -28]],
+                    'rgba(187,247,208,0.34)', Math.max(1, 3 * s));
             } else {
                 drawGroundLine(o, [[-154, 42], [-68, 12], [16, 20], [140, -34]], 'rgba(71,85,105,0.55)', Math.max(2, 10 * s));
                 drawGroundLine(o, [[-154, 42], [-68, 12], [16, 20], [140, -34]], 'rgba(255,255,255,0.28)', Math.max(1, 1.5 * s), [7 * s, 8 * s]);
@@ -1670,11 +1674,10 @@
             drawGroundLine(o, [[88, -56, 4], [88, -98, 4]], '#64748b', Math.max(1, 2 * s));
             drawGroundPoly(o, [[88, -98, 4], [122, -88, 4], [88, -78, 4]], '#ef4444', null, 0);
         } else if (r2 < 0.44) {
-            drawGroundPoly(o, [[-146, -88], [146, -88], [146, 88], [-146, 88]], 'rgba(22, 163, 74, 0.42)', 'rgba(255,255,255,0.16)', 1);
-            drawGroundPoly(o, [[-135, -76], [135, -76], [135, 76], [-135, 76]], '#22c55e', 'rgba(255,255,255,0.75)', Math.max(1, 1.8 * s));
-            drawGroundPoly(o, [[-112, -58], [112, -58], [112, 58], [-112, 58]], null, 'rgba(255,255,255,0.8)', Math.max(1, 1.6 * s));
-            drawGroundLine(o, [[0, -58], [0, 58]], 'rgba(255,255,255,0.76)', Math.max(1, 1.5 * s));
-            drawGroundPoly(o, [[-24, -18], [24, -18], [24, 18], [-24, 18]], null, 'rgba(255,255,255,0.72)', Math.max(1, 1.2 * s));
+            drawGroundPoly(o, [[-106, -62], [102, -62], [112, 58], [-98, 66]], 'rgba(134, 239, 172, 0.28)', 'rgba(255,255,255,0.16)', 1);
+            drawGroundPoly(o, [[-68, -34], [50, -36], [58, 32], [-58, 36]], 'rgba(187, 247, 208, 0.55)', 'rgba(255,255,255,0.22)', 1);
+            drawGroundLine(o, [[-94, 44], [-38, 18], [20, 22], [88, -20]], 'rgba(255,255,255,0.45)', Math.max(1, 2 * s));
+            drawGroundLine(o, [[-66, -44], [66, -44]], 'rgba(34,197,94,0.35)', Math.max(1, 2 * s));
         } else {
             drawGroundLine(o, [[-150, 48], [-60, 18], [34, -8], [150, -46]], 'rgba(51, 65, 85, 0.84)', Math.max(4, 24 * s));
             drawGroundLine(o, [[-150, 48], [-60, 18], [34, -8], [150, -46]], 'rgba(255,255,255,0.58)', Math.max(1, 2 * s), [8 * s, 8 * s]);
