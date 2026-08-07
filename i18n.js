@@ -128,6 +128,7 @@
         ['Trợ Giúp Bé: Bật', 'Aim Helper: On'],
         ['Trợ Giúp Bé: Tắt', 'Aim Helper: Off'],
         ['Hiện đường bay dự đoán giúp bé ngắm dễ hơn', 'Show the predicted flight path to make aiming easier'],
+        ['Giải Cứu Màu Sắc', 'Animal Color Rescue'],
 
         /* ---------- Nhãn ngắn ở màn hình chọn (Ocean Party & Aqua Dash) ----------
            Rút gọn nhãn mà quên bổ sung ở đây thì bản tiếng Anh lòi ra tiếng Việt.

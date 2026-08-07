@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Animal Color Rescue - Free Sorting Puzzle for Kids | KIBU Games</title>
+    <meta name="description" content="Play Animal Color Rescue free on KIBU Games. Drag each little friend to the matching color, shape, or size home in a calm offline sorting puzzle made for young kids and families.">
+    <meta name="keywords" content="animal color rescue, color sorting game, kids puzzle game, toddler color game, shape matching game, size sorting game, game mau sac cho be, tro choi ghep mau, KIBU Games">
+    <meta name="author" content="KIBU Games">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://kibugames.com/animal-color-rescue/">
+    <link rel="alternate" hreflang="en" href="https://kibugames.com/animal-color-rescue/">
+    <link rel="alternate" hreflang="vi" href="https://kibugames.com/animal-color-rescue/">
+    <link rel="alternate" hreflang="x-default" href="https://kibugames.com/animal-color-rescue/">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://kibugames.com/animal-color-rescue/">
+    <meta property="og:title" content="Animal Color Rescue - Free Sorting Puzzle | KIBU Games">
+    <meta property="og:description" content="Drag each friend to the matching color, shape, or size home. Calm, colorful, offline puzzle play for young kids.">
+    <meta property="og:image" content="https://kibugames.com/animal-color-rescue/og-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="vi_VN">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://kibugames.com/animal-color-rescue/">
+    <meta name="twitter:title" content="Animal Color Rescue - Free Sorting Puzzle">
+    <meta name="twitter:description" content="Match colors, shapes, and sizes with one easy drag.">
+    <meta name="twitter:image" content="https://kibugames.com/animal-color-rescue/og-image.jpg">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Animal Color Rescue",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Web Browser",
+      "url": "https://kibugames.com/animal-color-rescue/",
+      "genre": "Puzzle",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "inLanguage": ["en", "vi"]
+    }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+          media="print" onload="this.media='all';this.onload=null">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
+    <link rel="stylesheet" href="/animal-color-rescue/style.css">
+    <link rel="stylesheet" href="/site-chrome.css">
+    <script src="/routes.js"></script>
+    <script src="/i18n.js"></script>
+    <script src="/presence.js" defer></script>
+    <script type="module" src="/analytics.js"></script>
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+</head>
+<body class="chrome-fit">
+    <header class="unified-nav">
+        <div class="nav-left">
+            <a href="/" class="nav-home" title="Home" aria-label="Home">
+                <img src="/logo.svg" alt="KIBU Games">
+            </a>
+            <div class="brand">
+                <img src="/animal-color-rescue/icon.jpg" alt="" class="brand-img"><i class="fa-solid fa-paw brand-icon"></i>
+                <h1 class="brand-title" data-text="appName">Animal Color Rescue</h1>
+            </div>
+        </div>
+        <div class="nav-actions">
+            <button id="btn-home" class="btn btn-secondary" title="Home">
+                <i class="fa-solid fa-house"></i> <span data-text="menu">Menu</span>
+            </button>
+            <button id="btn-levels" class="btn btn-secondary" title="Levels">
+                <i class="fa-solid fa-table-cells"></i> <span data-text="levels">Levels</span>
+            </button>
+            <button id="btn-restart" class="btn btn-secondary" title="Restart">
+                <i class="fa-solid fa-rotate-right"></i> <span data-text="restart">Restart</span>
+            </button>
+            <button id="btn-sound" class="btn btn-secondary" title="Sound">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i> <span data-text="sound">Sound</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="game-shell" aria-live="polite">
+        <section class="hud">
+            <div class="level-pill"><span data-text="level">Level</span> <b id="level-number">1</b></div>
+            <div class="goal-text" id="goal-text">Match the colors.</div>
+            <div class="score-pill"><i class="fa-solid fa-star"></i> <b id="star-count">0</b></div>
+        </section>
+
+        <section class="play-area" id="play-area">
+            <div class="target-zone" id="target-zone"></div>
+            <div class="tray" id="tray"></div>
+            <div class="toast" id="toast" hidden></div>
+        </section>
+
+        <section class="reward-strip" id="reward-strip" aria-label="Sticker rewards"></section>
+
+        <div id="menu-overlay" class="overlay">
+            <div class="panel">
+                <h2 data-text="appName">Animal Color Rescue</h2>
+                <p data-text="tagline">Drag each friend to the right home.</p>
+                <div class="mode-grid">
+                    <div class="mode-item">
+                        <i class="fa-solid fa-palette"></i>
+                        <b data-text="colors">Colors</b>
+                        <span data-text="colorsHint">Match by red, yellow, blue, and more.</span>
+                    </div>
+                    <div class="mode-item">
+                        <i class="fa-solid fa-shapes"></i>
+                        <b data-text="shapes">Shapes</b>
+                        <span data-text="shapesHint">Find the same circle, star, or heart.</span>
+                    </div>
+                    <div class="mode-item">
+                        <i class="fa-solid fa-up-right-and-down-left-from-center"></i>
+                        <b data-text="sizes">Sizes</b>
+                        <span data-text="sizesHint">Sort small, medium, and big friends.</span>
+                    </div>
+                </div>
+                <div class="row-buttons">
+                    <button id="btn-play" class="btn btn-primary btn-big"><i class="fa-solid fa-play"></i> <span data-text="play">Play</span></button>
+                    <button id="btn-menu-levels" class="btn btn-ghost"><i class="fa-solid fa-table-cells"></i> <span data-text="levels">Levels</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div id="levels-overlay" class="overlay hidden">
+            <div class="panel">
+                <h2 data-text="chooseLevel">Choose a Level</h2>
+                <div class="level-grid" id="level-grid"></div>
+                <div class="row-buttons">
+                    <button id="btn-levels-back" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i> <span data-text="back">Back</span></button>
+                    <button id="btn-reset" class="btn btn-ghost"><i class="fa-solid fa-trash-can"></i> <span data-text="reset">Reset progress</span></button>
+                </div>
+            </div>
+        </div>
+
+        <div id="win-overlay" class="overlay hidden">
+            <div class="panel win-panel">
+                <h2 data-text="greatJob">Great job!</h2>
+                <div class="big-sticker" id="big-sticker">★</div>
+                <p id="win-copy">Everyone found a home.</p>
+                <div class="row-buttons">
+                    <button id="btn-next" class="btn btn-primary btn-big"><i class="fa-solid fa-forward"></i> <span data-text="next">Next Level</span></button>
+                    <button id="btn-win-levels" class="btn btn-ghost"><i class="fa-solid fa-table-cells"></i> <span data-text="levels">Levels</span></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <p class="footer-credit"><i class="fa-solid fa-heart"></i> <a href="/" class="footer-home">KIBU Games</a> - 100% Free games built with love for kids and families. <a href="/about">About Us</a></p>
+        <div class="footer-tools">
+        <a class="footer-contact is-facebook" href="https://www.facebook.com/kibugames.official/"
+            target="_blank" rel="noopener" title="Follow on Facebook" aria-label="Follow on Facebook">
+            <i class="fa-brands fa-facebook-f"></i>
+        </a>
+        <a class="footer-contact is-telegram" href="https://t.me/coolkitty007"
+            target="_blank" rel="noopener" title="Chat on Telegram" aria-label="Chat on Telegram">
+            <i class="fa-brands fa-telegram"></i>
+        </a>
+        <a class="footer-contact is-whatsapp" href="https://wa.me/84988100942"
+            target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">
+            <i class="fa-brands fa-whatsapp"></i>
+        </a>
+        <span class="online-badge" data-online hidden><span class="online-dot"></span><span data-online-text></span></span>
+        <button id="btn-global-lang" class="lang-flag-btn" title="Switch Language / Doi ngon ngu">
+            <img id="global-lang-flag" src="https://flagcdn.com/w40/vn.png" alt="Language">
+        </button>
+        </div>
+    </footer>
+
+    <script src="/animal-color-rescue/game.js"></script>
+</body>
+</html>

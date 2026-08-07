@@ -48,6 +48,12 @@
      * chủ, để đổi sang sinh ô gạch từ tệp này mà mặt trang không xê dịch. */
     var GAMES = [
         {
+            dir: 'animal-color-rescue', slug: 'animal-color-rescue', tile: 'tile-animalrescue',
+            en: 'Animal Color Rescue', vi: 'Giải Cứu Màu Sắc',
+            topics: ['puzzle', 'learning', 'creative'], players: '1', added: '2026-08-07',
+            keywords: 'animal color rescue giai cuu mau sac game mau sac cho be tro choi ghep mau color sorting kids puzzle shape matching size sorting toddler learning drag drop offline animals'
+        },
+        {
             dir: 'flight-adventure', slug: 'flight-adventure', tile: 'tile-flight',
             en: 'Flight Adventure Kids', vi: 'Bé Tập Lái Máy Bay',
             topics: ['learning', 'physics'], players: '1', added: '2026-08-06',
