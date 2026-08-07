@@ -1922,12 +1922,60 @@
             ctx.save();
             ctx.globalAlpha = fade;
             if (lm.kind === 'lake') {
-                ctx.fillStyle = '#3fa9d8';
-                ctx.beginPath(); ctx.ellipse(p.x, p.y, 320 * s, 74 * s, 0, 0, 6.284); ctx.fill();
-                ctx.fillStyle = '#2f8f4a';
-                ctx.beginPath(); ctx.arc(p.x + 40 * s, p.y - 6 * s, 34 * s, 0, 6.284); ctx.fill();
-                ctx.fillStyle = '#c8963e';
-                ctx.fillRect(p.x + 28 * s, p.y - 74 * s, 26 * s, 70 * s);
+                function groundOval(wx, wz, len, wid, lift, steps) {
+                    var pts = [];
+                    for (var o = 0; o < steps; o++) {
+                        var a = (o / steps) * Math.PI * 2;
+                        var gx = wx + Math.cos(a) * len;
+                        var gz = wz + Math.sin(a) * wid;
+                        var gp = proj(gx, R.groundAt(rt, gx) + lift, gz);
+                        if (gp) pts.push(gp);
+                    }
+                    return pts;
+                }
+
+                function fillGroundShape(pts, color) {
+                    if (pts.length < 3) return;
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.moveTo(pts[0].x, pts[0].y);
+                    for (var o = 1; o < pts.length; o++) ctx.lineTo(pts[o].x, pts[o].y);
+                    ctx.closePath();
+                    ctx.fill();
+                }
+
+                var shore = groundOval(lm.at, lm.z || 0, 580, 230, 0.3, 32);
+                var water = groundOval(lm.at, lm.z || 0, 500, 178, 0.8, 32);
+                fillGroundShape(shore, '#79c979');
+                fillGroundShape(water, '#39b8d8');
+
+                ctx.strokeStyle = 'rgba(255,255,255,0.42)';
+                ctx.lineWidth = Math.max(1, 10 * s);
+                ctx.beginPath();
+                for (var sw = 0; sw < water.length; sw++) {
+                    if (sw === 0) ctx.moveTo(water[sw].x, water[sw].y);
+                    else ctx.lineTo(water[sw].x, water[sw].y);
+                }
+                ctx.closePath();
+                ctx.stroke();
+
+                var island = groundOval(lm.at + 62, (lm.z || 0) + 18, 76, 42, 1.2, 20);
+                fillGroundShape(island, '#2f8f4a');
+
+                var base = proj(lm.at + 62, R.groundAt(rt, lm.at + 62) + 2, (lm.z || 0) + 18);
+                if (base) {
+                    var twrW = Math.max(2.8, 22 * base.s);
+                    var twrH = Math.max(5, 58 * base.s);
+                    ctx.fillStyle = '#d6a753';
+                    ctx.fillRect(base.x - twrW / 2, base.y - twrH, twrW, twrH);
+                    ctx.fillStyle = '#8f5c2b';
+                    ctx.beginPath();
+                    ctx.moveTo(base.x - twrW * 0.8, base.y - twrH);
+                    ctx.lineTo(base.x, base.y - twrH - Math.max(3, 18 * base.s));
+                    ctx.lineTo(base.x + twrW * 0.8, base.y - twrH);
+                    ctx.closePath();
+                    ctx.fill();
+                }
             } else if (lm.kind === 'river') {
                 ctx.strokeStyle = '#4fb6e0';
                 ctx.lineWidth = Math.max(2, 58 * s);
