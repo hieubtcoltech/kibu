@@ -110,11 +110,13 @@
         <div id="chip-1" class="chip chip-1" hidden>
             <span class="chip-name">Kid 1</span>
             <span class="chip-score" id="chip-1-score">0</span>
+            <span class="chip-goal" id="chip-1-goal" hidden></span>
             <span class="chip-next">Next <b id="chip-1-next">🍒</b></span>
         </div>
         <div id="chip-2" class="chip chip-2" hidden>
             <span class="chip-name">Kid 2</span>
             <span class="chip-score" id="chip-2-score">0</span>
+            <span class="chip-goal" id="chip-2-goal" hidden></span>
             <span class="chip-next">Next <b id="chip-2-next">🍒</b></span>
         </div>
 
@@ -142,6 +144,13 @@
                     <span class="ladder-goal">🍉</span>
                 </div>
 
+                <div class="party-row" aria-label="Two kid party rounds">
+                    <span>🍉 Watermelon Race</span>
+                    <span>🍍 Fruit Hunt</span>
+                    <span>⭐ Score Sprint</span>
+                    <span>✨ Merge Party</span>
+                </div>
+
                 <div class="pick-row">
                     <button class="kid-btn is-on" data-kids="1">1 KID</button>
                     <button class="kid-btn" data-kids="2">2 KIDS</button>
@@ -160,14 +169,15 @@
                     </div>
                     <div class="how-item">
                         <span class="how-emoji">🍉</span>
-                        <b>Keep it low</b>
-                        <span>Stay under the red line. Reach the watermelon to win big!</span>
+                        <b>Party goals</b>
+                        <span>Two kids race for a new goal each round: fruit, score, or merges.</span>
                     </div>
                 </div>
 
                 <p class="rule-note">
-                    With 2 kids each one gets a basket. The first watermelon wins —
-                    and if a basket overflows, the other kid takes it.
+                    With 2 kids each one gets a basket. Rounds rotate between
+                    Watermelon Race, Fruit Hunt, Score Sprint, and Merge Party.
+                    If a basket overflows, the other kid takes it.
                 </p>
 
                 <div class="row-buttons sticky-cta">

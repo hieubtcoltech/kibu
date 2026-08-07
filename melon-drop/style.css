@@ -142,6 +142,18 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 
 .chip-next b { font-size: 1rem; }
 
+.chip-goal {
+    min-width: 0;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #8a4b08;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chip-goal[hidden] { display: none; }
+
 /* ---------- Lời khen ---------- */
 .tip {
     position: absolute;
@@ -313,6 +325,25 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     font-size: 1.9rem;
     opacity: 1;
     filter: drop-shadow(0 0 10px rgba(255, 197, 61, 0.7));
+}
+
+.party-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: -4px 0 14px;
+}
+
+.party-row span {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255, 233, 168, 0.12);
+    border: 1px solid rgba(255, 233, 168, 0.22);
+    color: #ffe9a8;
+    font-size: 0.76rem;
+    font-weight: 800;
+    white-space: nowrap;
 }
 
 /* ---------- Chọn số bé ---------- */
@@ -496,6 +527,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     .chip { padding: 3px 9px; gap: 5px; }
     .chip-name { font-size: 0.6rem; }
     .chip-score { font-size: 1rem; }
+    .chip-goal { font-size: 0.58rem; }
     .chip-next { font-size: 0.6rem; }
     .chip-next b { font-size: 0.9rem; }
 
@@ -518,6 +550,8 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     .title { margin-bottom: 2px; }
     .subtitle { margin-bottom: 8px; font-size: 0.88rem; }
     .ladder { margin-bottom: 10px; }
+    .party-row { gap: 4px; margin-bottom: 10px; }
+    .party-row span { font-size: 0.66rem; padding: 4px 7px; }
     .btn-big { font-size: 1.05rem; padding: 12px 30px; }
     .big-fruit { font-size: 2.6rem; }
 }
@@ -532,6 +566,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     .subtitle { font-size: 0.8rem; margin-bottom: 6px; }
     .ladder { margin-bottom: 7px; font-size: 0.9rem; }
     .ladder .ladder-goal { font-size: 1.4rem; }
+    .party-row { display: none; }
 
     .pick-row { margin-bottom: 8px; }
     .kid-btn { padding: 8px 20px; font-size: 0.9rem; }

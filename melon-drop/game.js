@@ -179,6 +179,56 @@
     const TOP_TIER = FRUITS.length - 1;
     const MELON_POP = 120;      // thưởng cho lần hai quả dưa hấu nhập vào nhau rồi nổ
 
+    const SOLO_ROUND = {
+        key: 'classic',
+        title: 'Classic Stack',
+        short: 'Make the biggest fruit you can!',
+        kind: 'classic'
+    };
+
+    const DUO_ROUNDS = [
+        {
+            key: 'watermelon',
+            title: 'Watermelon Race',
+            short: 'First watermelon wins!',
+            kind: 'tier',
+            target: TOP_TIER,
+            win: 'First watermelon!'
+        },
+        {
+            key: 'pineapple',
+            title: 'Pineapple Hunt',
+            short: 'First pineapple wins!',
+            kind: 'tier',
+            target: 7,
+            win: 'Pineapple found!'
+        },
+        {
+            key: 'score',
+            title: 'Score Sprint',
+            short: 'First to 180 points wins!',
+            kind: 'score',
+            target: 180,
+            win: 'Score goal reached!'
+        },
+        {
+            key: 'merge',
+            title: 'Merge Party',
+            short: 'First to 12 merges wins!',
+            kind: 'merge',
+            target: 12,
+            win: 'Merge party complete!'
+        },
+        {
+            key: 'peach',
+            title: 'Peach Dash',
+            short: 'First peach wins!',
+            kind: 'tier',
+            target: 6,
+            win: 'Peach dash won!'
+        }
+    ];
+
     /* Chỉ năm bậc đầu được thả xuống. Quả càng to càng hiếm — thả toàn quả to
      * thì thùng đầy trong mười giây, mà thả toàn quả bé thì chẳng bao giờ leo
      * lên nổi bậc cao. */
@@ -328,6 +378,7 @@
             contacts: new Map(),      // xung lực của bước trước, giữ lại để khởi động ấm
             score: 0,
             bestTier: 0,
+            merges: 0,
             held: pickTier(),         // quả đang cầm trên tay
             next: pickTier(),         // quả kế tiếp, cho bé nhìn trước mà tính
             aimX: BW / 2,
@@ -952,8 +1003,48 @@
         boxes: [],
         time: 0,
         winner: 0,          // chế độ hai bé: 1, 2 hoặc 0 nếu hoà
+        round: SOLO_ROUND,
+        roundPick: 0,
         melonSeen: false    // đã khoe băng-rôn dưa hấu lần nào chưa, mỗi ván một lần
     };
+
+    function pickRound(kids) {
+        if (kids <= 1) return SOLO_ROUND;
+        const round = DUO_ROUNDS[G.roundPick % DUO_ROUNDS.length];
+        G.roundPick += 1;
+        return round;
+    }
+
+    function roundProgress(box) {
+        const r = G.round || SOLO_ROUND;
+        if (r.kind === 'tier') return box.bestTier >= r.target ? 1 : 0;
+        if (r.kind === 'score') return Math.min(box.score, r.target);
+        if (r.kind === 'merge') return Math.min(box.merges, r.target);
+        return 0;
+    }
+
+    function roundGoalText(box) {
+        const r = G.round || SOLO_ROUND;
+        if (G.kids <= 1 || r.kind === 'classic') return '';
+        const tr = window.KibuI18n && window.KibuI18n.t ? window.KibuI18n.t : s => s;
+        if (r.kind === 'tier') return tr('Goal') + ' ' + FRUITS[r.target].emoji;
+        if (r.kind === 'score') return roundProgress(box) + '/' + r.target + ' ' + tr('pts');
+        if (r.kind === 'merge') return tr('Merge') + ' ' + roundProgress(box) + '/' + r.target;
+        return '';
+    }
+
+    function checkRoundWin(box) {
+        if (G.mode !== 'play' || G.kids <= 1 || !G.round) return false;
+        const r = G.round;
+        let done = false;
+        if (r.kind === 'tier') done = box.bestTier >= r.target;
+        else if (r.kind === 'score') done = box.score >= r.target;
+        else if (r.kind === 'merge') done = box.merges >= r.target;
+        if (!done) return false;
+        box.won = true;
+        endDuo(box.kid, r.win || r.short);
+        return true;
+    }
 
     function newGame(kids) {
         G.kids = kids;
@@ -961,6 +1052,7 @@
         chipShown[0] = {}; chipShown[1] = {};
         for (let i = 0; i < kids; i++) G.boxes.push(makeBox(i + 1));
         G.winner = 0;
+        G.round = pickRound(kids);
         G.melonSeen = false;
         G.mode = 'play';
         layout();
@@ -1685,6 +1777,7 @@
         chips: [el('chip-1'), el('chip-2')],
         chipScore: [el('chip-1-score'), el('chip-2-score')],
         chipNext: [el('chip-1-next'), el('chip-2-next')],
+        chipGoal: [el('chip-1-goal'), el('chip-2-goal')],
         tip: el('tip'),
         menu: el('menu-overlay'), over: el('over-overlay'), duo: el('duo-overlay'),
         overScore: el('over-score'), overBest: el('over-best'), overFruit: el('over-fruit'),
@@ -1716,6 +1809,12 @@
                 ui.chipNext[i].textContent = FRUITS[box.next].emoji;
                 seen.next = box.next;
             }
+            const goal = roundGoalText(box);
+            if (ui.chipGoal[i] && seen.goal !== goal) {
+                ui.chipGoal[i].textContent = goal;
+                ui.chipGoal[i].hidden = !goal;
+                seen.goal = goal;
+            }
         }
     }
 
@@ -1732,6 +1831,8 @@
         hideAll();
         paintChips();
         placeChips();
+        const tr = window.KibuI18n && window.KibuI18n.t ? window.KibuI18n.t : s => s;
+        showTip(tr(G.round.title) + ': ' + tr(G.round.short), kids > 1 ? 3000 : 2400);
         const keys = el('keys');
         if (keys) keys.classList.toggle('duo', kids > 1);
     }
@@ -1850,6 +1951,7 @@
             if (kind === 'bump') { sfx.bump(v, r); return; }
             if (kind === 'merge' || kind === 'pop') {
                 sfx.merge(tier);
+                if (kind === 'merge') box.merges += 1;
                 puff(box, x, y, tier, kind === 'pop' ? 22 : 8 + tier);
                 ring(box, x, y, tier);
                 pop(box, x, y, n);
@@ -1859,6 +1961,7 @@
                     shake(box, 2.4, 0.35);
                     sfx.melon();
                 }
+                if (checkRoundWin(box)) return;
                 if (tier === TOP_TIER && kind === 'merge') onMelon(box);
                 else if (tier === 8) sfx.big();
             }
@@ -1946,9 +2049,11 @@
             },
             state: () => ({
                 mode: G.mode, kids: G.kids,
+                round: G.round ? G.round.key : '',
                 boxes: G.boxes.map(b => ({
                     score: b.score, fruits: b.fruits.length,
-                    best: b.bestTier, over: b.over, danger: +b.dangerT.toFixed(2)
+                    best: b.bestTier, merges: b.merges,
+                    over: b.over, danger: +b.dangerT.toFixed(2)
                 }))
             })
         };
