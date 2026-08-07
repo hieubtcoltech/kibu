@@ -1301,7 +1301,7 @@
 
     const SPR = {
         u: 0,               // cỡ u lúc nướng; khác với V.u hiện tại thì nướng lại
-        panda: null,        // { run: [8], jump, slide, cheer }
+        panda: null,        // { run: [12], jump, slide, cheer }
         pals: [],           // pals[i] = { run: [2], sit }
         coin: [],           // sáu hình xu xoay
         guard: [],          // hai hình thú canh, nhấp nhổm qua lại
@@ -2079,6 +2079,7 @@
         if (!u || SPR.u === u) return;
         SPR.u = u;
 
+        SPR.panda = null;
         if (PANDA_SHEET.ready && PANDA_SHEET.img.naturalWidth > 0) {
             const cellW = PANDA_SHEET.img.naturalWidth / PANDA_SHEET.cols;
             const cellH = PANDA_SHEET.img.naturalHeight / PANDA_SHEET.rows;
@@ -2095,18 +2096,6 @@
             };
             for (let i = 0; i < PANDA_FRAMES; i++) {
                 SPR.panda.run.push(pandaFrame(i, PW, PH, PAX, PAY));
-            }
-        } else {
-            const PW = 2.78 * u, PH = 2.48 * u, PAX = 1.38 * u, PAY = 2.30 * u;
-            SPR.panda = {
-                run: [],
-                jump: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'jump', 0)),
-                slide: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'slide', 0)),
-                cheer: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'cheer', 0))
-            };
-            for (let i = 0; i < PANDA_FRAMES; i++) {
-                const k = i / PANDA_FRAMES;
-                SPR.panda.run.push(bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'run', k)));
             }
         }
 
