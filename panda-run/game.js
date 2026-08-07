@@ -1292,9 +1292,9 @@
     };
 
     const PANDA_SHEET = {
-        src: '/panda-run/assets/panda-sprites.png',
+        src: '/panda-run/assets/panda-sprites-v2.png',
         cols: 4,
-        rows: 3,
+        rows: 4,
         img: new Image(),
         ready: false
     };
@@ -1305,9 +1305,9 @@
     };
     PANDA_SHEET.img.src = PANDA_SHEET.src;
 
-    /* Tám hình đầu của sprite sheet là vòng chạy; hàng cuối dành cho jump,
+    /* Mười hai hình đầu của sprite sheet là vòng chạy; hàng cuối dành cho jump,
      * slide, cheer, idle. Nhịp chân vẫn do runCycle quyết định bên dưới. */
-    const PANDA_FRAMES = 8;
+    const PANDA_FRAMES = 12;
     const COIN_FRAMES = 6;
 
     /* Biên độ trước–sau của bàn chân, và phần trăm vòng chạy mà một chân còn
@@ -2066,10 +2066,10 @@
         if (PANDA_SHEET.ready && PANDA_SHEET.img.naturalWidth > 0) {
             SPR.panda = {
                 run: [],
-                jump: pandaFrame(8, PW, PH, PAX, PAY),
-                slide: pandaFrame(9, PW, PH, PAX, PAY),
-                cheer: pandaFrame(10, PW, PH, PAX, PAY),
-                idle: pandaFrame(11, PW, PH, PAX, PAY)
+                jump: pandaFrame(12, PW, PH, PAX, PAY),
+                slide: pandaFrame(13, PW, PH, PAX, PAY),
+                cheer: pandaFrame(14, PW, PH, PAX, PAY),
+                idle: pandaFrame(15, PW, PH, PAX, PAY)
             };
             for (let i = 0; i < PANDA_FRAMES; i++) {
                 SPR.panda.run.push(pandaFrame(i, PW, PH, PAX, PAY));
