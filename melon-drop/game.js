@@ -1342,8 +1342,9 @@
         ctx.clip();
 
         const g = ctx.createLinearGradient(0, r.y, 0, r.y + r.h);
-        g.addColorStop(0, '#fff8e8');
-        g.addColorStop(1, '#ffe9c4');
+        g.addColorStop(0, '#ffffff');
+        g.addColorStop(0.58, '#fff8dd');
+        g.addColorStop(1, '#ffeab0');
         ctx.fillStyle = g;
         ctx.fillRect(r.x, r.y, r.w, r.h);
 
@@ -1351,8 +1352,8 @@
          * được phép", đỏ dần lên khi sắp thua. */
         const dg = ctx.createLinearGradient(0, r.y, 0, by(i, DANGER_Y));
         const heat = Math.min(1, box.dangerT / TOPOUT_T);
-        dg.addColorStop(0, 'rgba(255,255,255,0.85)');
-        dg.addColorStop(1, heat > 0 ? 'rgba(255,120,110,' + (0.12 + heat * 0.4) + ')' : 'rgba(255,255,255,0.15)');
+        dg.addColorStop(0, 'rgba(225,248,255,0.92)');
+        dg.addColorStop(1, heat > 0 ? 'rgba(255,92,111,' + (0.14 + heat * 0.4) + ')' : 'rgba(255,255,255,0.2)');
         ctx.fillStyle = dg;
         ctx.fillRect(r.x, r.y, r.w, by(i, DANGER_Y) - r.y);
 
@@ -1369,7 +1370,7 @@
 
         /* ---- thành thùng ---- */
         ctx.lineWidth = Math.max(3, u * 0.09);
-        ctx.strokeStyle = box.over ? '#8d5524' : (i === 0 ? '#b5651d' : '#2f7d8f');
+        ctx.strokeStyle = box.over ? '#ff5c6f' : (i === 0 ? '#ff9f1c' : '#18b7d8');
         roundRect(r.x, r.y, r.w, r.h, 14);
         ctx.stroke();
 
@@ -1381,7 +1382,7 @@
         ctx.save();
         ctx.setLineDash([r.u * 0.22, r.u * 0.16]);
         ctx.lineWidth = Math.max(2, r.u * 0.045);
-        ctx.strokeStyle = heat > 0 ? 'rgba(220,40,40,' + (0.55 + heat * 0.45) + ')' : 'rgba(224,90,70,0.5)';
+        ctx.strokeStyle = heat > 0 ? 'rgba(255,55,85,' + (0.6 + heat * 0.4) + ')' : 'rgba(255,92,111,0.42)';
         ctx.beginPath();
         ctx.moveTo(r.x, y);
         ctx.lineTo(r.x + r.w, y);
@@ -1399,7 +1400,7 @@
         ctx.save();
         ctx.setLineDash([r.u * 0.12, r.u * 0.2]);
         ctx.lineWidth = Math.max(1.5, r.u * 0.03);
-        ctx.strokeStyle = 'rgba(120, 80, 30, 0.3)';
+        ctx.strokeStyle = 'rgba(24, 183, 216, 0.34)';
         ctx.beginPath();
         ctx.moveTo(x, by(i, HOLD_Y) + FRUITS[box.held].r * r.u);
         ctx.lineTo(x, r.y + r.h);

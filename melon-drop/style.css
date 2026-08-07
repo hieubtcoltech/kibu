@@ -5,19 +5,22 @@
  * quanh: khung chứa canvas, thẻ điểm, lời khen và các bảng phủ (chào, hết
  * lượt, kết quả hai bé). Màu và bo góc lấy theo /site-chrome.css cho đồng bộ.
  *
- * Tông màu đi theo quầy trái cây: nền gỗ sẫm, lòng thùng kem, chữ nâu. Sáng
- * hẳn so với mấy game ban đêm của nhà mình là có chủ ý — game này chơi lâu,
- * mà nền tối thì mấy quả màu nóng bị chói mắt.
+ * Tông màu đi theo sân chơi trái cây: xanh trời, vàng nắng, hồng cam và các
+ * mảng trắng kem. Trẻ nhỏ nhìn vào phải thấy sáng, vui, và nhận ra ngay thùng
+ * của mình mà không bị nền tối nuốt mất màu trái cây.
  * ==========================================================================*/
 
 :root {
-    --md-wood: #7a4a20;
-    --md-cream: #fff6e0;
-    --md-ink: #43290f;
-    --md-red: #e0483c;
-    --md-gold: #ffc53d;
-    --md-kid1: #b5651d;
-    --md-kid2: #2f7d8f;
+    --md-wood: #c87527;
+    --md-cream: #fff9df;
+    --md-ink: #24324f;
+    --md-red: #ff5c6f;
+    --md-gold: #ffd43b;
+    --md-sky: #71d6ff;
+    --md-mint: #86efac;
+    --md-pink: #ff6fae;
+    --md-kid1: #ff9f1c;
+    --md-kid2: #18b7d8;
     --font-round: 'Fredoka', 'Baloo 2', system-ui, sans-serif;
     --font-fat: 'Baloo 2', 'Fredoka', system-ui, sans-serif;
 }
@@ -27,14 +30,22 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: linear-gradient(180deg, #2a1b0e 0%, #1a1109 100%);
+    background:
+        radial-gradient(circle at 15% 12%, rgba(255, 214, 64, 0.5), transparent 26%),
+        radial-gradient(circle at 86% 18%, rgba(255, 111, 174, 0.34), transparent 28%),
+        linear-gradient(180deg, #8ee7ff 0%, #dcfff0 54%, #fff3b8 100%);
     font-family: var(--font-round);
-    color: #fff6e6;
+    color: var(--md-ink);
 }
 
 .unified-nav,
 .site-footer {
     flex: 0 0 auto;
+}
+
+.brand-title {
+    color: #ffffff;
+    text-shadow: 0 2px 0 rgba(36, 50, 79, 0.26);
 }
 
 .brand-img {
@@ -44,6 +55,33 @@ body {
     object-fit: cover;
     flex-shrink: 0;
     display: block;
+}
+
+body > .site-footer {
+    background: rgba(255, 252, 204, 0.92);
+    border-top: 1px solid rgba(255, 159, 28, 0.22);
+    color: #3c4861;
+}
+
+body > .site-footer .footer-credit,
+body > .site-footer .footer-credit p {
+    color: #3c4861;
+}
+
+body > .site-footer .footer-credit a,
+body > .site-footer .footer-credit .footer-home {
+    color: #009bd6;
+}
+
+body > .site-footer .footer-credit a:hover,
+body > .site-footer .footer-credit .footer-home:hover {
+    color: #ff6fae;
+}
+
+body > .site-footer .footer-contact {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(36, 50, 79, 0.12);
+    color: #52607a;
 }
 
 @media (max-width: 560px) {
@@ -61,9 +99,11 @@ body {
     min-height: 0;
     margin: 0 auto;
     background:
-        radial-gradient(circle at 50% 0%, rgba(255, 200, 120, 0.16), transparent 60%),
-        #241708;
-    border: 1px solid rgba(255, 255, 255, 0.09);
+        radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.72) 0 6px, transparent 7px),
+        radial-gradient(circle at 72% 14%, rgba(255, 255, 255, 0.6) 0 5px, transparent 6px),
+        radial-gradient(circle at 84% 72%, rgba(255, 111, 174, 0.16), transparent 30%),
+        linear-gradient(180deg, #82dcff 0%, #baf4d7 58%, #ffe7a3 100%);
+    border: 1px solid rgba(36, 50, 79, 0.12);
     border-radius: 16px;
     overflow: hidden;
 }
@@ -104,9 +144,9 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     gap: 8px;
     padding: 4px 12px;
     border-radius: 999px;
-    background: rgba(255, 246, 224, 0.94);
-    border: 2px solid rgba(67, 41, 15, 0.8);
-    box-shadow: 0 3px 0 rgba(43, 25, 8, 0.4);
+    background: rgba(255, 255, 255, 0.94);
+    border: 2px solid rgba(36, 50, 79, 0.18);
+    box-shadow: 0 4px 0 rgba(36, 50, 79, 0.16), 0 8px 18px rgba(39, 91, 126, 0.16);
     color: var(--md-ink);
     font-family: var(--font-fat);
     pointer-events: none;
@@ -146,7 +186,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     min-width: 0;
     font-size: 0.68rem;
     font-weight: 800;
-    color: #8a4b08;
+    color: #e8590c;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -163,14 +203,15 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     z-index: 8;
     max-width: 88%;
     text-align: center;
-    background: rgba(67, 41, 15, 0.9);
+    background: linear-gradient(135deg, #ff6fae, #ff9f1c);
     border: 2px solid var(--md-gold);
     border-radius: 999px;
     padding: 10px 24px;
     font-family: var(--font-fat);
     font-size: 1.15rem;
     font-weight: 800;
-    color: #ffe9a8;
+    color: #ffffff;
+    text-shadow: 0 2px 0 rgba(124, 45, 18, 0.22);
     pointer-events: none;
     animation: tipIn 0.3s ease both;
 }
@@ -220,13 +261,13 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 .keys-hint.hidden { display: none; }
 
 .keys-hint span {
-    background: rgba(43, 25, 8, 0.82);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(24, 183, 216, 0.28);
     border-radius: 999px;
     padding: 4px 11px;
     font-size: 0.74rem;
     font-weight: 600;
-    color: #ffe9a8;
+    color: var(--md-ink);
 }
 
 /* ---------- Bảng phủ ---------- */
@@ -240,7 +281,9 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     align-items: flex-start;
     justify-content: center;
     padding: 14px;
-    background: rgba(26, 16, 7, 0.9);
+    background:
+        radial-gradient(circle at 20% 10%, rgba(255, 212, 59, 0.26), transparent 28%),
+        rgba(113, 214, 255, 0.82);
     overflow-y: auto;
     overscroll-behavior: contain;
 }
@@ -250,12 +293,12 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 .card {
     width: min(680px, 100%);
     margin: auto;
-    background: rgba(48, 30, 14, 0.96);
-    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.94);
+    border: 2px solid rgba(255, 255, 255, 0.8);
     border-radius: 20px;
     padding: 20px 22px;
     text-align: center;
-    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 18px 44px rgba(23, 85, 112, 0.24);
 }
 
 .pop-in { animation: popIn 0.28s cubic-bezier(0.2, 1.2, 0.4, 1) both; }
@@ -271,11 +314,11 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     font-weight: 800;
     margin: 0 0 6px;
     letter-spacing: 0.02em;
-    background: linear-gradient(180deg, #ffe9a8, #ff922b);
+    background: linear-gradient(180deg, #ff6fae, #ff9f1c 58%, #ffd43b);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    text-shadow: 0 4px 18px rgba(255, 146, 43, 0.25);
+    text-shadow: 0 4px 16px rgba(255, 111, 174, 0.22);
 }
 
 .title-sm {
@@ -285,11 +328,11 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     margin: 0 0 8px;
 }
 
-.text-good { color: #8ce99a; }
+.text-good { color: #0ca678; }
 
 .subtitle {
     margin: 0 0 12px;
-    color: #e8d3ae;
+    color: #52607a;
     font-size: 0.98rem;
 }
 
@@ -338,9 +381,9 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 .party-row span {
     padding: 5px 9px;
     border-radius: 999px;
-    background: rgba(255, 233, 168, 0.12);
-    border: 1px solid rgba(255, 233, 168, 0.22);
-    color: #ffe9a8;
+    background: linear-gradient(180deg, #fff8dc, #fff0b8);
+    border: 1px solid rgba(255, 159, 28, 0.3);
+    color: #8a4b08;
     font-size: 0.76rem;
     font-weight: 800;
     white-space: nowrap;
@@ -360,9 +403,9 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     font-weight: 800;
     padding: 10px 26px;
     border-radius: 999px;
-    border: 2px solid rgba(255, 255, 255, 0.18);
-    background: rgba(255, 255, 255, 0.06);
-    color: #e8d3ae;
+    border: 2px solid rgba(36, 50, 79, 0.14);
+    background: #ffffff;
+    color: #52607a;
     cursor: pointer;
     transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
 }
@@ -370,9 +413,9 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 .kid-btn:hover { transform: translateY(-2px); }
 
 .kid-btn.is-on {
-    background: linear-gradient(135deg, #ffc93b, #ff922b);
+    background: linear-gradient(135deg, #ffd43b, #ff9f1c);
     border-color: #fff;
-    color: #3a2400;
+    color: #24324f;
 }
 
 /* ---------- Hướng dẫn ---------- */
@@ -384,8 +427,8 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 }
 
 .how-item {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(180deg, #ffffff, #f4fbff);
+    border: 1px solid rgba(24, 183, 216, 0.18);
     border-radius: 14px;
     padding: 12px 10px;
     display: flex;
@@ -395,14 +438,14 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 }
 
 .how-emoji { font-size: 1.7rem; line-height: 1; }
-.how-item b { font-size: 0.98rem; color: #ffe9a8; }
-.how-item span:last-child { font-size: 0.84rem; color: #e8d3ae; }
+.how-item b { font-size: 0.98rem; color: #e8590c; }
+.how-item span:last-child { font-size: 0.84rem; color: #52607a; }
 
 .rule-note {
     margin: 0 0 6px;
     font-size: 0.88rem;
-    color: #e8d3ae;
-    background: rgba(255, 255, 255, 0.05);
+    color: #3c4861;
+    background: #fff6cc;
     border-radius: 12px;
     padding: 9px 12px;
 }
@@ -428,22 +471,22 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 .btn:active { transform: translateY(0); }
 
 .btn-primary {
-    background: linear-gradient(135deg, #ffc93b, #ff922b);
-    color: #3a2400;
-    box-shadow: 0 8px 22px rgba(255, 146, 43, 0.35);
+    background: linear-gradient(135deg, #ffd43b, #ff9f1c);
+    color: #24324f;
+    box-shadow: 0 8px 22px rgba(255, 159, 28, 0.32);
 }
 
 .btn-secondary {
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
 .btn-secondary.is-off { opacity: 0.55; }
 
 .btn-ghost {
     background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    color: #e8d3ae;
+    border: 1px solid rgba(36, 50, 79, 0.18);
+    color: #52607a;
 }
 
 .btn-big {
@@ -470,7 +513,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     bottom: -20px;
     padding: 10px 0 12px;
     margin-bottom: -12px;
-    background: linear-gradient(180deg, rgba(48, 30, 14, 0), rgba(48, 30, 14, 0.96) 35%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.94) 35%);
 }
 
 /* ---------- Bảng kết quả ---------- */
@@ -478,7 +521,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     margin: 2px 0 8px;
     font-size: 3.2rem;
     line-height: 1;
-    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.45));
+    filter: drop-shadow(0 6px 14px rgba(255, 159, 28, 0.28));
 }
 
 .new-best {
@@ -508,7 +551,7 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 .score-row {
     display: flex;
     justify-content: space-between;
-    background: rgba(255, 255, 255, 0.05);
+    background: #f4fbff;
     border-radius: 10px;
     padding: 8px 14px;
     font-weight: 600;
