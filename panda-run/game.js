@@ -1292,7 +1292,7 @@
     };
 
     const PANDA_SHEET = {
-        src: '/panda-run/assets/panda-sprites-v2.png',
+        src: '/panda-run/assets/panda-sprites-v3.png',
         cols: 4,
         rows: 4,
         img: new Image(),
