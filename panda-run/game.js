@@ -96,6 +96,9 @@
     const MAGNET_R = 4.2;        // tầm hút
     const SHIELD_HITS = 1;       // khiên đỡ được mấy đòn
     const ROCKET_T = 3.4;        // tên lửa bay bao lâu
+    const WINGS_T = 6.5;         // đôi cánh giữ panda lượn nhẹ bao lâu
+    const CLOCK_T = 5.5;         // đồng hồ làm chậm nhịp chạy bao lâu
+    const BOOTS_T = 7.0;         // giày bật nhảy cao hơn bao lâu
 
     const COMBO_T = 2.6;         // quá bấy nhiêu giây không ăn gì thì tuột combo
     const NEAR_MISS = 0.62;      // lướt sát chướng ngại trong khoảng này được thưởng
@@ -123,7 +126,14 @@
         POWER: 'power'
     };
 
-    const POWER = { SHIELD: 'shield', MAGNET: 'magnet', ROCKET: 'rocket' };
+    const POWER = {
+        SHIELD: 'shield', MAGNET: 'magnet', ROCKET: 'rocket',
+        BLASTER: 'blaster', WINGS: 'wings', CLOCK: 'clock',
+        BOOTS: 'boots', HEART: 'heart'
+    };
+    const BONUS_POWERS = [
+        POWER.BLASTER, POWER.WINGS, POWER.CLOCK, POWER.BOOTS, POWER.HEART
+    ];
 
     /* Sáu vùng cảnh, đổi sau mỗi ZONE_LEN mét. Đổi cảnh không chỉ cho đẹp: nó
      * là cái mốc để bé biết mình đã đi được xa tới đâu, con số mét trên HUD
@@ -280,7 +290,8 @@
         {
             w: 28, tier: 1, items: [].concat(
                 [{ t: T.BRANCH, x: 9 }, { t: T.ROCK, x: 17, h: 1.2 }],
-                line(5, 5, 0.75), arc(14.5, 19.5, 2)
+                line(5, 5, 0.75), arc(14.5, 19.5, 2),
+                [{ t: T.POWER, x: 6.5, y: 1.6, kind: POWER.BLASTER }]
             )
         },
         {
@@ -305,7 +316,7 @@
                 [{ t: T.GAP, x: 8, w: 4.2 }, { t: T.PLAT, x: 9, y: 2.8, w: 3 },
                 { t: T.GAP, x: 18, w: 4.4 }, { t: T.PLAT, x: 19, y: 3.4, w: 3 }],
                 line(9.4, 3, 3.9), line(19.4, 3, 4.5),
-                [{ t: T.FRIEND, x: 26, y: 1.75 }]
+                [{ t: T.POWER, x: 6.6, y: 3.4, kind: POWER.WINGS }, { t: T.FRIEND, x: 26, y: 1.75 }]
             )
         },
         {
@@ -321,7 +332,8 @@
                 { t: T.ROCK, x: 14.4, h: 1.1 }, { t: T.GUARD, x: 22 },
                 { t: T.PLAT, x: 26, y: 3, w: 4 }],
                 arc(6.5, 16, 3, 1.2), line(26.4, 3, 4.1),
-                [{ t: T.POWER, x: 28, y: 4.2, kind: POWER.SHIELD }]
+                [{ t: T.POWER, x: 5.6, y: 1.4, kind: POWER.CLOCK },
+                { t: T.POWER, x: 28, y: 4.2, kind: POWER.SHIELD }]
             )
         },
         {
@@ -337,7 +349,8 @@
                 [{ t: T.GAP, x: 9, w: 3.4 }, { t: T.GAP, x: 15, w: 3.4 },
                 { t: T.GAP, x: 21, w: 3.4 }],
                 arc(8, 13, 1.8), arc(14, 19, 1.8), arc(20, 25, 1.8),
-                [{ t: T.GUARD, x: 28 }, { t: T.FRIEND, x: 30, y: 1.75 }]
+                [{ t: T.POWER, x: 6.4, y: 1.2, kind: POWER.BOOTS },
+                { t: T.GUARD, x: 28 }, { t: T.FRIEND, x: 30, y: 1.75 }]
             )
         },
 
@@ -357,7 +370,8 @@
                 [{ t: T.SPIKE, x: 8 }, { t: T.BRANCH, x: 12 }, { t: T.SPIKE, x: 16 },
                 { t: T.ROCK, x: 21, h: 1.5 }, { t: T.GAP, x: 27, w: 4.8 },
                 { t: T.PLAT, x: 28, y: 3.2, w: 3 }],
-                line(10, 3, 0.72), arc(19, 24, 2.4), line(28.4, 3, 4.3)
+                line(10, 3, 0.72), arc(19, 24, 2.4), line(28.4, 3, 4.3),
+                [{ t: T.POWER, x: 24.6, y: 1.7, kind: POWER.HEART }]
             )
         },
         {
@@ -558,11 +572,16 @@
         shield: 0,
         magnetT: 0,
         rocketT: 0,
+        ammo: 0,
+        wingsT: 0,
+        clockT: 0,
+        bootsT: 0,
 
         zone: 0,
         missions: [],
 
         parts: [],
+        shots: [],
         rings: [],
         floats: [],
         shakeUntil: 0,
@@ -657,6 +676,7 @@
             const c = pickChunk();
             const base = G.builtTo;
             c.items.forEach(it => spawn(it, base));
+            maybeSpawnBonusPower(c, base);
             G.builtTo = base + c.w;
         }
         /* Trong một khối, chướng ngại được viết trước rồi mới tới dãy quả bao
@@ -681,6 +701,19 @@
             pal: Math.floor(Math.random() * ANIMALS.length),
             bob: Math.random() * 6.28
         });
+    }
+
+    function maybeSpawnBonusPower(chunk, base) {
+        if (chunk.rest) return;
+        if (G.metres < 35) return;
+        if (Math.random() > 0.32) return;
+        const kind = BONUS_POWERS[Math.floor(Math.random() * BONUS_POWERS.length)];
+        const x = Math.max(5, Math.min(chunk.w - 4, 4 + Math.random() * (chunk.w - 8)));
+        const y = kind === POWER.WINGS ? 3.4 + Math.random() * 1.4
+            : kind === POWER.CLOCK ? 2.4
+                : kind === POWER.BLASTER ? 1.45
+                    : kind === POWER.BOOTS ? 1.15 : 1.7;
+        spawn({ t: T.POWER, x: x, y: y, kind: kind }, base);
     }
 
     /* Dọn những gì đã trôi khỏi màn hình. Không dọn thì sau vài phút mảng phình
@@ -747,8 +780,13 @@
         G.shield = 0;
         G.magnetT = 0;
         G.rocketT = 0;
+        G.ammo = 0;
+        G.wingsT = 0;
+        G.clockT = 0;
+        G.bootsT = 0;
         G.zone = 0;
         G.parts = [];
+        G.shots = [];
         G.rings = [];
         G.floats = [];
         G.shakeUntil = 0;
@@ -773,7 +811,7 @@
         if (!canCoyote && G.rocketT <= 0) return;
         if (G.rocketT > 0) return;                 // đang bay thì khỏi nhảy
 
-        G.vy = -JUMP_V;
+        G.vy = -(G.bootsT > 0 ? JUMP_V * 1.28 : JUMP_V);
         G.onGround = false;
         G.jumpHold = HOLD_T;
         G.sliding = 0;
@@ -833,7 +871,7 @@
         /* ---- chạy tới ---- */
         const mm = G.metres * G.metres;
         G.speed = RUN_START + (RUN_MAX - RUN_START) * (mm / (mm + RUN_MID * RUN_MID));
-        const sp = G.speed * (G.rocketT > 0 ? 1.25 : 1);
+        const sp = G.speed * (G.rocketT > 0 ? 1.25 : 1) * (G.clockT > 0 ? 0.72 : 1);
         G.x += sp * dt;
         G.dist += sp * dt;
         const wasM = G.metres;
@@ -869,6 +907,10 @@
             if (G.jumpHold > 0 && G.vy < 0) {
                 g = GRAV * HOLD_G;
                 G.jumpHold -= dt;
+            }
+            if (G.wingsT > 0 && G.vy > -2) {
+                g *= 0.22;
+                G.vy = Math.min(G.vy, 4.2);
             }
             const prevY = G.y;
             G.vy += g * dt;
@@ -948,6 +990,9 @@
 
         /* ---- vật phẩm hết hạn ---- */
         if (G.magnetT > 0) G.magnetT -= dt;
+        if (G.wingsT > 0) G.wingsT -= dt;
+        if (G.clockT > 0) G.clockT -= dt;
+        if (G.bootsT > 0) G.bootsT -= dt;
         if (G.rocketT > 0) {
             G.rocketT -= dt;
             if (G.rocketT <= 0) G.vy = 0;
@@ -972,9 +1017,68 @@
         return a.x1 > x0 && a.x0 < x1 && a.y1 > y0 && a.y0 < y1;
     }
 
+    function obstacleBounds(it) {
+        if (it.t === T.ROCK) return { x0: it.x - 0.55, x1: it.x + 0.55, y0: 0, y1: it.h };
+        if (it.t === T.SPIKE) return { x0: it.x - 0.6, x1: it.x + 0.6, y0: 0, y1: 0.85 };
+        if (it.t === T.GUARD) return { x0: it.x - 0.62, x1: it.x + 0.62, y0: 0, y1: 1.35 };
+        if (it.t === T.BRANCH) return { x0: it.x - 0.7, x1: it.x + 0.7, y0: 1.05, y1: 2.6 };
+        return null;
+    }
+
+    function autoBlaster() {
+        if (G.ammo <= 0) return;
+        if (G.shots.some(s => !s.gone)) return;
+        let target = null;
+        for (const it of G.items) {
+            if (it.gone) continue;
+            const b = obstacleBounds(it);
+            if (!b) continue;
+            if (it.x <= G.x + 1.2 || it.x > G.x + 6.2) continue;
+            target = it;
+            break;
+        }
+        if (!target) return;
+        G.ammo--;
+        const b = obstacleBounds(target);
+        G.shots.push({
+            x: G.x + 0.6, y: Math.max(0.9, G.y + 0.9),
+            vx: 16, targetY: (b.y0 + b.y1) / 2, born: G.time, gone: false
+        });
+        sfx.power();
+    }
+
+    function stepShots(dt) {
+        autoBlaster();
+        for (let i = G.shots.length - 1; i >= 0; i--) {
+            const s = G.shots[i];
+            s.x += s.vx * dt;
+            s.y += (s.targetY - s.y) * Math.min(1, dt * 7);
+            if (s.x > G.x + V.cols + 2 || G.time - s.born > 1.2) {
+                G.shots.splice(i, 1);
+                continue;
+            }
+            for (const it of G.items) {
+                if (it.gone) continue;
+                const b = obstacleBounds(it);
+                if (!b) continue;
+                if (s.x > b.x0 - 0.16 && s.x < b.x1 + 0.16 && s.y > b.y0 - 0.16 && s.y < b.y1 + 0.16) {
+                    it.gone = true;
+                    G.shots.splice(i, 1);
+                    G.score += 45;
+                    bumpCombo();
+                    G.parts.push.apply(G.parts, burst(it.x, (b.y0 + b.y1) / 2, 12, '#74f2ff'));
+                    G.rings.push({ x: it.x, y: (b.y0 + b.y1) / 2, r0: 0.45, grow: 2.8, life: 0.3, age: 0, col: '#74f2ff' });
+                    G.floats.push({ text: 'ZAP!', x: it.x, y: b.y1 + 0.6, born: G.time, col: '#74f2ff' });
+                    break;
+                }
+            }
+        }
+    }
+
     function stepItems(dt) {
         const box = playerBox();
         const magnet = G.magnetT > 0;
+        stepShots(dt);
 
         for (const it of G.items) {
             if (it.gone) continue;
@@ -1018,11 +1122,9 @@
             /* ---- chướng ngại ---- */
             if (G.rocketT > 0) continue;              // đang bay thì xuyên qua tất
 
-            let x0, x1, y0, y1;
-            if (it.t === T.ROCK) { x0 = it.x - 0.55; x1 = it.x + 0.55; y0 = 0; y1 = it.h; }
-            else if (it.t === T.SPIKE) { x0 = it.x - 0.6; x1 = it.x + 0.6; y0 = 0; y1 = 0.85; }
-            else if (it.t === T.GUARD) { x0 = it.x - 0.62; x1 = it.x + 0.62; y0 = 0; y1 = 1.35; }
-            else { x0 = it.x - 0.7; x1 = it.x + 0.7; y0 = 1.05; y1 = 2.6; }   // khúc gỗ
+            const ob = obstacleBounds(it);
+            if (!ob) continue;
+            const x0 = ob.x0, x1 = ob.x1, y0 = ob.y0, y1 = ob.y1;
 
             if (hits(box, x0, x1, y0, y1)) {
                 if (it.t === T.BRANCH && (G.sliding > 0 || (!G.onGround && box.y0 > 0.95))) {
@@ -1087,12 +1189,32 @@
             G.magnetT = MAGNET_T;
             sfx.power();
             G.floats.push({ text: 'MAGNET!', x: it.x, y: it.y + 1.6, born: G.time, col: '#ff9de2' });
-        } else {
+        } else if (it.kind === POWER.ROCKET) {
             G.rocketT = ROCKET_T;
             G.vy = -6;
             sfx.rocket();
             shake(0.3, 0.4);
             G.floats.push({ text: 'BLAST OFF!', x: it.x, y: it.y + 1.6, born: G.time, big: true, col: '#ff922b' });
+        } else if (it.kind === POWER.BLASTER) {
+            G.ammo = Math.min(9, G.ammo + 3);
+            sfx.power();
+            G.floats.push({ text: '+3 SHOTS!', x: it.x, y: it.y + 1.6, born: G.time, col: '#74f2ff' });
+        } else if (it.kind === POWER.WINGS) {
+            G.wingsT = WINGS_T;
+            sfx.power();
+            G.floats.push({ text: 'WINGS!', x: it.x, y: it.y + 1.6, born: G.time, big: true, col: '#b8f7ff' });
+        } else if (it.kind === POWER.CLOCK) {
+            G.clockT = CLOCK_T;
+            sfx.power();
+            G.floats.push({ text: 'SLOW!', x: it.x, y: it.y + 1.6, born: G.time, col: '#c5b3ff' });
+        } else if (it.kind === POWER.BOOTS) {
+            G.bootsT = BOOTS_T;
+            sfx.power();
+            G.floats.push({ text: 'BOOTS!', x: it.x, y: it.y + 1.6, born: G.time, col: '#8ef0a0' });
+        } else if (it.kind === POWER.HEART) {
+            if (G.tail.length < MAX_TAIL) G.tail.push(Math.floor(Math.random() * ANIMALS.length));
+            sfx.pal();
+            G.floats.push({ text: '+1 FRIEND!', x: it.x, y: it.y + 1.6, born: G.time, col: '#ff8fab' });
         }
         G.parts.push.apply(G.parts, burst(it.x, it.y, 14, '#ffffff'));
         updateHud();
@@ -2150,6 +2272,7 @@
         drawParallax(Z);
         drawGround(Z);
         drawItems(Z);
+        drawShots();
         drawTail();
         drawPlayer();
         drawParts();
@@ -2347,6 +2470,27 @@
         });
     }
 
+    function drawShots() {
+        G.shots.forEach(s => {
+            const x = sx(s.x), y = sy(s.y);
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = '#74f2ff';
+            ctx.shadowColor = '#74f2ff';
+            ctx.shadowBlur = V.u * 0.35;
+            ctx.beginPath();
+            ctx.ellipse(x, y, V.u * 0.18, V.u * 0.08, 0, 0, 6.283);
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+            ctx.lineWidth = Math.max(1, V.u * 0.03);
+            ctx.beginPath();
+            ctx.moveTo(x - V.u * 0.24, y);
+            ctx.lineTo(x + V.u * 0.18, y);
+            ctx.stroke();
+            ctx.restore();
+        });
+    }
+
     function drawRock(x, gy, h) {
         const w = V.u * 1.1, hh = V.u * h;
         const g = ctx.createLinearGradient(0, gy - hh, 0, gy);
@@ -2452,7 +2596,12 @@
     function drawPower(x, y, it) {
         const r = V.u * 0.48;
         const col = it.kind === POWER.SHIELD ? '#8ed0ff'
-            : it.kind === POWER.MAGNET ? '#ff9de2' : '#ff922b';
+            : it.kind === POWER.MAGNET ? '#ff9de2'
+                : it.kind === POWER.ROCKET ? '#ff922b'
+                    : it.kind === POWER.BLASTER ? '#74f2ff'
+                        : it.kind === POWER.WINGS ? '#b8f7ff'
+                            : it.kind === POWER.CLOCK ? '#c5b3ff'
+                                : it.kind === POWER.BOOTS ? '#8ef0a0' : '#ff8fab';
         ctx.save();
         ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = 0.35 + 0.2 * Math.sin(G.time * 5 + it.bob);
@@ -2493,13 +2642,50 @@
             ctx.stroke();
             ctx.fillRect(-r * 0.57, r * 0.1, r * 0.3, r * 0.42);
             ctx.fillRect(r * 0.27, r * 0.1, r * 0.3, r * 0.42);
-        } else {
+        } else if (it.kind === POWER.ROCKET) {
             ctx.beginPath();
             ctx.moveTo(0, -r * 0.6);
             ctx.quadraticCurveTo(r * 0.4, 0, r * 0.22, r * 0.45);
             ctx.lineTo(-r * 0.22, r * 0.45);
             ctx.quadraticCurveTo(-r * 0.4, 0, 0, -r * 0.6);
             ctx.closePath();
+            ctx.fill();
+        } else if (it.kind === POWER.BLASTER) {
+            ctx.beginPath();
+            ctx.moveTo(-r * 0.48, -r * 0.12);
+            ctx.lineTo(r * 0.24, -r * 0.12);
+            ctx.lineTo(r * 0.58, 0);
+            ctx.lineTo(r * 0.24, r * 0.12);
+            ctx.lineTo(-r * 0.48, r * 0.12);
+            ctx.closePath();
+            ctx.fill();
+        } else if (it.kind === POWER.WINGS) {
+            ctx.beginPath();
+            ctx.ellipse(-r * 0.28, 0, r * 0.28, r * 0.52, -0.45, 0, 6.283);
+            ctx.ellipse(r * 0.28, 0, r * 0.28, r * 0.52, 0.45, 0, 6.283);
+            ctx.fill();
+        } else if (it.kind === POWER.CLOCK) {
+            ctx.lineWidth = r * 0.16;
+            ctx.strokeStyle = col;
+            ctx.beginPath();
+            ctx.arc(0, 0, r * 0.48, 0, 6.283);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -r * 0.32);
+            ctx.moveTo(0, 0);
+            ctx.lineTo(r * 0.25, r * 0.12);
+            ctx.stroke();
+        } else if (it.kind === POWER.BOOTS) {
+            rr(ctx, -r * 0.43, -r * 0.02, r * 0.5, r * 0.38, r * 0.12);
+            ctx.fill();
+            rr(ctx, -r * 0.05, r * 0.1, r * 0.55, r * 0.24, r * 0.1);
+            ctx.fill();
+        } else {
+            ctx.beginPath();
+            ctx.moveTo(0, r * 0.5);
+            ctx.bezierCurveTo(-r * 0.75, 0, -r * 0.4, -r * 0.55, 0, -r * 0.18);
+            ctx.bezierCurveTo(r * 0.4, -r * 0.55, r * 0.75, 0, 0, r * 0.5);
             ctx.fill();
         }
         ctx.restore();
@@ -2586,6 +2772,18 @@
             ctx.beginPath();
             ctx.arc(x, y - V.u * 0.8, V.u * 1.25, 0, 6.283);
             ctx.stroke();
+            ctx.restore();
+        }
+
+        if (G.wingsT > 0) {
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = 0.22 + 0.1 * Math.sin(G.time * 8);
+            ctx.fillStyle = '#b8f7ff';
+            ctx.beginPath();
+            ctx.ellipse(x - V.u * 0.5, y - V.u * 0.95, V.u * 0.34, V.u * 0.72, -0.45, 0, 6.283);
+            ctx.ellipse(x + V.u * 0.5, y - V.u * 0.95, V.u * 0.34, V.u * 0.72, 0.45, 0, 6.283);
+            ctx.fill();
             ctx.restore();
         }
 
@@ -2771,6 +2969,14 @@
             '<b>' + Math.ceil(G.magnetT) + '</b></span>';
         if (G.rocketT > 0) html += '<span class="pw pw-rocket"><i class="fa-solid fa-rocket"></i>' +
             '<b>' + Math.ceil(G.rocketT) + '</b></span>';
+        if (G.ammo > 0) html += '<span class="pw pw-blaster"><i class="fa-solid fa-bolt"></i>' +
+            '<b>' + G.ammo + '</b></span>';
+        if (G.wingsT > 0) html += '<span class="pw pw-wings"><i class="fa-solid fa-dove"></i>' +
+            '<b>' + Math.ceil(G.wingsT) + '</b></span>';
+        if (G.clockT > 0) html += '<span class="pw pw-clock"><i class="fa-solid fa-clock"></i>' +
+            '<b>' + Math.ceil(G.clockT) + '</b></span>';
+        if (G.bootsT > 0) html += '<span class="pw pw-boots"><i class="fa-solid fa-shoe-prints"></i>' +
+            '<b>' + Math.ceil(G.bootsT) + '</b></span>';
         if (ui.powers.innerHTML !== html) ui.powers.innerHTML = html;
 
         paintMissions(ui.missions);
@@ -3121,7 +3327,8 @@
             state: () => ({
                 mode: G.mode, m: G.metres, pals: G.tail.length, rescued: G.pals,
                 coins: G.coins, score: G.score, combo: G.combo, speed: +G.speed.toFixed(2),
-                zone: zone().key, shield: G.shield
+                zone: zone().key, shield: G.shield, ammo: G.ammo,
+                wings: +G.wingsT.toFixed(1), clock: +G.clockT.toFixed(1), boots: +G.bootsT.toFixed(1)
             })
         };
 

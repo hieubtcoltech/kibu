@@ -226,6 +226,10 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 .pw-shield { color: #8ed0ff; border-color: rgba(142, 208, 255, 0.55); }
 .pw-magnet { color: #ff9de2; border-color: rgba(255, 157, 226, 0.55); }
 .pw-rocket { color: #ffa94d; border-color: rgba(255, 169, 77, 0.55); }
+.pw-blaster { color: #74f2ff; border-color: rgba(116, 242, 255, 0.55); }
+.pw-wings { color: #b8f7ff; border-color: rgba(184, 247, 255, 0.55); }
+.pw-clock { color: #c5b3ff; border-color: rgba(197, 179, 255, 0.55); }
+.pw-boots { color: #8ef0a0; border-color: rgba(142, 240, 160, 0.55); }
 
 /* ---------- Nhiệm vụ ---------- */
 .mission-list {
