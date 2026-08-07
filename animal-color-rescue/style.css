@@ -374,6 +374,7 @@ body {
     border: 1px dashed rgba(255, 255, 255, 0.26);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    overflow: hidden;
 }
 
 .piece {

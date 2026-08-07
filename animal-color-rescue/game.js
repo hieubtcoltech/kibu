@@ -346,19 +346,48 @@
     function layoutPieces() {
         const tray = el.tray.getBoundingClientRect();
         const area = el.playArea.getBoundingClientRect();
-        const n = state.pieces.length;
-        state.pieces.forEach((piece, i) => {
-            if (piece.placed) return;
-            const node = piece.node;
-            const size = node.offsetWidth || 78;
-            const gap = Math.max(8, Math.min(18, (tray.width - n * size) / Math.max(1, n + 1)));
-            const total = n * size + (n - 1) * gap;
-            const start = tray.left + (tray.width - total) / 2;
-            const x = start + i * (size + gap) - area.left;
+        if (!tray.width || !tray.height || !area.width) return;
+
+        const unplaced = state.pieces.filter(p => !p.placed);
+        const n = unplaced.length;
+        if (n === 0) return;
+
+        const availWidth = Math.max(100, tray.width - 24);
+        const baseSizes = unplaced.map(p => Math.round(76 * p.size.scale));
+        const sumBaseSizes = baseSizes.reduce((a, b) => a + b, 0);
+        const minGap = n > 1 ? 4 : 0;
+        const reqWidth = sumBaseSizes + (n - 1) * minGap;
+
+        let fitScale = 1.0;
+        if (reqWidth > availWidth) {
+            fitScale = Math.max(0.48, availWidth / reqWidth);
+        }
+
+        const effectiveSizes = unplaced.map(p => Math.round(76 * p.size.scale * fitScale));
+        const sumEffective = effectiveSizes.reduce((a, b) => a + b, 0);
+
+        let gap = 0;
+        if (n > 1) {
+            gap = (availWidth - sumEffective) / (n - 1);
+            gap = Math.max(2, Math.min(22, gap));
+        }
+
+        const actualTotalWidth = sumEffective + (n - 1) * gap;
+        const startX = tray.left + (tray.width - actualTotalWidth) / 2;
+
+        let currentX = startX;
+        unplaced.forEach((piece, i) => {
+            const size = effectiveSizes[i];
+            piece.node.style.setProperty('--piece-size', size + 'px');
+
+            const x = currentX - area.left;
             const y = tray.top + (tray.height - size) / 2 - area.top;
+
             placeNode(piece, x, y);
             piece.homeX = x;
             piece.homeY = y;
+
+            currentX += size + gap;
         });
     }
 
@@ -450,13 +479,18 @@
         target.placed++;
         piece.node.classList.add('is-placed');
         target.node.classList.toggle('is-full', target.placed >= target.count);
+
+        const naturalSize = Math.round(76 * piece.size.scale);
+        piece.node.style.setProperty('--piece-size', naturalSize + 'px');
+
         const dock = target.node.querySelector('.target-dock').getBoundingClientRect();
         const area = el.playArea.getBoundingClientRect();
-        const size = piece.node.offsetWidth || 78;
+        const size = piece.node.offsetWidth || naturalSize;
         const offset = (target.placed - 1) - (target.count - 1) / 2;
         const x = dock.left + dock.width / 2 - size / 2 + offset * Math.min(34, size * 0.38) - area.left;
         const y = dock.top + dock.height / 2 - size / 2 - area.top;
         placeNode(piece, x, y);
+        layoutPieces();
     }
 
     function finishLevel() {
