@@ -1291,9 +1291,23 @@
         cage: null, log: null, rock: null, spike: null
     };
 
-    /* Mười hai hình cho một vòng chạy thay vì tám: với nhịp chân đúng (xem
-     * LEG_AMP bên dưới) thì tám hình đổi quá thưa, mắt thấy giật. */
-    const PANDA_FRAMES = 12;
+    const PANDA_SHEET = {
+        src: '/panda-run/assets/panda-sprites.png',
+        cols: 4,
+        rows: 3,
+        img: new Image(),
+        ready: false
+    };
+    PANDA_SHEET.img.onload = () => {
+        PANDA_SHEET.ready = true;
+        SPR.u = 0;
+        bakeSprites();
+    };
+    PANDA_SHEET.img.src = PANDA_SHEET.src;
+
+    /* Tám hình đầu của sprite sheet là vòng chạy; hàng cuối dành cho jump,
+     * slide, cheer, idle. Nhịp chân vẫn do runCycle quyết định bên dưới. */
+    const PANDA_FRAMES = 8;
     const COIN_FRAMES = 6;
 
     /* Biên độ trước–sau của bàn chân, và phần trăm vòng chạy mà một chân còn
@@ -1335,8 +1349,28 @@
         const k = scale == null ? 1 : scale;
         ctx.save();
         if (alpha != null) ctx.globalAlpha *= alpha;
-        ctx.drawImage(s.c, x - s.ax * k, y - s.ay * k, s.w * k, s.h * k);
+        if (s.img) {
+            ctx.drawImage(
+                s.img,
+                s.sx, s.sy, s.sw, s.sh,
+                x - s.ax * k, y - s.ay * k, s.w * k, s.h * k
+            );
+        } else {
+            ctx.drawImage(s.c, x - s.ax * k, y - s.ay * k, s.w * k, s.h * k);
+        }
         ctx.restore();
+    }
+
+    function pandaFrame(index, w, h, ax, ay) {
+        const sw = PANDA_SHEET.img.naturalWidth / PANDA_SHEET.cols;
+        const sh = PANDA_SHEET.img.naturalHeight / PANDA_SHEET.rows;
+        return {
+            img: PANDA_SHEET.img,
+            sx: (index % PANDA_SHEET.cols) * sw,
+            sy: Math.floor(index / PANDA_SHEET.cols) * sh,
+            sw: sw, sh: sh,
+            w: w, h: h, ax: ax, ay: ay
+        };
     }
 
     /* ---- gấu trúc ----
@@ -2028,16 +2062,29 @@
         if (!u || SPR.u === u) return;
         SPR.u = u;
 
-        const PW = 2.6 * u, PH = 2.0 * u, PAX = 1.35 * u, PAY = 1.86 * u;
-        SPR.panda = {
-            run: [],
-            jump: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'jump', 0)),
-            slide: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'slide', 0)),
-            cheer: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'cheer', 0))
-        };
-        for (let i = 0; i < PANDA_FRAMES; i++) {
-            const k = i / PANDA_FRAMES;
-            SPR.panda.run.push(bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'run', k)));
+        const PW = 2.78 * u, PH = 2.48 * u, PAX = 1.38 * u, PAY = 2.30 * u;
+        if (PANDA_SHEET.ready && PANDA_SHEET.img.naturalWidth > 0) {
+            SPR.panda = {
+                run: [],
+                jump: pandaFrame(8, PW, PH, PAX, PAY),
+                slide: pandaFrame(9, PW, PH, PAX, PAY),
+                cheer: pandaFrame(10, PW, PH, PAX, PAY),
+                idle: pandaFrame(11, PW, PH, PAX, PAY)
+            };
+            for (let i = 0; i < PANDA_FRAMES; i++) {
+                SPR.panda.run.push(pandaFrame(i, PW, PH, PAX, PAY));
+            }
+        } else {
+            SPR.panda = {
+                run: [],
+                jump: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'jump', 0)),
+                slide: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'slide', 0)),
+                cheer: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'cheer', 0))
+            };
+            for (let i = 0; i < PANDA_FRAMES; i++) {
+                const k = i / PANDA_FRAMES;
+                SPR.panda.run.push(bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'run', k)));
+            }
         }
 
         SPR.pals = ANIMALS.map(sp => ({
