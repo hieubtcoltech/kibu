@@ -6,61 +6,77 @@
  * lệch đi. Tệp này lo đúng mấy chuyện đó, không đụng vào giao diện game.
  * ==========================================================================*/
 
-/* ---------- Chừa lề cho tai thỏ và thanh vuốt ----------
- * Không có mấy dòng này thì trên iPhone hàng nút trên cùng chui vào tai thỏ,
- * còn chân trang nằm đúng chỗ vuốt lên về màn hình chính.
- * Đặt sau các @media của style.css nên thắng — media query không cộng thêm độ
- * ưu tiên, luật viết sau thì thắng. */
+/* ---------- Tối ưu tràn màn hình Full-Bleed cho App ---------- */
 .app-wrapper {
-    /* 100dvh chứ không phải 100vh: trên iOS 100vh tính cả phần thanh công cụ
-       có lúc ẩn lúc hiện, làm game bị cắt mất một dải ở đáy. */
     height: 100dvh;
-    padding-top: calc(10px + env(safe-area-inset-top));
-    padding-bottom: calc(8px + env(safe-area-inset-bottom));
-    padding-left: calc(12px + env(safe-area-inset-left));
-    padding-right: calc(12px + env(safe-area-inset-right));
+    padding: 0 !important;
+    gap: 0 !important;
+    display: flex;
+    flex-direction: column;
+    max-width: 100% !important;
 }
 
-/* Cầm ngang: style.css đã thu mọi khoảng đệm cho sân chơi rộng ra, nhưng luật
-   ở trên đây viết sau nên đè mất. Thu lại y như vậy, phần lề tai thỏ vẫn giữ. */
-@media (max-height: 480px) {
-    .app-wrapper {
-        padding-top: calc(6px + env(safe-area-inset-top));
-        padding-bottom: calc(4px + env(safe-area-inset-bottom));
-        padding-left: calc(8px + env(safe-area-inset-left));
-        padding-right: calc(8px + env(safe-area-inset-right));
+/* Thanh top-nav chừa safe-area-inset-top */
+.unified-nav {
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    padding-top: calc(8px + env(safe-area-inset-top)) !important;
+    padding-bottom: 8px !important;
+    padding-left: calc(12px + env(safe-area-inset-left)) !important;
+    padding-right: calc(12px + env(safe-area-inset-right)) !important;
+    background: rgba(7, 9, 20, 0.92) !important;
+}
+
+/* Game viewport và stage tràn 100% chiều cao còn lại */
+.game-viewport {
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    flex: 1;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+.stage {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    aspect-ratio: auto !important;
+}
+
+@media (max-width: 760px), (max-height: 760px) {
+    .screen {
+        padding: 8px 6px !important;
+    }
+    .panel {
+        padding: 16px 14px !important;
+        border-radius: 20px !important;
+        max-width: 100% !important;
     }
 }
 
-/* ---------- Không cho trang nhúc nhích ----------
- * Bé chơi là quẹt loạn xạ trên canvas. Mặc định Safari sẽ kéo cả trang nảy lên
- * nảy xuống theo, đang ngắm thì khung hình trôi. */
+/* ---------- Không cho trang nhúc nhích ---------- */
 html,
 body {
     overscroll-behavior: none;
     background: #070914;
-    /* nền lúc màn hình xoay, khỏi loé trắng */
     touch-action: manipulation;
-    /* tắt luôn cú chạm hai lần để phóng to */
     -webkit-touch-callout: none;
 }
 
-/* Canvas thì cấm hẳn mọi cử chỉ mặc định: quẹt để ngắm không được biến thành
-   cuộn trang, giữ lâu không được ra kính lúp chọn chữ. */
 #game-canvas {
     touch-action: none;
     -webkit-user-select: none;
     user-select: none;
 }
 
-/* ---------- Logo hết là liên kết ---------- */
 .nav-home {
     cursor: default;
 }
 
-/* ---------- Nút đổi ngôn ngữ nằm chung hàng nút ----------
- * Trên web nó ở chân trang; app đã bỏ chân trang nên nút dời lên thanh trên
- * cùng. Thu nhỏ bằng đúng mấy nút bên cạnh cho thành một hàng đều nhau. */
 .nav-actions .lang-flag-btn {
     width: 40px;
     height: 40px;
@@ -74,9 +90,6 @@ body {
     }
 }
 
-/* ---------- Hộp khoe điểm ----------
- * Chỉ còn nút "Chia sẻ" (mở khay của iOS) và "Chép". Hai nút cũ dẫn ra
- * Facebook / X đã bị app.js gỡ, ở đây căn lại cho khỏi trống trải. */
 .share-row {
     justify-content: center;
 }
