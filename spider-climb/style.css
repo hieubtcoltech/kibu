@@ -980,14 +980,43 @@ body {
     .mission-text { font-size: 0.82rem; }
     .rec { font-size: 0.76rem; padding: 6px 9px; }
 
-    .app-wrapper { padding: 8px 8px 10px; gap: 8px; }
-    .unified-nav { padding: 8px 10px; border-radius: 16px; gap: 8px; }
+    .app-wrapper {
+        padding: 0 !important;
+        gap: 0 !important;
+        height: 100dvh;
+        max-width: 100% !important;
+    }
+    .unified-nav {
+        border-radius: 0 !important;
+        border-left: none !important;
+        border-right: none !important;
+        border-top: none !important;
+        padding-top: calc(8px + env(safe-area-inset-top, 0px)) !important;
+        padding-bottom: 8px !important;
+        padding-left: calc(10px + env(safe-area-inset-left, 0px)) !important;
+        padding-right: calc(10px + env(safe-area-inset-right, 0px)) !important;
+        background: rgba(7, 11, 22, 0.92) !important;
+    }
     .brand-title { font-size: 1.1rem; }
     .brand-img { width: 30px; height: 30px; }
     .btn { padding: 8px 11px; font-size: 0.84rem; }
     .btn span { display: none; }
     .nav-actions { gap: 6px; }
-    .game-viewport { border-radius: 18px; }
+    .game-viewport {
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        flex: 1;
+        height: 100% !important;
+        width: 100% !important;
+    }
+    .stage {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        aspect-ratio: auto !important;
+    }
     .panel { padding: 18px 15px 16px; border-radius: 20px; }
     .over-hero { padding: 13px 14px 11px; border-radius: 18px; }
     .hero-track { margin-top: 8px; height: 10px; }
