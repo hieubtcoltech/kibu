@@ -1129,7 +1129,9 @@
 
     function drawDistantRidges() {
         var hz = horizonY();
-        var kind = G.route ? sceneKindAt(cam.x + 4200) : 'fields';
+        var kind = G.route ? sceneKindAt(cam.x + 2600) : 'fields';
+        var here = G.route ? sceneKindAt(cam.x) : kind;
+        if (kind === 'fuji' && here !== 'fuji') kind = here;
         ctx.save();
         ctx.fillStyle = 'rgba(62,105,122,0.16)';
         ctx.beginPath();

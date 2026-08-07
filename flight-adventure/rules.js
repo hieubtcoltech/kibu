@@ -344,50 +344,56 @@
         },
         {
             id: 'world-scenic',
-            en: 'World Scenic Tour', vi: 'Vòng Bay Ngắm Cảnh Thế Giới',
+            en: 'Hanoi to Tokyo', vi: 'Hà Nội đến Tokyo',
             fromCity: { en: 'Hanoi', vi: 'Hà Nội' },
-            toCity: { en: 'Tokyo Night', vi: 'Tokyo Đêm' },
+            toCity: { en: 'Tokyo', vi: 'Tokyo' },
             fromAirport: { en: 'Noi Bai Airport', vi: 'Sân bay Nội Bài', code: 'HAN' },
             toAirport: { en: 'Haneda Airport', vi: 'Sân bay Haneda', code: 'HND' },
-            realKm: 9000,
+            realKm: 3700,
             sky: 'morning',
-            len: 90000,
+            len: 86000,
             runwayLen: 2600,
-            landStart: 72000,
+            landStart: 68000,
             segments: [
                 { to: 6200, kind: 'city' },
                 { to: 14000, kind: 'fields' },
-                { to: 29000, kind: 'everest' },
-                { to: 43000, kind: 'fuji' },
-                { to: 59000, kind: 'desert' },
-                { to: 70000, kind: 'sea' },
-                { to: 81500, kind: 'nightcity' },
-                { to: 90000, kind: 'nightcity' }
+                { to: 24000, kind: 'coast' },
+                { to: 46000, kind: 'sea' },
+                { to: 60000, kind: 'fuji' },
+                { to: 70000, kind: 'coast' },
+                { to: 78000, kind: 'nightcity' },
+                { to: 86000, kind: 'nightcity' }
             ],
             landmarks: [
                 {
-                    at: 24500, kind: 'everest', z: -430,
-                    en: 'Mount Everest', vi: 'Đỉnh Everest',
-                    factEn: 'The tallest mountain on Earth rises above the clouds.',
-                    factVi: 'Ngọn núi cao nhất Trái Đất vươn lên trên mây.'
+                    at: 4200, kind: 'lake', z: -520,
+                    en: 'Hoan Kiem Lake', vi: 'Hồ Hoàn Kiếm',
+                    factEn: 'A famous lake in the middle of Hanoi.',
+                    factVi: 'Một cái hồ nổi tiếng ở giữa Hà Nội.'
                 },
                 {
-                    at: 38200, kind: 'fuji', z: 460,
-                    en: 'Snowy Mount Fuji', vi: 'Núi Phú Sỹ phủ tuyết',
+                    at: 22000, kind: 'beach', z: 620,
+                    en: 'Coastline to Japan', vi: 'Bờ Biển Đi Nhật',
+                    factEn: 'The plane leaves land and starts the ocean crossing.',
+                    factVi: 'Máy bay rời đất liền và bắt đầu bay qua biển.'
+                },
+                {
+                    at: 41000, kind: 'beach', z: -460,
+                    en: 'Open Ocean', vi: 'Giữa Đại Dương',
+                    factEn: 'Blue water stretches below on the way to Japan.',
+                    factVi: 'Biển xanh trải dài bên dưới trên đường đến Nhật Bản.'
+                },
+                {
+                    at: 56000, kind: 'fuji', z: 520,
+                    en: 'Mount Fuji', vi: 'Núi Phú Sỹ',
                     factEn: 'A cone-shaped mountain in Japan, often capped with snow.',
                     factVi: 'Ngọn núi hình nón ở Nhật Bản, thường phủ tuyết trên đỉnh.'
                 },
                 {
-                    at: 53500, kind: 'desert', z: -520,
-                    en: 'Golden Desert', vi: 'Sa mạc vàng',
-                    factEn: 'Wind shapes the sand into rolling dunes.',
-                    factVi: 'Gió thổi cát thành những đụn cát uốn lượn.'
-                },
-                {
-                    at: 78000, kind: 'nightcity', z: 180,
-                    en: 'Night City Lights', vi: 'Thành phố đêm lung linh',
-                    factEn: 'City lights sparkle below like a sky full of stars.',
-                    factVi: 'Ánh đèn thành phố lấp lánh bên dưới như một bầu trời sao.'
+                    at: 74000, kind: 'nightcity', z: 180,
+                    en: 'Tokyo City Lights', vi: 'Ánh Đèn Tokyo',
+                    factEn: 'Tokyo glows below as the airport gets closer.',
+                    factVi: 'Tokyo sáng lên bên dưới khi sân bay đã ở gần.'
                 }
             ]
         }
