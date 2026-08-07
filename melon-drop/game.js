@@ -1074,7 +1074,8 @@
     const V = { w: 0, h: 0, dpr: 1 };
     const rects = [];           // {x, y, w, h, u} theo điểm ảnh CSS, mỗi thùng một cái
 
-    const PAD_TOP = 34;         // chừa chỗ cho thẻ điểm nổi phía trên thùng
+    const PAD_TOP = 52;         // chừa chỗ cho thẻ điểm nổi phía trên thùng
+    const CHIP_GAP = 8;         // khoảng trống giữa thẻ điểm và miệng thùng
 
     function resize() {
         const host = canvas.parentElement;
@@ -1122,8 +1123,9 @@
             if (G.mode !== 'play' || !r || i >= G.kids) { chip.hidden = true; continue; }
             chip.hidden = false;
             chip.style.left = r.x + 'px';
-            chip.style.top = Math.max(0, r.y - PAD_TOP + 2) + 'px';
             chip.style.width = r.w + 'px';
+            const chipH = chip.offsetHeight || 40;
+            chip.style.top = Math.max(0, r.y - chipH - CHIP_GAP) + 'px';
         }
     }
 
