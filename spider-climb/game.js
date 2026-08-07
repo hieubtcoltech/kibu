@@ -3702,7 +3702,7 @@
          * chơi sai, mà là một dòng ném lỗi ở khung hình thứ mười nghìn. */
         window.ClimbDebug = { G: G, P: P, tap: doJump, tapDir: doJumpTo, web: fireWeb,
             start: startRun, R: R, pos: moverPos, hud: syncHud, flock: flock, perchN: perchN,
-            Sfx: Sfx };
+            Sfx: Sfx, showScreen: showScreen, touchButtons: touchButtons };
 
         requestAnimationFrame(frame);
     }
