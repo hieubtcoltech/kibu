@@ -111,7 +111,7 @@
         GAP: 'gap',         // hố, rơi xuống là mất một bạn
         ROCK: 'rock',       // chướng ngại thấp, nhảy qua
         SPIKE: 'spike',     // bụi gai, nhảy qua
-        BRANCH: 'branch',   // khúc gỗ đổ, phải trượt xuống mới chui lọt
+        BRANCH: 'branch',   // khúc gỗ đổ, nhảy qua hoặc trượt dưới đều được
         /* Thú canh: chướng ngại BIẾT CỬ ĐỘNG, và là kẻ đã nhốt các bạn nhỏ.
          * Game tên là Giải Cứu Bạn mà không có kẻ nào nhốt thì chuồng hoá ra
          * tự mọc giữa rừng — có đứa canh thì việc cứu mới thành việc phải
@@ -1025,6 +1025,9 @@
             else { x0 = it.x - 0.7; x1 = it.x + 0.7; y0 = 1.05; y1 = 2.6; }   // khúc gỗ
 
             if (hits(box, x0, x1, y0, y1)) {
+                if (it.t === T.BRANCH && (G.sliding > 0 || (!G.onGround && box.y0 > 0.95))) {
+                    continue;
+                }
                 if (G.time < G.hurtUntil) continue;
                 loseOne('hit');
                 it.hitAt = G.time;
