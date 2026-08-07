@@ -884,9 +884,9 @@
         const cadence = Math.min(CADENCE_MAX, TAU * sp * LEG_CONTACT / (2 * LEG_AMP));
         G.runCycle += dt * (G.onGround ? cadence : 4);
         if (G.onGround && G.sliding <= 0) {
-            G.pandaFrameAcc += dt * (cadence / TAU) * PANDA_FRAMES;
+            G.pandaFrameAcc += dt * (cadence / TAU) * PANDA_RUN_SEQUENCE.length;
             if (G.pandaFrameAcc >= 1) {
-                G.pandaFrame = (G.pandaFrame + 1) % PANDA_FRAMES;
+                G.pandaFrame = (G.pandaFrame + 1) % PANDA_RUN_SEQUENCE.length;
                 /* Khi frame rate tụt, đừng nhảy cóc 2-3 frame một lần. Giữ lại
                  * phần lẻ dưới một frame để animation vẫn tăng tốc nhưng đủ
                  * mềm cho bé nhìn thấy từng bước trung gian. */
@@ -1446,8 +1446,10 @@
     PANDA_SHEET.img.src = PANDA_SHEET.src;
 
     /* Mười hai hình đầu của sprite sheet là vòng chạy; hàng cuối dành cho jump,
-     * slide, cheer, idle. Nhịp chân vẫn do runCycle quyết định bên dưới. */
+     * slide, cheer, idle. Lúc chạy chỉ dùng 8 pose chính để bớt các chuyển động
+     * trung gian quá mềm: chân trước/chân sau đổi pha rõ hơn và nhịp gọn hơn. */
     const PANDA_FRAMES = 12;
+    const PANDA_RUN_SEQUENCE = [0, 2, 3, 5, 6, 8, 9, 11];
     const COIN_FRAMES = 6;
 
     /* Biên độ trước–sau của bàn chân, và phần trăm vòng chạy mà một chân còn
@@ -2418,9 +2420,9 @@
                 cheer: pandaFrame(14, PW, PH, PAX, PAY),
                 idle: pandaFrame(15, PW, PH, PAX, PAY)
             };
-            for (let i = 0; i < PANDA_FRAMES; i++) {
+            PANDA_RUN_SEQUENCE.forEach(i => {
                 SPR.panda.run.push(pandaFrame(i, PW, PH, PAX, PAY));
-            }
+            });
         }
 
         SPR.pals = ANIMALS.map(sp => ({
@@ -2968,7 +2970,7 @@
         else if (!G.onGround || G.rocketT > 0) s = SPR.panda.jump;
         else if (G.time - G.cheerAt < 0.45) s = SPR.panda.cheer;
         else {
-            s = SPR.panda.run[G.pandaFrame % PANDA_FRAMES];
+            s = SPR.panda.run[G.pandaFrame % PANDA_RUN_SEQUENCE.length];
         }
 
         ctx.save();
