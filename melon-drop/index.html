@@ -126,10 +126,18 @@
         <!-- Nhắc phím, chỉ hiện trên máy có chuột. Hai bé thì đổi sang bảng
              phím của từng bé, vì lúc ấy mới cần biết ai bấm phím nào. -->
         <div id="keys" class="keys-hint">
-            <span class="k-solo">Move: drag or arrows</span>
-            <span class="k-solo">Drop: let go or space</span>
-            <span class="k-duo">Kid 1: A D, drop with S</span>
-            <span class="k-duo">Kid 2: arrow keys, drop with down</span>
+            <span class="k-solo" title="Move: drag or arrows" aria-label="Move: drag or arrows">
+                <b aria-hidden="true">⇄</b>
+            </span>
+            <span class="k-solo" title="Drop: let go or space" aria-label="Drop: let go or space">
+                <b aria-hidden="true">⬇</b>
+            </span>
+            <span class="k-duo" title="Kid 1: A D, drop with S" aria-label="Kid 1: A D, drop with S">
+                <b aria-hidden="true">①</b><b aria-hidden="true">⇄</b><b aria-hidden="true">⬇</b>
+            </span>
+            <span class="k-duo" title="Kid 2: arrow keys, drop with down" aria-label="Kid 2: arrow keys, drop with down">
+                <b aria-hidden="true">②</b><b aria-hidden="true">⇄</b><b aria-hidden="true">⬇</b>
+            </span>
         </div>
 
         <!-- ---------- Màn chào ---------- -->

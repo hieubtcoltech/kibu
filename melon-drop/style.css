@@ -224,22 +224,16 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 }
 
 /* ---------- Nhắc phím ----------
-   Chỉ có nghĩa với máy có bàn phím, nên máy cảm ứng ẩn hẳn đi — trên điện
-   thoại nó vừa vô dụng vừa chiếm mất dải dưới thùng.
-
-   Nằm ở góc trên bên trái chứ không nằm giữa đáy như mấy game khác: thùng trái
-   cây cao gần hết khung và đống quả xếp từ ĐÁY lên, nên dải dưới là chỗ đông
-   quả nhất — đặt chữ ở đó là che đúng chỗ bé đang nhìn. Hai bên thùng thì lúc
-   nào cũng trống. */
+   Chỉ còn icon/keycap nhỏ để không lấn vào thẻ điểm hay che thùng chơi. */
 .keys-hint {
     position: absolute;
     left: 12px;
     top: 10px;
-    z-index: 6;
+    z-index: 4;
     display: none;
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 5px;
     pointer-events: none;
     white-space: nowrap;
 }
@@ -261,13 +255,33 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 .keys-hint.hidden { display: none; }
 
 .keys-hint span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 42px;
+    height: 32px;
+    box-sizing: border-box;
     background: rgba(255, 255, 255, 0.86);
     border: 1px solid rgba(24, 183, 216, 0.28);
     border-radius: 999px;
-    padding: 4px 11px;
-    font-size: 0.74rem;
-    font-weight: 600;
+    padding: 0 9px;
+    box-shadow: 0 4px 12px rgba(39, 91, 126, 0.12);
+    font-size: 1rem;
+    font-weight: 800;
     color: var(--md-ink);
+}
+
+.keys-hint span.k-duo {
+    min-width: 76px;
+}
+
+.keys-hint b {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    line-height: 1;
 }
 
 /* ---------- Bảng phủ ---------- */
