@@ -42,12 +42,28 @@ body {
    chạm được. Canvas vẫn giữ đúng tỉ lệ vì Phaser để chế độ FIT và
    .board-host căn giữa nó. */
 body.chrome-fit > .game-wrapper.game-wrapper {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
+    align-self: center;
+    width: min(1400px, calc(100% - 28px), calc((100dvh - 126px) * 16 / 9));
+    max-height: calc(100dvh - 126px);
+    aspect-ratio: 16 / 9;
 }
 
-/* Khung sân đã tự nở chiếm hết chỗ trống nên footer luôn ở đáy rồi; dùng
-   margin-top:auto ở đây chỉ nuốt mất khoảng cách 10 px mà site-chrome.css
-   đặt giữa sân chơi và footer. */
+@media (max-width: 900px) {
+    body.chrome-fit > .game-wrapper.game-wrapper {
+        width: min(100%, calc((100dvh - 90px) * 16 / 9));
+        max-height: calc(100dvh - 90px);
+    }
+}
+
+@media (orientation: portrait) and (max-width: 640px) {
+    body.chrome-fit > .game-wrapper.game-wrapper {
+        flex: 1 1 auto;
+        width: 100%;
+        max-height: 100%;
+        aspect-ratio: auto;
+    }
+}
 
 /* site-chrome.css chỉ lo việc ẩn emoji khi có ảnh, còn kích thước ảnh thương
    hiệu thì từng trang game phải tự đặt. Bỏ quên là ảnh 512 px hiện nguyên cỡ
@@ -66,21 +82,16 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 }
 
 /* ---------- Khung sân ----------
-   Tỉ lệ 16:9 khớp đúng thế giới 1280x720 bên trong Phaser, nên bình thường
-   canvas lấp đầy khung không thừa dải nào.
-   max-height là chỗ dễ quên nhất: thiếu nó thì trên màn 1280x800 khung vẫn
-   đòi đủ 720 px chiều cao, đẩy đáy sân và cả footer ra ngoài màn hình. Có nó,
-   khung co lại theo chỗ trống còn dư và Phaser tự thu canvas cho vừa. */
+   Tỉ lệ 16:9 khớp đúng thế giới 1280x720 bên trong Phaser.
+   Giữ đúng tỉ lệ 16:9 trong phần diện tích khả dụng để Phaser Canvas phủ 100%
+   sân chơi mà không bị dải đen dôi ra ở hai đầu. */
 .game-wrapper {
     position: relative;
     width: 100%;
-    /* Bằng đúng max-width của thanh trên trong site-chrome.css. Để 1280 thì
-       trên màn rộng hơn 1400 px khung game hẹp hơn thanh trên, nhìn so le. */
     max-width: 1400px;
     aspect-ratio: 16 / 9;
-    max-height: 100%;
     margin: 0 auto;
-    background: #0b1a2b;
+    background: #1d5f96;
     border: 1px solid rgba(255, 255, 255, 0.09);
     border-radius: 16px;
     overflow: hidden;
@@ -88,7 +99,6 @@ body.chrome-fit > .game-wrapper.game-wrapper {
 
 @media (max-width: 900px) {
     .game-wrapper {
-        width: 100%;
         border-radius: 0;
         border-left: none;
         border-right: none;

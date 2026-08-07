@@ -753,7 +753,37 @@
             /* --- điều khiển --- */
             this.input.on('pointerdown', function (p) { self.onDown(p); });
             this.input.on('pointermove', function (p) { self.onMove(p); });
-            this.input.on('pointerup', function () { self.onUp(); });
+            this.input.on('pointerup', function (p) { self.onUp(p); });
+
+            /* Bắt sự kiện kéo chuột ra ngoài khung game/màn hình */
+            var onWinMove = function (e) {
+                if (!self.dragging || !self.armed) return;
+                var canvas = self.game ? self.game.canvas : null;
+                if (!canvas) return;
+                var rect = canvas.getBoundingClientRect();
+                if (!rect.width || !rect.height) return;
+                var wx = (e.clientX - rect.left) * (W / rect.width);
+                var wy = (e.clientY - rect.top) * (H / rect.height);
+                self.updatePull(wx, wy);
+            };
+
+            var onWinUp = function () {
+                if (self.dragging) {
+                    self.onUp();
+                }
+            };
+
+            window.addEventListener('pointermove', onWinMove, { passive: true });
+            window.addEventListener('pointerup', onWinUp, { passive: true });
+            window.addEventListener('mousemove', onWinMove, { passive: true });
+            window.addEventListener('mouseup', onWinUp, { passive: true });
+
+            this.events.once('shutdown', function () {
+                window.removeEventListener('pointermove', onWinMove);
+                window.removeEventListener('pointerup', onWinUp);
+                window.removeEventListener('mousemove', onWinMove);
+                window.removeEventListener('mouseup', onWinUp);
+            });
 
             /* --- va chạm ---
                Không đụng vào thế giới ngay trong hàm này: Matter đang duyệt
@@ -974,12 +1004,24 @@
             if (d > 170 && p.worldX > 560) return;
             this.dragging = true;
             Sfx.ctx();
+
+            if (p && p.event && p.event.target && p.event.target.setPointerCapture && p.event.pointerId != null) {
+                try { p.event.target.setPointerCapture(p.event.pointerId); } catch (e) {}
+            }
+
             this.onMove(p);
         }
 
         onMove(p) {
             if (!this.dragging || !this.armed) return;
-            var dx = p.worldX - SLING_X, dy = p.worldY - SLING_Y;
+            var wx = p ? p.worldX : this.armed.x;
+            var wy = p ? p.worldY : this.armed.y;
+            this.updatePull(wx, wy);
+        }
+
+        updatePull(wx, wy) {
+            if (!this.dragging || !this.armed) return;
+            var dx = wx - SLING_X, dy = wy - SLING_Y;
             var len = Math.hypot(dx, dy);
             if (len > MAX_PULL) { dx = dx / len * MAX_PULL; dy = dy / len * MAX_PULL; len = MAX_PULL; }
             /* chỉ cho kéo về phía sau và xuống dưới, đúng như ná thật */
@@ -992,9 +1034,14 @@
             }
         }
 
-        onUp() {
+        onUp(p) {
             if (!this.dragging || !this.armed) return;
             this.dragging = false;
+
+            if (p && p.event && p.event.target && p.event.target.releasePointerCapture && p.event.pointerId != null) {
+                try { p.event.target.releasePointerCapture(p.event.pointerId); } catch (e) {}
+            }
+
             var dx = SLING_X - this.armed.x, dy = SLING_Y - this.armed.y;
             var pull = Math.hypot(dx, dy);
             if (pull < 14) { this.armed.x = SLING_X; this.armed.y = SLING_Y; return; }
