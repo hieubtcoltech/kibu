@@ -536,6 +536,8 @@
         slideHold: false,    // còn giữ tay/phím xuống thì nằm mãi
         resuming: false,     // đang đếm ngược để chạy tiếp, chưa hẳn là đã dừng
         runCycle: 0,         // pha chạy, dùng để vẽ chân tay
+        pandaFrame: 0,       // frame sprite chạy đang hiển thị
+        pandaFrameAcc: 0,    // phần lẻ của nhịp sprite, để không nhảy frame
 
         tail: [],            // các bạn đã cứu, phần tử là chỉ số màu trong ANIMALS
         trail: [],           // vệt đường đã đi, để đoàn bám theo
@@ -721,6 +723,8 @@
         G.wantSlide = -9;
         G.slideHold = false;
         G.runCycle = 0;
+        G.pandaFrame = 0;
+        G.pandaFrameAcc = 0;
         G.tail = [];
         for (let i = 0; i < START_PALS; i++) {
             G.tail.push(Math.floor(Math.random() * ANIMALS.length));
@@ -841,6 +845,16 @@
          * đúng động tác moonwalk. */
         const cadence = Math.min(CADENCE_MAX, TAU * sp * LEG_CONTACT / (2 * LEG_AMP));
         G.runCycle += dt * (G.onGround ? cadence : 4);
+        if (G.onGround && G.sliding <= 0) {
+            G.pandaFrameAcc += dt * (cadence / TAU) * PANDA_FRAMES;
+            if (G.pandaFrameAcc >= 1) {
+                G.pandaFrame = (G.pandaFrame + 1) % PANDA_FRAMES;
+                /* Khi frame rate tụt, đừng nhảy cóc 2-3 frame một lần. Giữ lại
+                 * phần lẻ dưới một frame để animation vẫn tăng tốc nhưng đủ
+                 * mềm cho bé nhìn thấy từng bước trung gian. */
+                G.pandaFrameAcc = Math.min(G.pandaFrameAcc - 1, 0.95);
+            }
+        }
 
         /* ---- lên xuống ---- */
         if (G.rocketT > 0) {
@@ -2062,8 +2076,13 @@
         if (!u || SPR.u === u) return;
         SPR.u = u;
 
-        const PW = 2.78 * u, PH = 2.48 * u, PAX = 1.38 * u, PAY = 2.30 * u;
         if (PANDA_SHEET.ready && PANDA_SHEET.img.naturalWidth > 0) {
+            const cellW = PANDA_SHEET.img.naturalWidth / PANDA_SHEET.cols;
+            const cellH = PANDA_SHEET.img.naturalHeight / PANDA_SHEET.rows;
+            const PH = 2.48 * u;
+            const PW = PH * (cellW / cellH);
+            const PAX = PW * 0.5;
+            const PAY = PH * 0.91;
             SPR.panda = {
                 run: [],
                 jump: pandaFrame(12, PW, PH, PAX, PAY),
@@ -2075,6 +2094,7 @@
                 SPR.panda.run.push(pandaFrame(i, PW, PH, PAX, PAY));
             }
         } else {
+            const PW = 2.78 * u, PH = 2.48 * u, PAX = 1.38 * u, PAY = 2.30 * u;
             SPR.panda = {
                 run: [],
                 jump: bake(PW, PH, PAX, PAY, g => paintPanda(g, u, 'jump', 0)),
@@ -2605,8 +2625,7 @@
         else if (!G.onGround || G.rocketT > 0) s = SPR.panda.jump;
         else if (G.time - G.cheerAt < 0.45) s = SPR.panda.cheer;
         else {
-            const f = Math.floor((G.runCycle / TAU) * PANDA_FRAMES) % PANDA_FRAMES;
-            s = SPR.panda.run[(f + PANDA_FRAMES) % PANDA_FRAMES];
+            s = SPR.panda.run[G.pandaFrame % PANDA_FRAMES];
         }
 
         ctx.save();
