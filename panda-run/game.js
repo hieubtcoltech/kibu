@@ -1431,26 +1431,33 @@
         cage: null, log: null, rock: null, spike: null
     };
 
+    /* Mười hai hình đầu của sprite sheet là vòng chạy; hàng cuối dành cho jump,
+     * slide, cheer, idle. Lúc chạy chỉ dùng 6 pose chính để bớt các chuyển động
+     * trung gian quá mềm: chân trước/chân sau đổi pha rõ hơn và nhịp gọn hơn. */
+    const PANDA_FRAMES = 12;
+    const PANDA_RUN_SEQUENCE = [0, 2, 5, 6, 9, 11];
+    const COIN_FRAMES = 6;
+
+    const PANDA_PRELOAD_IMG = document.getElementById('panda-sprite-preload');
     const PANDA_SHEET = {
         src: '/panda-run/assets/panda-sprites-v3.png',
         cols: 4,
         rows: 4,
-        img: new Image(),
+        img: PANDA_PRELOAD_IMG || new Image(),
         ready: false
     };
-    PANDA_SHEET.img.onload = () => {
+    var spritesCanBake = false;
+    function markPandaSheetReady() {
         PANDA_SHEET.ready = true;
         SPR.u = 0;
-        bakeSprites();
-    };
-    PANDA_SHEET.img.src = PANDA_SHEET.src;
-
-    /* Mười hai hình đầu của sprite sheet là vòng chạy; hàng cuối dành cho jump,
-     * slide, cheer, idle. Lúc chạy chỉ dùng 8 pose chính để bớt các chuyển động
-     * trung gian quá mềm: chân trước/chân sau đổi pha rõ hơn và nhịp gọn hơn. */
-    const PANDA_FRAMES = 12;
-    const PANDA_RUN_SEQUENCE = [0, 2, 3, 5, 6, 8, 9, 11];
-    const COIN_FRAMES = 6;
+        if (spritesCanBake) bakeSprites();
+    }
+    if (PANDA_SHEET.img.complete && PANDA_SHEET.img.naturalWidth > 0) {
+        markPandaSheetReady();
+    } else {
+        PANDA_SHEET.img.addEventListener('load', markPandaSheetReady, { once: true });
+        if (!PANDA_PRELOAD_IMG) PANDA_SHEET.img.src = PANDA_SHEET.src;
+    }
 
     /* Biên độ trước–sau của bàn chân, và phần trăm vòng chạy mà một chân còn
      * chống đất. Hai số này quyết định nhịp chân: bàn chân lùi được 2×LEG_AMP
@@ -3461,6 +3468,7 @@
     }
 
     function init() {
+        spritesCanBake = true;
         store.load();
         sfx.init();
         seedDeco();

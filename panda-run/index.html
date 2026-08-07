@@ -54,7 +54,7 @@
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preload" as="image" href="/panda-run/assets/panda-sprites-v3.png">
+    <link rel="preload" as="image" type="image/png" href="/panda-run/assets/panda-sprites-v3.png" fetchpriority="high">
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <!-- FontAwesome nạp KHÔNG CHẶN hiển thị: media="print" khiến trình duyệt coi
@@ -77,6 +77,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 </head>
 <body class="chrome-fit">
+    <img id="panda-sprite-preload" src="/panda-run/assets/panda-sprites-v3.png" alt="" aria-hidden="true"
+        decoding="sync" fetchpriority="high"
+        style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;top:-9999px">
     <header class="unified-nav">
         <div class="nav-left">
             <a href="/" class="nav-home" title="Home" aria-label="Home">
