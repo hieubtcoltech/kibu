@@ -1400,9 +1400,8 @@
             ctx.bezierCurveTo(r * 0.84, -r * 0.76, r * 0.98, r * 0.3, 0, r * 0.92);
         } else if (f.name === 'Lemon') {
             ctx.moveTo(-r * 0.95, 0);
-            ctx.quadraticCurveTo(-r * 0.46, -r * 0.95, r * 0.82, -r * 0.74);
-            ctx.quadraticCurveTo(r * 1.04, 0, r * 0.82, r * 0.74);
-            ctx.quadraticCurveTo(-r * 0.46, r * 0.95, -r * 0.95, 0);
+            ctx.bezierCurveTo(-r * 0.72, -r * 0.9, r * 0.72, -r * 0.9, r * 0.95, 0);
+            ctx.bezierCurveTo(r * 0.72, r * 0.9, -r * 0.72, r * 0.9, -r * 0.95, 0);
         } else if (f.name === 'Apple') {
             ctx.moveTo(0, -r * 0.85);
             ctx.bezierCurveTo(-r * 0.22, -r * 1.04, -r * 0.98, -r * 0.7, -r * 0.9, r * 0.08);
@@ -1445,6 +1444,10 @@
             ctx.moveTo(-r * 0.18, -r * 0.78);
             ctx.quadraticCurveTo(-r * 0.08, -r * 1.28, r * 0.35, -r * 1.42);
             ctx.stroke();
+            ctx.fillStyle = '#4faa3a';
+            ctx.beginPath();
+            ctx.ellipse(r * 0.22, -r * 1.24, r * 0.2, r * 0.1, -0.45, 0, Math.PI * 2);
+            ctx.fill();
             return;
         }
         ctx.strokeStyle = '#6b4a1f';
@@ -1465,21 +1468,15 @@
     function decorate(tier, r) {
         const f = FRUITS[tier];
         if (f.name === 'Cherry') {
-            const g = ctx.createRadialGradient(r * 0.24, -r * 0.28, r * 0.05, r * 0.16, -r * 0.2, r * 0.58);
-            g.addColorStop(0, lighten(f.c, 0.35));
-            g.addColorStop(0.58, f.c);
-            g.addColorStop(1, f.c2);
-            ctx.fillStyle = g;
-            ctx.beginPath();
-            ctx.arc(r * 0.32, -r * 0.16, r * 0.54, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = f.c2;
-            ctx.lineWidth = Math.max(1, r * 0.06);
-            ctx.stroke();
             ctx.fillStyle = 'rgba(255,255,255,0.45)';
             ctx.beginPath();
-            ctx.ellipse(r * 0.1, -r * 0.43, r * 0.13, r * 0.08, -0.55, 0, Math.PI * 2);
+            ctx.ellipse(-r * 0.32, -r * 0.38, r * 0.16, r * 0.09, -0.55, 0, Math.PI * 2);
             ctx.fill();
+            ctx.strokeStyle = 'rgba(120,16,32,0.28)';
+            ctx.lineWidth = Math.max(1, r * 0.04);
+            ctx.beginPath();
+            ctx.arc(0, 0, r * 0.76, -0.1, 0.95);
+            ctx.stroke();
         } else if (f.name === 'Watermelon' || f.name === 'Melon') {
             ctx.save();
             ctx.beginPath(); ctx.arc(0, 0, r * 0.99, 0, Math.PI * 2); ctx.clip();
@@ -1559,13 +1556,31 @@
                 ctx.arc(p[0] * r, p[1] * r, r * 0.24, 0, Math.PI * 2);
                 ctx.fill();
             });
-        } else if (f.name === 'Orange' || f.name === 'Lemon') {
+        } else if (f.name === 'Lemon') {
+            ctx.save();
+            fruitShape(tier, r * 0.99);
+            ctx.clip();
+            ctx.fillStyle = 'rgba(255,255,255,0.2)';
+            for (let k = 0; k < 18; k++) {
+                const a = k * 2.31;
+                const d = 0.18 + ((k * 37) % 70) / 100;
+                ctx.beginPath();
+                ctx.arc(Math.cos(a) * r * d, Math.sin(a) * r * d * 0.72, r * 0.035, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.fillStyle = 'rgba(215,150,0,0.18)';
+            ctx.beginPath();
+            ctx.ellipse(-r * 0.86, 0, r * 0.07, r * 0.18, 0, 0, Math.PI * 2);
+            ctx.ellipse(r * 0.86, 0, r * 0.07, r * 0.18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        } else if (f.name === 'Orange') {
             ctx.save();
             ctx.beginPath(); ctx.arc(0, 0, r * 0.99, 0, Math.PI * 2); ctx.clip();
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.strokeStyle = 'rgba(255,255,255,0.16)';
             ctx.lineWidth = Math.max(1, r * 0.035);
-            for (let k = 0; k < 9; k++) {
-                const a = k * Math.PI / 9;
+            for (let k = 0; k < 7; k++) {
+                const a = k * Math.PI / 7;
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
                 ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
