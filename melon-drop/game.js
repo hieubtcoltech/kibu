@@ -1328,7 +1328,7 @@
          * bấm mà chưa thả được. */
         ctx.save();
         ctx.globalAlpha = box.dropCd > 0 ? 0.45 : 1;
-        paintFruit(bx(i, box.aimX), by(i, HOLD_Y), t.r * rects[i].u, box.held, 0, 1);
+        paintFruit(bx(i, box.aimX), by(i, HOLD_Y), t.r * rects[i].u, box.held, 0, 1, 0, 0, box.time);
         ctx.restore();
     }
 
@@ -1342,14 +1342,18 @@
             const k = age / 0.2;
             s = 1 + 0.3 * Math.sin(k * Math.PI) * (1 - k * 0.3);
         }
-        paintFruit(bx(i, f.x), by(i, f.y), f.r * u * s, f.tier, f.rot, s);
+        paintFruit(bx(i, f.x), by(i, f.y), f.r * u * s, f.tier, f.rot, s, f.vx, f.vy, age);
     }
 
     /* Vẽ một quả: khối tròn có khối, cuống lá, hai con mắt và cái miệng. Mặt
      * mũi chỉ tốn mấy dòng mà đổi hẳn cảm giác — đống hình tròn trơn thì lạnh,
      * gắn mắt vào là bé coi như một lũ bạn. */
-    function paintFruit(cx, cy, r, tier, rot, scale) {
+    function paintFruit(cx, cy, r, tier, rot, scale, vx, vy, age) {
         const t = FRUITS[tier];
+        const wobble = Math.min(0.13, Math.hypot(vx || 0, vy || 0) * 0.015);
+        const breath = 0.012 * Math.sin((age || 0) * 9 + tier);
+        const sx = 1 + wobble + breath;
+        const sy = 1 - wobble * 0.72 - breath;
         ctx.save();
         ctx.translate(cx, cy);
         ctx.rotate(rot || 0);
@@ -1360,13 +1364,13 @@
         ctx.ellipse(0, r * 0.82, r * 0.86, r * 0.24, 0, 0, Math.PI * 2);
         ctx.fill();
 
+        ctx.scale(sx, sy);
         const g = ctx.createRadialGradient(-r * 0.32, -r * 0.36, r * 0.1, 0, 0, r * 1.06);
         g.addColorStop(0, lighten(t.c, 0.28));
         g.addColorStop(0.55, t.c);
         g.addColorStop(1, t.c2);
         ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(0, 0, r, 0, Math.PI * 2);
+        fruitShape(tier, r);
         ctx.fill();
 
         ctx.lineWidth = Math.max(1, r * 0.07);
@@ -1376,83 +1380,226 @@
         decorate(tier, r);
 
         /* bóng sáng */
-        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.fillStyle = 'rgba(255,255,255,0.52)';
         ctx.beginPath();
         ctx.ellipse(-r * 0.36, -r * 0.42, r * 0.26, r * 0.17, -0.6, 0, Math.PI * 2);
         ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.24)';
+        ctx.beginPath();
+        ctx.ellipse(-r * 0.08, -r * 0.2, r * 0.54, r * 0.43, -0.35, Math.PI * 1.08, Math.PI * 1.72);
+        ctx.fill();
 
         /* cuống và lá, chỉ vẽ khi quả đủ to để nhìn ra */
-        if (r > 7) {
-            ctx.strokeStyle = '#6b4a1f';
-            ctx.lineWidth = Math.max(1.5, r * 0.085);
-            ctx.lineCap = 'round';
-            ctx.beginPath();
-            ctx.moveTo(0, -r * 0.92);
-            ctx.quadraticCurveTo(r * 0.08, -r * 1.12, r * 0.02, -r * 1.24);
-            ctx.stroke();
-            ctx.fillStyle = '#4faa3a';
-            ctx.beginPath();
-            ctx.ellipse(r * 0.3, -r * 1.16, r * 0.28, r * 0.14, -0.45, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        if (r > 7) stemAndLeaf(tier, r);
 
         face(r, t, scale);
         ctx.restore();
+    }
+
+    function fruitShape(tier, r) {
+        const f = FRUITS[tier];
+        ctx.beginPath();
+        if (f.name === 'Strawberry') {
+            ctx.moveTo(0, r * 0.92);
+            ctx.bezierCurveTo(-r * 0.98, r * 0.3, -r * 0.84, -r * 0.76, 0, -r * 0.94);
+            ctx.bezierCurveTo(r * 0.84, -r * 0.76, r * 0.98, r * 0.3, 0, r * 0.92);
+        } else if (f.name === 'Lemon') {
+            ctx.moveTo(-r * 0.95, 0);
+            ctx.quadraticCurveTo(-r * 0.46, -r * 0.95, r * 0.82, -r * 0.74);
+            ctx.quadraticCurveTo(r * 1.04, 0, r * 0.82, r * 0.74);
+            ctx.quadraticCurveTo(-r * 0.46, r * 0.95, -r * 0.95, 0);
+        } else if (f.name === 'Apple') {
+            ctx.moveTo(0, -r * 0.85);
+            ctx.bezierCurveTo(-r * 0.22, -r * 1.04, -r * 0.98, -r * 0.7, -r * 0.9, r * 0.08);
+            ctx.bezierCurveTo(-r * 0.82, r * 0.86, -r * 0.18, r * 1.02, 0, r * 0.76);
+            ctx.bezierCurveTo(r * 0.18, r * 1.02, r * 0.82, r * 0.86, r * 0.9, r * 0.08);
+            ctx.bezierCurveTo(r * 0.98, -r * 0.7, r * 0.22, -r * 1.04, 0, -r * 0.85);
+        } else if (f.name === 'Peach') {
+            ctx.moveTo(0, -r);
+            ctx.bezierCurveTo(-r * 0.95, -r * 0.82, -r, r * 0.55, -r * 0.18, r * 0.94);
+            ctx.bezierCurveTo(0, r, r * 0.18, r * 0.94, r * 0.18, r * 0.94);
+            ctx.bezierCurveTo(r, r * 0.55, r * 0.95, -r * 0.82, 0, -r);
+        } else if (f.name === 'Pineapple') {
+            ctx.ellipse(0, r * 0.06, r * 0.78, r * 0.98, 0, 0, Math.PI * 2);
+        } else {
+            ctx.arc(0, 0, r, 0, Math.PI * 2);
+        }
+        ctx.closePath();
+    }
+
+    function stemAndLeaf(tier, r) {
+        const f = FRUITS[tier];
+        if (f.name === 'Pineapple') {
+            ctx.fillStyle = '#3f9f38';
+            for (let k = -2; k <= 2; k++) {
+                ctx.save();
+                ctx.rotate(k * 0.28);
+                ctx.beginPath();
+                ctx.moveTo(0, -r * 0.72);
+                ctx.quadraticCurveTo(r * 0.18, -r * 1.18, k * r * 0.18, -r * 1.45);
+                ctx.quadraticCurveTo(-r * 0.08, -r * 1.08, 0, -r * 0.72);
+                ctx.fill();
+                ctx.restore();
+            }
+            return;
+        }
+        if (f.name === 'Cherry') {
+            ctx.strokeStyle = '#5d3a16';
+            ctx.lineWidth = Math.max(1.5, r * 0.09);
+            ctx.beginPath();
+            ctx.moveTo(-r * 0.18, -r * 0.78);
+            ctx.quadraticCurveTo(-r * 0.08, -r * 1.28, r * 0.35, -r * 1.42);
+            ctx.stroke();
+            return;
+        }
+        ctx.strokeStyle = '#6b4a1f';
+        ctx.lineWidth = Math.max(1.5, r * 0.085);
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(0, -r * 0.86);
+        ctx.quadraticCurveTo(r * 0.08, -r * 1.08, r * 0.02, -r * 1.2);
+        ctx.stroke();
+        ctx.fillStyle = '#4faa3a';
+        ctx.beginPath();
+        ctx.ellipse(r * 0.3, -r * 1.12, r * 0.28, r * 0.14, -0.45, 0, Math.PI * 2);
+        ctx.fill();
     }
 
     /* Nét riêng của từng loại quả — chỉ vài đường, đủ để phân biệt khi hai bậc
      * cạnh nhau có màu hao hao. */
     function decorate(tier, r) {
         const f = FRUITS[tier];
-        if (f.name === 'Watermelon' || f.name === 'Melon') {
+        if (f.name === 'Cherry') {
+            const g = ctx.createRadialGradient(r * 0.24, -r * 0.28, r * 0.05, r * 0.16, -r * 0.2, r * 0.58);
+            g.addColorStop(0, lighten(f.c, 0.35));
+            g.addColorStop(0.58, f.c);
+            g.addColorStop(1, f.c2);
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(r * 0.32, -r * 0.16, r * 0.54, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = f.c2;
+            ctx.lineWidth = Math.max(1, r * 0.06);
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,0.45)';
+            ctx.beginPath();
+            ctx.ellipse(r * 0.1, -r * 0.43, r * 0.13, r * 0.08, -0.55, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (f.name === 'Watermelon' || f.name === 'Melon') {
             ctx.save();
             ctx.beginPath(); ctx.arc(0, 0, r * 0.99, 0, Math.PI * 2); ctx.clip();
-            ctx.strokeStyle = f.name === 'Watermelon' ? 'rgba(20,80,30,0.55)' : 'rgba(255,255,255,0.5)';
-            ctx.lineWidth = Math.max(1, r * 0.1);
-            for (let k = -2; k <= 2; k++) {
+            ctx.strokeStyle = f.name === 'Watermelon' ? 'rgba(19,86,32,0.62)' : 'rgba(255,255,255,0.55)';
+            ctx.lineWidth = Math.max(1, r * 0.08);
+            for (let k = -3; k <= 3; k++) {
                 ctx.beginPath();
-                ctx.moveTo(k * r * 0.42, -r);
-                ctx.quadraticCurveTo(k * r * 0.62, 0, k * r * 0.42, r);
+                ctx.moveTo(k * r * 0.28, -r);
+                ctx.bezierCurveTo(k * r * 0.45, -r * 0.38, k * r * 0.45, r * 0.38, k * r * 0.28, r);
                 ctx.stroke();
+            }
+            if (f.name === 'Watermelon') {
+                ctx.strokeStyle = 'rgba(175,235,128,0.35)';
+                ctx.lineWidth = Math.max(1, r * 0.045);
+                for (let k = -2; k <= 2; k++) {
+                    ctx.beginPath();
+                    ctx.moveTo(k * r * 0.34 + r * 0.13, -r);
+                    ctx.bezierCurveTo(k * r * 0.5, -r * 0.3, k * r * 0.5, r * 0.3, k * r * 0.34 + r * 0.13, r);
+                    ctx.stroke();
+                }
             }
             ctx.restore();
         } else if (f.name === 'Strawberry') {
             ctx.fillStyle = 'rgba(255,255,220,0.85)';
-            for (let k = 0; k < 6; k++) {
-                const a = k * 1.05 + 0.4;
+            for (let k = 0; k < 13; k++) {
+                const row = Math.floor(k / 4);
+                const col = k % 4;
+                const x = (col - 1.5) * r * 0.23 + (row % 2) * r * 0.08;
+                const y = -r * 0.48 + row * r * 0.28;
+                if (Math.abs(x) + Math.abs(y) * 0.45 > r * 0.78) continue;
                 ctx.beginPath();
-                ctx.arc(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.5, r * 0.07, 0, Math.PI * 2);
+                ctx.ellipse(x, y, r * 0.045, r * 0.075, 0.2, 0, Math.PI * 2);
                 ctx.fill();
+            }
+            ctx.fillStyle = '#54b83f';
+            for (let k = -2; k <= 2; k++) {
+                ctx.save();
+                ctx.rotate(k * 0.18);
+                ctx.beginPath();
+                ctx.moveTo(0, -r * 0.76);
+                ctx.lineTo(r * 0.16, -r * 1.03);
+                ctx.lineTo(-r * 0.16, -r * 0.92);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
             }
         } else if (f.name === 'Pineapple') {
             ctx.save();
-            ctx.beginPath(); ctx.arc(0, 0, r * 0.99, 0, Math.PI * 2); ctx.clip();
-            ctx.strokeStyle = 'rgba(150,100,10,0.4)';
+            ctx.beginPath(); ctx.ellipse(0, r * 0.06, r * 0.78, r * 0.98, 0, 0, Math.PI * 2); ctx.clip();
+            ctx.strokeStyle = 'rgba(125,82,8,0.46)';
             ctx.lineWidth = Math.max(1, r * 0.06);
             for (let k = -3; k <= 3; k++) {
                 ctx.beginPath(); ctx.moveTo(-r, k * r * 0.34); ctx.lineTo(r, k * r * 0.34 + r * 0.5); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(-r, k * r * 0.34 + r * 0.5); ctx.lineTo(r, k * r * 0.34); ctx.stroke();
             }
+            ctx.fillStyle = 'rgba(255,238,120,0.55)';
+            for (let yy = -2; yy <= 2; yy++) {
+                for (let xx = -2; xx <= 2; xx++) {
+                    if (Math.abs(xx) + Math.abs(yy) > 3) continue;
+                    ctx.beginPath();
+                    ctx.arc(xx * r * 0.25, yy * r * 0.28 + r * 0.08, r * 0.035, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
             ctx.restore();
         } else if (f.name === 'Grape') {
-            ctx.fillStyle = 'rgba(255,255,255,0.16)';
-            for (let k = 0; k < 3; k++) {
-                const a = k * 2.1 + 1;
+            const spots = [
+                [-0.28, -0.28], [0.05, -0.34], [0.32, -0.14],
+                [-0.18, 0.02], [0.18, 0.08], [-0.02, 0.36]
+            ];
+            spots.forEach((p, idx) => {
+                const gg = ctx.createRadialGradient((p[0] - 0.08) * r, (p[1] - 0.1) * r, r * 0.02, p[0] * r, p[1] * r, r * 0.25);
+                gg.addColorStop(0, lighten(f.c, 0.28));
+                gg.addColorStop(1, idx % 2 ? '#7f43d0' : f.c2);
+                ctx.fillStyle = gg;
                 ctx.beginPath();
-                ctx.arc(Math.cos(a) * r * 0.42, Math.sin(a) * r * 0.42, r * 0.26, 0, Math.PI * 2);
+                ctx.arc(p[0] * r, p[1] * r, r * 0.24, 0, Math.PI * 2);
                 ctx.fill();
-            }
+            });
         } else if (f.name === 'Orange' || f.name === 'Lemon') {
             ctx.save();
             ctx.beginPath(); ctx.arc(0, 0, r * 0.99, 0, Math.PI * 2); ctx.clip();
-            ctx.fillStyle = 'rgba(255,255,255,0.14)';
-            for (let k = 0; k < 14; k++) {
-                const a = k * 0.45;
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = Math.max(1, r * 0.035);
+            for (let k = 0; k < 9; k++) {
+                const a = k * Math.PI / 9;
                 ctx.beginPath();
-                ctx.arc(Math.cos(a) * r * 0.75, Math.sin(a) * r * 0.75, r * 0.1, 0, Math.PI * 2);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(a + Math.PI) * r, Math.sin(a + Math.PI) * r);
+                ctx.stroke();
+            }
+            ctx.fillStyle = 'rgba(255,255,255,0.16)';
+            for (let k = 0; k < 18; k++) {
+                const a = k * 0.7;
+                ctx.beginPath();
+                ctx.arc(Math.cos(a) * r * 0.72, Math.sin(a) * r * 0.72, r * 0.045, 0, Math.PI * 2);
                 ctx.fill();
             }
             ctx.restore();
+        } else if (f.name === 'Apple') {
+            ctx.strokeStyle = 'rgba(120,20,35,0.34)';
+            ctx.lineWidth = Math.max(1, r * 0.055);
+            ctx.beginPath();
+            ctx.moveTo(0, -r * 0.78);
+            ctx.quadraticCurveTo(-r * 0.1, -r * 0.3, -r * 0.02, r * 0.68);
+            ctx.stroke();
+        } else if (f.name === 'Peach') {
+            ctx.strokeStyle = 'rgba(175,77,66,0.4)';
+            ctx.lineWidth = Math.max(1, r * 0.07);
+            ctx.beginPath();
+            ctx.moveTo(r * 0.12, -r * 0.78);
+            ctx.bezierCurveTo(-r * 0.18, -r * 0.28, -r * 0.18, r * 0.42, r * 0.1, r * 0.78);
+            ctx.stroke();
         }
     }
 
