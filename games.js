@@ -60,7 +60,7 @@
             keywords: 'flight adventure kids may bay game may bay cho be tap lai may bay flight simulator for children airplane game flying game ha noi da nang landmark photo travel album takeoff landing no crash calm relaxing'
         },
         {
-            dir: 'spider-climb', slug: 'spider-climb', tile: 'tile-spider',
+            dir: 'spider-climb', slug: 'spider-climb', tile: 'tile-spider tile-hot',
             en: 'Spider Climb', vi: 'Người Nhện Leo Tháp',
             topics: ['action', 'physics'], players: '1', added: '2026-08-06',
             keywords: 'spider climb nguoi nhen leo thap game nguoi nhen leo toa nha endless climber wall jump skyscraper web shot drone laser zone climbing arcade high score daily climb hardcore'
@@ -174,7 +174,7 @@
             keywords: 'super striker soccer football game sut bong tro choi da bong goal penalty 2 player'
         },
         {
-            dir: 'darts-game', slug: 'balloon-darts', tile: 'tile-darts',
+            dir: 'darts-game', slug: 'balloon-darts', tile: 'tile-darts tile-hot',
             en: 'Balloon Darts', vi: 'Phi Tiêu Bong Bóng',
             topics: ['sports', 'action'], players: '1-2', added: '2026-07-25',
             keywords: 'balloon darts game phi tieu tro choi nem phi tieu bong bay throw aim pop'
