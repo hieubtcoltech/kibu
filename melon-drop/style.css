@@ -223,67 +223,6 @@ body.chrome-fit > .game-wrapper.game-wrapper {
     to { opacity: 1; transform: translateX(-50%) scale(1); }
 }
 
-/* ---------- Nhắc phím ----------
-   Chỉ còn icon/keycap nhỏ để không lấn vào thẻ điểm hay che thùng chơi. */
-.keys-hint {
-    position: absolute;
-    left: 12px;
-    top: 10px;
-    z-index: 4;
-    display: none;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 5px;
-    pointer-events: none;
-    white-space: nowrap;
-}
-
-@media (pointer: fine) {
-    .keys-hint { display: flex; }
-}
-
-.keys-hint .k-duo { display: none; }
-.keys-hint.duo .k-solo { display: none; }
-.keys-hint.duo .k-duo { display: block; }
-
-/* Cửa sổ hẹp thì thùng nới ra sát mép trái, lúc ấy nhắc phím đè lên thùng —
-   thà không nhắc còn hơn che mất trái cây. */
-@media (max-width: 900px) {
-    .keys-hint { display: none !important; }
-}
-
-.keys-hint.hidden { display: none; }
-
-.keys-hint span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    min-width: 42px;
-    height: 32px;
-    box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.86);
-    border: 1px solid rgba(24, 183, 216, 0.28);
-    border-radius: 999px;
-    padding: 0 9px;
-    box-shadow: 0 4px 12px rgba(39, 91, 126, 0.12);
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--md-ink);
-}
-
-.keys-hint span.k-duo {
-    min-width: 76px;
-}
-
-.keys-hint b {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 16px;
-    line-height: 1;
-}
-
 /* ---------- Bảng phủ ---------- */
 .overlay {
     position: absolute;
@@ -523,11 +462,10 @@ body.chrome-fit > .game-wrapper.game-wrapper {
    không tự nghĩ ra chuyện cuộn xuống tìm nút, thấy bảng dài không có nút là
    tưởng game hỏng. */
 .row-buttons.sticky-cta {
-    position: sticky;
-    bottom: -20px;
-    padding: 10px 0 12px;
-    margin-bottom: -12px;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.94) 35%);
+    position: static;
+    padding: 0 0 4px;
+    margin-bottom: 0;
+    background: none;
 }
 
 /* ---------- Bảng kết quả ---------- */
@@ -618,24 +556,24 @@ body.chrome-fit > .game-wrapper.game-wrapper {
    dựng theo bề ngang nên không rơi vào ngưỡng max-width phía trên. Ở đây co
    theo CHIỀU CAO để bé không phải cuộn mới thấy nút CHƠI. */
 @media (max-height: 520px) {
-    .card { padding: 10px 14px; }
-    .title { font-size: 1.5rem; margin-bottom: 0; }
-    .subtitle { font-size: 0.8rem; margin-bottom: 6px; }
-    .ladder { margin-bottom: 7px; font-size: 0.9rem; }
+    .card { padding: 8px 14px; }
+    .title { font-size: 1.38rem; margin-bottom: 0; }
+    .subtitle { font-size: 0.76rem; margin-bottom: 5px; }
+    .ladder { display: none; }
     .ladder .ladder-goal { font-size: 1.4rem; }
     .party-row { display: none; }
 
-    .pick-row { margin-bottom: 8px; }
-    .kid-btn { padding: 8px 20px; font-size: 0.9rem; }
+    .pick-row { margin-bottom: 6px; }
+    .kid-btn { padding: 7px 18px; font-size: 0.86rem; }
 
-    .how-row { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 7px; }
-    .how-item { padding: 6px 7px; gap: 1px; }
-    .how-emoji { font-size: 1.15rem; }
-    .how-item b { font-size: 0.8rem; }
-    .how-item span:last-child { font-size: 0.68rem; line-height: 1.2; }
+    .how-row { grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 5px; }
+    .how-item { padding: 5px 7px; gap: 0; }
+    .how-emoji { display: none; }
+    .how-item b { font-size: 0.76rem; }
+    .how-item span:last-child { font-size: 0.64rem; line-height: 1.15; }
 
-    .rule-note { padding: 6px 10px; font-size: 0.78rem; }
-    .btn-big { font-size: 1rem; padding: 9px 26px; }
-    .row-buttons { margin-top: 9px; }
+    .rule-note { padding: 5px 10px; font-size: 0.72rem; }
+    .btn-big { font-size: 0.92rem; padding: 8px 24px; }
+    .row-buttons { margin-top: 6px; }
     .big-fruit { font-size: 2.2rem; }
 }

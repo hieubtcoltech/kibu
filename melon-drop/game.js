@@ -1834,8 +1834,6 @@
         placeChips();
         const tr = window.KibuI18n && window.KibuI18n.t ? window.KibuI18n.t : s => s;
         showTip(tr(G.round.title) + ': ' + tr(G.round.short), kids > 1 ? 3000 : 2400);
-        const keys = el('keys');
-        if (keys) keys.classList.toggle('duo', kids > 1);
     }
 
     function openMenu() {
