@@ -806,6 +806,10 @@ body .app-wrapper {
 .pc-pass { background-image: linear-gradient(160deg, #cbd8e6, #5d7a92); }
 .pc-beach { background-image: linear-gradient(160deg, #ffe6b0, #58c2e0); }
 .pc-bridge { background-image: linear-gradient(160deg, #ffc078, #e0663a); }
+.pc-everest { background-image: linear-gradient(160deg, #f8fafc, #64748b); }
+.pc-fuji { background-image: linear-gradient(160deg, #e0f2fe, #7c8fa3); }
+.pc-desert { background-image: linear-gradient(160deg, #fde68a, #b45309); }
+.pc-nightcity { background-image: linear-gradient(160deg, #0f172a, #facc15); }
 
 .photo-card b { font-family: var(--font-display); font-size: 0.86rem; color: #fff; }
 .photo-card span { font-size: 0.71rem; color: #9fb4c6; line-height: 1.35; }
@@ -833,6 +837,10 @@ body .app-wrapper {
 .photo-view-pic.pc-pass { background-image: linear-gradient(160deg, #cbd8e6, #5d7a92); }
 .photo-view-pic.pc-beach { background-image: linear-gradient(160deg, #ffe6b0, #58c2e0); }
 .photo-view-pic.pc-bridge { background-image: linear-gradient(160deg, #ffc078, #e0663a); }
+.photo-view-pic.pc-everest { background-image: linear-gradient(160deg, #f8fafc, #64748b); }
+.photo-view-pic.pc-fuji { background-image: linear-gradient(160deg, #e0f2fe, #7c8fa3); }
+.photo-view-pic.pc-desert { background-image: linear-gradient(160deg, #fde68a, #b45309); }
+.photo-view-pic.pc-nightcity { background-image: linear-gradient(160deg, #0f172a, #facc15); }
 
 .pc-pic,
 .photo-view-pic {

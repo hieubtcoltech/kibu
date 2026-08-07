@@ -216,6 +216,10 @@
      *      mountains núi đá vôi, mây vắt ngang sườn
      *      coast     bờ biển — nửa đất nửa nước
      *      sea       biển, có đảo và thuyền
+     *      everest   dãy núi tuyết rất cao
+     *      fuji      núi Phú Sỹ phủ tuyết
+     *      desert    sa mạc vàng, đụn cát thấp
+     *      nightcity thành phố ban đêm, nhiều ánh đèn
      * ------------------------------------------------------------------ */
 
     var ROUTES = [
@@ -337,6 +341,55 @@
                     factVi: 'Cây cầu màu cam nổi tiếng bên vịnh.'
                 }
             ]
+        },
+        {
+            id: 'world-scenic',
+            en: 'World Scenic Tour', vi: 'Vòng Bay Ngắm Cảnh Thế Giới',
+            fromCity: { en: 'Hanoi', vi: 'Hà Nội' },
+            toCity: { en: 'Tokyo Night', vi: 'Tokyo Đêm' },
+            fromAirport: { en: 'Noi Bai Airport', vi: 'Sân bay Nội Bài', code: 'HAN' },
+            toAirport: { en: 'Haneda Airport', vi: 'Sân bay Haneda', code: 'HND' },
+            realKm: 9000,
+            sky: 'morning',
+            len: 90000,
+            runwayLen: 2600,
+            landStart: 72000,
+            segments: [
+                { to: 6200, kind: 'city' },
+                { to: 14000, kind: 'fields' },
+                { to: 29000, kind: 'everest' },
+                { to: 43000, kind: 'fuji' },
+                { to: 59000, kind: 'desert' },
+                { to: 70000, kind: 'sea' },
+                { to: 81500, kind: 'nightcity' },
+                { to: 90000, kind: 'nightcity' }
+            ],
+            landmarks: [
+                {
+                    at: 24500, kind: 'everest', z: -430,
+                    en: 'Mount Everest', vi: 'Đỉnh Everest',
+                    factEn: 'The tallest mountain on Earth rises above the clouds.',
+                    factVi: 'Ngọn núi cao nhất Trái Đất vươn lên trên mây.'
+                },
+                {
+                    at: 38200, kind: 'fuji', z: 460,
+                    en: 'Snowy Mount Fuji', vi: 'Núi Phú Sỹ phủ tuyết',
+                    factEn: 'A cone-shaped mountain in Japan, often capped with snow.',
+                    factVi: 'Ngọn núi hình nón ở Nhật Bản, thường phủ tuyết trên đỉnh.'
+                },
+                {
+                    at: 53500, kind: 'desert', z: -520,
+                    en: 'Golden Desert', vi: 'Sa mạc vàng',
+                    factEn: 'Wind shapes the sand into rolling dunes.',
+                    factVi: 'Gió thổi cát thành những đụn cát uốn lượn.'
+                },
+                {
+                    at: 78000, kind: 'nightcity', z: 180,
+                    en: 'Night City Lights', vi: 'Thành phố đêm lung linh',
+                    factEn: 'City lights sparkle below like a sky full of stars.',
+                    factVi: 'Ánh đèn thành phố lấp lánh bên dưới như một bầu trời sao.'
+                }
+            ]
         }
     ];
 
@@ -368,7 +421,10 @@
 
     /* Độ cao đặc trưng của từng kiểu vùng, mét. Biển âm để mặt nước nằm dưới
      * mực đất một chút — nhìn từ trên cao mới ra bờ. */
-    var GROUND = { city: 40, fields: 60, hills: 340, mountains: 1050, coast: 20, sea: 0 };
+    var GROUND = {
+        city: 40, fields: 60, hills: 340, mountains: 1050, coast: 20, sea: 0,
+        everest: 2500, fuji: 1450, desert: 170, nightcity: 65
+    };
 
     /* ĐƯỜNG BĂNG PHẢI PHẲNG.
      *
@@ -387,9 +443,21 @@
                 + Math.sin(x / 620 + 1.3) * 165
                 + Math.sin(x / 210 + 2.7) * 42;
         }
+        if (kind === 'everest') {
+            return g
+                + Math.sin(x / 1500) * 780
+                + Math.sin(x / 480 + 1.8) * 260
+                + Math.sin(x / 150 + 2.4) * 95;
+        }
+        if (kind === 'fuji') {
+            var cone = Math.max(0, 1 - Math.abs(((x % 14000) / 14000) - 0.5) * 2);
+            return g + cone * cone * 1450 + Math.sin(x / 900) * 70;
+        }
         if (kind === 'hills') {
             return g + Math.sin(x / 1250) * 175 + Math.sin(x / 430 + 0.8) * 58;
         }
+        if (kind === 'desert') return g + Math.sin(x / 1100) * 68 + Math.sin(x / 340 + 0.9) * 24;
+        if (kind === 'nightcity') return g + Math.sin(x / 680) * 10;
         if (kind === 'fields') return g + Math.sin(x / 1600) * 34;
         if (kind === 'coast') return g + Math.sin(x / 900) * 18;
         if (kind === 'city') return g + Math.sin(x / 700) * 14;

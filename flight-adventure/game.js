@@ -1004,7 +1004,8 @@
      * sáng vừa dịu. */
     var SKIES = {
         morning: { top: '#2f8fd8', mid: '#8ed2f0', low: '#dff0f7', haze: '#dff0f7', sun: '#fff3c4' },
-        sunset: { top: '#3a3d7a', mid: '#e8756b', low: '#ffc978', haze: '#ffd9a8', sun: '#fff0b0' }
+        sunset: { top: '#3a3d7a', mid: '#e8756b', low: '#ffc978', haze: '#ffd9a8', sun: '#fff0b0' },
+        night: { top: '#06101f', mid: '#10294a', low: '#1b3d62', haze: '#223a56', sun: '#dbeafe' }
     };
 
     /* Mặt trời cố định trong thế giới (phía trước–phải so với tuyến +X), không
@@ -1013,7 +1014,17 @@
     var SUN_WZ = 28000;
     var SUN_ALT = 10000;
 
-    function skyOf() { return SKIES[G.route ? G.route.sky : 'morning'] || SKIES.morning; }
+    function sceneKindAt(x) {
+        if (!G.route) return 'fields';
+        var info = R.segmentAt(G.route, x);
+        if (info.next.kind === 'nightcity' && info.k > 0.35) return 'nightcity';
+        return info.seg.kind;
+    }
+
+    function skyOf() {
+        if (sceneKindAt(P.x || 0) === 'nightcity') return SKIES.night;
+        return SKIES[G.route ? G.route.sky : 'morning'] || SKIES.morning;
+    }
 
     function weatherAt(x) {
         var rt = G.route;
@@ -1023,6 +1034,7 @@
         function getVal(kind) {
             if (kind === 'fields') return { storm: 0, cloudy: 0.95 };
             if (kind === 'hills' || kind === 'mountains') return { storm: 1.0, cloudy: 0 };
+            if (kind === 'everest' || kind === 'fuji') return { storm: 0.08, cloudy: 0.24 };
             return { storm: 0, cloudy: 0 };
         }
         
@@ -1062,6 +1074,7 @@
 
     function sunVisibility() {
         var w = G.route ? weatherAt(P.x) : { storm: 0, cloudy: 0 };
+        if (sceneKindAt(P.x || 0) === 'nightcity') return 0;
         var cover = Math.max(w.storm * 0.98, w.cloudy * 0.88);
         return clamp(1 - cover, 0, 1);
     }
@@ -1078,6 +1091,23 @@
          * trời thì hễ máy quay chúc lên là hở một dải chưa tô ở dưới. */
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, W, H);
+
+        if (sceneKindAt(P.x || 0) === 'nightcity') {
+            ctx.save();
+            for (var si = 0; si < 70; si++) {
+                var sx = (hash(si, 401) * W + cam.x * 0.012) % W;
+                var sy = 22 + hash(si, 409) * Math.max(40, hz - 56);
+                var sr = 0.7 + hash(si, 419) * 1.6;
+                var twinkle = 0.35 + 0.55 * hash(si + Math.floor(G.t * 2), 431);
+                ctx.fillStyle = 'rgba(226,242,255,' + twinkle + ')';
+                ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.284); ctx.fill();
+            }
+            ctx.fillStyle = 'rgba(219,234,254,0.88)';
+            ctx.beginPath(); ctx.arc(W * 0.78, hz - 118, 24, 0, 6.284); ctx.fill();
+            ctx.fillStyle = 'rgba(6,16,31,0.95)';
+            ctx.beginPath(); ctx.arc(W * 0.79, hz - 126, 24, 0, 6.284); ctx.fill();
+            ctx.restore();
+        }
 
         var sp = proj(SUN_WX, SUN_ALT, SUN_WZ);
         var sunVis = sunVisibility();
@@ -1099,7 +1129,7 @@
 
     function drawDistantRidges() {
         var hz = horizonY();
-        var kind = G.route ? R.segmentAt(G.route, cam.x + 4200).seg.kind : 'fields';
+        var kind = G.route ? sceneKindAt(cam.x + 4200) : 'fields';
         ctx.save();
         ctx.fillStyle = 'rgba(62,105,122,0.16)';
         ctx.beginPath();
@@ -1120,15 +1150,57 @@
         }
         ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
 
-        if (kind === 'hills' || kind === 'mountains') {
+        if (kind === 'desert') {
+            ctx.fillStyle = 'rgba(202, 138, 4, 0.18)';
+            ctx.beginPath();
+            ctx.moveTo(0, hz + 46);
+            for (var dx = -50; dx <= W + 90; dx += 70) {
+                var dy = hz + 44 + Math.sin(dx * 0.016 + cam.x * 0.0011) * 12;
+                ctx.quadraticCurveTo(dx + 32, dy - 18, dx + 70, dy);
+            }
+            ctx.lineTo(W, H); ctx.lineTo(0, H); ctx.closePath(); ctx.fill();
+        } else if (kind === 'nightcity') {
+            ctx.fillStyle = 'rgba(5, 14, 28, 0.78)';
+            ctx.beginPath();
+            ctx.moveTo(0, H);
+            ctx.lineTo(0, hz + 74);
+            for (var bx = 0; bx <= W + 40; bx += 34) {
+                var bh = 26 + hash(Math.round(bx / 34), 509) * 62;
+                ctx.lineTo(bx, hz + 74 - bh);
+                ctx.lineTo(bx + 26, hz + 74 - bh);
+            }
+            ctx.lineTo(W, H); ctx.closePath(); ctx.fill();
+            for (var lw = 0; lw < 44; lw++) {
+                var lx = hash(lw, 521) * W;
+                var ly = hz + 8 + hash(lw, 523) * 76;
+                ctx.fillStyle = hash(lw, 527) > 0.35 ? 'rgba(250,204,21,0.72)' : 'rgba(125,211,252,0.62)';
+                ctx.fillRect(lx, ly, 2.6, 2.2);
+            }
+        } else if (kind === 'fuji') {
+            ctx.fillStyle = 'rgba(71, 85, 105, 0.28)';
+            ctx.beginPath();
+            ctx.moveTo(W * 0.18, hz + 64);
+            ctx.lineTo(W * 0.5, hz - 58);
+            ctx.lineTo(W * 0.84, hz + 64);
+            ctx.closePath(); ctx.fill();
+            ctx.fillStyle = 'rgba(248,250,252,0.74)';
+            ctx.beginPath();
+            ctx.moveTo(W * 0.5, hz - 58);
+            ctx.lineTo(W * 0.58, hz - 10);
+            ctx.lineTo(W * 0.5, hz + 4);
+            ctx.lineTo(W * 0.42, hz - 8);
+            ctx.closePath(); ctx.fill();
+        } else if (kind === 'hills' || kind === 'mountains' || kind === 'everest') {
             var high = kind === 'mountains';
-            ctx.fillStyle = high ? 'rgba(45, 75, 72, 0.34)' : 'rgba(52, 116, 72, 0.26)';
+            var snowy = kind === 'everest';
+            if (snowy) high = true;
+            ctx.fillStyle = snowy ? 'rgba(71, 85, 105, 0.42)' : (high ? 'rgba(45, 75, 72, 0.34)' : 'rgba(52, 116, 72, 0.26)');
             ctx.beginPath();
             ctx.moveTo(0, hz + 54);
             for (var mx = -80; mx <= W + 160; mx += 90) {
                 var peak = hz + (high ? -18 : 8) +
-                    Math.sin(mx * 0.017 + cam.x * 0.0012) * (high ? 26 : 12) -
-                    hash(Math.round((mx + cam.x * 0.03) / 90), 311) * (high ? 54 : 24);
+                    Math.sin(mx * 0.017 + cam.x * 0.0012) * (snowy ? 34 : (high ? 26 : 12)) -
+                    hash(Math.round((mx + cam.x * 0.03) / 90), 311) * (snowy ? 78 : (high ? 54 : 24));
                 ctx.lineTo(mx + 45, peak);
                 ctx.lineTo(mx + 90, hz + 56 + Math.sin(mx * 0.01) * 8);
             }
@@ -1136,7 +1208,7 @@
             ctx.fill();
 
             if (high) {
-                ctx.fillStyle = 'rgba(248, 250, 252, 0.42)';
+                ctx.fillStyle = snowy ? 'rgba(248, 250, 252, 0.74)' : 'rgba(248, 250, 252, 0.42)';
                 for (var sx = 20; sx < W; sx += 180) {
                     var py = hz - 10 + Math.sin(sx * 0.018 + cam.x * 0.001) * 16;
                     ctx.beginPath();
@@ -1291,8 +1363,9 @@
                 var d = 120 + (9000 - 120) * t * t;
                 var wx = cam.x + d;
                 var seg = R.segmentAt(rt, wx).seg;
-                // Không kẻ ô trên mặt biển hoặc đồi núi hiểm trở
-                if (seg.kind === 'sea' || seg.kind === 'mountains') continue;
+                // Không kẻ ô trên mặt biển, sa mạc, thành phố đêm hoặc núi cao.
+                if (seg.kind === 'sea' || seg.kind === 'mountains' || seg.kind === 'everest' ||
+                    seg.kind === 'fuji' || seg.kind === 'desert' || seg.kind === 'nightcity') continue;
 
                 var p = proj(wx, R.groundAt(rt, wx), z);
                 if (!p) continue;
@@ -1307,7 +1380,8 @@
         var x0 = Math.ceil((cam.x + 180) / GX) * GX;
         for (var wx2 = x0; wx2 < cam.x + 9000; wx2 += GX) {
             var seg2 = R.segmentAt(rt, wx2).seg;
-            if (seg2.kind === 'sea' || seg2.kind === 'mountains') continue;
+            if (seg2.kind === 'sea' || seg2.kind === 'mountains' || seg2.kind === 'everest' ||
+                seg2.kind === 'fuji' || seg2.kind === 'desert' || seg2.kind === 'nightcity') continue;
 
             var g = R.groundAt(rt, wx2);
             var a = proj(wx2, g, cam.z - 5200), b = proj(wx2, g, cam.z + 5200);
@@ -1327,7 +1401,11 @@
             hills: ['#7cc667', '#4f9a4e'],
             mountains: ['#94a58f', '#5d6f58'],
             coast: ['#f0dfb0', '#dcc48c'],
-            sea: ['#3fa9d8', '#2a8fc0']
+            sea: ['#3fa9d8', '#2a8fc0'],
+            everest: ['#e9f1f8', '#9aa9b8'],
+            fuji: ['#d9eef8', '#8fa7b9'],
+            desert: ['#f7d88d', '#c99345'],
+            nightcity: ['#1e293b', '#0f172a']
         }[kind] || ['#a8dc7c', '#74b855'];
     }
 
@@ -1450,6 +1528,40 @@
             } else if (r2 < 0.24) {
                 drawGroundPoly(o, [[-18, -8, 4], [18, -8, 4], [28, 0, 4], [18, 8, 4], [-18, 8, 4], [-28, 0, 4]], '#f8fafc', 'rgba(15,23,42,0.25)', 1);
                 drawGroundLine(o, [[-4, -20, 6], [-4, 20, 6]], 'rgba(255,255,255,0.72)', Math.max(1, 2 * s));
+            }
+        } else if (o.kind === 'everest') {
+            drawGroundLine(o, [[-150, 76, 8], [-92, 16, 42], [-32, -8, 70], [46, -52, 120], [138, -82, 80]],
+                'rgba(248,250,252,0.62)', Math.max(1, 4.8 * s));
+            drawGroundLine(o, [[-116, -42, 28], [-36, -10, 52], [40, -28, 76], [130, 8, 42]],
+                'rgba(125,211,252,0.36)', Math.max(1, 2.2 * s));
+            if (r1 > 0.55) {
+                drawGroundPoly(o, [[-42, -18, 24], [0, -56, 92], [48, -16, 24]], '#f8fafc', 'rgba(71,85,105,0.18)', 1);
+            }
+        } else if (o.kind === 'fuji') {
+            drawGroundPoly(o, [[-122, 54, 4], [0, -86, 154], [126, 54, 4]], '#708798', 'rgba(255,255,255,0.18)', 1);
+            drawGroundPoly(o, [[0, -86, 154], [42, -28, 74], [0, -8, 82], [-44, -30, 74]], '#f8fafc', null, 0);
+            if (r2 > 0.45) {
+                drawGroundLine(o, [[-132, 82], [-46, 48], [50, 56], [132, 24]], 'rgba(15,81,50,0.58)', Math.max(1, 4 * s));
+            }
+        } else if (o.kind === 'desert') {
+            drawGroundLine(o, [[-166, 58], [-86, 20], [4, 34], [92, -8], [158, 10]],
+                'rgba(255,244,190,0.52)', Math.max(1, 5 * s));
+            drawGroundLine(o, [[-152, -54], [-76, -18], [20, -32], [122, -62]],
+                'rgba(151,93,34,0.26)', Math.max(1, 3 * s));
+            if (r1 > 0.66) {
+                drawGroundPoly(o, [[-44, 20, 0], [0, -34, 66], [46, 20, 0]], '#d6a04d', 'rgba(120,53,15,0.22)', 1);
+                drawGroundPoly(o, [[0, -34, 66], [46, 20, 0], [18, 42, 0]], '#b8792f', null, 0);
+            }
+        } else if (o.kind === 'nightcity') {
+            drawGroundLine(o, [[-170, 52], [-78, 22], [16, 14], [152, -38]], 'rgba(15,23,42,0.9)', Math.max(4, 24 * s));
+            drawGroundLine(o, [[-170, 52], [-78, 22], [16, 14], [152, -38]], 'rgba(250,204,21,0.58)', Math.max(1, 2.2 * s), [5 * s, 10 * s]);
+            var towers = r1 > 0.52 ? 3 : 2;
+            for (var nb = 0; nb < towers; nb++) {
+                var ncx = -70 + nb * 70 + (hash(idx, nb + 131) - 0.5) * 18;
+                var ncz = (hash(idx, nb + 137) - 0.5) * 90;
+                var nh = 64 + hash(idx, nb + 139) * 180;
+                drawMapBlock(o, ncx, ncz, 48 + hash(idx, nb + 141) * 42, 44, nh, '#152238',
+                    hash(idx, nb + 143) > 0.5 ? '#facc15' : '#38bdf8');
             }
         }
         ctx.restore();
@@ -1863,6 +1975,82 @@
                 ctx.stroke();
                 ctx.fillStyle = '#f0a03c';
                 ctx.beginPath(); ctx.arc(p.x + 230 * s, p.y - 22 * s, 15 * s, 0, 6.284); ctx.fill();
+            } else if (lm.kind === 'everest') {
+                var peaks = [
+                    [-420, 78, -250, -190, -80, 78],
+                    [-120, 96, 40, -280, 260, 96],
+                    [180, 84, 330, -150, 520, 84]
+                ];
+                for (var ep = 0; ep < peaks.length; ep++) {
+                    ctx.fillStyle = ep === 1 ? '#708090' : '#8796a5';
+                    ctx.beginPath();
+                    ctx.moveTo(p.x + peaks[ep][0] * s, p.y + peaks[ep][1] * s);
+                    ctx.lineTo(p.x + peaks[ep][2] * s, p.y + peaks[ep][3] * s);
+                    ctx.lineTo(p.x + peaks[ep][4] * s, p.y + peaks[ep][5] * s);
+                    ctx.closePath(); ctx.fill();
+                    ctx.fillStyle = 'rgba(248,250,252,0.9)';
+                    ctx.beginPath();
+                    ctx.moveTo(p.x + peaks[ep][2] * s, p.y + peaks[ep][3] * s);
+                    ctx.lineTo(p.x + (peaks[ep][2] + 58) * s, p.y + (peaks[ep][3] + 92) * s);
+                    ctx.lineTo(p.x + (peaks[ep][2] - 70) * s, p.y + (peaks[ep][3] + 104) * s);
+                    ctx.closePath(); ctx.fill();
+                }
+            } else if (lm.kind === 'fuji') {
+                ctx.fillStyle = '#73889a';
+                ctx.beginPath();
+                ctx.moveTo(p.x - 460 * s, p.y + 100 * s);
+                ctx.lineTo(p.x, p.y - 260 * s);
+                ctx.lineTo(p.x + 460 * s, p.y + 100 * s);
+                ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - 260 * s);
+                ctx.lineTo(p.x + 118 * s, p.y - 118 * s);
+                ctx.lineTo(p.x + 38 * s, p.y - 88 * s);
+                ctx.lineTo(p.x - 36 * s, p.y - 112 * s);
+                ctx.lineTo(p.x - 120 * s, p.y - 116 * s);
+                ctx.closePath(); ctx.fill();
+                ctx.fillStyle = 'rgba(35, 105, 65, 0.42)';
+                ctx.beginPath(); ctx.ellipse(p.x, p.y + 104 * s, 420 * s, 46 * s, 0, 0, 6.284); ctx.fill();
+            } else if (lm.kind === 'desert') {
+                ctx.strokeStyle = 'rgba(255, 244, 190, 0.72)';
+                ctx.lineWidth = Math.max(2, 18 * s);
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(p.x - 520 * s, p.y + 72 * s);
+                ctx.quadraticCurveTo(p.x - 260 * s, p.y - 50 * s, p.x, p.y + 34 * s);
+                ctx.quadraticCurveTo(p.x + 260 * s, p.y + 118 * s, p.x + 520 * s, p.y - 20 * s);
+                ctx.stroke();
+                ctx.fillStyle = '#d79a45';
+                ctx.beginPath();
+                ctx.moveTo(p.x - 132 * s, p.y + 72 * s);
+                ctx.lineTo(p.x, p.y - 108 * s);
+                ctx.lineTo(p.x + 136 * s, p.y + 72 * s);
+                ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#b8792f';
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - 108 * s);
+                ctx.lineTo(p.x + 136 * s, p.y + 72 * s);
+                ctx.lineTo(p.x + 42 * s, p.y + 88 * s);
+                ctx.closePath(); ctx.fill();
+            } else if (lm.kind === 'nightcity') {
+                var glow = ctx.createRadialGradient(p.x, p.y, 10 * s, p.x, p.y, 520 * s);
+                glow.addColorStop(0, 'rgba(250,204,21,0.26)');
+                glow.addColorStop(1, 'rgba(250,204,21,0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(p.x - 560 * s, p.y - 260 * s, 1120 * s, 520 * s);
+                for (var nb = 0; nb < 9; nb++) {
+                    var bw = (44 + hash(nb, 601) * 38) * s;
+                    var bh = (90 + hash(nb, 607) * 180) * s;
+                    var bx = p.x - 360 * s + nb * 92 * s;
+                    ctx.fillStyle = '#0f172a';
+                    ctx.fillRect(bx, p.y + 90 * s - bh, bw, bh);
+                    ctx.fillStyle = hash(nb, 613) > 0.45 ? '#facc15' : '#7dd3fc';
+                    for (var wy = p.y + 90 * s - bh + 16 * s; wy < p.y + 72 * s; wy += 24 * s) {
+                        ctx.fillRect(bx + 10 * s, wy, Math.max(1.2, 7 * s), Math.max(1.2, 8 * s));
+                        ctx.fillRect(bx + bw - 18 * s, wy, Math.max(1.2, 7 * s), Math.max(1.2, 8 * s));
+                    }
+                }
             }
 
             /* Nhãn tên. Chỉ hiện khi đã tới gần — hiện từ xa thì cả bầu trời
