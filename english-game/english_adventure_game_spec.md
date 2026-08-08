@@ -1,41 +1,39 @@
 # English Adventure --- Game Design & AI Coding Specification
 
 > Tài liệu đặc tả để AI coding xây dựng game học tiếng Anh cho trẻ từ
-> **lớp 2 đến lớp 5**.
+> **Mầm non đến Lớp 5** (3 tuổi đến 11 tuổi).
 
 ## 1. Mục tiêu sản phẩm
 
-Xây dựng game học tiếng Anh cho trẻ em Việt Nam lớp 2--5 theo hình thức
-**học qua mini-game**, có progression rõ ràng từ kiến thức cơ bản đến
-ngữ pháp nâng cao.
+Xây dựng game học tiếng Anh cho trẻ em Việt Nam từ **Mầm non đến Lớp 5** theo hình thức
+**học qua mini-game**, có progression rõ ràng từ từ vựng nhận biết qua tranh ảnh, âm thanh phát âm đến ngữ pháp nâng cao.
 
-Mục tiêu: - Trẻ học từ vựng và ngữ pháp thông qua tương tác, không chỉ
-làm trắc nghiệm. - Mỗi bài ngắn, dễ hiểu, có phản hồi ngay sau khi trả
-lời. - Tạo cảm giác đang chơi game: World → Level → Stars/XP → Unlock →
-Boss. - Có thể chơi lại level để cải thiện điểm. - Nội dung tăng độ khó
-từ lớp 2 đến lớp 5. - Hạn chế yêu cầu trẻ đọc hướng dẫn dài. - Ưu tiên
-hình ảnh, âm thanh, kéo thả và thao tác trực quan.
+Mục tiêu:
+- Trẻ Mầm non học từ vựng qua hình ảnh emoji sinh động, âm thanh phát âm chuẩn tự động (TTS), không yêu cầu đọc chữ thạo.
+- Học sinh Lớp 1-5 học từ vựng và ngữ pháp thông qua tương tác trực quan (kéo thả, chọn đáp án, xếp câu, phân loại).
+- Tạo cảm giác đang chơi game: World → Level → Stars/XP → Unlock → Boss.
+- Hạn chế chữ hướng dẫn dài, phản hồi tức thì với hiệu ứng âm thanh & động lực học tập.
 
 ## 2. Đối tượng
 
--   Lớp 2: khoảng 7--8 tuổi.
--   Lớp 3: khoảng 8--9 tuổi.
--   Lớp 4: khoảng 9--10 tuổi.
--   Lớp 5: khoảng 10--11 tuổi.
+-   **Mầm non (Pre-K & Kindergarten)**: 3--6 tuổi (Hình ảnh, âm thanh, phát âm tự động, nhận biết màu sắc, con số, chữ cái, đồ chơi, gia đình).
+-   **Lớp 1**: 6--7 tuổi (Từ vựng học tập, quần áo, thức ăn, câu ngắn *This is a...*, động vật & hành động).
+-   **Lớp 2**: 7--8 tuổi (Từ vựng đời sống, To Be, Have/Has, So sánh số nhiều, Giới từ).
+-   **Lớp 3**: 8--9 tuổi (Hiện tại đơn, Hiện tại tiếp diễn, Giờ giấc, Trạng từ).
+-   **Lớp 4**: 9--10 tuổi (Quá khứ đơn, Tương lai, So sánh hơn & So sánh nhất).
+-   **Lớp 5**: 10--11 tuổi (Hiện tại hoàn thành, 30 Động từ bất quy tắc V3, Thử thách Tổng hợp & Trùm Cuối).
 
 Ngôn ngữ giao diện chính: **Tiếng Việt**.\
 Nội dung học và câu hỏi: **Tiếng Anh**.
 
 ## 3. Cấu trúc progression
 
-Phiên bản đầu tiên gồm:
-
--   **10 Worlds**
--   **100 Levels**
+-   **12 Worlds**
+-   **120 Levels**
 -   Mỗi World có 10 level.
 -   Level 10 của mỗi World là **Boss Level**.
--   Mỗi level nên có khoảng 8--12 câu/thử thách.
--   Một lượt chơi lý tưởng: 3--7 phút.
+-   Mỗi level có khoảng 6--10 câu/thử thách.
+-   Một lượt chơi lý tưởng: 2--5 phút.
 
 Progression:
 
@@ -43,45 +41,85 @@ Progression:
 
 ------------------------------------------------------------------------
 
-# 4. ROADMAP 100 LEVEL
+# 4. ROADMAP 120 LEVEL (MẦM NON DẾN LỚP 5)
 
-## WORLD 1 --- 🌱 English Starter
+## WORLD 1 --- 🎈 Pre-K & Kindergarten Starter (Mầm non)
 
-**Mục tiêu:** Pronouns + To Be + kiến thức tiếng Anh nền tảng.\
-**Phù hợp:** Lớp 2.
+**Mục tiêu:** Bảng chữ cái Alphabet Phonics, Màu sắc, Số đếm 1-10, Động vật nuôi cơ bản.\
+**Phù hợp:** Mầm non (3-5 tuổi).
 
-  Level   Nội dung                   Gameplay gợi ý
+  Level   Nội dung                   Gameplay
   ------- -------------------------- -----------------
-  1       I / You / He / She / It    Match nhân vật
-  2       I am                       Choose
-  3       He / She is                Drag & Drop
-  4       You / We / They are        Choose
-  5       am / is / are              Fill Missing
-  6       To Be Negative             Fix Sentence
-  7       Is he...? / Are they...?   Yes / No
-  8       Numbers & Ages             Picture Match
-  9       Colors & Objects           Picture Quiz
-  10      👑 Boss: To Be             Mixed Challenge
+  1       Alphabet ABC Phonics (A-G) Flashcard + Audio
+  2       Alphabet Phonics (H-N)     Flashcard + Audio
+  3       Alphabet Phonics (O-Z)     Flashcard + Audio
+  4       Colors (Red, Blue, Yellow) Picture Choice
+  5       Colors (Green, Pink, Orange) Picture Choice
+  6       Numbers 1 - 5              Count & Pick
+  7       Numbers 6 - 10             Count & Pick
+  8       Pets (Cat, Dog, Bird)      Picture Match
+  9       Animals (Fish, Duck, Rabbit) Listen & Tap
+  10      👑 Boss: Pre-K Fun         Mixed Challenge
 
 ------------------------------------------------------------------------
 
-## WORLD 2 --- 🎒 My Everyday World
+## WORLD 2 --- 🧸 Fun Around Me (Mầm non)
 
-**Mục tiêu:** Have/Has, demonstratives, possessives, family và school
-vocabulary.
+**Mục tiêu:** Gia đình, Trái cây, Bộ phận cơ thể, Đồ chơi & Cảm xúc.\
+**Phù hợp:** Mầm non (4-6 tuổi).
 
-  Level   Nội dung                Gameplay
-  ------- ----------------------- ------------------
-  11      School Objects          Picture Match
-  12      Family                  Matching
-  13      I / You have            Fill Missing
-  14      He / She has            Choose
-  15      Have vs Has             Spider Climb
-  16      This / That             Picture Quiz
-  17      These / Those           Sorting
-  18      My / Your / His / Her   Drag & Drop
-  19      Build a Sentence        Sentence Builder
-  20      👑 Boss: My World       Mixed Challenge
+  Level   Nội dung                   Gameplay
+  ------- -------------------------- -----------------
+  11      Family (Mommy, Daddy)      Picture Choice
+  12      Family (Brother, Sister)   Picture Match
+  13      Fruits (Apple, Banana)     Flashcard + Audio
+  14      Fruits (Orange, Watermelon) Picture Choice
+  15      My Body (Head, Eyes, Nose) Tap Body Part
+  16      My Body (Hands, Legs)      Listen & Tap
+  17      Toys (Ball, Doll, Car)     Picture Match
+  18      Toys (Teddy, Robot)        Picture Choice
+  19      Feelings (Happy, Sad)      Emoji Choice
+  20      👑 Boss: Kids World        Mixed Challenge
+
+------------------------------------------------------------------------
+
+## WORLD 3 --- 🌱 School & Home (Lớp 1)
+
+**Mục tiêu:** Đồ dùng học tập, Quần áo, Thức ăn, Cấu trúc câu ngắn *This is a...*, *It is red*.\
+**Phù hợp:** Lớp 1 (6-7 tuổi).
+
+  Level   Nội dung                   Gameplay
+  ------- -------------------------- -----------------
+  21      School Supplies (Pen, Book) Picture Match
+  22      Classroom Objects          Choice
+  23      Clothes (Shirt, Pants)     Picture Quiz
+  24      Clothes (Hat, Shoes)       Match
+  25      Food (Bread, Milk, Rice)   Picture Choice
+  26      This is a...               Sentence Builder
+  27      It is [color]              Choice
+  28      My Room (Bed, Chair)       Picture Match
+  29      Short Sentences            Sentence Builder
+  30      👑 Boss: School Star       Mixed Challenge
+
+------------------------------------------------------------------------
+
+## WORLD 4 --- 🐶 Animals & Actions (Lớp 1)
+
+**Mục tiêu:** Động vật hoang dã, Động từ hành động (*run, fly, swim*), Cấu trúc *I can...*, *I like...*.\
+**Phù hợp:** Lớp 1 (6-7 tuổi).
+
+  Level   Nội dung                   Gameplay
+  ------- -------------------------- -----------------
+  31      Wild Animals (Lion, Elephant) Picture Match
+  32      Wild Animals (Monkey, Tiger) Choice
+  33      Action Verbs (Run, Jump)   Listen & Pick
+  34      Action Verbs (Fly, Swim)   Choice
+  35      I can [verb]               Sentence Builder
+  36      I cannot [verb]            Fill Missing
+  37      I like [food/animal]       Choice
+  38      I don't like...            Fill Missing
+  39      Animal Actions Match       Sorting
+  40      👑 Boss: Jungle Hero       Mixed Challenge
 
 ------------------------------------------------------------------------
 
