@@ -726,11 +726,12 @@
         worldNav.innerHTML = worlds.map(w => {
             const completedCount = w.levels.filter(l => (save.stars[l.id] || 0) > 0).length;
             const isSelected = w.id === activeWorldId;
+            const titleClean = w.title.replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2300}-\u{23FF}\u{2B00}-\u{2BFF}\s]+/u, '').trim();
             return `
                 <div class="world-card ${isSelected ? 'active' : ''}" data-world="${w.id}">
                     <div class="w-icon">${w.icon}</div>
                     <div class="w-info">
-                        <div class="w-title" title="${escapeHtml(w.title)}">${w.title}</div>
+                        <div class="w-title" title="${escapeHtml(titleClean)}">${titleClean}</div>
                         <span class="w-grade">${w.grade} · ${completedCount}/10</span>
                     </div>
                 </div>`;
