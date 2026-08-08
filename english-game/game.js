@@ -290,13 +290,18 @@
     const sfx = {
         ctx: null,
         init() {
-            if (!this.ctx) {
-                const AC = window.AudioContext || window.webkitAudioContext;
-                if (AC) this.ctx = new AC();
-            }
-            if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+            try {
+                if (!this.ctx) {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (AC) this.ctx = new AC();
+                }
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            } catch (e) {}
         },
-        tone(freq, dur, type = 'sine', vol = 0.15, endFreq = null) {
+        tone(freq, dur, type = 'sine', vol = 0.25, endFreq = null) {
+            this.init();
             if (!soundOn || !this.ctx) return;
             try {
                 const t = this.ctx.currentTime;
@@ -304,8 +309,10 @@
                 const gain = this.ctx.createGain();
                 osc.type = type;
                 osc.frequency.setValueAtTime(freq, t);
-                if (endFreq) {
+                if (endFreq && endFreq > 0) {
                     osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), t + dur);
+                } else {
+                    osc.frequency.setValueAtTime(freq, t);
                 }
                 gain.gain.setValueAtTime(vol, t);
                 gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
@@ -316,24 +323,24 @@
         },
         click() {
             // Nút bấm giòn giã kiểu pop-bubble
-            this.tone(420, 0.05, 'sine', 0.12, 780);
+            this.tone(450, 0.06, 'sine', 0.3, 900);
         },
         correct() {
-            // Chuỗi âm thanh chúc mừng 3 nốt tươi vui (C5 - E5 - G5 - C6)
+            // Chuỗi âm thanh chúc mừng 4 nốt tươi vui (C5 - E5 - G5 - C6)
             const notes = [523.25, 659.25, 783.99, 1046.50];
             notes.forEach((f, i) => {
-                setTimeout(() => this.tone(f, 0.18, 'triangle', 0.18), i * 70);
+                setTimeout(() => this.tone(f, 0.18, 'triangle', 0.35), i * 70);
             });
         },
         wrong() {
-            // Âm thanh báo sai nhẹ nhàng kiểu nhún bồng bềnh (không làm bé sợ)
-            this.tone(260, 0.2, 'sine', 0.16, 130);
-            setTimeout(() => this.tone(180, 0.25, 'triangle', 0.14, 90), 80);
+            // Âm thanh báo sai nhẹ nhàng kiểu nhún bồng bềnh
+            this.tone(300, 0.18, 'sine', 0.3, 150);
+            setTimeout(() => this.tone(200, 0.22, 'triangle', 0.25, 100), 70);
         },
         combo() {
             // Âm thanh thưởng combo chuỗi đúng (Chime lấp lánh)
-            this.tone(880, 0.12, 'sine', 0.15, 1320);
-            setTimeout(() => this.tone(1320, 0.2, 'sine', 0.18, 1760), 60);
+            this.tone(880, 0.12, 'sine', 0.32, 1320);
+            setTimeout(() => this.tone(1320, 0.22, 'sine', 0.38, 1760), 60);
         },
         win() {
             // Nhạc khải hoàn khi hoàn thành 1 bài học (Duolingo Fanfare)
@@ -346,17 +353,24 @@
                 { f: 1046.50, d: 0.35 }  // C6 rực rỡ
             ];
             fanfare.forEach((n, i) => {
-                setTimeout(() => this.tone(n.f, n.d, 'triangle', 0.2), i * 110);
+                setTimeout(() => this.tone(n.f, n.d, 'triangle', 0.4), i * 110);
             });
         },
         fail() {
             // Nhạc ngắt quãng dịu dàng khi hết tim
             const notes = [440, 392, 349, 293];
             notes.forEach((f, i) => {
-                setTimeout(() => this.tone(f, 0.22, 'sine', 0.14, f * 0.8), i * 120);
+                setTimeout(() => this.tone(f, 0.22, 'sine', 0.28, f * 0.8), i * 120);
             });
         }
     };
+
+    function unlockAudio() {
+        sfx.init();
+    }
+    window.addEventListener('pointerdown', unlockAudio, { passive: true });
+    window.addEventListener('click', unlockAudio, { passive: true });
+    window.addEventListener('keydown', unlockAudio, { passive: true });
 
     /* ---------- Đọc tiếng Anh (Text-to-Speech) ---------- */
     const TTS_OK = 'speechSynthesis' in window;
