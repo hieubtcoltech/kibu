@@ -720,6 +720,14 @@
 
             /* --- ảnh nền vẽ một lần --- */
             this.bg = this.add.graphics().setDepth(0);
+            this.cloudGfx = this.add.graphics().setDepth(1);
+            this.clouds = [
+                { x: 160, y: 110, s: 1.15, speed: 0.25 },
+                { x: 580, y: 80, s: 0.85, speed: 0.18 },
+                { x: 960, y: 175, s: 0.70, speed: 0.15 },
+                { x: 380, y: 200, s: 0.55, speed: 0.12 },
+                { x: 1240, y: 130, s: 0.95, speed: 0.22 }
+            ];
             this.drawBackdrop();
 
             /* --- hạt: một chấm trắng nhỏ, tô màu lại khi bắn --- */
@@ -816,9 +824,6 @@
                 g.fillRect(0, i * (GROUND_Y / 44), W, GROUND_Y / 44 + 1);
             }
             this.drawSun(g, 1128, 205, 32);
-            /* mây */
-            this.cloud(g, 260, 120, 1.1); this.cloud(g, 700, 86, 0.8);
-            this.cloud(g, 1000, 190, 0.65); this.cloud(g, 470, 210, 0.5);
             /* đồi xa */
             g.fillStyle(0x4c9d63, 1);
             this.hill(g, 180, GROUND_Y, 300, 130);
@@ -1243,6 +1248,20 @@
         /* ---------------- vòng lặp ---------------- */
         update(time, delta) {
             var i, e, b, blast;
+
+            /* mây bay nhẹ nhàng */
+            if (this.cloudGfx && this.clouds) {
+                this.cloudGfx.clear();
+                var dt = (delta || 16.6) / 16.6;
+                for (i = 0; i < this.clouds.length; i++) {
+                    var cl = this.clouds[i];
+                    cl.x += cl.speed * dt;
+                    if (cl.x - 70 * cl.s > W + 80) {
+                        cl.x = -90 * cl.s;
+                    }
+                    this.cloud(this.cloudGfx, cl.x, cl.y, cl.s);
+                }
+            }
 
             /* nổ đã xếp hàng từ khung trước */
             while (this.blastQueue.length) {
