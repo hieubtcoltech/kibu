@@ -106,8 +106,8 @@
         /* ---------- Thế giới 1: Sunny Yard — dạy tay ---------- */
         {
             name: 'First Shot', tip: 'Drag back from the ball, then let go.',
-            ball: [3, 11], hoop: { x: 14, y: 9 }, par: 1,
-            walls: [[0, 11, 20, 1]]
+            ball: [7, 4], hoop: { x: 15, y: 9 }, par: 1,
+            walls: [[0, 11, 20, 1], [5, 4, 5, 1]]
         },
         {
             name: 'Over The Wall', tip: 'Throw high to clear the wall.',
