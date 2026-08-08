@@ -722,11 +722,12 @@
             this.bg = this.add.graphics().setDepth(0);
             this.cloudGfx = this.add.graphics().setDepth(1);
             this.clouds = [
-                { x: 160, y: 110, s: 1.15, speed: 0.25 },
-                { x: 580, y: 80, s: 0.85, speed: 0.18 },
-                { x: 960, y: 175, s: 0.70, speed: 0.15 },
-                { x: 380, y: 200, s: 0.55, speed: 0.12 },
-                { x: 1240, y: 130, s: 0.95, speed: 0.22 }
+                { x: 280, y: 115, s: 1.10, speed: 0 },
+                { x: 1020, y: 185, s: 0.75, speed: 0 },
+                { x: 50, y: 85, s: 0.85, speed: 0.07 },
+                { x: 540, y: 140, s: 0.60, speed: 0.04 },
+                { x: 800, y: 95, s: 0.90, speed: 0.08 },
+                { x: 1260, y: 160, s: 0.70, speed: 0.05 }
             ];
             this.drawBackdrop();
 
