@@ -645,6 +645,16 @@
         return false;
     }
 
+    let searchQuery = '';
+
+    function normalizeText(str) {
+        if (!str) return '';
+        return String(str)
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase();
+    }
+
     function starRow(n, cls) {
         let out = '';
         for (let i = 0; i < 3; i++) out += `<span class="${i < n ? 'on' : 'off'}">⭐</span>`;
@@ -692,6 +702,10 @@
         const worlds = getFilteredWorlds();
         const worldNav = $('world-nav');
         const worldNavContainer = $('world-nav-container');
+        const searchInput = $('lesson-search-input');
+        const clearBtn = $('btn-clear-search');
+        const gradeFilterBar = document.querySelector('.grade-filter-bar');
+        const sectionTitle = $('map-section-title');
         
         if (!worlds.some(w => w.id === activeWorldId) && worlds.length > 0) {
             activeWorldId = worlds[0].id;
@@ -736,33 +750,106 @@
 
         const grid = $('station-grid');
         const doing = readRun();
-        const levels = activeWorld ? activeWorld.levels : [];
+        const query = searchQuery.trim();
 
-        grid.innerHTML = levels.map((lvl, i) => {
-            const stars = save.stars[lvl.id] || 0;
-            const unlocked = isLevelUnlocked(lvl);
-            const isDoing = doing && doing.station.id === lvl.id;
-            return `
-                <button class="station-row ${stars === 3 ? 'mastered' : ''} ${isDoing ? 'doing' : ''} ${!unlocked ? 'locked' : ''}"
-                        data-station="${lvl.id}" ${!unlocked ? 'disabled' : ''} style="--st-color:${activeWorld.color}">
-                    <span class="st-index">${lvl.order}</span>
-                    <span class="st-icon">${unlocked ? (lvl.isBoss ? '👑' : activeWorld.icon) : '🔒'}</span>
-                    <span class="st-body">
-                        <span class="st-head">
-                            <span class="st-title">Lv ${lvl.order}. ${lvl.title}</span>
-                            ${isDoing ? '<span class="st-flag">Đang học dở</span>' : ''}
-                            ${stars === 3 ? '<span class="st-flag done">Đã thuộc</span>' : ''}
-                            ${lvl.isBoss ? '<span class="st-flag boss">Boss Level</span>' : ''}
+        if (clearBtn) clearBtn.style.display = query ? 'grid' : 'none';
+
+        if (query) {
+            // Chế độ Tìm kiếm nhanh
+            if (worldNavContainer) worldNavContainer.style.display = 'none';
+            if (gradeFilterBar) gradeFilterBar.style.display = 'none';
+
+            const normQ = normalizeText(query);
+            const matches = [];
+
+            window.ENGLISH_WORLDS.forEach(w => {
+                w.levels.forEach(lvl => {
+                    const matchTitle = normalizeText(lvl.title).includes(normQ);
+                    const matchTopic = normalizeText(lvl.topic).includes(normQ);
+                    const matchDesc = normalizeText(lvl.desc || '').includes(normQ);
+                    const matchWorld = normalizeText(w.title).includes(normQ) || normalizeText(w.grade).includes(normQ);
+                    const matchWords = lvl.items.some(it => it.w && normalizeText(it.w.w + ' ' + (it.w.vi || '')).includes(normQ));
+
+                    if (matchTitle || matchTopic || matchDesc || matchWorld || matchWords) {
+                        matches.push({ level: lvl, world: w });
+                    }
+                });
+            });
+
+            if (sectionTitle) {
+                sectionTitle.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i> Tìm thấy <b>${matches.length}</b> bài học phù hợp cho "${escapeHtml(query)}"`;
+            }
+
+            if (matches.length === 0) {
+                grid.innerHTML = `
+                    <div class="search-empty-state">
+                        <i class="fa-solid fa-face-frown-open"></i>
+                        <div>Không tìm thấy bài học nào phù hợp với từ khóa "${escapeHtml(query)}"</div>
+                        <small style="display:block; margin-top:8px; color:var(--ink-3)">Thử tìm từ khác như: <i>Animals, Present Perfect, Lớp 3, Colors...</i></small>
+                    </div>`;
+            } else {
+                grid.innerHTML = matches.map(({ level: lvl, world: w }) => {
+                    const stars = save.stars[lvl.id] || 0;
+                    const unlocked = isLevelUnlocked(lvl);
+                    const isDoing = doing && doing.station.id === lvl.id;
+                    return `
+                        <button class="station-row ${stars === 3 ? 'mastered' : ''} ${isDoing ? 'doing' : ''} ${!unlocked ? 'locked' : ''}"
+                                data-station="${lvl.id}" ${!unlocked ? 'disabled' : ''} style="--st-color:${w.color}">
+                            <span class="st-index">${lvl.order}</span>
+                            <span class="st-icon">${unlocked ? (lvl.isBoss ? '👑' : w.icon) : '🔒'}</span>
+                            <span class="st-body">
+                                <span class="st-head">
+                                    <span class="st-title">Lv ${lvl.order}. ${lvl.title}</span>
+                                    <span class="st-flag done" style="background:var(--surface-2); color:var(--duo-blue); border-color:var(--border)">${w.grade} · ${w.title}</span>
+                                    ${isDoing ? '<span class="st-flag">Đang học dở</span>' : ''}
+                                    ${stars === 3 ? '<span class="st-flag done">Đã thuộc</span>' : ''}
+                                </span>
+                                <span class="st-desc">${lvl.desc || lvl.topic}</span>
+                                <span class="st-meta">${lvl.topic} · ${lvl.items.length} câu</span>
+                            </span>
+                            <span class="st-right">
+                                ${unlocked ? starRow(stars, 'st-stars') : '<span class="st-lock-txt">Khóa 🔒</span>'}
+                                <span class="st-go">${unlocked ? (stars ? 'LUYỆN LẠI' : 'BẮT ĐẦU') : 'CHƯA MỞ'} ▶</span>
+                            </span>
+                        </button>`;
+                }).join('');
+            }
+        } else {
+            // Chế độ bản đồ bình thường
+            if (worldNavContainer) worldNavContainer.style.display = isGridMode ? 'grid' : 'flex';
+            if (gradeFilterBar) gradeFilterBar.style.display = 'flex';
+            if (sectionTitle) {
+                sectionTitle.innerHTML = `<i class="fa-solid fa-layer-group"></i> Chọn khối lớp &amp; Thế giới bài học`;
+            }
+
+            const levels = activeWorld ? activeWorld.levels : [];
+
+            grid.innerHTML = levels.map((lvl, i) => {
+                const stars = save.stars[lvl.id] || 0;
+                const unlocked = isLevelUnlocked(lvl);
+                const isDoing = doing && doing.station.id === lvl.id;
+                return `
+                    <button class="station-row ${stars === 3 ? 'mastered' : ''} ${isDoing ? 'doing' : ''} ${!unlocked ? 'locked' : ''}"
+                            data-station="${lvl.id}" ${!unlocked ? 'disabled' : ''} style="--st-color:${activeWorld.color}">
+                        <span class="st-index">${lvl.order}</span>
+                        <span class="st-icon">${unlocked ? (lvl.isBoss ? '👑' : activeWorld.icon) : '🔒'}</span>
+                        <span class="st-body">
+                            <span class="st-head">
+                                <span class="st-title">Lv ${lvl.order}. ${lvl.title}</span>
+                                ${isDoing ? '<span class="st-flag">Đang học dở</span>' : ''}
+                                ${stars === 3 ? '<span class="st-flag done">Đã thuộc</span>' : ''}
+                                ${lvl.isBoss ? '<span class="st-flag boss">Boss Level</span>' : ''}
+                            </span>
+                            <span class="st-desc">${lvl.desc || lvl.topic}</span>
+                            <span class="st-meta">${lvl.topic} · ${lvl.items.length} câu</span>
                         </span>
-                        <span class="st-desc">${lvl.desc || lvl.topic}</span>
-                        <span class="st-meta">${lvl.topic} · ${lvl.items.length} câu</span>
-                    </span>
-                    <span class="st-right">
-                        ${unlocked ? starRow(stars, 'st-stars') : '<span class="st-lock-txt">Khóa 🔒</span>'}
-                        <span class="st-go">${unlocked ? (stars ? 'LUYỆN LẠI' : 'BẮT ĐẦU') : 'CHƯA MỞ'} ▶</span>
-                    </span>
-                </button>`;
-        }).join('');
+                        <span class="st-right">
+                            ${unlocked ? starRow(stars, 'st-stars') : '<span class="st-lock-txt">Khóa 🔒</span>'}
+                            <span class="st-go">${unlocked ? (stars ? 'LUYỆN LẠI' : 'BẮT ĐẦU') : 'CHƯA MỞ'} ▶</span>
+                        </span>
+                    </button>`;
+            }).join('');
+        }
 
         grid.querySelectorAll('.station-row:not([disabled])').forEach(card => {
             card.addEventListener('click', () => {
@@ -1909,6 +1996,32 @@
             setHash('');
             showScreen('map');
             renderMap();
+        });
+
+        const searchInput = $('lesson-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', e => {
+                searchQuery = e.target.value;
+                renderMap();
+            });
+        }
+
+        const btnClearSearch = $('btn-clear-search');
+        if (btnClearSearch) {
+            btnClearSearch.addEventListener('click', () => {
+                sfx.init();
+                sfx.click();
+                searchQuery = '';
+                if (searchInput) searchInput.value = '';
+                renderMap();
+            });
+        }
+
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                if (searchInput) { searchInput.focus(); searchInput.select(); }
+            }
         });
 
         $('btn-resume').addEventListener('click', () => {

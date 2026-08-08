@@ -160,8 +160,16 @@
                 </div>
             </div>
 
+            <div class="search-bar-wrap">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-ic"></i>
+                    <input type="text" id="lesson-search-input" class="search-input" placeholder="🔍 Tìm nhanh bài học (VD: Animals, Present Perfect, Lớp 3...)" autocomplete="off">
+                    <button id="btn-clear-search" class="search-clear-btn" style="display:none" title="Xóa tìm kiếm">✕</button>
+                </div>
+            </div>
+
             <div class="section-label" style="display: flex; justify-content: space-between; align-items: center;">
-                <span><i class="fa-solid fa-layer-group"></i> Chọn khối lớp &amp; Thế giới bài học</span>
+                <span id="map-section-title"><i class="fa-solid fa-layer-group"></i> Chọn khối lớp &amp; Thế giới bài học</span>
                 <button id="btn-toggle-view" class="view-toggle-btn" title="Chuyển chế độ hiển thị Dạng lưới / Thanh trượt">
                     <i class="fa-solid fa-grip"></i> <span id="view-toggle-text">Dạng Lưới</span>
                 </button>
