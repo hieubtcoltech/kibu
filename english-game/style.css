@@ -1757,11 +1757,7 @@ body {
     text-align: left;
 }
 
-.passage h4 {
-    font-family: var(--font-display);
-    font-size: 1.15rem;
-    font-weight: 800;
-    color: var(--duo-gold);
+.passage-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1770,6 +1766,69 @@ body {
     margin-bottom: 12px;
     padding-bottom: 12px;
     border-bottom: 2px solid var(--border);
+}
+
+.passage-header h4 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--duo-gold);
+    margin: 0;
+}
+
+.passage-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-passage-btn {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.88rem;
+    padding: 8px 16px;
+    border-radius: var(--r-md);
+    background: var(--duo-blue);
+    border: none;
+    border-bottom: 4px solid var(--duo-blue-shadow);
+    color: #ffffff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.1s ease;
+}
+.btn-passage-btn:hover { background: #33beff; }
+.btn-passage-btn:active { transform: translateY(3px); border-bottom-width: 1px; }
+
+.btn-passage-btn.pause-mode {
+    background: var(--duo-orange);
+    border-bottom-color: var(--duo-orange-shadow);
+    color: #ffffff;
+}
+
+.btn-passage-btn.replay-btn {
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    color: var(--ink-2);
+}
+.btn-passage-btn.replay-btn:hover {
+    background: var(--border);
+    color: var(--ink);
+}
+
+.passage-status-badge {
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--duo-blue-soft);
+    color: var(--duo-blue);
+    border: 1px solid var(--duo-blue);
 }
 
 .passage b { color: var(--duo-green); }

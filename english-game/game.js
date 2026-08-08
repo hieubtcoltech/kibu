@@ -390,11 +390,102 @@
         return list[0]; // đã sắp xếp theo điểm chất lượng
     }
 
-    function speak(text, rateOverride) {
-        if (!TTS_OK) {
+    let passageAudioState = 'idle'; // 'idle' | 'playing' | 'paused'
+    let currentPassagePlain = '';
+
+    function stopPassageAudio() {
+        if (!TTS_OK || !window.speechSynthesis) return;
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+        passageAudioState = 'idle';
+        updatePassageUI();
+    }
+
+    function updatePassageUI() {
+        const playBtn = $('btn-passage-play');
+        const replayBtn = $('btn-passage-replay');
+        const statusBadge = $('passage-status');
+        const playIcon = $('passage-play-icon');
+        const playTxt = $('passage-play-txt');
+
+        if (!playBtn) return;
+
+        if (passageAudioState === 'playing') {
+            playBtn.classList.add('pause-mode');
+            if (playIcon) playIcon.className = 'fa-solid fa-circle-pause';
+            if (playTxt) playTxt.textContent = 'Tạm dừng';
+            if (replayBtn) replayBtn.style.display = 'inline-flex';
+            if (statusBadge) {
+                statusBadge.style.display = 'inline-block';
+                statusBadge.textContent = '🔊 Đang đọc...';
+            }
+        } else if (passageAudioState === 'paused') {
+            playBtn.classList.remove('pause-mode');
+            if (playIcon) playIcon.className = 'fa-solid fa-circle-play';
+            if (playTxt) playTxt.textContent = 'Nghe tiếp';
+            if (replayBtn) replayBtn.style.display = 'inline-flex';
+            if (statusBadge) {
+                statusBadge.style.display = 'inline-block';
+                statusBadge.textContent = '⏸️ Đã tạm dừng';
+            }
+        } else {
+            playBtn.classList.remove('pause-mode');
+            if (playIcon) playIcon.className = 'fa-solid fa-circle-play';
+            if (playTxt) playTxt.textContent = 'Nghe cả bài';
+            if (replayBtn) replayBtn.style.display = 'none';
+            if (statusBadge) statusBadge.style.display = 'none';
+        }
+    }
+
+    function handlePassagePlayClick(plainText) {
+        if (!TTS_OK || !window.speechSynthesis) {
             showToast('⚠️ Trình duyệt này không hỗ trợ đọc tiếng Anh');
             return;
         }
+
+        if (passageAudioState === 'idle') {
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+            const textToSpeak = String(plainText || currentPassagePlain).replace(/<[^>]+>/g, '');
+            const u = new SpeechSynthesisUtterance(textToSpeak);
+            const v = pickVoice();
+            if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = 'en-US'; }
+            u.rate = prefs.rate;
+            u.pitch = 1;
+            u.volume = 1;
+
+            u.onstart = () => { passageAudioState = 'playing'; updatePassageUI(); };
+            u.onpause = () => { passageAudioState = 'paused'; updatePassageUI(); };
+            u.onresume = () => { passageAudioState = 'playing'; updatePassageUI(); };
+            u.onend = () => { passageAudioState = 'idle'; updatePassageUI(); };
+            u.onerror = () => { passageAudioState = 'idle'; updatePassageUI(); };
+
+            passageAudioState = 'playing';
+            updatePassageUI();
+            window.speechSynthesis.speak(u);
+        } else if (passageAudioState === 'playing') {
+            window.speechSynthesis.pause();
+            passageAudioState = 'paused';
+            updatePassageUI();
+        } else if (passageAudioState === 'paused') {
+            window.speechSynthesis.resume();
+            passageAudioState = 'playing';
+            updatePassageUI();
+        }
+    }
+
+    function handlePassageReplayClick(plainText) {
+        if (!TTS_OK || !window.speechSynthesis) return;
+        try { window.speechSynthesis.cancel(); } catch (e) {}
+        passageAudioState = 'idle';
+        updatePassageUI();
+        handlePassagePlayClick(plainText);
+    }
+
+    function speak(text, rateOverride) {
+        if (!TTS_OK || !window.speechSynthesis) {
+            showToast('⚠️ Trình duyệt này không hỗ trợ đọc tiếng Anh');
+            return;
+        }
+        stopPassageAudio();
         try {
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g, ''));
@@ -746,6 +837,7 @@
     /* ---------- Vẽ từng dạng bài ---------- */
 
     function renderItem() {
+        stopPassageAudio();
         const it = currentItem();
         run.answered = false;
         run.selected = -1;
@@ -845,15 +937,22 @@
     function passageHtml() {
         const p = run.station.passage;
         if (!p) return '';
+        currentPassagePlain = p.plain || p.text || '';
         return `
             <div class="passage">
-                <h4>
-                    <span>📔 ${escapeHtml(p.title)}</span>
-                    <button class="btn-speak small" data-speak="${escapeHtml(p.plain)}">
-                        <i class="fa-solid fa-volume-high"></i> Nghe cả bài
-                    </button>
-                </h4>
-                <div class="passage-pics">${p.pics.join(' ')}</div>
+                <div class="passage-header">
+                    <h4>📔 ${escapeHtml(p.title)}</h4>
+                    <div class="passage-controls">
+                        <button id="btn-passage-play" class="btn-passage-btn" data-passage="${escapeHtml(currentPassagePlain)}">
+                            <i id="passage-play-icon" class="fa-solid fa-circle-play"></i> <span id="passage-play-txt">Nghe cả bài</span>
+                        </button>
+                        <button id="btn-passage-replay" class="btn-passage-btn replay-btn" data-passage="${escapeHtml(currentPassagePlain)}" style="display:none">
+                            <i class="fa-solid fa-rotate-left"></i> <span>Tải lại</span>
+                        </button>
+                        <span id="passage-status" class="passage-status-badge" style="display:none"></span>
+                    </div>
+                </div>
+                <div class="passage-pics">${p.pics ? p.pics.join(' ') : ''}</div>
                 <div>${p.text.replace(/\n/g, '<br>')}</div>
             </div>`;
     }
@@ -1867,6 +1966,19 @@
 
         // Mọi nút "nghe" đều dùng chung một handler
         document.addEventListener('click', e => {
+            const playBtn = e.target.closest('#btn-passage-play');
+            if (playBtn) {
+                sfx.init();
+                handlePassagePlayClick(playBtn.dataset.passage);
+                return;
+            }
+            const replayBtn = e.target.closest('#btn-passage-replay');
+            if (replayBtn) {
+                sfx.init();
+                handlePassageReplayClick(replayBtn.dataset.passage);
+                return;
+            }
+
             const b = e.target.closest('[data-speak]');
             if (!b) return;
             sfx.init();
