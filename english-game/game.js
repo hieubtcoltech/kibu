@@ -1617,22 +1617,452 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
     }
 
     /* =====================================================
-       8. MODAL & SỰ KIỆN
+       8. MODAL & SỰ KIỆN GHI NHỚ CHI TIẾT (12 WORLDS)
        ===================================================== */
 
     function openModal(id) { $(id).classList.add('open'); }
     function closeModal(id) { $(id).classList.remove('open'); }
 
-    function renderTheoryVerbs() {
-        $('theory-verbs').innerHTML = VOCAB.map((v, i) => `
-            <div class="verb-row">
-                <span class="vr-no">${i + 1}</span>
-                <span class="vr-emo">${v.emoji}</span>
-                <span class="vr-v1">${escapeHtml(v.w)}</span>
-                <span class="vr-v2">${escapeHtml(v.v2 || '')}</span>
-                <span class="vr-v3">${escapeHtml(v.v3 || '')}</span>
-                <span class="vr-vi">${escapeHtml(v.vi)}</span>
-            </div>`).join('');
+    function getTheoryForWorld(worldId) {
+        switch (worldId) {
+            case 'world-1':
+                return {
+                    title: '🎈 Ghi Nhớ Mầm Non: Phonics A-Z, Màu Sắc & Số Đếm 1–10',
+                    blocks: [
+                        {
+                            head: '1. Bảng Chữ Cái Phonics A – Z',
+                            type: 'list',
+                            items: [
+                                '🅰️ <b>A</b> - Apple 🍎 (quả táo) · <b>B</b> - Ball ⚽ (quả bóng)',
+                                '🐱 <b>C</b> - Cat (con mèo) · <b>D</b> - Dog 🐶 (con chó)',
+                                '🐘 <b>E</b> - Elephant · <b>F</b> - Fish 🐟 · <b>G</b> - Giraffe 🦒',
+                                '🧢 <b>H</b> - Hat · <b>I</b> - Ice 🧊 · <b>J</b> - Juice 🧃',
+                                '🦁 <b>L</b> - Lion · <b>M</b> - Monkey 🐒 · <b>N</b> - Nest 🪹',
+                                '🐼 <b>P</b> - Panda · <b>S</b> - Sun ☀️ · <b>T</b> - Tiger 🐅'
+                            ]
+                        },
+                        {
+                            head: '2. Màu Sắc Cơ Bản (Colors)',
+                            type: 'signals',
+                            signals: [
+                                { word: 'Red 🔴', desc: 'Màu đỏ' },
+                                { word: 'Blue 🔵', desc: 'Màu xanh dương' },
+                                { word: 'Yellow 🟡', desc: 'Màu vàng' },
+                                { word: 'Green 🟢', desc: 'Màu xanh lá' },
+                                { word: 'Pink 🩷', desc: 'Màu hồng' },
+                                { word: 'Orange 🟠', desc: 'Màu cam' }
+                            ]
+                        },
+                        {
+                            head: '3. Số Đếm 1 đến 10 (Numbers)',
+                            type: 'grid',
+                            items: [
+                                '1️⃣ <b>One</b> (Một)', '2️⃣ <b>Two</b> (Hai)', '3️⃣ <b>Three</b> (Ba)', '4️⃣ <b>Four</b> (Bốn)', '5️⃣ <b>Five</b> (Năm)',
+                                '6️⃣ <b>Six</b> (Sáu)', '7️⃣ <b>Seven</b> (Bảy)', '8️⃣ <b>Eight</b> (Tám)', '9️⃣ <b>Nine</b> (Chín)', '🔟 <b>Ten</b> (Mười)'
+                            ]
+                        },
+                        {
+                            head: '💡 Mẹo cho bé Mầm non',
+                            type: 'note',
+                            text: 'Bố mẹ cho bé bấm nút loa 🔊 nghe phát âm chuẩn mỗi ngày. Nhìn tranh và gọi tên bằng tiếng Anh để bé thẩm âm tự nhiên!'
+                        }
+                    ]
+                };
+
+            case 'world-2':
+                return {
+                    title: '🧸 Ghi Nhớ Mầm Non: Gia Đình, Trái Cây & Cảm Xúc',
+                    blocks: [
+                        {
+                            head: '1. Thành Viên Gia Đình (Family)',
+                            type: 'list',
+                            items: [
+                                '👩 <b>Mommy / Mother</b>: Mẹ',
+                                '👨 <b>Daddy / Father</b>: Bố',
+                                '👦 <b>Brother</b>: Anh / Em trai',
+                                '👧 <b>Sister</b>: Chị / Em gái',
+                                '👶 <b>Baby</b>: Em bé'
+                            ]
+                        },
+                        {
+                            head: '2. Trái Cây Yêu Thích',
+                            type: 'signals',
+                            signals: [
+                                { word: 'Apple 🍎', desc: 'Quả táo' },
+                                { word: 'Banana 🍌', desc: 'Quả chuối' },
+                                { word: 'Orange 🍊', desc: 'Quả cam' },
+                                { word: 'Watermelon 🍉', desc: 'Dưa hấu' },
+                                { word: 'Milk 🥛', desc: 'Sữa' }
+                            ]
+                        },
+                        {
+                            head: '3. Cảm Xúc & Cơ Thể',
+                            type: 'grid',
+                            items: [
+                                '😊 <b>Happy</b> (Vui)', '😢 <b>Sad</b> (Buồn)', '👀 <b>Eye</b> (Mắt)', '👃 <b>Nose</b> (Mũi)',
+                                '👂 <b>Ear</b> (Tai)', '👄 <b>Mouth</b> (Miệng)', '✋ <b>Hand</b> (Bàn tay)'
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-3':
+                return {
+                    title: '🌱 Ghi Nhớ Lớp 1: Đồ Dùng Học Tập & Mẫu Câu Giới Thiệu',
+                    blocks: [
+                        {
+                            head: '1. Mẫu Câu Giới Thiệu Đồ Vật: This is a...',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'Mẫu câu 1', rule: 'This is a + [tên đồ vật]', ex: 'This is a book. (Đây là một cuốn sách.)' },
+                                { tag: 'Mẫu câu 2', rule: 'It is + [màu sắc]', ex: 'It is red. (Nó có màu đỏ.)' }
+                            ]
+                        },
+                        {
+                            head: '2. Từ Vựng Đồ Dùng Học Tập & Quần Áo',
+                            type: 'signals',
+                            signals: [
+                                { word: 'Book 📖', desc: 'Cuốn sách' },
+                                { word: 'Pen 🖊️', desc: 'Bút mực' },
+                                { word: 'Pencil ✏️', desc: 'Bút chì' },
+                                { word: 'Desk 🪑', desc: 'Bàn học' },
+                                { word: 'Hat 🧢', desc: 'Cái mũ' },
+                                { word: 'Shirt 👕', desc: 'Áo sơ mi' }
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-4':
+                return {
+                    title: '🐶 Ghi Nhớ Lớp 1: Động Vật & Động Từ Hành Động (I can...)',
+                    blocks: [
+                        {
+                            head: '1. Mẫu Câu Khả Năng: I can...',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'Khẳng định', rule: 'I can + [động từ]', ex: 'I can run. (Tớ có thể chạy.)' },
+                                { tag: 'Phủ định', rule: 'I cannot / can\'t + [động từ]', ex: 'I can\'t fly. (Tớ không thể bay.)' },
+                                { tag: 'Sở thích', rule: 'I like + [động vật số nhiều]', ex: 'I like dogs. (Tớ thích những chú chó.)' }
+                            ]
+                        },
+                        {
+                            head: '2. Từ Vựng Động Từ Hành Động',
+                            type: 'signals',
+                            signals: [
+                                { word: 'Run 🏃', desc: 'Chạy' },
+                                { word: 'Jump 🦘', desc: 'Nhảy' },
+                                { word: 'Fly 🐦', desc: 'Bay' },
+                                { word: 'Swim 🏊', desc: 'Bơi' },
+                                { word: 'Sing 🎤', desc: 'Hát' },
+                                { word: 'Dance 💃', desc: 'Nhảy múa' }
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-5':
+                return {
+                    title: '🌱 Ghi Nhớ Lớp 2: Động Từ To Be (Am / Is / Are)',
+                    blocks: [
+                        {
+                            head: '1. Quy Tắc Chia Động Từ To Be',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'I đi với', rule: 'I + am (I\'m)', ex: 'I am a student.' },
+                                { tag: 'Số ít', rule: 'He / She / It + is (He\'s / She\'s)', ex: 'She is happy. / It is a cat.' },
+                                { tag: 'Số nhiều', rule: 'You / We / They + are (They\'re)', ex: 'We are ready.' }
+                            ]
+                        },
+                        {
+                            head: '2. Phủ Định & Câu Hỏi',
+                            type: 'list',
+                            items: [
+                                '🛑 <b>Phủ định</b>: Thêm <i>not</i> phía sau To Be ➔ <i>is not = isn\'t</i>, <i>are not = aren\'t</i>.',
+                                '❓ <b>Câu hỏi</b>: Đảo To Be lên đầu ➔ <i>Is he a doctor? Yes, he is.</i> / <i>Are you happy? Yes, I am.</i>'
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-6':
+                return {
+                    title: '🎒 Ghi Nhớ Lớp 2: Sở Hữu Have/Has & Từ Chỉ Định',
+                    blocks: [
+                        {
+                            head: '1. Động Từ Sở Hữu Have / Has',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'I / You / We / They', rule: 'S + have', ex: 'I have a new hat.' },
+                                { tag: 'He / She / It', rule: 'S + has', ex: 'He has a red car.' }
+                            ]
+                        },
+                        {
+                            head: '2. Từ Chỉ Định (This, That, These, Those)',
+                            type: 'signals',
+                            signals: [
+                                { word: 'This', desc: 'Đây (gần - số ít)' },
+                                { word: 'That', desc: 'Đó (xa - số ít)' },
+                                { word: 'These', desc: 'Những cái này (gần - số nhiều)' },
+                                { word: 'Those', desc: 'Những cái đó (xa - số nhiều)' }
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-7':
+                return {
+                    title: '🏠 Ghi Nhớ Lớp 3: Giới Từ Vị Trí & Cấu Trúc There is / There are',
+                    blocks: [
+                        {
+                            head: '1. Giới Từ Vị Trí (Prepositions of Place)',
+                            type: 'signals',
+                            signals: [
+                                { word: 'In 📦', desc: 'Ở trong' },
+                                { word: 'On 🔝', desc: 'Ở trên' },
+                                { word: 'Under ⬇️', desc: 'Ở dưới' },
+                                { word: 'Behind 🔙', desc: 'Ở phía sau' },
+                                { word: 'Next to ➡️', desc: 'Bên cạnh' },
+                                { word: 'Between ↕️', desc: 'Ở giữa 2 vật' }
+                            ]
+                        },
+                        {
+                            head: '2. Cấu Trúc There is / There are',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'Số ít', rule: 'There is a / an + [N số ít]', ex: 'There is an apple on the table.' },
+                                { tag: 'Số nhiều', rule: 'There are + [N số nhiều]', ex: 'There are 3 dogs in the yard.' }
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-8':
+                return {
+                    title: '☀️ Ghi Nhớ Lớp 3: Thì Hiện Tại Đơn (Present Simple)',
+                    blocks: [
+                        {
+                            head: '1. Công Thức Hiện Tại Đơn',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'He / She / It', rule: 'S + V-s / V-es', ex: 'She plays tennis every day.' },
+                                { tag: 'I / You / We / They', rule: 'S + V1 (giữ nguyên)', ex: 'They walk to school.' },
+                                { tag: 'Phủ định', rule: 'S + don\'t / doesn\'t + V1', ex: 'He doesn\'t like milk.' }
+                            ]
+                        },
+                        {
+                            head: '2. Mẹo Thêm -es Khi Tận Cùng Động Từ',
+                            type: 'note',
+                            text: '💡 Động từ tận cùng bằng <b>-o, -ch, -sh, -s, -x, -z</b> thì thêm <b>-es</b>: <i>go ➔ goes, watch ➔ watches, wash ➔ washes</i>.'
+                        }
+                    ]
+                };
+
+            case 'world-9':
+                return {
+                    title: '🏃 Ghi Nhớ Lớp 3: Thì Hiện Tại Tiếp Diễn (Present Continuous)',
+                    blocks: [
+                        {
+                            head: '1. Công Thức Đang Diễn Ra',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'Khẳng định', rule: 'S + am / is / are + V-ing', ex: 'I am reading a book now.' },
+                                { tag: 'Phủ định', rule: 'S + am / is / are + not + V-ing', ex: 'She isn\'t cooking.' },
+                                { tag: 'Nghi vấn', rule: 'Am / Is / Are + S + V-ing?', ex: 'Are they playing soccer?' }
+                            ]
+                        },
+                        {
+                            head: '2. Từ Dấu Hiệu Nhận Biết',
+                            type: 'signals',
+                            signals: [
+                                { word: 'Now', desc: 'Bây giờ' },
+                                { word: 'Right now', desc: 'Ngay bây giờ' },
+                                { word: 'At the moment', desc: 'Lúc này' },
+                                { word: 'Look! 👁️', desc: 'Nhìn kìa!' },
+                                { word: 'Listen! 👂', desc: 'Nghe kìa!' }
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-10':
+                return {
+                    title: '🦖 Ghi Nhớ Lớp 4: Thì Quá Khứ Đơn (Past Simple)',
+                    blocks: [
+                        {
+                            head: '1. To Be Quá Khứ & Động Từ Quá Khứ',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'Was', rule: 'I / He / She / It + was', ex: 'I was happy yesterday.' },
+                                { tag: 'Were', rule: 'You / We / They + were', ex: 'They were at home.' },
+                                { tag: 'Động từ thường', rule: 'S + V2 / V-ed', ex: 'We visited grandma last Sunday.' }
+                            ]
+                        },
+                        {
+                            head: '2. Động Từ Bất Quy Tắc Quá Khứ Phổ Biến',
+                            type: 'signals',
+                            signals: [
+                                { word: 'go ➔ went', desc: 'đã đi' },
+                                { word: 'eat ➔ ate', desc: 'đã ăn' },
+                                { word: 'see ➔ saw', desc: 'đã thấy' },
+                                { word: 'buy ➔ bought', desc: 'đã mua' },
+                                { word: 'make ➔ made', desc: 'đã làm' },
+                                { word: 'have ➔ had', desc: 'đã có' }
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-11':
+                return {
+                    title: '🚀 Ghi Nhớ Lớp 4: Thì Tương Lai & Cấu Trúc So Sánh',
+                    blocks: [
+                        {
+                            head: '1. Tương Lai Will vs Be going to',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'Will (Sẽ)', rule: 'S + will + V1', ex: 'I will help you. (Tớ sẽ giúp bạn.)' },
+                                { tag: 'Be going to', rule: 'S + am/is/are + going to + V1', ex: 'They are going to travel tomorrow.' }
+                            ]
+                        },
+                        {
+                            head: '2. So Sánh Hơn & So Sánh Nhất',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'So sánh hơn', rule: 'adj-er + than / more adj + than', ex: 'Tom is taller than Ben.' },
+                                { tag: 'So sánh nhất', rule: 'the adj-est / the most adj', ex: 'An is the tallest in class.' }
+                            ]
+                        }
+                    ]
+                };
+
+            case 'world-12':
+            default:
+                return {
+                    title: '⭐ Ghi Nhớ Lớp 5: Thì Hiện Tại Hoàn Thành & Trùm Cuối V3',
+                    blocks: [
+                        {
+                            head: '1. Công Thức Hiện Tại Hoàn Thành (Present Perfect)',
+                            type: 'formulas',
+                            formulas: [
+                                { tag: 'Khẳng định', rule: 'S + have / has + V3', ex: 'I have eaten pizza.' },
+                                { tag: 'Phủ định', rule: 'S + have / has + not + V3', ex: 'She hasn\'t finished yet.' },
+                                { tag: 'Nghi vấn', rule: 'Have / Has + S + V3?', ex: 'Have you seen it?' }
+                            ]
+                        },
+                        {
+                            head: '2. Từ Dấu Hiệu Nhận Biết Quan Trọng',
+                            type: 'signals',
+                            signals: [
+                                { word: 'just', desc: 'vừa mới' },
+                                { word: 'already', desc: 'đã... rồi' },
+                                { word: 'yet', desc: 'chưa' },
+                                { word: 'ever / never', desc: 'từng / chưa từng' },
+                                { word: 'since', desc: 'từ khi (mốc)' },
+                                { word: 'for', desc: 'trong (khoảng)' }
+                            ]
+                        },
+                        {
+                            head: '3. Bảng 30 Động Từ Bất Quy Tắc Cần Thuộc V3',
+                            type: 'verbs',
+                            verbs: VOCAB
+                        }
+                    ]
+                };
+        }
+    }
+
+    function openTheoryModal(targetWorldId) {
+        let currentWId = targetWorldId || (run.station ? run.station.worldId : activeWorldId) || 'world-1';
+        
+        // Render World Selector Tab Bar inside Modal
+        const tabContainer = $('theory-tab-bar');
+        if (tabContainer && window.ENGLISH_WORLDS) {
+            tabContainer.innerHTML = window.ENGLISH_WORLDS.map(w => `
+                <button class="theory-tab-btn ${w.id === currentWId ? 'active' : ''}" data-wid="${w.id}">
+                    ${w.icon} ${w.grade}
+                </button>
+            `).join('');
+
+            tabContainer.querySelectorAll('.theory-tab-btn').forEach(btn => {
+                btn.onclick = () => {
+                    sfx.click();
+                    openTheoryModal(btn.dataset.wid);
+                };
+            });
+        }
+
+        // Render Theory Content
+        const bodyContainer = $('theory-content-body');
+        if (!bodyContainer) return;
+
+        const theoryData = getTheoryForWorld(currentWId);
+        let html = `<h3 style="margin-bottom:14px; font-size:1.15rem; color:var(--yellow)">${theoryData.title}</h3>`;
+
+        theoryData.blocks.forEach(b => {
+            html += `<div class="theory-block"><h4>${b.head}</h4>`;
+
+            if (b.type === 'formulas') {
+                html += `<div class="formula-row">`;
+                b.formulas.forEach(f => {
+                    const plainEx = f.ex ? f.ex.split('(')[0].trim() : '';
+                    html += `
+                        <div class="formula">
+                            <span class="f-tag">${f.tag}</span>
+                            <b>${f.rule}</b>
+                            ${f.ex ? `<em><u>${f.ex}</u> <button class="btn-speak small inline-speak" data-speak="${escapeHtml(plainEx)}">🔊</button></em>` : ''}
+                        </div>`;
+                });
+                html += `</div>`;
+            } else if (b.type === 'signals') {
+                html += `<div class="signal-grid">`;
+                b.signals.forEach(s => {
+                    const wordOnly = s.word.replace(/[^\w\s]/gi, '').trim();
+                    html += `<span class="signal" data-speak="${escapeHtml(wordOnly)}" style="cursor:pointer">${s.word} <small>${s.desc}</small></span>`;
+                });
+                html += `</div>`;
+            } else if (b.type === 'list') {
+                html += `<ul class="theory-list">`;
+                b.items.forEach(it => { html += `<li>${it}</li>`; });
+                html += `</ul>`;
+            } else if (b.type === 'grid') {
+                html += `<div class="signal-grid">`;
+                b.items.forEach(it => { html += `<span class="signal">${it}</span>`; });
+                html += `</div>`;
+            } else if (b.type === 'note') {
+                html += `<p class="theory-note">${b.text}</p>`;
+            } else if (b.type === 'verbs') {
+                html += `
+                    <div class="verb-legend">
+                        <span>#</span><span></span><span>V1</span><span>V2</span><span>V3</span><span>Nghĩa</span>
+                    </div>
+                    <div class="verb-table">
+                        ${b.verbs.map((v, i) => `
+                            <div class="verb-row">
+                                <span class="vr-no">${i + 1}</span>
+                                <span class="vr-emo">${v.emoji}</span>
+                                <span class="vr-v1">${escapeHtml(v.w)}</span>
+                                <span class="vr-v2">${escapeHtml(v.v2 || '')}</span>
+                                <span class="vr-v3">${escapeHtml(v.v3 || '')}</span>
+                                <span class="vr-vi">${escapeHtml(v.vi)}</span>
+                            </div>`).join('')}
+                    </div>`;
+            }
+
+            html += `</div>`;
+        });
+
+        bodyContainer.innerHTML = html;
+
+        // Wire TTS buttons inside theory content
+        bodyContainer.querySelectorAll('[data-speak]').forEach(btn => {
+            btn.onclick = (e) => {
+                e.stopPropagation();
+                speak(btn.dataset.speak);
+            };
+        });
+
+        openModal('modal-theory');
     }
 
     function bindEvents() {
@@ -1695,7 +2125,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             showToast('🗑️ Đã bỏ lượt học dở và quay lại bản đồ');
         });
 
-        $('btn-theory').addEventListener('click', () => { sfx.init(); openModal('modal-theory'); });
+        $('btn-theory').addEventListener('click', () => { sfx.init(); openTheoryModal(); });
 
         $('btn-voice').addEventListener('click', () => {
             sfx.init();

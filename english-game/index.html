@@ -249,70 +249,13 @@
     <div id="modal-theory" class="modal">
         <div class="modal-card modal-wide">
             <button class="modal-close" data-close="modal-theory"><i class="fa-solid fa-xmark"></i></button>
-            <h2 class="modal-title">📚 Ghi Nhớ: Từ Vựng &amp; Ngữ Pháp Tiếng Anh</h2>
+            <h2 class="modal-title">📚 Ghi Nhớ Từ Vựng &amp; Ngữ Pháp Chi Tiết</h2>
 
-            <div class="theory-block">
-                <h4>1. Công thức</h4>
-                <div class="formula-row">
-                    <div class="formula formula-pos">
-                        <span class="f-tag">Khẳng định</span>
-                        <b>S + have/has + V3</b>
-                        <em>I <u>have eaten</u> pizza.</em>
-                    </div>
-                    <div class="formula formula-neg">
-                        <span class="f-tag">Phủ định</span>
-                        <b>S + have/has + not + V3</b>
-                        <em>She <u>hasn't finished</u> yet.</em>
-                    </div>
-                    <div class="formula formula-que">
-                        <span class="f-tag">Nghi vấn</span>
-                        <b>Have/Has + S + V3?</b>
-                        <em><u>Have</u> you <u>seen</u> it?</em>
-                    </div>
-                </div>
-                <p class="theory-note">
-                    👉 <b>He / She / It</b> và danh từ số ít dùng <b class="hl-pink">has</b>.
-                    <b>I / You / We / They</b> và danh từ số nhiều dùng <b class="hl-blue">have</b>.
-                </p>
-            </div>
+            <!-- Thanh chọn Thế giới trong Ghi nhớ -->
+            <div id="theory-tab-bar" class="theory-tab-bar"></div>
 
-            <div class="theory-block">
-                <h4>2. Dùng khi nào?</h4>
-                <ul class="theory-list">
-                    <li>✅ Việc <b>vừa mới xảy ra</b>, còn "nóng hổi": <em>I have just finished my homework.</em></li>
-                    <li>✅ Việc <b>bắt đầu trong quá khứ và vẫn kéo dài</b> tới hiện tại: <em>We have lived here for 5 years.</em></li>
-                    <li>✅ <b>Trải nghiệm</b> trong đời, không nói rõ thời gian: <em>She has never seen snow.</em></li>
-                    <li>❌ <b>Không dùng</b> khi đã nói rõ thời điểm trong quá khứ (yesterday, last week) — lúc đó dùng quá khứ đơn.</li>
-                </ul>
-            </div>
-
-            <div class="theory-block">
-                <h4>3. Dấu hiệu nhận biết</h4>
-                <div class="signal-grid">
-                    <span class="signal">just <small>vừa mới</small></span>
-                    <span class="signal">already <small>rồi</small></span>
-                    <span class="signal">yet <small>chưa (câu ¬/?)</small></span>
-                    <span class="signal">ever <small>từng</small></span>
-                    <span class="signal">never <small>chưa bao giờ</small></span>
-                    <span class="signal">since <small>từ khi (mốc)</small></span>
-                    <span class="signal">for <small>trong (khoảng)</small></span>
-                    <span class="signal">recently <small>gần đây</small></span>
-                    <span class="signal">so far <small>cho đến nay</small></span>
-                    <span class="signal">times <small>… lần</small></span>
-                </div>
-                <p class="theory-note">
-                    ⚖️ <b class="hl-yellow">since</b> + <u>mốc thời gian</u> (since 2020, since Monday) ·
-                    <b class="hl-yellow">for</b> + <u>khoảng thời gian</u> (for 3 years, for a week).
-                </p>
-            </div>
-
-            <div class="theory-block">
-                <h4>4. Bảng 30 động từ bất quy tắc cần thuộc</h4>
-                <div class="verb-legend">
-                    <span>#</span><span></span><span>V1</span><span>V2</span><span>V3</span><span>Nghĩa</span>
-                </div>
-                <div id="theory-verbs" class="verb-table"></div>
-            </div>
+            <!-- Nội dung Ghi nhớ động -->
+            <div id="theory-content-body" class="theory-content-body"></div>
         </div>
     </div>
 
