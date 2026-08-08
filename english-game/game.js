@@ -1234,16 +1234,24 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
 
     function renderChoice(stage, it) {
         const keys = ['A', 'B', 'C', 'D', 'E'];
+
+        // Trong dữ liệu, cả 101 câu trắc nghiệm đều để đáp án đúng ở opts[0].
+        // Cứ hiện theo thứ tự gốc thì bé bấm A là đúng hết, không cần đọc câu
+        // hỏi — bài kiểm tra hoá ra không đo được gì. Xáo vị trí hiển thị,
+        // nhưng data-opt vẫn mang chỉ số gốc nên phần chấm điểm ở dưới
+        // (so với it.ans) không phải đổi gì.
+        const order = shuffle(it.opts.map((o, i) => ({ o, i })));
+
         stage.innerHTML = `
             ${passageHtml()}
             ${picHtml(it.emoji)}
             <div class="q-prompt">${it.prompt}</div>
             ${it.speak ? `<div class="speak-row"><button class="btn-speak small" data-speak="${escapeHtml(it.speak)}"><i class="fa-solid fa-volume-high"></i> Nghe câu</button></div>` : ''}
             <div class="opts">
-                ${it.opts.map((o, i) => `
-                    <button class="opt" data-opt="${i}">
-                        <span class="key">${keys[i]}</span>
-                        <span>${o}</span>
+                ${order.map((e, pos) => `
+                    <button class="opt" data-opt="${e.i}">
+                        <span class="key">${keys[pos]}</span>
+                        <span>${e.o}</span>
                     </button>`).join('')}
             </div>`;
 
