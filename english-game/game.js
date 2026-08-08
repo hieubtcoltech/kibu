@@ -595,7 +595,9 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
 
     function stationFromHash() {
         const id = (window.location.hash || '').replace(/^#/, '');
-        return id ? STATIONS.find(s => s.id === id) : null;
+        if (!id) return null;
+        const found = findLevel(id);
+        return found ? found.level : null;
     }
 
     /* =====================================================
@@ -700,7 +702,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
     }
 
     function refreshVoices() {
-        if (!TTS_OK) return;
+        if (!TTS_OK || !window.speechSynthesis) return;
         voices = window.speechSynthesis.getVoices() || [];
     }
 
@@ -2224,7 +2226,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             }
         });
 
-        if (TTS_OK) {
+        if (TTS_OK && window.speechSynthesis) {
             refreshVoices();
             // Danh sách giọng thường nạp chậm một nhịp sau khi trang mở
             window.speechSynthesis.onvoiceschanged = () => {
@@ -2241,7 +2243,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
     window.addEventListener('DOMContentLoaded', () => {
         loadSave();
         loadPrefs();
-        renderTheoryVerbs();
         renderMap();
         bindEvents();
 
