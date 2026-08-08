@@ -1046,7 +1046,7 @@ body {
 }
 
 .combo-chip b {
-    color: var(--duo-orange);
+    color: var(--ink);
 }
 
 .combo-chip.hot {
