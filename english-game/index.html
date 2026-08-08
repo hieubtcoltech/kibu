@@ -90,7 +90,7 @@
                 </a>
                 <div class="brand">
                     <img src="/english-game/icon.jpg" alt="" class="brand-img"
-                    onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><i class="fa-solid fa-graduation-cap brand-icon" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.5);"></i>
+                    onerror="if(this.dataset.png){this.remove()}else{this.dataset.png=1;this.src=this.src.replace('.jpg','.png')}"><i class="fa-solid fa-graduation-cap brand-icon"></i>
                     <div>
                         <h1 class="brand-title">ENGLISH QUEST</h1>
                         <p class="brand-sub">English Adventure · Mầm Non đến Lớp 5</p>
@@ -325,13 +325,13 @@
     <!-- ============ MODAL: RESUME CONFIRM ============ -->
     <div id="modal-resume-confirm" class="modal">
         <div class="modal-card">
-            <div class="modal-icon" style="color: #ffd700;">⏸️</div>
+            <div class="modal-icon">⏸️</div>
             <h2 class="modal-title">Lượt học dở dang</h2>
             <p class="res-sub">Bé đang học dở một chặng. Bé muốn học tiếp hay quay về bản đồ học tập?</p>
-            <div id="resume-confirm-info" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 14px; border-radius: 12px; margin: 12px 0; font-size: 0.95rem;"></div>
-            <div class="res-actions" style="display: flex; gap: 12px; width: 100%; margin-top: 10px;">
-                <button id="btn-resume-yes" class="btn btn-primary" style="flex: 1; justify-content: center;">▶ Học Tiếp</button>
-                <button id="btn-resume-no" class="btn btn-secondary" style="flex: 1; justify-content: center;">🗺️ Bản Đồ</button>
+            <div id="resume-confirm-info" class="resume-info-box"></div>
+            <div class="res-actions resume-choice">
+                <button id="btn-resume-yes" class="btn btn-primary">▶ Học Tiếp</button>
+                <button id="btn-resume-no" class="btn btn-secondary">🗺️ Bản Đồ</button>
             </div>
         </div>
     </div>

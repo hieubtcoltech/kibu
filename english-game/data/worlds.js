@@ -16,7 +16,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 0,
         gradeMax: 0,
         icon: '🎈',
-        color: '#ff4d6d',
+        color: '#c2255c',
         levels: [
             {
                 id: 'w1-l1',
@@ -160,7 +160,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 0,
         gradeMax: 0,
         icon: '🧸',
-        color: '#ff9900',
+        color: '#b5620a',
         levels: [
             {
                 id: 'w2-l1',
@@ -293,7 +293,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 1,
         gradeMax: 1,
         icon: '🌱',
-        color: '#00f0ff',
+        color: '#0f766e',
         levels: [
             {
                 id: 'w3-l1',
@@ -418,7 +418,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 1,
         gradeMax: 1,
         icon: '🐶',
-        color: '#ff8c42',
+        color: '#1a7f4b',
         levels: [
             {
                 id: 'w4-l1',
@@ -540,7 +540,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 2,
         gradeMax: 2,
         icon: '🌱',
-        color: '#3ddc84',
+        color: '#2f5bd0',
         levels: [
             {
                 id: 'w5-l1',
@@ -591,7 +591,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 2,
         gradeMax: 2,
         icon: '🎒',
-        color: '#ff9900',
+        color: '#6538b8',
         levels: [
             { id: 'w6-l1', order: 1, title: 'School Objects', topic: 'School', desc: 'Dụng cụ học tập.', items: [{ kind: 'choice', prompt: 'Book nghĩa là gì?', opts: ['sách', 'bút'], ans: 0, why: 'Book = sách.' }] },
             { id: 'w6-l2', order: 2, title: 'Family', topic: 'Family', desc: 'Gia đình.', items: [{ kind: 'choice', prompt: 'Mother nghĩa là gì?', opts: ['mẹ', 'bố'], ans: 0, why: 'Mother = mẹ.' }] },
@@ -614,7 +614,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 3,
         gradeMax: 3,
         icon: '🏠',
-        color: '#00f0ff',
+        color: '#0e7490',
         levels: [
             { id: 'w7-l1', order: 1, title: 'In / On', topic: 'Prepositions', desc: 'Ở trong / Ở trên.', items: [{ kind: 'choice', prompt: 'In nghĩa là gì?', opts: ['ở trong', 'ở trên'], ans: 0, why: 'In = trong.' }] },
             { id: 'w7-l2', order: 2, title: 'Under', topic: 'Under', desc: 'Ở dưới.', items: [{ kind: 'choice', prompt: 'Under nghĩa là gì?', opts: ['ở dưới', 'ở trên'], ans: 0, why: 'Under = dưới.' }] },
@@ -637,7 +637,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 3,
         gradeMax: 3,
         icon: '☀️',
-        color: '#ff8c42',
+        color: '#b45309',
         levels: [
             { id: 'w8-l1', order: 1, title: 'Daily Actions', topic: 'Routine', desc: 'Hoạt động hằng ngày.', items: [{ kind: 'choice', prompt: 'Get up nghĩa là gì?', opts: ['thức dậy', 'đi ngủ'], ans: 0, why: 'Get up = thức dậy.' }] },
             { id: 'w8-l2', order: 2, title: 'I play', topic: 'V1', desc: 'Động từ giữ nguyên.', items: [{ kind: 'choice', prompt: 'I ______ to school.', opts: ['go', 'goes'], ans: 0, why: 'I go.' }] },
@@ -660,7 +660,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 3,
         gradeMax: 3,
         icon: '🏃',
-        color: '#ff007f',
+        color: '#a3357f',
         levels: [
             { id: 'w9-l1', order: 1, title: 'V-ing', topic: 'V-ing', desc: 'Động từ đuôi -ing.', items: [{ kind: 'choice', prompt: 'Dạng -ing của run là gì?', opts: ['running', 'runing'], ans: 0, why: 'Running.' }] },
             { id: 'w9-l2', order: 2, title: 'I am reading', topic: 'Continuous', desc: 'Tớ đang đọc.', items: [{ kind: 'build', target: 'I am reading now .', emoji: '📖', vi: 'Tớ đang đọc sách.', why: 'I am reading.' }] },
@@ -683,7 +683,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 4,
         gradeMax: 4,
         icon: '🦖',
-        color: '#9d4edd',
+        color: '#5b21b6',
         levels: [
             { id: 'w10-l1', order: 1, title: 'Yesterday', topic: 'Signals', desc: 'Mốc quá khứ.', items: [{ kind: 'choice', prompt: 'Yesterday nghĩa là gì?', opts: ['hôm qua', 'ngày mai'], ans: 0, why: 'Yesterday = hôm qua.' }] },
             { id: 'w10-l2', order: 2, title: 'Was / Were', topic: 'To Be Past', desc: 'Was / Were.', items: [{ kind: 'choice', prompt: 'I ______ at home yesterday.', opts: ['was', 'were'], ans: 0, why: 'I was.' }] },
@@ -706,7 +706,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 4,
         gradeMax: 4,
         icon: '🚀',
-        color: '#3ddc84',
+        color: '#047857',
         levels: [
             { id: 'w11-l1', order: 1, title: 'Will', topic: 'Future', desc: 'Tương lai với Will.', items: [{ kind: 'choice', prompt: 'I ______ help you tomorrow.', opts: ['will', 'was'], ans: 0, why: 'Will help.' }] },
             { id: 'w11-l2', order: 2, title: "Won't", topic: 'Negative', desc: 'Phủ định Won\'t.', items: [{ kind: 'choice', prompt: 'It ______ rain tomorrow.', opts: ["won't", "didn't"], ans: 0, why: 'Won\'t rain.' }] },
@@ -729,7 +729,7 @@ window.ENGLISH_WORLDS = [
         gradeMin: 5,
         gradeMax: 5,
         icon: '⭐',
-        color: '#ffd700',
+        color: '#8a5a00',
         levels: [
             {
                 id: 'w12-l1', order: 1, title: 'Present Perfect Starter', topic: 'Present Perfect', desc: '30 Động từ V3 cơ bản.',

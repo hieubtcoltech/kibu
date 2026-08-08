@@ -962,7 +962,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
                             <span class="st-title">Lv ${lvl.order}. ${lvl.title}</span>
                             ${isDoing ? '<span class="st-flag">Đang học dở</span>' : ''}
                             ${stars === 3 ? '<span class="st-flag done">Đã thuộc</span>' : ''}
-                            ${lvl.isBoss ? '<span class="st-flag" style="background:#ff4d6d">Boss Level</span>' : ''}
+                            ${lvl.isBoss ? '<span class="st-flag boss">Boss Level</span>' : ''}
                         </span>
                         <span class="st-desc">${lvl.desc || lvl.topic}</span>
                         <span class="st-meta">${lvl.topic} · ${lvl.items.length} câu</span>
