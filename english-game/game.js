@@ -286,7 +286,7 @@
         toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
     }
 
-    /* ---------- Âm thanh hiệu ứng (WebAudio) ---------- */
+    /* ---------- Âm thanh hiệu ứng sinh động (WebAudio Synthesizer) ---------- */
     const sfx = {
         ctx: null,
         init() {
@@ -296,26 +296,66 @@
             }
             if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
         },
-        tone(freq, dur, type = 'sine', vol = 0.15) {
+        tone(freq, dur, type = 'sine', vol = 0.15, endFreq = null) {
             if (!soundOn || !this.ctx) return;
-            const t = this.ctx.currentTime;
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, t);
-            gain.gain.setValueAtTime(vol, t);
-            gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-            osc.connect(gain).connect(this.ctx.destination);
-            osc.start(t);
-            osc.stop(t + dur);
+            try {
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, t);
+                if (endFreq) {
+                    osc.frequency.exponentialRampToValueAtTime(Math.max(20, endFreq), t + dur);
+                }
+                gain.gain.setValueAtTime(vol, t);
+                gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+                osc.connect(gain).connect(this.ctx.destination);
+                osc.start(t);
+                osc.stop(t + dur);
+            } catch (e) {}
         },
-        correct() { this.tone(660, 0.14, 'triangle'); setTimeout(() => this.tone(880, 0.22, 'triangle'), 90); },
-        wrong() { this.tone(200, 0.3, 'sawtooth', 0.12); },
-        click() { this.tone(520, 0.06, 'square', 0.07); },
+        click() {
+            // Nút bấm giòn giã kiểu pop-bubble
+            this.tone(420, 0.05, 'sine', 0.12, 780);
+        },
+        correct() {
+            // Chuỗi âm thanh chúc mừng 3 nốt tươi vui (C5 - E5 - G5 - C6)
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((f, i) => {
+                setTimeout(() => this.tone(f, 0.18, 'triangle', 0.18), i * 70);
+            });
+        },
+        wrong() {
+            // Âm thanh báo sai nhẹ nhàng kiểu nhún bồng bềnh (không làm bé sợ)
+            this.tone(260, 0.2, 'sine', 0.16, 130);
+            setTimeout(() => this.tone(180, 0.25, 'triangle', 0.14, 90), 80);
+        },
+        combo() {
+            // Âm thanh thưởng combo chuỗi đúng (Chime lấp lánh)
+            this.tone(880, 0.12, 'sine', 0.15, 1320);
+            setTimeout(() => this.tone(1320, 0.2, 'sine', 0.18, 1760), 60);
+        },
         win() {
-            [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => this.tone(f, 0.3, 'triangle', 0.16), i * 130));
+            // Nhạc khải hoàn khi hoàn thành 1 bài học (Duolingo Fanfare)
+            const fanfare = [
+                { f: 523.25, d: 0.12 }, // C5
+                { f: 659.25, d: 0.12 }, // E5
+                { f: 783.99, d: 0.12 }, // G5
+                { f: 1046.50, d: 0.22 }, // C6
+                { f: 880.00, d: 0.12 },  // A5
+                { f: 1046.50, d: 0.35 }  // C6 rực rỡ
+            ];
+            fanfare.forEach((n, i) => {
+                setTimeout(() => this.tone(n.f, n.d, 'triangle', 0.2), i * 110);
+            });
         },
-        fail() { [400, 330, 262].forEach((f, i) => setTimeout(() => this.tone(f, 0.3, 'sawtooth', 0.12), i * 150)); }
+        fail() {
+            // Nhạc ngắt quãng dịu dàng khi hết tim
+            const notes = [440, 392, 349, 293];
+            notes.forEach((f, i) => {
+                setTimeout(() => this.tone(f, 0.22, 'sine', 0.14, f * 0.8), i * 120);
+            });
+        }
     };
 
     /* ---------- Đọc tiếng Anh (Text-to-Speech) ---------- */
@@ -1302,7 +1342,11 @@
         if (ok) {
             const gain = award();
             popXP(gain);
-            sfx.correct();
+            if (run.combo >= 3) {
+                sfx.combo();
+            } else {
+                sfx.correct();
+            }
             const praise = ['Chính xác! 🎉', 'Tuyệt vời! ⭐', 'Giỏi quá! 👏', 'Quá đỉnh! 🚀'];
             showFeedback(true, praise[run.combo % praise.length],
                 (it.why || '') + (run.combo >= 3 ? ` <b>🔥 Chuỗi ${run.combo} câu đúng liên tiếp!</b>` : ''));
