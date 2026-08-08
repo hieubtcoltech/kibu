@@ -1462,3 +1462,673 @@ body {
     font-size: 0.88rem;
 }
 .site-footer a { color: var(--duo-blue); text-decoration: none; font-weight: 800; }
+
+/* =========================================================
+   PHẦN BÙ — các thành phần bản Duolingo Edition chưa phủ
+
+   Bản viết lại phía trên mới lo màn hình bản đồ và phần khung
+   của màn hình học. Toàn bộ những thứ dưới đây là class mà
+   game.js thật sự render nhưng chưa có style, nên hiển thị
+   trần trụi: bài đọc, nối cặp, phân loại, ô gợi ý, thẻ từ
+   vựng, bảng kết quả, hộp chọn giọng đọc, toast.
+
+   Giữ nguyên quy ước của bản trên: nền --surface / --surface-2,
+   viền 2px + đáy dày 4-5px tạo khối, bấm thì lún xuống 3px,
+   màu chỉ dùng bốn vai trò duo-green (đúng) / duo-red (sai) /
+   duo-blue (việc chính) / duo-gold (nhấn mạnh).
+   ========================================================= */
+
+/* ---------- Trắc nghiệm: JS render .opts và .key, không phải
+     .options/.opt-num như bản trên giả định ---------- */
+.opts {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 10px;
+}
+
+@media (max-width: 600px) {
+    .opts { grid-template-columns: 1fr; }
+}
+
+.opt .key {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--r-sm);
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    color: var(--duo-blue);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.opt.selected .key { background: var(--duo-blue); color: #fff; border-color: var(--duo-blue); }
+.opt.correct  .key { background: var(--duo-green); color: #fff; border-color: var(--duo-green); }
+.opt.wrong    .key { background: var(--duo-red); color: #fff; border-color: var(--duo-red); }
+.opt:disabled { cursor: default; }
+
+/* ---------- Chú thích dưới câu hỏi ---------- */
+.q-hint {
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.q-prompt .blank {
+    display: inline-block;
+    min-width: 90px;
+    border-bottom: 4px solid var(--duo-gold);
+    color: var(--duo-gold);
+}
+
+.q-prompt .cue { color: var(--duo-blue); font-size: 0.9em; }
+
+/* ---------- Thẻ từ vựng: câu ví dụ, các dạng động từ, mẹo ---------- */
+.vocab-example {
+    width: 100%;
+    max-width: 560px;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-left: 6px solid var(--duo-blue);
+    border-radius: var(--r-lg);
+    padding: 16px 20px;
+    text-align: center;
+}
+
+.vocab-example .en {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1.4;
+}
+
+.vocab-example .en u {
+    text-decoration-color: var(--duo-gold);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 4px;
+    color: var(--duo-gold);
+}
+
+.vocab-example .vi {
+    color: var(--ink-3);
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+.vocab-forms {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.form-pill {
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    border-radius: var(--r-md);
+    padding: 10px 18px;
+    text-align: center;
+    min-width: 108px;
+}
+
+.form-pill small {
+    display: block;
+    color: var(--ink-3);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.form-pill b { font-family: var(--font-display); font-size: 1.2rem; color: var(--ink); }
+.form-pill.v3 { border-color: var(--duo-green); border-bottom-color: var(--duo-green-shadow); background: var(--duo-green-soft); }
+.form-pill.v3 b { color: var(--duo-green); }
+
+.vocab-tip {
+    width: 100%;
+    max-width: 560px;
+    background: var(--duo-gold-soft);
+    border: 2px solid var(--duo-gold);
+    border-bottom: 4px solid var(--duo-gold-shadow);
+    border-radius: var(--r-lg);
+    padding: 12px 18px;
+    text-align: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink-2);
+}
+.vocab-tip b { color: var(--duo-gold); }
+
+/* ---------- Điền từ & nghe chép: hàng nhập và ô gợi ý ---------- */
+.fill-row {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.fill-input::placeholder { color: var(--ink-3); font-weight: 700; font-size: 1.1rem; }
+.fill-input.ok  { border-color: var(--duo-green); border-bottom-color: var(--duo-green-shadow); background: var(--duo-green-soft); }
+.fill-input.bad { border-color: var(--duo-red);   border-bottom-color: var(--duo-red-shadow);   background: var(--duo-red-soft); }
+
+.bank-label {
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+}
+
+.hint-chips,
+.build-bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    width: 100%;
+}
+
+/* Mảnh từ dùng chung cho xếp câu, ô gợi ý và phân loại */
+.chip {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    padding: 10px 18px;
+    border-radius: var(--r-md);
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.chip:hover:not(:disabled) { background: var(--surface-2); border-color: var(--duo-blue); transform: translateY(-2px); }
+.chip:active { transform: translateY(3px); border-bottom-width: 1px; }
+.chip.selected { border-color: var(--duo-blue); background: var(--duo-blue-soft); color: var(--duo-blue); }
+.chip.used { visibility: hidden; }
+.chip.ok  { border-color: var(--duo-green); border-bottom-color: var(--duo-green-shadow); background: var(--duo-green-soft); color: var(--duo-green); }
+.chip.bad { border-color: var(--duo-red);   border-bottom-color: var(--duo-red-shadow);   background: var(--duo-red-soft);   color: var(--duo-red); }
+
+/* ---------- Nối cặp ---------- */
+.match-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    width: 100%;
+    max-width: 640px;
+}
+
+.match-col { display: flex; flex-direction: column; gap: 10px; }
+
+.match-col h5 {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    text-align: center;
+}
+
+.m-item {
+    font-family: var(--font-main);
+    font-weight: 800;
+    font-size: 1.02rem;
+    padding: 14px 12px;
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    color: var(--ink);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.1s ease;
+}
+
+.m-item:hover:not(:disabled) { background: var(--surface-2); border-color: var(--duo-blue); }
+.m-item.sel { border-color: var(--duo-gold); border-bottom-color: var(--duo-gold-shadow); background: var(--duo-gold-soft); color: var(--duo-gold); }
+.m-item.done { border-color: var(--duo-green); background: var(--duo-green-soft); color: var(--duo-green); opacity: 0.6; cursor: default; }
+.m-item.shake { animation: duoShake 0.32s ease; }
+
+@keyframes duoShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+}
+
+/* ---------- Phân loại vào hai cột ---------- */
+.sort-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    width: 100%;
+}
+
+.sort-bucket {
+    background: var(--surface-2);
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--r-xl);
+    padding: 16px;
+    min-height: 170px;
+    text-align: center;
+    transition: border-color 0.15s ease;
+}
+
+.sort-bucket:hover { border-color: var(--duo-blue); }
+
+.sort-bucket h5 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 12px;
+}
+
+.sort-items { display: flex; flex-direction: column; gap: 8px; }
+
+@media (max-width: 600px) {
+    .sort-container, .match-board { grid-template-columns: 1fr; }
+}
+
+/* ---------- Bài đọc ----------
+   Phải tách hẳn khỏi câu hỏi bên dưới, nếu không bé không biết
+   đâu là đoạn văn đâu là đề bài. */
+.passage {
+    width: 100%;
+    max-width: 620px;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-bottom: 5px solid var(--border-strong);
+    border-radius: var(--r-xl);
+    padding: 20px 24px;
+    line-height: 1.9;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--ink-2);
+    text-align: left;
+}
+
+.passage h4 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--duo-gold);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+}
+
+.passage b { color: var(--duo-green); }
+
+.passage-pics {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    font-size: 2rem;
+    margin-bottom: 12px;
+    filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.3));
+}
+
+/* ---------- Nút phụ trong khu hành động ---------- */
+.btn-check.btn-alt {
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    color: var(--ink-2);
+}
+.btn-check.btn-alt:hover { background: var(--border); color: var(--ink); }
+
+.inline-speak {
+    padding: 2px 10px;
+    font-size: 0.75rem;
+    border-radius: var(--r-sm);
+    vertical-align: middle;
+}
+
+/* ---------- Ghi Nhớ: danh sách, bảng động từ, hộp mẹo ---------- */
+.theory-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+.theory-list li {
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    font-size: 0.98rem;
+    font-weight: 700;
+    line-height: 1.6;
+    color: var(--ink-2);
+}
+
+.theory-list b { color: var(--ink); }
+.theory-list em { color: var(--duo-gold); font-style: normal; font-weight: 800; }
+
+.theory-note {
+    margin-top: 12px;
+    background: var(--duo-gold-soft);
+    border: 2px solid var(--duo-gold);
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.6;
+    color: var(--ink-2);
+}
+
+.verb-legend {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 12px 6px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--ink-3);
+}
+
+.verb-row .vr-no  { color: var(--ink-3); font-size: 0.78rem; font-weight: 800; }
+.verb-row .vr-emo { font-size: 1.2rem; }
+.verb-row .vr-v2  { font-weight: 800; color: var(--duo-orange); }
+.verb-row .vr-vi  { color: var(--ink-3); font-size: 0.85rem; font-weight: 700; }
+
+.hl-pink   { color: var(--duo-purple); font-weight: 800; }
+.hl-blue   { color: var(--duo-blue); font-weight: 800; }
+.hl-yellow { color: var(--duo-gold); font-weight: 800; }
+
+/* ---------- Hộp chọn giọng đọc ---------- */
+.modal-mid { max-width: 620px; text-align: left; }
+.modal-mid .modal-title, .modal-mid .res-sub { text-align: center; }
+
+.speed-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+}
+
+.speed-label { font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; color: var(--ink-3); }
+.speed-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.speed-btn {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.88rem;
+    padding: 8px 14px;
+    border-radius: var(--r-sm);
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    color: var(--ink-2);
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+.speed-btn:hover { background: var(--border); color: var(--ink); }
+.speed-btn.on { background: var(--duo-blue); border-color: var(--duo-blue); border-bottom-color: var(--duo-blue-shadow); color: #fff; }
+
+.voice-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 320px;
+    overflow-y: auto;
+    margin-bottom: 16px;
+    padding-right: 4px;
+}
+
+.voice-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    border-radius: var(--r-md);
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.1s ease;
+}
+
+.voice-row:hover { border-color: var(--duo-blue); }
+.voice-row.on { border-color: var(--duo-green); border-bottom-color: var(--duo-green-shadow); background: var(--duo-green-soft); }
+
+.voice-play {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    border: none;
+    border-bottom: 3px solid var(--duo-blue-shadow);
+    background: var(--duo-blue);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+}
+.voice-play:active { transform: translateY(2px); border-bottom-width: 1px; }
+
+.voice-info { flex: 1; min-width: 0; }
+.voice-info b { display: block; font-size: 1rem; font-weight: 800; color: var(--ink); }
+.voice-info small { color: var(--ink-3); font-size: 0.8rem; font-weight: 700; }
+
+.voice-q {
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: var(--r-sm);
+    white-space: nowrap;
+    text-transform: uppercase;
+}
+.q-best  { background: var(--duo-gold-soft); color: var(--duo-gold); }
+.q-good  { background: var(--duo-blue-soft); color: var(--duo-blue); }
+.q-basic { background: var(--surface); color: var(--ink-3); }
+
+.voice-check { color: var(--duo-green); font-size: 1.1rem; width: 18px; }
+.voice-empty { color: var(--ink-3); text-align: center; padding: 24px 12px; line-height: 1.6; font-weight: 700; }
+
+.voice-help {
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px 18px;
+}
+
+.voice-help summary {
+    cursor: pointer;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--duo-gold);
+}
+
+.voice-help-body { margin-top: 12px; font-size: 0.92rem; font-weight: 700; line-height: 1.7; color: var(--ink-2); }
+.voice-help-body ol { margin: 6px 0 12px 20px; }
+.voice-help-body li { margin-bottom: 5px; }
+.voice-help-body b { color: var(--duo-gold); }
+
+.vh-title { font-family: var(--font-display); font-weight: 800; color: var(--duo-blue); margin-top: 12px; }
+.vh-tip {
+    margin-top: 10px;
+    background: var(--duo-blue-soft);
+    border: 2px solid var(--duo-blue);
+    border-radius: var(--r-sm);
+    padding: 10px 14px;
+}
+
+/* ---------- Bảng kết quả cuối bài ---------- */
+.modal-icon { font-size: 3rem; line-height: 1; margin-bottom: 8px; }
+.res-emoji { font-size: 4rem; line-height: 1; margin-bottom: 8px; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, 0.3)); }
+.res-sub { color: var(--ink-3); font-weight: 700; margin-bottom: 18px; }
+
+.res-stars { font-size: 2.6rem; letter-spacing: 8px; margin-bottom: 20px; }
+.res-stars .off { filter: grayscale(1); opacity: 0.25; }
+.res-stars .on { animation: duoStarPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.6) both; display: inline-block; }
+.res-stars .on:nth-child(2) { animation-delay: 0.14s; }
+.res-stars .on:nth-child(3) { animation-delay: 0.28s; }
+
+@keyframes duoStarPop {
+    from { transform: scale(0) rotate(-70deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.res-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.res-box {
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    border-radius: var(--r-md);
+    padding: 14px 8px;
+}
+
+.res-box b {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    display: block;
+    color: var(--duo-gold);
+}
+.res-box small { color: var(--ink-3); font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+
+.res-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.res-actions .btn-check { padding: 14px 26px; font-size: 1rem; }
+
+.link-btn {
+    margin-top: 14px;
+    background: none;
+    border: none;
+    color: var(--ink-3);
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+.link-btn:hover { color: var(--ink); }
+
+/* Hộp xác nhận học tiếp */
+.resume-info-box {
+    background: var(--surface-2);
+    border: 2px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px;
+    margin: 12px 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.6;
+    color: var(--ink-2);
+    text-align: left;
+}
+
+.resume-choice { width: 100%; margin-top: 10px; gap: 12px; display: flex; }
+.resume-choice .btn { flex: 1; justify-content: center; padding: 13px 16px; }
+
+/* ---------- Toast, hiệu ứng điểm, pháo giấy ---------- */
+.toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translate(-50%, 20px);
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-bottom: 4px solid var(--border-strong);
+    border-radius: var(--r-md);
+    padding: 14px 24px;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--ink);
+    z-index: 260;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+.xp-pop {
+    position: fixed;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.7rem;
+    color: var(--duo-green);
+    text-shadow: 0 3px 0 var(--duo-green-shadow);
+    pointer-events: none;
+    z-index: 265;
+    animation: duoXpFly 1s ease-out forwards;
+}
+
+@keyframes duoXpFly {
+    0% { opacity: 1; transform: translateY(0) scale(0.7); }
+    30% { transform: translateY(-24px) scale(1.15); }
+    100% { opacity: 0; transform: translateY(-80px) scale(1); }
+}
+
+.confetti {
+    position: fixed;
+    width: 11px;
+    height: 15px;
+    z-index: 255;
+    pointer-events: none;
+    animation: duoConfFall 1.5s linear forwards;
+}
+
+@keyframes duoConfFall {
+    0% { opacity: 1; transform: translateY(0) rotate(0); }
+    100% { opacity: 0; transform: translateY(85vh) rotate(720deg); }
+}
+
+/* ---------- Chân trang riêng của game ---------- */
+.page-foot {
+    text-align: center;
+    color: var(--ink-3);
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 6px 0 20px;
+}
+.page-foot b { color: var(--duo-gold); }
+
+.st-lock-txt { color: var(--ink-3); font-size: 0.9rem; font-weight: 800; }
+
+/* ---------- Ghi đè chrome dùng chung ----------
+   /site-chrome.css nạp SAU tệp này; nền tối nên phần lớn hợp
+   sẵn, chỉ cần chỉnh lại thanh nav lấy đúng màu bề mặt mới. */
+:root {
+    --card-bg: #18252b;
+    --card-border: #37464f;
+}
+
+/* Bé bật "giảm chuyển động" thì tắt hết animation */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
