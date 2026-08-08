@@ -491,7 +491,8 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         selected: -1,
         tray: [],
         matchSel: null,
-        matchLeft: 0
+        matchLeft: 0,
+        sortWrong: 0
     };
 
     let soundOn = true;
@@ -1092,6 +1093,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         run.selected = -1;
         run.tray = [];
         run.matchSel = null;
+        run.sortWrong = 0;
         hideFeedback();
         updateBars();
 
@@ -1139,6 +1141,10 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         let placed = 0;
         const total = allChips.length;
 
+        // Đếm số mảnh bỏ nhầm cột. Không có biến này thì phần chấm điểm chỉ
+        // biết "bé đã xếp xong", chứ không biết xếp đúng hay sai.
+        run.sortWrong = 0;
+
         bank.querySelectorAll('.chip').forEach(chip => {
             chip.addEventListener('click', () => {
                 if (run.answered || chip.classList.contains('used')) return;
@@ -1159,6 +1165,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
 
                 const item = document.createElement('div');
                 const isOk = bucketType === chipType;
+                if (!isOk) run.sortWrong++;
                 item.className = 'chip ' + (isOk ? 'ok' : 'bad');
                 item.textContent = selectedChip.textContent;
                 targetBox.appendChild(item);
@@ -1276,7 +1283,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
                 ${it.prompt.replace(/_{3,}/g, '<span class="blank">&nbsp;</span>')}
                 ${it.cue ? `<span class="cue">${escapeHtml(it.cue)}</span>` : ''}
             </div>
-            <p class="q-hint">Chia động từ trong ngoặc rồi gõ vào ô bên dưới 👇</p>
+            <p class="q-hint">${escapeHtml(it.hint || 'Chia động từ trong ngoặc rồi gõ vào ô bên dưới 👇')}</p>
             <div class="fill-row">
                 <input id="fill-input" class="fill-input" type="text" autocomplete="off"
                        autocapitalize="off" spellcheck="false" placeholder="gõ đáp án…">
@@ -1529,7 +1536,8 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             });
             userText = it.target.replace(/ ([.?!,])/g, '$1');
         } else if (it.kind === 'sort') {
-            ok = true;
+            ok = (run.sortWrong || 0) === 0;
+            userText = 'xếp đúng cả ' + (it.pairs.length * 2) + ' từ vào hai cột';
         }
 
         run.answered = true;
