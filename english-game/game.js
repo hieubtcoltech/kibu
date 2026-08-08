@@ -480,6 +480,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
     // Trạng thái của lượt chơi hiện tại
     const run = {
         station: null,
+        world: null,
         idx: 0,
         hearts: MAX_HEARTS,
         xp: 0,
@@ -544,6 +545,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         const { data: d, station: st } = found;
 
         run.station = st;
+        run.world = found.world;
         run.hearts = Math.min(MAX_HEARTS, Math.max(1, Number(d.hearts) || MAX_HEARTS));
         run.xp = Math.max(0, Number(d.xp) || 0);
         run.combo = Math.max(0, Number(d.combo) || 0);
@@ -1028,6 +1030,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         if (!found) return;
         const st = found.level;
         run.station = st;
+        run.world = found.world;
         run.idx = 0;
         run.hearts = MAX_HEARTS;
         run.xp = 0;
@@ -1975,25 +1978,11 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         }
     }
 
-    function openTheoryModal(targetWorldId) {
-        let currentWId = targetWorldId || (run.station ? run.station.worldId : activeWorldId) || 'world-1';
-        
-        // Render World Selector Tab Bar inside Modal
-        const tabContainer = $('theory-tab-bar');
-        if (tabContainer && window.ENGLISH_WORLDS) {
-            tabContainer.innerHTML = window.ENGLISH_WORLDS.map(w => `
-                <button class="theory-tab-btn ${w.id === currentWId ? 'active' : ''}" data-wid="${w.id}">
-                    ${w.icon} ${w.grade}
-                </button>
-            `).join('');
-
-            tabContainer.querySelectorAll('.theory-tab-btn').forEach(btn => {
-                btn.onclick = () => {
-                    sfx.click();
-                    openTheoryModal(btn.dataset.wid);
-                };
-            });
-        }
+    function openTheoryModal() {
+        // Chỉ hiện ghi nhớ của bài đang học: đang chơi thì lấy world của chặng
+        // đó, còn ở bản đồ thì lấy world bé đang chọn xem.
+        const playing = $('screen-play').classList.contains('active');
+        const currentWId = (playing && run.world ? run.world.id : activeWorldId) || 'world-1';
 
         // Render Theory Content
         const bodyContainer = $('theory-content-body');

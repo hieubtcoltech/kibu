@@ -1218,41 +1218,6 @@ body {
 .formula-que { border-color: rgba(0, 240, 255, 0.4); }
 .formula-que .f-tag { background: rgba(0, 240, 255, 0.18); color: var(--blue); }
 
-.theory-tab-bar {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding-bottom: 12px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid var(--border);
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 240, 255, 0.3) transparent;
-}
-.theory-tab-bar::-webkit-scrollbar { height: 4px; }
-.theory-tab-bar::-webkit-scrollbar-thumb { background: var(--blue); border-radius: 4px; }
-
-.theory-tab-btn {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 0.88rem;
-    padding: 7px 14px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--border);
-    color: var(--text);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-}
-.theory-tab-btn:hover { background: rgba(255, 255, 255, 0.12); }
-.theory-tab-btn.active {
-    background: linear-gradient(135deg, var(--blue), #3ddc84);
-    color: #04121a;
-    border-color: transparent;
-    box-shadow: 0 4px 12px rgba(0, 240, 255, 0.35);
-}
-
 .theory-content-body {
     max-height: 60vh;
     overflow-y: auto;
