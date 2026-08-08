@@ -1095,79 +1095,21 @@
 
     function brick(x, y, w, h, W, isPad) {
         const px = sx(x), py = sy(y), pw = w * V.u, ph = h * V.u;
-        const rad = Math.min(pw, ph, V.u * 0.22);
-        const depth = Math.max(3, V.u * 0.14);
-        const ink = W.ink || '#241a12';
-
-        ctx.save();
-
-        /* --- 1. Lớp bóng & mặt bên 3D (2.5D Side Depth) --- */
-        ctx.fillStyle = isPad ? '#b45309' : 'rgba(0, 0, 0, 0.25)';
-        roundRect(px, py + depth, pw, ph, rad);
+        ctx.fillStyle = isPad ? '#ff922b' : '#ffffff';
+        roundRect(px, py, pw, ph, Math.min(pw, ph) * 0.18);
         ctx.fill();
-
-        ctx.fillStyle = isPad ? '#d97706' : '#cbd5e1';
-        roundRect(px + depth * 0.5, py + depth * 0.5, pw, ph, rad);
-        ctx.fill();
-
-        /* --- 2. Mặt chính khối 2.5D (Top Face) --- */
-        const mainGrad = ctx.createLinearGradient(px, py, px, py + ph);
-        if (isPad) {
-            mainGrad.addColorStop(0, '#ffa94d');
-            mainGrad.addColorStop(1, '#ff922b');
-        } else {
-            mainGrad.addColorStop(0, '#ffffff');
-            mainGrad.addColorStop(1, '#f1f5f9');
-        }
-        ctx.fillStyle = mainGrad;
-        roundRect(px, py, pw, ph, rad);
-        ctx.fill();
-
-        /* --- 3. Viền nét đen --- */
-        ctx.strokeStyle = ink;
+        ctx.strokeStyle = W.ink;
         ctx.lineWidth = Math.max(2, V.u * 0.075);
         ctx.stroke();
-
-        /* --- 4. Họa tiết ô gạch nổi 2.5D (Bevelled Inner Tiles) --- */
-        const cell = V.u * 0.54;
-        const gap = (V.u - cell) / 2;
-        const tileRad = Math.max(2, cell * 0.18);
-
+        /* Ô vuông nhỏ bên trong cho khối gạch có kết cấu, không phải mảng trắng
+         * trơn — đúng kiểu trong bản mẫu. */
+        ctx.fillStyle = isPad ? 'rgba(255,255,255,0.5)' : '#ffc93b';
+        const cell = V.u * 0.52, gap = (V.u - cell) / 2;
         for (let gx = 0; gx < w; gx++) {
             for (let gy = 0; gy < h; gy++) {
-                const cx = px + gx * V.u + gap;
-                const cy = py + gy * V.u + gap;
-
-                ctx.fillStyle = isPad ? 'rgba(180, 83, 9, 0.35)' : '#cbd5e1';
-                roundRect(cx, cy + 2, cell, cell, tileRad);
-                ctx.fill();
-
-                const cellGrad = ctx.createLinearGradient(cx, cy, cx, cy + cell);
-                if (isPad) {
-                    cellGrad.addColorStop(0, '#ffe8cc');
-                    cellGrad.addColorStop(1, '#ffd8a8');
-                } else {
-                    cellGrad.addColorStop(0, '#ffe066');
-                    cellGrad.addColorStop(1, '#fab005');
-                }
-                ctx.fillStyle = cellGrad;
-                roundRect(cx, cy, cell, cell, tileRad);
-                ctx.fill();
-
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-                ctx.fillRect(cx + 2, cy + 2, cell - 4, Math.max(1, cell * 0.15));
+                ctx.fillRect(px + gx * V.u + gap, py + gy * V.u + gap, cell, cell);
             }
         }
-
-        /* --- 5. Viền vắt sáng góc trên (Specular Top Edge) --- */
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.lineWidth = Math.max(1.5, V.u * 0.04);
-        ctx.beginPath();
-        ctx.moveTo(px + rad, py + 1.5);
-        ctx.lineTo(px + pw - rad, py + 1.5);
-        ctx.stroke();
-
-        ctx.restore();
     }
 
     function drawWalls(W) {
@@ -1190,43 +1132,16 @@
     function drawSpikes() {
         for (const s of G.spikes) {
             const px = sx(s.x), py = sy(s.y + s.h), pw = s.w * V.u, ph = s.h * V.u;
+            ctx.fillStyle = '#2f9e44';
+            ctx.beginPath();
             const n = Math.max(2, Math.round(s.w * 2));
-            const wUnit = pw / n;
-
-            ctx.save();
             for (let i = 0; i < n; i++) {
-                const bx = px + i * wUnit;
-                const tipX = bx + wUnit / 2;
-                const tipY = py - ph;
-
-                /* Bóng 3D vát bên phải */
-                ctx.fillStyle = '#1e7e34';
-                ctx.beginPath();
-                ctx.moveTo(tipX, tipY);
-                ctx.lineTo(bx + wUnit, py);
-                ctx.lineTo(bx + wUnit / 2, py);
-                ctx.closePath();
-                ctx.fill();
-
-                /* Mặt sáng 3D bên trái */
-                ctx.fillStyle = '#40c057';
-                ctx.beginPath();
+                const bx = px + (i * pw) / n;
                 ctx.moveTo(bx, py);
-                ctx.lineTo(tipX, tipY);
-                ctx.lineTo(bx + wUnit / 2, py);
-                ctx.closePath();
-                ctx.fill();
-
-                /* Viền sắc nét */
-                ctx.strokeStyle = '#145223';
-                ctx.lineWidth = Math.max(1.5, V.u * 0.04);
-                ctx.beginPath();
-                ctx.moveTo(bx, py);
-                ctx.lineTo(tipX, tipY);
-                ctx.lineTo(bx + wUnit, py);
-                ctx.stroke();
+                ctx.lineTo(bx + pw / n / 2, py - ph);
+                ctx.lineTo(bx + pw / n, py);
             }
-            ctx.restore();
+            ctx.fill();
         }
     }
 
