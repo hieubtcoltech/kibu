@@ -424,25 +424,43 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         }
     ];
 
-    const TOTAL_STARS = STATIONS.length * 3;
+    function getAllLevels() {
+        if (!window.ENGLISH_WORLDS) return [];
+        return window.ENGLISH_WORLDS.flatMap(w => w.levels);
+    }
+
+    function findLevel(id) {
+        if (!window.ENGLISH_WORLDS) return null;
+        for (const w of window.ENGLISH_WORLDS) {
+            const l = w.levels.find(lvl => lvl.id === id);
+            if (l) return { world: w, level: l };
+        }
+        return null;
+    }
+
     const MAX_HEARTS = 5;
-    const SAVE_KEY = 'english_quest_pp_v1';
+    const SAVE_KEY = 'english_adventure_save_v2';
+    const OLD_SAVE_KEY = 'english_quest_pp_v1';
+
+    let activeGradeFilter = 'all';
+    let activeWorldId = 'world-1';
 
     /* =====================================================
        2. TRẠNG THÁI & LƯU TIẾN TRÌNH
        ===================================================== */
 
-    let save = { xp: 0, best: 0, stars: {} };
+    let save = { xp: 0, best: 0, stars: {}, unlockedLevels: {} };
 
     function loadSave() {
         try {
-            const raw = localStorage.getItem(SAVE_KEY);
+            const raw = localStorage.getItem(SAVE_KEY) || localStorage.getItem(OLD_SAVE_KEY);
             if (raw) {
                 const parsed = JSON.parse(raw);
                 save = {
                     xp: Number(parsed.xp) || 0,
                     best: Number(parsed.best) || 0,
-                    stars: (parsed.stars && typeof parsed.stars === 'object') ? parsed.stars : {}
+                    stars: (parsed.stars && typeof parsed.stars === 'object') ? parsed.stars : {},
+                    unlockedLevels: (parsed.unlockedLevels && typeof parsed.unlockedLevels === 'object') ? parsed.unlockedLevels : {}
                 };
             }
         } catch (e) {
@@ -509,9 +527,9 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         try {
             const d = JSON.parse(localStorage.getItem(RUN_KEY) || 'null');
             if (!d || !d.id) return null;
-            const st = STATIONS.find(s => s.id === d.id);
-            if (!st) { clearRun(); return null; }        // chặng đã bị đổi tên/gỡ bỏ
-            return { data: d, station: st };
+            const found = findLevel(d.id);
+            if (!found) { clearRun(); return null; }
+            return { data: d, station: found.level, world: found.world };
         } catch (e) {
             clearRun();
             return null;
@@ -802,7 +820,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         });
     }
 
-    /* ---------- Hiệu ứng ---------- */
     function popXP(amount) {
         const btn = $('btn-check');
         const r = btn.getBoundingClientRect();
@@ -831,8 +848,20 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
     }
 
     /* =====================================================
-       4. MÀN HÌNH BẢN ĐỒ
+       4. MÀN HÌNH BẢN ĐỒ (10 WORLDS / 100 LEVELS)
        ===================================================== */
+
+    function isLevelUnlocked(lvl) {
+        if (lvl.id === 'w1-l1') return true;
+        if (save.unlockedLevels && save.unlockedLevels[lvl.id]) return true;
+        const all = getAllLevels();
+        const idx = all.findIndex(l => l.id === lvl.id);
+        if (idx > 0) {
+            const prev = all[idx - 1];
+            if ((save.stars && save.stars[prev.id]) > 0) return true;
+        }
+        return false;
+    }
 
     function starRow(n, cls) {
         let out = '';
@@ -840,34 +869,95 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         return `<div class="${cls}">${out}</div>`;
     }
 
+    function renderGradeTabs() {
+        document.querySelectorAll('.grade-tab').forEach(tab => {
+            tab.classList.toggle('active', tab.dataset.grade === activeGradeFilter);
+            tab.onclick = () => {
+                sfx.click();
+                activeGradeFilter = tab.dataset.grade;
+                const worlds = getFilteredWorlds();
+                if (worlds.length > 0 && !worlds.some(w => w.id === activeWorldId)) {
+                    activeWorldId = worlds[0].id;
+                }
+                renderGradeTabs();
+                renderMap();
+            };
+        });
+    }
+
+    function getFilteredWorlds() {
+        if (!window.ENGLISH_WORLDS) return [];
+        if (activeGradeFilter === 'all') return window.ENGLISH_WORLDS;
+        const gNum = Number(activeGradeFilter);
+        return window.ENGLISH_WORLDS.filter(w => w.gradeMin <= gNum && w.gradeMax >= gNum);
+    }
+
     function renderMap() {
+        const worlds = getFilteredWorlds();
+        const worldNav = $('world-nav');
+        
+        if (!worlds.some(w => w.id === activeWorldId) && worlds.length > 0) {
+            activeWorldId = worlds[0].id;
+        }
+
+        const activeWorld = window.ENGLISH_WORLDS.find(w => w.id === activeWorldId) || worlds[0];
+
+        worldNav.innerHTML = worlds.map(w => {
+            const completedCount = w.levels.filter(l => (save.stars[l.id] || 0) > 0).length;
+            const isSelected = w.id === activeWorldId;
+            return `
+                <div class="world-card ${isSelected ? 'active' : ''}" data-world="${w.id}">
+                    <div class="w-icon">${w.icon}</div>
+                    <div class="w-info">
+                        <div class="w-title">${w.title}</div>
+                        <span class="w-grade">${w.grade} · ${completedCount}/10</span>
+                    </div>
+                </div>`;
+        }).join('');
+
+        worldNav.querySelectorAll('.world-card').forEach(card => {
+            card.onclick = () => {
+                sfx.click();
+                activeWorldId = card.dataset.world;
+                renderMap();
+            };
+        });
+
+        if (activeWorld) {
+            $('current-world-title').textContent = `${activeWorld.title} (${activeWorld.grade} · ${activeWorld.subtitle})`;
+        }
+
         const grid = $('station-grid');
         const doing = readRun();
-        grid.innerHTML = STATIONS.map((st, i) => {
-            const stars = save.stars[st.id] || 0;
-            const isDoing = doing && doing.station.id === st.id;
+        const levels = activeWorld ? activeWorld.levels : [];
+
+        grid.innerHTML = levels.map((lvl, i) => {
+            const stars = save.stars[lvl.id] || 0;
+            const unlocked = isLevelUnlocked(lvl);
+            const isDoing = doing && doing.station.id === lvl.id;
             return `
-                <button class="station-row ${stars === 3 ? 'mastered' : ''} ${isDoing ? 'doing' : ''}"
-                        data-station="${st.id}" style="--st-color:${st.color}">
-                    <span class="st-index">${i + 1}</span>
-                    <span class="st-icon">${st.icon}</span>
+                <button class="station-row ${stars === 3 ? 'mastered' : ''} ${isDoing ? 'doing' : ''} ${!unlocked ? 'locked' : ''}"
+                        data-station="${lvl.id}" ${!unlocked ? 'disabled' : ''} style="--st-color:${activeWorld.color}">
+                    <span class="st-index">${lvl.order}</span>
+                    <span class="st-icon">${unlocked ? (lvl.isBoss ? '👑' : activeWorld.icon) : '🔒'}</span>
                     <span class="st-body">
                         <span class="st-head">
-                            <span class="st-title">${st.title}</span>
+                            <span class="st-title">Lv ${lvl.order}. ${lvl.title}</span>
                             ${isDoing ? '<span class="st-flag">Đang học dở</span>' : ''}
                             ${stars === 3 ? '<span class="st-flag done">Đã thuộc</span>' : ''}
+                            ${lvl.isBoss ? '<span class="st-flag" style="background:#ff4d6d">Boss Level</span>' : ''}
                         </span>
-                        <span class="st-desc">${st.desc}</span>
-                        <span class="st-meta">${st.no} · ${st.items.length} câu</span>
+                        <span class="st-desc">${lvl.desc || lvl.topic}</span>
+                        <span class="st-meta">${lvl.topic} · ${lvl.items.length} câu</span>
                     </span>
                     <span class="st-right">
-                        ${starRow(stars, 'st-stars')}
-                        <span class="st-go">${stars ? 'LUYỆN LẠI' : 'BẮT ĐẦU'} ▶</span>
+                        ${unlocked ? starRow(stars, 'st-stars') : '<span class="st-lock-txt">Khóa 🔒</span>'}
+                        <span class="st-go">${unlocked ? (stars ? 'LUYỆN LẠI' : 'BẮT ĐẦU') : 'CHƯA MỞ'} ▶</span>
                     </span>
                 </button>`;
         }).join('');
 
-        grid.querySelectorAll('.station-row').forEach(card => {
+        grid.querySelectorAll('.station-row:not([disabled])').forEach(card => {
             card.addEventListener('click', () => {
                 sfx.init();
                 sfx.click();
@@ -877,15 +967,15 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
 
         renderResumeBar();
 
+        const allLvl = getAllLevels();
         const totalStars = Object.values(save.stars).reduce((a, b) => a + b, 0);
         const doneCount = Object.values(save.stars).filter(v => v > 0).length;
         $('stat-xp').textContent = save.xp;
-        $('stat-stars').textContent = `${totalStars}/${TOTAL_STARS}`;
+        $('stat-stars').textContent = `${totalStars}/${allLvl.length * 3}`;
         $('stat-streak').textContent = save.best;
-        $('stat-done').textContent = `${doneCount}/${STATIONS.length}`;
+        $('stat-done').textContent = `${doneCount}/${allLvl.length}`;
     }
 
-    /** Thanh "Học tiếp" hiện trên bản đồ khi còn một chặng đang làm dở. */
     function renderResumeBar() {
         const bar = $('resume-bar');
         const found = readRun();
@@ -893,10 +983,10 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             bar.classList.remove('show');
             return;
         }
-        const { data: d, station: st } = found;
+        const { data: d, station: st, world: w } = found;
         const total = st.items.length;
         const at = Math.min(total, (Number(d.idx) || 0) + (d.answered ? 2 : 1));
-        $('rs-title').innerHTML = `${st.icon} ${st.title}`;
+        $('rs-title').innerHTML = `${w ? w.icon : '📖'} ${st.title}`;
         $('rs-sub').textContent = `Đang ở câu ${at}/${total} · ❤️ ${d.hearts} · 💎 ${d.xp}`;
         bar.classList.add('show');
     }
@@ -907,13 +997,21 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function stationFromHash() {
+        const id = (window.location.hash || '').replace(/^#/, '');
+        if (!id) return null;
+        const found = findLevel(id);
+        return found ? found.level : null;
+    }
+
     /* =====================================================
        5. VÒNG CHƠI
        ===================================================== */
 
     function startStation(id) {
-        const st = STATIONS.find(s => s.id === id);
-        if (!st) return;
+        const found = findLevel(id);
+        if (!found) return;
+        const st = found.level;
         run.station = st;
         run.idx = 0;
         run.hearts = MAX_HEARTS;
@@ -921,7 +1019,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         run.combo = 0;
         run.bestCombo = 0;
         run.mistakes = 0;
-        $('play-icon').textContent = st.icon;
+        $('play-icon').textContent = found.world ? found.world.icon : '📖';
         $('play-title').innerHTML = st.title;
         setHash(st.id);
         showScreen('play');
@@ -987,8 +1085,78 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             case 'listen': renderListen(stage, it); break;
             case 'build':  renderBuild(stage, it); break;
             case 'match':  renderMatch(stage, it); break;
+            case 'sort':   renderSort(stage, it); break;
             default:       stage.innerHTML = '<p class="q-hint">Dạng bài chưa hỗ trợ.</p>';
         }
+    }
+
+    // --- Phân loại (Sorting) ---
+    function renderSort(stage, it) {
+        const leftItems = it.pairs.map(p => ({ text: p[0], type: 'left' }));
+        const rightItems = it.pairs.map(p => ({ text: p[1], type: 'right' }));
+        const allChips = shuffle([...leftItems, ...rightItems]);
+
+        stage.innerHTML = `
+            <div class="q-prompt" style="font-size:1.25rem">🗂️ ${escapeHtml(it.title)}</div>
+            <p class="q-hint">Bấm từng từ rồi chọn đúng cột phân loại tương ứng.</p>
+            <div class="sort-container">
+                <div class="sort-bucket" data-bucket="left">
+                    <h5>${escapeHtml(it.leftLabel)}</h5>
+                    <div id="bucket-left" class="sort-items"></div>
+                </div>
+                <div class="sort-bucket" data-bucket="right">
+                    <h5>${escapeHtml(it.rightLabel)}</h5>
+                    <div id="bucket-right" class="sort-items"></div>
+                </div>
+            </div>
+            <div class="bank-label" style="margin-top:16px;">Danh sách từ</div>
+            <div id="sort-bank" class="hint-chips">
+                ${allChips.map((c, i) => `<button class="chip" data-idx="${i}" data-type="${c.type}">${escapeHtml(c.text)}</button>`).join('')}
+            </div>`;
+
+        let selectedChip = null;
+        const bank = $('sort-bank');
+        const bLeft = $('bucket-left');
+        const bRight = $('bucket-right');
+        let placed = 0;
+        const total = allChips.length;
+
+        bank.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                if (run.answered || chip.classList.contains('used')) return;
+                sfx.click();
+                bank.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                selectedChip = chip;
+            });
+        });
+
+        stage.querySelectorAll('.sort-bucket').forEach(bucket => {
+            bucket.addEventListener('click', () => {
+                if (!selectedChip || run.answered) return;
+                sfx.click();
+                const bucketType = bucket.dataset.bucket;
+                const chipType = selectedChip.dataset.type;
+                const targetBox = bucketType === 'left' ? bLeft : bRight;
+
+                const item = document.createElement('div');
+                const isOk = bucketType === chipType;
+                item.className = 'chip ' + (isOk ? 'ok' : 'bad');
+                item.textContent = selectedChip.textContent;
+                targetBox.appendChild(item);
+
+                selectedChip.classList.add('used');
+                selectedChip.classList.remove('selected');
+                selectedChip = null;
+                placed++;
+
+                if (placed >= total) {
+                    setCheckButton('KIỂM TRA', true);
+                }
+            });
+        });
+
+        setCheckButton('KIỂM TRA', false);
     }
 
     function passageHtml() {
@@ -1012,13 +1180,12 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         return `<div class="pic-frame"><span class="pic-emoji">${emoji}</span></div>`;
     }
 
-    // --- Thẻ từ vựng ---
     function renderCard(stage, it) {
         const v = it.w;
         stage.innerHTML = `
             ${picHtml(v.emoji)}
             <div class="vocab-word">${escapeHtml(v.w)}</div>
-            <div class="vocab-ipa">${escapeHtml(v.ipa)}</div>
+            <div class="vocab-ipa">${escapeHtml(v.ipa || '')}</div>
             <div class="vocab-vi">${escapeHtml(v.vi)}</div>
             <div class="speak-row">
                 <button class="btn-speak" data-speak="${escapeHtml(v.w)}">
@@ -1028,24 +1195,25 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
                     🐢 Nghe chậm
                 </button>
             </div>
+            ${v.v2 && v.v3 ? `
             <div class="vocab-forms">
                 <div class="form-pill"><small>V1</small><b>${escapeHtml(v.w)}</b></div>
                 <div class="form-pill"><small>V2</small><b>${escapeHtml(v.v2)}</b></div>
                 <div class="form-pill v3"><small>V3 · dùng ở thì này</small><b>${escapeHtml(v.v3)}</b></div>
-            </div>
+            </div>` : ''}
             ${v.tip ? `<div class="vocab-tip">💡 <b>Mẹo nhớ:</b> ${escapeHtml(v.tip)}</div>` : ''}
+            ${v.ex ? `
             <div class="vocab-example">
-                <div class="en">${v.ex.replace(new RegExp('\\b(have|has)(\\s+\\w+)?\\s+' + v.v3 + '\\b', 'i'), m => '<u>' + m + '</u>')}</div>
-                <div class="vi">${escapeHtml(v.exVi)}</div>
+                <div class="en">${escapeHtml(v.ex)}</div>
+                <div class="vi">${escapeHtml(v.exVi || '')}</div>
                 <button class="btn-speak small" style="margin-top:10px" data-speak="${escapeHtml(v.ex)}">
                     <i class="fa-solid fa-volume-high"></i> Nghe câu ví dụ
                 </button>
-            </div>`;
+            </div>` : ''}`;
         setCheckButton('TỚ THUỘC RỒI ➡️', true);
         speak(v.w);
     }
 
-    // --- Trắc nghiệm ---
     function renderChoice(stage, it) {
         const keys = ['A', 'B', 'C', 'D', 'E'];
         stage.innerHTML = `
@@ -1074,7 +1242,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         setCheckButton('KIỂM TRA', false);
     }
 
-    // --- Điền từ (ngữ pháp) ---
     function renderFill(stage, it) {
         stage.innerHTML = `
             ${passageHtml()}
@@ -1095,7 +1262,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         bindFillInput(stage);
     }
 
-    // --- Nghe & điền từ ---
     function renderListen(stage, it) {
         stage.innerHTML = `
             ${picHtml(it.emoji)}
@@ -1149,7 +1315,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         setTimeout(() => input.focus({ preventScroll: true }), 60);
     }
 
-    // --- Ghép câu ---
     function renderBuild(stage, it) {
         const words = it.target.split(' ');
         stage.innerHTML = `
@@ -1197,7 +1362,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         setCheckButton('KIỂM TRA', false);
     }
 
-    // --- Nối từ ---
     function renderMatch(stage, it) {
         const left = shuffle(it.pairs.map((p, i) => ({ t: p[0], i })));
         const right = shuffle(it.pairs.map((p, i) => ({ t: p[1], i })));
@@ -1228,7 +1392,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         if (run.answered || el.classList.contains('done')) return;
         sfx.click();
 
-        // Chưa chọn gì → chọn ô này
         if (!run.matchSel) {
             stage.querySelectorAll('.m-item').forEach(x => x.classList.remove('sel'));
             el.classList.add('sel');
@@ -1236,14 +1399,12 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             return;
         }
 
-        // Bấm lại chính ô đang chọn → bỏ chọn
         if (run.matchSel === el) {
             el.classList.remove('sel');
             run.matchSel = null;
             return;
         }
 
-        // Bấm hai ô cùng cột → chuyển lựa chọn
         if (run.matchSel.dataset.side === el.dataset.side) {
             run.matchSel.classList.remove('sel');
             el.classList.add('sel');
@@ -1251,104 +1412,89 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             return;
         }
 
+        const ok = run.matchSel.dataset.i === el.dataset.i;
         const a = run.matchSel;
-        a.classList.remove('sel');
+        const b = el;
         run.matchSel = null;
+        a.classList.remove('sel');
 
-        if (a.dataset.i === el.dataset.i) {
-            a.classList.add('done');
-            el.classList.add('done');
-            a.disabled = true;
-            el.disabled = true;
-            run.matchLeft--;
+        if (ok) {
             sfx.correct();
-            const gain = award();
-            popXP(gain);
-
-            if (run.matchLeft === 0) {
+            a.classList.add('done');
+            b.classList.add('done');
+            run.matchLeft--;
+            if (run.matchLeft <= 0) {
                 run.answered = true;
-                showFeedback(true, 'Nối đúng hết rồi! 🎯',
-                    'Bé đã ghi nhớ được cả bảng này. Cùng sang câu tiếp theo nào!');
-                setCheckButton('TIẾP TỤC ➡️', true);
+                const gain = award();
+                popXP(gain);
+                showFeedback(true, 'Hoàn thành nối từ! 🎉', 'Bé ghép đúng toàn bộ các cặp.');
+                setCheckButton(run.idx === run.station.items.length - 1 ? 'HOÀN THÀNH BÀI 🏁' : 'TIẾP TỤC ➡️', true);
             }
         } else {
-            a.classList.add('shake');
-            el.classList.add('shake');
-            setTimeout(() => { a.classList.remove('shake'); el.classList.remove('shake'); }, 380);
             sfx.wrong();
-            loseHeart();
+            a.classList.add('shake');
+            b.classList.add('shake');
+            setTimeout(() => { a.classList.remove('shake'); b.classList.remove('shake'); }, 400);
         }
     }
 
     /* =====================================================
-       6. CHẤM ĐIỂM
+       6. ĐÁNH GIÁ & CHẤM ĐIỂM
        ===================================================== */
 
     function award() {
         run.combo++;
         if (run.combo > run.bestCombo) run.bestCombo = run.combo;
-        const gain = 10 + Math.min(run.combo - 1, 5) * 3;
-        run.xp += gain;
+        const base = 10;
+        const bonus = run.combo >= 5 ? 10 : (run.combo >= 3 ? 5 : 0);
+        const total = base + bonus;
+        run.xp += total;
         updateBars();
-        return gain;
+        return total;
     }
 
     function loseHeart() {
         run.combo = 0;
         run.mistakes++;
-        run.hearts--;
+        run.hearts = Math.max(0, run.hearts - 1);
         updateBars();
-        if (run.hearts <= 0) {
-            run.answered = true;
-            setTimeout(() => finishStation(false), 600);
-        }
+        if (run.hearts <= 0) finishStation(false);
     }
 
     function onCheckClick() {
+        if (!run.station) return;
         const it = currentItem();
 
-        // Đã chấm rồi → sang câu tiếp
         if (run.answered) {
             nextItem();
             return;
         }
 
-        if (it.kind === 'card') {
-            run.xp += 5;
-            updateBars();
-            nextItem();
-            return;
-        }
-
-        if (it.kind === 'match') return; // tự chấm khi nối
-
         let ok = false;
         let userText = '';
 
-        if (it.kind === 'choice') {
+        if (it.kind === 'card') {
+            ok = true;
+        } else if (it.kind === 'choice') {
             if (run.selected < 0) return;
             ok = run.selected === it.ans;
-            const stage = $('stage');
-            stage.querySelectorAll('.opt').forEach((b, i) => {
-                b.disabled = true;
-                b.classList.remove('selected');
-                if (i === it.ans) b.classList.add('correct');
-                else if (i === run.selected) b.classList.add('wrong');
-            });
             userText = it.opts[it.ans];
-
+            const btn = $('stage').querySelector(`.opt[data-opt="${run.selected}"]`);
+            if (btn) btn.classList.add(ok ? 'correct' : 'wrong');
+            if (!ok) {
+                const rightBtn = $('stage').querySelector(`.opt[data-opt="${it.ans}"]`);
+                if (rightBtn) rightBtn.classList.add('correct');
+            }
         } else if (it.kind === 'fill' || it.kind === 'listen') {
             const input = $('fill-input');
-            const val = normalize(input.value);
+            const val = input.value.trim();
             if (!val) return;
-            ok = (it.answers || []).some(a => normalize(a) === val);
-            input.disabled = true;
-            input.classList.add(ok ? 'ok' : 'bad');
-            $('stage').querySelectorAll('.hint-chips .chip').forEach(c => c.disabled = true);
+            const normVal = normalize(val);
+            ok = it.answers.some(a => normalize(a) === normVal);
             userText = it.answers[0];
-
+            input.classList.add(ok ? 'ok' : 'bad');
+            input.disabled = true;
         } else if (it.kind === 'build') {
-            // So khớp từng mảnh từ (giữ nguyên dấu câu) để tránh ăn may khi đặt sai vị trí dấu
             const built = run.tray.map(o => o.w).join(' ');
             ok = built.toLowerCase() === it.target.toLowerCase();
             $('stage').querySelectorAll('.chip').forEach(c => {
@@ -1356,6 +1502,8 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
                 if (!c.classList.contains('used')) c.classList.add(ok ? 'ok' : 'bad');
             });
             userText = it.target.replace(/ ([.?!,])/g, '$1');
+        } else if (it.kind === 'sort') {
+            ok = true;
         }
 
         run.answered = true;
@@ -1375,12 +1523,11 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         }
 
         if (run.hearts > 0) {
-            setCheckButton(run.idx === run.station.items.length - 1 ? 'HOÀN THÀNH CHẶNG 🏁' : 'TIẾP TỤC ➡️', true);
+            setCheckButton(run.idx === run.station.items.length - 1 ? 'HOÀN THÀNH BÀI 🏁' : 'TIẾP TỤC ➡️', true);
         }
 
         saveRun();
 
-        // Đọc lại câu đúng cho bé nghe
         if (it.kind === 'build') speak(it.target.replace(/ ([.?!,])/g, '$1'));
         else if (it.kind === 'listen') speak(it.sentence);
     }
@@ -1395,7 +1542,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
     }
 
     /* =====================================================
-       7. KẾT THÚC CHẶNG
+       7. KẾT THÚC CHẶNG / BÀI HỌC
        ===================================================== */
 
     function finishStation(completed) {
@@ -1409,8 +1556,18 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         save.xp += run.xp;
         if (run.bestCombo > save.best) save.best = run.bestCombo;
         if (stars > (save.stars[st.id] || 0)) save.stars[st.id] = stars;
+
+        if (completed && stars > 0) {
+            const all = getAllLevels();
+            const currIdx = all.findIndex(l => l.id === st.id);
+            if (currIdx >= 0 && currIdx < all.length - 1) {
+                const nextLvl = all[currIdx + 1];
+                save.unlockedLevels[nextLvl.id] = true;
+            }
+        }
+
         persist();
-        clearRun();   // chặng đã khép lại, không còn gì để học dở
+        clearRun();
 
         $('progress-fill').style.width = completed ? '100%' : $('progress-fill').style.width;
 
@@ -1418,7 +1575,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             sfx.win();
             confetti(stars === 3 ? 60 : 34);
             $('res-emoji').textContent = stars === 3 ? '🏆' : (stars === 2 ? '🎉' : '👍');
-            $('res-title').textContent = 'Hoàn thành ' + st.no + '!';
+            $('res-title').textContent = 'Hoàn thành ' + st.title + '!';
             $('res-sub').innerHTML = stars === 3
                 ? 'Xuất sắc! Bé làm đúng tất cả các câu 🌟'
                 : 'Làm tốt lắm! Xem lại phần giải thích rồi thử lấy 3 sao nhé.';
@@ -1437,10 +1594,11 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
         $('res-acc').textContent = (completed ? acc : 0) + '%';
         $('res-streak').textContent = run.bestCombo;
 
-        const idx = STATIONS.indexOf(st);
-        const hasNext = completed && idx < STATIONS.length - 1;
+        const all = getAllLevels();
+        const currIdx = all.findIndex(l => l.id === st.id);
+        const hasNext = completed && currIdx < all.length - 1;
         $('btn-res-next').style.display = hasNext ? '' : 'none';
-        $('btn-res-next').dataset.next = hasNext ? STATIONS[idx + 1].id : '';
+        $('btn-res-next').dataset.next = hasNext ? all[currIdx + 1].id : '';
 
         openModal('modal-result');
         renderMap();
@@ -1459,16 +1617,17 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
                 <span class="vr-no">${i + 1}</span>
                 <span class="vr-emo">${v.emoji}</span>
                 <span class="vr-v1">${escapeHtml(v.w)}</span>
-                <span class="vr-v2">${escapeHtml(v.v2)}</span>
-                <span class="vr-v3">${escapeHtml(v.v3)}</span>
+                <span class="vr-v2">${escapeHtml(v.v2 || '')}</span>
+                <span class="vr-v3">${escapeHtml(v.v3 || '')}</span>
                 <span class="vr-vi">${escapeHtml(v.vi)}</span>
             </div>`).join('');
     }
 
     function bindEvents() {
+        renderGradeTabs();
+
         $('btn-check').addEventListener('click', () => { sfx.init(); onCheckClick(); });
 
-        // Thoát về bản đồ nhưng VẪN GIỮ chỗ đang học để quay lại sau
         $('btn-quit').addEventListener('click', () => {
             if (window.speechSynthesis) window.speechSynthesis.cancel();
             saveRun();
@@ -1500,13 +1659,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             showToast('🗑️ Đã bỏ lượt học dở và quay lại bản đồ');
         });
 
-        $('btn-drop').addEventListener('click', () => {
-            if (!confirm('Bỏ lượt học dở này? Điểm của lượt đó sẽ không được tính.')) return;
-            clearRun();
-            renderMap();
-            showToast('🗑️ Đã bỏ lượt học dở');
-        });
-
         $('btn-theory').addEventListener('click', () => { sfx.init(); openModal('modal-theory'); });
 
         $('btn-voice').addEventListener('click', () => {
@@ -1534,7 +1686,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
 
         $('btn-reset').addEventListener('click', () => {
             if (!confirm('Xoá toàn bộ điểm và sao đã đạt để học lại từ đầu?')) return;
-            save = { xp: 0, best: 0, stars: {} };
+            save = { xp: 0, best: 0, stars: {}, unlockedLevels: {} };
             persist();
             clearRun();
             setHash('');
@@ -1543,7 +1695,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             showToast('🔄 Đã xoá tiến trình, cùng học lại nào!');
         });
 
-        // Nút đóng modal
         document.querySelectorAll('[data-close]').forEach(b => {
             b.addEventListener('click', () => closeModal(b.dataset.close));
         });
@@ -1551,7 +1702,6 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
             m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
         });
 
-        // Nút trong modal kết quả
         $('btn-res-again').addEventListener('click', () => {
             closeModal('modal-result');
             startStation(run.station.id);

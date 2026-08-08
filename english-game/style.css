@@ -1653,3 +1653,135 @@ body {
 
 @media (max-height: 560px) { .app-wrapper .brand-img { height: 26px; } }
 @media (max-width: 560px) { .brand-img { height: 30px; } }
+
+/* ================= GRADE FILTER & WORLD NAV ================= */
+.grade-filter-bar {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 14px;
+    scrollbar-width: none;
+}
+.grade-filter-bar::-webkit-scrollbar { display: none; }
+
+.grade-tab {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    padding: 9px 18px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+}
+
+.grade-tab:hover { background: rgba(255, 255, 255, 0.12); }
+.grade-tab.active {
+    background: linear-gradient(135deg, var(--blue), #3ddc84);
+    color: #04121a;
+    border-color: transparent;
+    box-shadow: 0 4px 14px rgba(0, 240, 255, 0.4);
+}
+
+.world-nav-container {
+    margin-bottom: 16px;
+}
+
+.world-nav-bar {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 6px 2px 14px;
+    scrollbar-width: thin;
+}
+
+.world-card {
+    min-width: 200px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.world-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.world-card.active {
+    border-color: var(--yellow);
+    background: rgba(255, 215, 0, 0.14);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.25);
+}
+
+.world-card .w-icon {
+    font-size: 2rem;
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    flex-shrink: 0;
+}
+
+.world-card .w-info { flex: 1; }
+.world-card .w-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    line-height: 1.2;
+}
+
+.world-card .w-grade {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--yellow);
+    margin-top: 4px;
+}
+
+/* Sorting game mode */
+.sort-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+}
+
+.sort-bucket {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed var(--border);
+    border-radius: 20px;
+    padding: 16px;
+    min-height: 180px;
+    text-align: center;
+}
+
+.sort-bucket h5 {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--yellow);
+    margin-bottom: 12px;
+}
+
+.sort-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+

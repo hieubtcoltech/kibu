@@ -14,4 +14,4 @@ tmp/
 .public-url.txt
 
 # Số liệu lượt chơi do máy chủ tự ghi — không theo git, deploy không đụng tới
-data/
+/data/

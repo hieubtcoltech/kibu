@@ -119,11 +119,11 @@
         <!-- ============ SCREEN: MAP ============ -->
         <section id="screen-map" class="screen active">
             <div class="hero">
-                <div class="hero-badge">🗺️ Bản đồ hành trình · 12 chặng · 30 động từ</div>
-                <h2 class="hero-title">Chinh Phục Thì Hiện Tại Hoàn Thành</h2>
+                <div class="hero-badge">🗺️ English Adventure · 10 Worlds · 100 Levels</div>
+                <h2 class="hero-title">Hành Trình Chinh Phục Tiếng Anh Lớp 2 – 5</h2>
                 <p class="hero-sub">
-                    Học <b>30 động từ bất quy tắc</b> có tranh minh hoạ &amp; phát âm, luyện ngữ pháp,
-                    ghép câu, nối từ, nghe điền từ và đọc hiểu — tất cả trong một cuộc phiêu lưu.
+                    Khám phá <b>10 thế giới học tập</b> với 100 cấp độ phong phú: từ vựng, ngữ pháp To Be, 
+                    Hiện Tại Đơn, Hiện Tại Tiếp Diễn, Quá Khứ Đơn, Tương Lai, So Sánh và Hiện Tại Hoàn Thành!
                 </p>
             </div>
 
@@ -134,7 +134,7 @@
                 </div>
                 <div class="stat-chip stat-star">
                     <span class="stat-ic">⭐</span>
-                    <div><b id="stat-stars">0/36</b><small>Sao đã đạt</small></div>
+                    <div><b id="stat-stars">0/300</b><small>Sao đã đạt</small></div>
                 </div>
                 <div class="stat-chip stat-fire">
                     <span class="stat-ic">🔥</span>
@@ -142,7 +142,7 @@
                 </div>
                 <div class="stat-chip stat-done">
                     <span class="stat-ic">🏁</span>
-                    <div><b id="stat-done">0/12</b><small>Chặng hoàn thành</small></div>
+                    <div><b id="stat-done">0/100</b><small>Level hoàn thành</small></div>
                 </div>
             </div>
 
@@ -150,7 +150,7 @@
                 <div class="rs-info">
                     <span class="rs-icon">⏸️</span>
                     <div>
-                        <b id="rs-title">Bé đang học dở một chặng</b>
+                        <b id="rs-title">Bé đang học dở một bài</b>
                         <small id="rs-sub"></small>
                     </div>
                 </div>
@@ -160,7 +160,21 @@
                 </div>
             </div>
 
-            <div class="section-label"><i class="fa-solid fa-map-location-dot"></i> Chọn một chặng để bắt đầu</div>
+            <div class="section-label"><i class="fa-solid fa-layer-group"></i> Chọn khối lớp &amp; Thế giới bài học</div>
+            
+            <div class="grade-filter-bar">
+                <button class="grade-tab active" data-grade="all">Tất cả (Lớp 2–5)</button>
+                <button class="grade-tab" data-grade="2">🌱 Lớp 2</button>
+                <button class="grade-tab" data-grade="3">🎒 Lớp 3</button>
+                <button class="grade-tab" data-grade="4">🦖 Lớp 4</button>
+                <button class="grade-tab" data-grade="5">👑 Lớp 5</button>
+            </div>
+
+            <div id="world-nav-container" class="world-nav-container">
+                <div id="world-nav" class="world-nav-bar"></div>
+            </div>
+
+            <div class="section-label" style="margin-top:20px;"><i class="fa-solid fa-map-location-dot"></i> <span id="current-world-title">Danh sách bài học</span></div>
             <div id="station-grid" class="station-grid"></div>
 
             <footer class="page-foot">
@@ -375,6 +389,7 @@
 
     <div id="toast" class="toast"></div>
 
+    <script src="/english-game/data/worlds.js"></script>
     <script src="/english-game/game.js"></script>
 
     
