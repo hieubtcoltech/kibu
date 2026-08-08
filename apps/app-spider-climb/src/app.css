@@ -29,7 +29,6 @@
     background: rgba(7, 11, 22, 0.92) !important;
 }
 
-/* Game viewport và stage tràn 100% chiều cao còn lại */
 .game-viewport {
     border-radius: 0 !important;
     border: none !important;
@@ -37,14 +36,25 @@
     flex: 1;
     height: 100% !important;
     width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    container-type: size !important;
+    background: #060a14 !important;
 }
 
 .stage {
-    width: 100% !important;
+    position: relative !important;
     height: 100% !important;
     max-width: 100% !important;
     max-height: 100% !important;
-    aspect-ratio: auto !important;
+    aspect-ratio: var(--stage-w, 540) / var(--stage-h, 960) !important;
+}
+
+@supports (width: 1cqh) {
+    .stage {
+        width: min(100cqw, 100cqh * var(--stage-w, 540) / var(--stage-h, 960)) !important;
+    }
 }
 
 /* ---------- Không cho trang nhúc nhích ---------- */
