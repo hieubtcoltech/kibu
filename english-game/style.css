@@ -171,9 +171,18 @@ body {
 .nav-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     margin-left: auto;
-    flex-wrap: nowrap;
+    flex-wrap: nowrap !important;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.nav-actions .btn {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 /* Duolingo 3D Buttons */
