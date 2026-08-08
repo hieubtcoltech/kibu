@@ -1687,16 +1687,90 @@ body {
     box-shadow: 0 4px 14px rgba(0, 240, 255, 0.4);
 }
 
+.view-toggle-btn {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.85rem;
+    padding: 6px 14px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
+    color: var(--blue);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+.view-toggle-btn:hover {
+    background: rgba(0, 240, 255, 0.16);
+    transform: scale(1.03);
+}
+
 .world-nav-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-bottom: 16px;
 }
 
+.world-nav-arrow {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: rgba(10, 14, 30, 0.9);
+    border: 1px solid var(--blue);
+    color: var(--blue);
+    display: grid;
+    place-items: center;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    transition: all 0.2s ease;
+}
+
+.world-nav-arrow:hover {
+    background: var(--blue);
+    color: #04121a;
+    transform: scale(1.1);
+}
+
+.world-nav-container.is-grid .world-nav-arrow {
+    display: none !important;
+}
+
 .world-nav-bar {
+    flex: 1;
     display: flex;
     gap: 12px;
     overflow-x: auto;
     padding: 6px 2px 14px;
+    scroll-behavior: smooth;
     scrollbar-width: thin;
+    scrollbar-color: rgba(0, 240, 255, 0.4) transparent;
+}
+
+.world-nav-bar::-webkit-scrollbar {
+    height: 6px;
+}
+.world-nav-bar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+.world-nav-bar::-webkit-scrollbar-thumb {
+    background: linear-gradient(90deg, var(--blue), #3ddc84);
+    border-radius: 4px;
+}
+
+/* Grid Mode: hiển thị tất cả 12 thế giới dạng lưới rõ ràng */
+.world-nav-bar.grid-mode {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 12px;
+    overflow-x: visible;
 }
 
 .world-card {
@@ -1711,6 +1785,11 @@ body {
     gap: 12px;
     transition: all 0.2s ease;
     flex-shrink: 0;
+}
+
+.world-nav-bar.grid-mode .world-card {
+    min-width: 0;
+    flex-shrink: 1;
 }
 
 .world-card:hover {
@@ -1735,12 +1814,15 @@ body {
     flex-shrink: 0;
 }
 
-.world-card .w-info { flex: 1; }
+.world-card .w-info { flex: 1; min-width: 0; }
 .world-card .w-title {
     font-family: var(--font-display);
     font-weight: 800;
     font-size: 1.05rem;
     line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .world-card .w-grade {

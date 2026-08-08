@@ -444,6 +444,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
 
     let activeGradeFilter = 'all';
     let activeWorldId = 'world-1';
+    let isGridMode = true;
 
     /* =====================================================
        2. TRẠNG THÁI & LƯU TIẾN TRÌNH
@@ -895,12 +896,23 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
     function renderMap() {
         const worlds = getFilteredWorlds();
         const worldNav = $('world-nav');
+        const worldNavContainer = $('world-nav-container');
         
         if (!worlds.some(w => w.id === activeWorldId) && worlds.length > 0) {
             activeWorldId = worlds[0].id;
         }
 
         const activeWorld = window.ENGLISH_WORLDS.find(w => w.id === activeWorldId) || worlds[0];
+
+        // Apply grid mode or carousel mode
+        if (worldNav && worldNavContainer) {
+            worldNav.classList.toggle('grid-mode', isGridMode);
+            worldNavContainer.classList.toggle('is-grid', isGridMode);
+            const toggleText = $('view-toggle-text');
+            if (toggleText) {
+                toggleText.textContent = isGridMode ? 'Thanh Trượt' : 'Dạng Lưới';
+            }
+        }
 
         worldNav.innerHTML = worlds.map(w => {
             const completedCount = w.levels.filter(l => (save.stars[l.id] || 0) > 0).length;
@@ -909,7 +921,7 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
                 <div class="world-card ${isSelected ? 'active' : ''}" data-world="${w.id}">
                     <div class="w-icon">${w.icon}</div>
                     <div class="w-info">
-                        <div class="w-title">${w.title}</div>
+                        <div class="w-title" title="${escapeHtml(w.title)}">${w.title}</div>
                         <span class="w-grade">${w.grade} · ${completedCount}/10</span>
                     </div>
                 </div>`;
@@ -1625,6 +1637,30 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
 
     function bindEvents() {
         renderGradeTabs();
+
+        const btnToggleView = $('btn-toggle-view');
+        if (btnToggleView) {
+            btnToggleView.addEventListener('click', () => {
+                sfx.click();
+                isGridMode = !isGridMode;
+                renderMap();
+            });
+        }
+
+        const scrollLeftBtn = $('world-scroll-left');
+        const scrollRightBtn = $('world-scroll-right');
+        if (scrollLeftBtn) {
+            scrollLeftBtn.addEventListener('click', () => {
+                sfx.click();
+                $('world-nav').scrollBy({ left: -260, behavior: 'smooth' });
+            });
+        }
+        if (scrollRightBtn) {
+            scrollRightBtn.addEventListener('click', () => {
+                sfx.click();
+                $('world-nav').scrollBy({ left: 260, behavior: 'smooth' });
+            });
+        }
 
         $('btn-check').addEventListener('click', () => { sfx.init(); onCheckClick(); });
 

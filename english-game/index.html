@@ -160,7 +160,12 @@
                 </div>
             </div>
 
-            <div class="section-label"><i class="fa-solid fa-layer-group"></i> Chọn khối lớp &amp; Thế giới bài học</div>
+            <div class="section-label" style="display: flex; justify-content: space-between; align-items: center;">
+                <span><i class="fa-solid fa-layer-group"></i> Chọn khối lớp &amp; Thế giới bài học</span>
+                <button id="btn-toggle-view" class="view-toggle-btn" title="Chuyển chế độ hiển thị Dạng lưới / Thanh trượt">
+                    <i class="fa-solid fa-grip"></i> <span id="view-toggle-text">Dạng Lưới</span>
+                </button>
+            </div>
             
             <div class="grade-filter-bar">
                 <button class="grade-tab active" data-grade="all">Tất cả (Mầm non–Lớp 5)</button>
@@ -173,7 +178,9 @@
             </div>
 
             <div id="world-nav-container" class="world-nav-container">
+                <button id="world-scroll-left" class="world-nav-arrow left" title="Cuộn sang trái"><i class="fa-solid fa-chevron-left"></i></button>
                 <div id="world-nav" class="world-nav-bar"></div>
+                <button id="world-scroll-right" class="world-nav-arrow right" title="Cuộn sang phải"><i class="fa-solid fa-chevron-right"></i></button>
             </div>
 
             <div class="section-label" style="margin-top:20px;"><i class="fa-solid fa-map-location-dot"></i> <span id="current-world-title">Danh sách bài học</span></div>
