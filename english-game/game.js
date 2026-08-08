@@ -201,7 +201,7 @@
         let idx = Math.max(0, Number(d.idx) || 0);
         if (d.answered) idx++;
 
-        $('play-icon').textContent = st.icon;
+        $('play-icon').textContent = found.world ? found.world.icon : '📖';
         $('play-title').innerHTML = st.title;
         setHash(st.id);
         showScreen('play');
@@ -2081,10 +2081,11 @@
         // Tải lại trang giữa chừng -> Kiểm tra lượt học cũ để hỏi bé
         const found = readRun();
         if (found) {
-            const { data: d, station: st } = found;
+            const { data: d, station: st, world: w } = found;
             const total = st.items.length;
             const at = Math.min(total, (Number(d.idx) || 0) + (d.answered ? 2 : 1));
-            $('resume-confirm-info').innerHTML = `${st.icon} <b>${st.title}</b><br><small>Đang ở câu ${at}/${total} · ❤️ ${d.hearts} · 💎 ${d.xp}</small>`;
+            const icon = w ? w.icon : '📖';
+            $('resume-confirm-info').innerHTML = `${icon} <b>${st.title}</b><br><small>Đang ở câu ${at}/${total} · ❤️ ${d.hearts} · 💎 ${d.xp}</small>`;
             openModal('modal-resume-confirm');
         } else {
             // Không có bài dở, nhưng địa chỉ chỉ tới một chặng -> mở chặng đó
