@@ -1476,8 +1476,7 @@
                 var isScared = (this.state === 'flying') && this.balls.some(ba => !ba.dead && Phaser.Math.Distance.Between(ba.body.position.x, ba.body.position.y, bPos.x, bPos.y) < 260);
                 var isHurt = e.hp < e.maxHp;
                 var isBlinking = !isScared && !isHurt && (cycle < 160);
-                var isWinking = !isScared && !isHurt && (cycle > 1800 && cycle < 2050);
-                var isLooking = !isScared && !isHurt && (cycle > 2600 && cycle < 3900);
+                var isLooking = !isScared && !isHurt && (cycle > 2200 && cycle < 3900);
 
                 g.save();
                 g.translateCanvas(bPos.x, bPos.y);
@@ -1492,11 +1491,6 @@
                     g.lineStyle(3, 0x14251a, 1);
                     g.beginPath(); g.moveTo(-14, -5); g.lineTo(-3, -5); g.strokePath();
                     g.beginPath(); g.moveTo(3, -5); g.lineTo(14, -5); g.strokePath();
-                } else if (isWinking) {
-                    g.lineStyle(3, 0x14251a, 1);
-                    g.beginPath(); g.moveTo(-14, -5); g.lineTo(-3, -5); g.strokePath();
-                    g.fillStyle(0xffffff, 1); g.fillCircle(8, -5, 7);
-                    g.fillStyle(0x14251a, 1); g.fillCircle(9, -4, 3.4);
                 } else if (isHurt) {
                     g.lineStyle(3, 0x14251a, 1);
                     g.beginPath(); g.moveTo(-12, -9); g.lineTo(-4, -1); g.strokePath();
@@ -1533,8 +1527,6 @@
                     g.fillCircle(0, 9, 4.5);
                 } else if (isHurt) {
                     g.beginPath(); g.moveTo(-8, 14); g.lineTo(0, 9); g.lineTo(8, 14); g.strokePath();
-                } else if (isWinking) {
-                    g.beginPath(); g.moveTo(-6, 10); g.lineTo(2, 13); g.lineTo(8, 9); g.strokePath();
                 } else {
                     g.beginPath(); g.moveTo(-7, 11); g.lineTo(7, 11); g.strokePath();
                 }
