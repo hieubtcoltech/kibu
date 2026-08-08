@@ -1873,6 +1873,18 @@
             resumeRun();
         });
 
+        const btnDrop = $('btn-drop');
+        if (btnDrop) {
+            btnDrop.addEventListener('click', e => {
+                e.stopPropagation();
+                sfx.init();
+                sfx.click();
+                clearRun();
+                renderMap();
+                showToast('🗑️ Đã huỷ bài học dở');
+            });
+        }
+
         $('btn-resume-yes').addEventListener('click', () => {
             sfx.init();
             sfx.click();

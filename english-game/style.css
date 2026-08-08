@@ -1759,18 +1759,17 @@ body {
 
 .passage-header {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 14px;
     padding-bottom: 12px;
     border-bottom: 2px solid var(--border);
 }
 
 .passage-header h4 {
     font-family: var(--font-display);
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: var(--duo-gold);
     margin: 0;
@@ -1779,8 +1778,9 @@ body {
 .passage-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
+    margin-top: 2px;
 }
 
 .btn-passage-btn {
