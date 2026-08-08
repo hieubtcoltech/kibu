@@ -1,7 +1,7 @@
 /* =========================================================
-   ENGLISH QUEST — Present Perfect (Hiện Tại Hoàn Thành)
-   Game học tiếng Anh: từ vựng, nối từ, ghép câu, ngữ pháp,
-   nghe điền từ, đọc hiểu và trắc nghiệm tổng hợp.
+   ENGLISH QUEST — English Adventure (Mầm Non đến Lớp 5)
+   Game học tiếng Anh cho trẻ em: từ vựng, hình ảnh Phonics,
+   ngữ pháp, ghép câu, nối từ, nghe điền từ và phân loại.
    ========================================================= */
 
 (() => {

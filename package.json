@@ -2,7 +2,7 @@
   "name": "kids-game-playground",
   "version": "1.0.0",
   "private": true,
-  "description": "Sân chơi game cho bé: Fruit Crush, Bot Arena, Neon Racer và English Quest (học thì Hiện Tại Hoàn Thành).",
+  "description": "Sân chơi game cho bé: Fruit Crush, Bot Arena, Neon Racer và English Quest (học tiếng Anh Mầm non đến Lớp 5).",
   "scripts": {
     "start": "node server.js",
     "serve": "node server.js",

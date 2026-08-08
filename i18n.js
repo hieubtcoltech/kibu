@@ -2091,7 +2091,7 @@
         ['Chế Độ Thử Màn', 'Level Test Mode'],
 
         /* ---------- English Quest (UI chrome only — lessons stay Vietnamese) ---------- */
-        ['Chinh Phục Thì Hiện Tại Hoàn Thành', 'Master The Present Perfect'],
+        ['Chinh Phục Tiếng Anh Từ Mầm Non Đến Lớp 5', 'Learn English from Pre-K to Grade 5'],
         ['🗺️ Bản đồ hành trình · 8 chặng · 20 động từ', '🗺️ Journey map · 8 stages · 20 verbs'],
         ['Điểm kinh nghiệm', 'Experience points'],
         ['Sao đã đạt', 'Stars earned'],
