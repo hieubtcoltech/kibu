@@ -853,7 +853,8 @@ Our whole family <b>has grown</b> closer, and we <b>have known</b> how wonderful
        ===================================================== */
 
     function isLevelUnlocked(lvl) {
-        if (lvl.id === 'w1-l1') return true;
+        if (!lvl) return false;
+        if (lvl.order === 1 || (lvl.id && lvl.id.endsWith('-l1')) || lvl.id === 'w1-l1') return true;
         if (save.unlockedLevels && save.unlockedLevels[lvl.id]) return true;
         const all = getAllLevels();
         const idx = all.findIndex(l => l.id === lvl.id);
