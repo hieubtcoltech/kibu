@@ -1468,25 +1468,76 @@
             for (i = 0; i < this.targets.length; i++) {
                 e = this.targets[i]; b = e.body;
                 t = 1 - Math.max(0, e.hp) / e.maxHp;
+                var bPos = b.position;
+                var now = this.time.now || 0;
+                var seed = (b.id || (i + 1)) * 37;
+                var cycle = (now + seed) % 4200;
+
+                var isScared = (this.state === 'flying') && this.balls.some(ba => !ba.dead && Phaser.Math.Distance.Between(ba.body.position.x, ba.body.position.y, bPos.x, bPos.y) < 260);
+                var isHurt = e.hp < e.maxHp;
+                var isBlinking = !isScared && !isHurt && (cycle < 160);
+                var isWinking = !isScared && !isHurt && (cycle > 1800 && cycle < 2050);
+                var isLooking = !isScared && !isHurt && (cycle > 2600 && cycle < 3900);
+
                 g.save();
-                g.translateCanvas(b.position.x, b.position.y);
+                g.translateCanvas(bPos.x, bPos.y);
                 g.rotateCanvas(b.angle);
                 g.fillStyle(lerpColor(0x63d16f, 0xd2603f, t), 1);
                 g.fillCircle(0, 0, e.r);
                 g.lineStyle(3, 0x24552b, 1);
                 g.strokeCircle(0, 0, e.r);
+
                 /* mắt */
-                g.fillStyle(0xffffff, 1);
-                g.fillCircle(-8, -5, 7); g.fillCircle(8, -5, 7);
-                g.fillStyle(0x14251a, 1);
-                g.fillCircle(-7, -4, 3.4); g.fillCircle(9, -4, 3.4);
-                /* lông mày cau có */
+                if (isBlinking) {
+                    g.lineStyle(3, 0x14251a, 1);
+                    g.beginPath(); g.moveTo(-14, -5); g.lineTo(-3, -5); g.strokePath();
+                    g.beginPath(); g.moveTo(3, -5); g.lineTo(14, -5); g.strokePath();
+                } else if (isWinking) {
+                    g.lineStyle(3, 0x14251a, 1);
+                    g.beginPath(); g.moveTo(-14, -5); g.lineTo(-3, -5); g.strokePath();
+                    g.fillStyle(0xffffff, 1); g.fillCircle(8, -5, 7);
+                    g.fillStyle(0x14251a, 1); g.fillCircle(9, -4, 3.4);
+                } else if (isHurt) {
+                    g.lineStyle(3, 0x14251a, 1);
+                    g.beginPath(); g.moveTo(-12, -9); g.lineTo(-4, -1); g.strokePath();
+                    g.beginPath(); g.moveTo(-12, -1); g.lineTo(-4, -9); g.strokePath();
+                    g.fillStyle(0xffffff, 1); g.fillCircle(8, -5, 7);
+                    g.fillStyle(0x14251a, 1); g.fillCircle(8, -4, 3.4);
+                } else if (isScared) {
+                    g.fillStyle(0xffffff, 1);
+                    g.fillCircle(-8, -5, 8.5); g.fillCircle(8, -5, 8.5);
+                    g.fillStyle(0x14251a, 1);
+                    g.fillCircle(-8, -5, 4); g.fillCircle(8, -5, 4);
+                } else {
+                    var lookDX = isLooking ? -2.5 : 0;
+                    g.fillStyle(0xffffff, 1);
+                    g.fillCircle(-8, -5, 7); g.fillCircle(8, -5, 7);
+                    g.fillStyle(0x14251a, 1);
+                    g.fillCircle(-7 + lookDX, -4, 3.4); g.fillCircle(9 + lookDX, -4, 3.4);
+                }
+
+                /* lông mày */
                 g.lineStyle(3, 0x14251a, 1);
-                g.beginPath(); g.moveTo(-15, -15); g.lineTo(-3, -10); g.strokePath();
-                g.beginPath(); g.moveTo(15, -15); g.lineTo(3, -10); g.strokePath();
+                if (isScared || isHurt) {
+                    g.beginPath(); g.moveTo(-15, -12); g.lineTo(-4, -16); g.strokePath();
+                    g.beginPath(); g.moveTo(15, -12); g.lineTo(4, -16); g.strokePath();
+                } else {
+                    g.beginPath(); g.moveTo(-15, -15); g.lineTo(-3, -10); g.strokePath();
+                    g.beginPath(); g.moveTo(15, -15); g.lineTo(3, -10); g.strokePath();
+                }
+
                 /* miệng */
                 g.lineStyle(3, 0x14251a, 1);
-                g.beginPath(); g.moveTo(-7, 11); g.lineTo(7, 11); g.strokePath();
+                if (isScared) {
+                    g.fillStyle(0x14251a, 1);
+                    g.fillCircle(0, 9, 4.5);
+                } else if (isHurt) {
+                    g.beginPath(); g.moveTo(-8, 14); g.lineTo(0, 9); g.lineTo(8, 14); g.strokePath();
+                } else if (isWinking) {
+                    g.beginPath(); g.moveTo(-6, 10); g.lineTo(2, 13); g.lineTo(8, 9); g.strokePath();
+                } else {
+                    g.beginPath(); g.moveTo(-7, 11); g.lineTo(7, 11); g.strokePath();
+                }
                 g.restore();
             }
 
@@ -1550,8 +1601,7 @@
                 g.fillCircle(-r * 0.32, -r * 0.34, r * 0.26);
             }
             if (type === 'rock') {
-                /* Chú lợn hồng: hai tai, mõm tròn, má ửng. Vẽ sau vòng tròn nền
-                   nên nằm đè lên, và quay theo viên bi cho vui mắt. */
+                /* Chú lợn hồng với biểu cảm nhắm mắt kéo ná & chớp mắt */
                 g.fillStyle(spec.fill, 1);
                 g.fillCircle(0, 0, r);
                 g.lineStyle(3, spec.dark, 1);
@@ -1559,12 +1609,30 @@
                 g.fillStyle(0xff85b6, 0.5);
                 g.fillCircle(-r * 0.58, r * 0.22, r * 0.19);
                 g.fillCircle(r * 0.58, r * 0.22, r * 0.19);
-                g.fillStyle(0xffffff, 1);
-                g.fillCircle(-r * 0.34, -r * 0.28, r * 0.21);
-                g.fillCircle(r * 0.34, -r * 0.28, r * 0.21);
-                g.fillStyle(0x3b1420, 1);
-                g.fillCircle(-r * 0.3, -r * 0.27, r * 0.11);
-                g.fillCircle(r * 0.38, -r * 0.27, r * 0.11);
+
+                var isAiming = this.dragging && (this.armed && Math.hypot(x - this.armed.x, y - this.armed.y) < 5);
+                var now = this.time.now || 0;
+                var isBlink = !isAiming && ((now % 3500) < 160);
+
+                if (isAiming) {
+                    // Nhắm mắt nghiến răng kéo ná > <
+                    g.lineStyle(2.5, 0x3b1420, 1);
+                    g.beginPath(); g.moveTo(-r * 0.45, -r * 0.35); g.lineTo(-r * 0.2, -r * 0.25); g.lineTo(-r * 0.45, -r * 0.15); g.strokePath();
+                    g.beginPath(); g.moveTo(r * 0.45, -r * 0.35); g.lineTo(r * 0.2, -r * 0.25); g.lineTo(r * 0.45, -r * 0.15); g.strokePath();
+                } else if (isBlink) {
+                    // Chớp mắt
+                    g.lineStyle(2.5, 0x3b1420, 1);
+                    g.beginPath(); g.moveTo(-r * 0.4, -r * 0.27); g.lineTo(-r * 0.2, -r * 0.27); g.strokePath();
+                    g.beginPath(); g.moveTo(r * 0.2, -r * 0.27); g.lineTo(r * 0.4, -r * 0.27); g.strokePath();
+                } else {
+                    g.fillStyle(0xffffff, 1);
+                    g.fillCircle(-r * 0.34, -r * 0.28, r * 0.21);
+                    g.fillCircle(r * 0.34, -r * 0.28, r * 0.21);
+                    g.fillStyle(0x3b1420, 1);
+                    g.fillCircle(-r * 0.3, -r * 0.27, r * 0.11);
+                    g.fillCircle(r * 0.38, -r * 0.27, r * 0.11);
+                }
+
                 g.fillStyle(0xff9bc4, 1);
                 g.fillEllipse(0, r * 0.3, r * 0.66, r * 0.46);
                 g.lineStyle(2, spec.dark, 1);
