@@ -838,20 +838,13 @@
                 g.fillTriangle(x, GROUND_Y, x + 5, GROUND_Y - 9 - (i % 5) * 2, x + 10, GROUND_Y);
             }
         }
-        /* Mặt trời: một đĩa vàng, tám tia ngắn, và một quầng mờ cùng màu.
-           Chỉ dùng đúng một màu vàng để hợp với lối vẽ phẳng của cả sân. */
+        /* Mặt trời: thiết kế tối giản, tươi sáng với quầng sáng mềm mại */
         drawSun(g, cx, cy, r) {
-            var i, a, w = 0.09;
-            g.fillStyle(0xffd94f, 0.16);
-            g.fillCircle(cx, cy, r * 1.75);
-            g.fillStyle(0xffd94f, 1);
-            for (i = 0; i < 8; i++) {
-                a = i * Math.PI / 4 + 0.2;
-                g.fillTriangle(
-                    cx + Math.cos(a - w) * r * 1.05, cy + Math.sin(a - w) * r * 1.05,
-                    cx + Math.cos(a + w) * r * 1.05, cy + Math.sin(a + w) * r * 1.05,
-                    cx + Math.cos(a) * r * 1.5, cy + Math.sin(a) * r * 1.5);
-            }
+            g.fillStyle(0xffe047, 0.15);
+            g.fillCircle(cx, cy, r * 1.5);
+            g.fillStyle(0xffe047, 0.3);
+            g.fillCircle(cx, cy, r * 1.22);
+            g.fillStyle(0xffcc00, 1);
             g.fillCircle(cx, cy, r);
         }
 
