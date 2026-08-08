@@ -83,7 +83,10 @@
     const SAVE_KEY = 'english_adventure_save_v2';
     const OLD_SAVE_KEY = 'english_quest_pp_v1';
 
-    let activeGradeFilter = 'all';
+    // Không còn lựa chọn "Tất cả": bản đồ luôn hiển thị đúng một khối lớp.
+    // Mặc định Mầm non, nhưng nếu bé đã học rồi thì pickStartingGrade() nhảy
+    // thẳng tới khối bé đang học dở, khỏi phải bấm lại mỗi lần vào.
+    let activeGradeFilter = '0';
     let activeWorldId = 'world-1';
     let isGridMode = true;
 
@@ -535,9 +538,23 @@
 
     function getFilteredWorlds() {
         if (!window.ENGLISH_WORLDS) return [];
-        if (activeGradeFilter === 'all') return window.ENGLISH_WORLDS;
         const gNum = Number(activeGradeFilter);
         return window.ENGLISH_WORLDS.filter(w => w.gradeMin <= gNum && w.gradeMax >= gNum);
+    }
+
+    /** Chọn khối lớp mở sẵn khi vào trang: khối chứa bài xa nhất bé từng học.
+     *  Bé mới hoàn toàn thì về Mầm non. */
+    function pickStartingGrade() {
+        if (!window.ENGLISH_WORLDS) return;
+        let furthest = null;
+        for (const w of window.ENGLISH_WORLDS) {
+            for (const l of w.levels) {
+                if (save.stars[l.id] > 0 || save.unlockedLevels[l.id]) furthest = w;
+            }
+        }
+        if (!furthest) return;
+        activeGradeFilter = String(furthest.gradeMin);
+        activeWorldId = furthest.id;
     }
 
     function renderMap() {
@@ -1889,6 +1906,7 @@
     window.addEventListener('DOMContentLoaded', () => {
         loadSave();
         loadPrefs();
+        pickStartingGrade();
         renderMap();
         bindEvents();
 
